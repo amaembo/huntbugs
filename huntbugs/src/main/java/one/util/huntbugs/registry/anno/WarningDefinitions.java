@@ -13,21 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package one.util.hb.warning;
+package one.util.huntbugs.registry.anno;
 
-import java.util.List;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-/**
- * @author lan
- *
- */
-public class Warning {
-    WarningType type;
-    int rankAdjustment;
-    String className;
-    String methodName;
-    String methodSignature;
-    int lineNumber;
-    
-    List<WarningAnnotation> annotations;
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.TYPE})
+public @interface WarningDefinitions {
+    WarningDefinition[] value();
 }

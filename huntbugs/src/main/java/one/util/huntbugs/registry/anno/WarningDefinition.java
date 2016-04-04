@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package one.util.hb.warning;
+package one.util.huntbugs.registry.anno;
 
-import com.strobel.assembler.metadata.TypeReference;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-/**
- * @author lan
- *
- */
-public abstract class WarningAnnotation {
-    abstract String getRole();
-    abstract Object getValue();
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+@Repeatable(WarningDefinitions.class)
+public @interface WarningDefinition {
+    String category();
     
-    static class TypeWarningAnnotation extends WarningAnnotation {
-        public TypeWarningAnnotation(TypeReference type) {
-            
-        }
-    }
+    String name();
+    
+    int baseRank();
 }

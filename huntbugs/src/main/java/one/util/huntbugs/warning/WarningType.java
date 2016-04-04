@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package one.util.hb.warning;
+package one.util.huntbugs.warning;
+
+import one.util.huntbugs.registry.anno.WarningDefinition;
 
 /**
  * @author lan
@@ -28,6 +30,10 @@ public class WarningType {
         this.category = category;
         this.name = name;
         this.baseRank = baseRank;
+    }
+    
+    public WarningType(WarningDefinition def) {
+        this(def.category(), def.name(), def.baseRank());
     }
 
     public String getCategory() {
