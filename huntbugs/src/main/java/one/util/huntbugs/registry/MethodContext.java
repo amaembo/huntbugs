@@ -77,7 +77,7 @@ public class MethodContext {
     void visitNode(Node node, NodeChain parents) {
         for(MethodHandle mh : detector.astVisitors) {
             try {
-                mh.invoke(det, node, parents, this);
+                mh.invoke(det, node, parents, this, md, cc.type);
             } catch (Throwable e) {
                 ctx.addError(new ErrorMessage(detector, md, -1, e));
             }

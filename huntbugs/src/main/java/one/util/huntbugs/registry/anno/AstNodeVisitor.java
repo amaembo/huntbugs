@@ -20,6 +20,19 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import one.util.huntbugs.registry.MethodContext;
+import one.util.huntbugs.util.NodeChain;
+
+import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.TypeDefinition;
+import com.strobel.decompiler.ast.Node;
+
+/**
+ * Method in detector class which called for every AST node
+ * 
+ * Allowed parameter types (no repeats):
+ * {@link Node}, {@link NodeChain}, {@link MethodContext}, {@link MethodDefinition}, {@link TypeDefinition}
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface AstNodeVisitor {

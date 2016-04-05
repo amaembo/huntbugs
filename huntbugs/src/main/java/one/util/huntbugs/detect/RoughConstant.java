@@ -98,7 +98,7 @@ public class RoughConstant {
     };
 
     @AstNodeVisitor
-    public void visit(Node node, NodeChain parents, MethodContext ctx) {
+    public void visit(Node node, MethodContext ctx, NodeChain parents) {
         if(node instanceof Expression) {
             Expression expr = (Expression)node;
             if(expr.getCode() == AstCode.LdC) {

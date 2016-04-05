@@ -23,14 +23,13 @@ import com.strobel.decompiler.ast.Node;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodeVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
-import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 
 @WarningDefinition(category = "CodeStyle", name = "NonShortCircuit", baseRank = 50)
 @WarningDefinition(category = "Correctness", name = "NonShortCircuitDangerous", baseRank = 80)
 public class NonShortCircuit {
     @AstNodeVisitor
-    public void visitNode(Node node, NodeChain parents, MethodContext ctx) {
+    public void visitNode(Node node, MethodContext ctx) {
         if(Nodes.isOp(node, AstCode.And) || Nodes.isOp(node, AstCode.Or)) {
             Expression expr = ((Expression)node);
             Expression firstArg = expr.getArguments().get(0);

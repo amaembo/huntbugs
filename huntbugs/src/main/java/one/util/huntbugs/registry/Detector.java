@@ -17,13 +17,20 @@ package one.util.huntbugs.registry;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.TypeDefinition;
+import com.strobel.decompiler.ast.Node;
+
 import one.util.huntbugs.registry.anno.AstNodeVisitor;
+import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.WarningType;
 
 /**
@@ -41,17 +48,47 @@ public class Detector {
         for(Method m : clazz.getMethods()) {
             if(m.getAnnotation(AstNodeVisitor.class) != null) {
                 MethodHandle mh = MethodHandles.publicLookup().unreflect(m);
-                //Class<?>[] types = m.getParameterTypes();
-                //TODO: support various signatures
-                //Currently supported: Node, NodeChain, MethodContext
+                MethodType wantedType = MethodType.methodType(void.class, clazz, Node.class, NodeChain.class,
+                    MethodContext.class, MethodDefinition.class, TypeDefinition.class);
+                mh = adapt(mh, wantedType);
                 astVisitors.add(mh);
             }
         }
         // TODO Auto-generated constructor stub
     }
     
-    
-    
+    private MethodHandle adapt(MethodHandle mh, MethodType wantedType) {
+        MethodType type = mh.type();
+        List<Class<?>> wantedTypes = new ArrayList<>(wantedType.parameterList());
+        int[] map = new int[wantedTypes.size()];
+        Arrays.fill(map, -1);
+        map[0] = 0;
+        wantedTypes.set(0, null); // self-reference
+        Class<?>[] types = type.parameterArray();
+        for(int i=1; i<types.length; i++) {
+            int pos = wantedTypes.indexOf(types[i]);
+            if(pos < 0)
+                throw new IllegalStateException(mh+": Unexpected argument of type "+types[i]);
+            wantedTypes.set(pos, null);
+            map[i] = pos;
+        }
+        MethodHandle result = mh;
+        Class<?>[] missingClasses = wantedTypes.stream().filter(Objects::nonNull).toArray(Class<?>[]::new);
+        if(missingClasses.length > 0) {
+            int pos = 0;
+            for(int i=types.length; i<map.length; i++) {
+                while(wantedTypes.get(pos) == null)
+                    pos++;
+                map[i] = pos++;
+            }
+            result = MethodHandles.dropArguments(result, types.length, missingClasses);
+        }
+        result = MethodHandles.permuteArguments(result, wantedType, map);
+        return result;
+    }
+
+
+
     public WarningType getWarningType(String typeName) {
         return wts.get(typeName);
     }
