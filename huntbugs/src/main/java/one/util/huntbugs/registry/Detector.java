@@ -43,7 +43,7 @@ public class Detector {
                 MethodHandle mh = MethodHandles.publicLookup().unreflect(m);
                 //Class<?>[] types = m.getParameterTypes();
                 //TODO: support various signatures
-                //Currently supported: Node, MethodContext
+                //Currently supported: Node, NodeChain, MethodContext
                 astVisitors.add(mh);
             }
         }
@@ -59,5 +59,13 @@ public class Detector {
     @Override
     public String toString() {
         return clazz.getName();
+    }
+
+    public Object newInstance() {
+        try {
+            return clazz.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new InternalError(e);
+        }
     }
 }

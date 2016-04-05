@@ -21,6 +21,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.strobel.assembler.metadata.ITypeLoader;
+import com.strobel.assembler.metadata.MetadataSystem;
+import com.strobel.assembler.metadata.TypeDefinition;
+import one.util.huntbugs.registry.DetectorRegistry;
 import one.util.huntbugs.warning.Warning;
 
 /**
@@ -28,11 +32,19 @@ import one.util.huntbugs.warning.Warning;
  *
  */
 public class Context {
-    List<ErrorMessage> errors = Collections.synchronizedList(new ArrayList<>());
-    List<Warning> warnings = Collections.synchronizedList(new ArrayList<>());
+    private final List<ErrorMessage> errors = Collections.synchronizedList(new ArrayList<>());
+    private final List<Warning> warnings = Collections.synchronizedList(new ArrayList<>());
+    private final DetectorRegistry registry;
+    private final MetadataSystem ms;
     
-    public void Context() {
-        
+    public Context(ITypeLoader loader) {
+        registry = new DetectorRegistry(this);
+        ms = new MetadataSystem(loader);
+    }
+    
+    public void analyzeClass(String name) {
+        TypeDefinition type = ms.resolve(ms.lookupType(name));
+        registry.analyzeClass(type);
     }
     
     public void addError(ErrorMessage msg) {

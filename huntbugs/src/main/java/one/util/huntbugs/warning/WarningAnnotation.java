@@ -22,67 +22,54 @@ import com.strobel.assembler.metadata.TypeReference;
  * @author lan
  *
  */
-public abstract class WarningAnnotation<T> {
-    abstract public String getRole();
+public class WarningAnnotation<T> {
+    private final String role;
+    private final T value;
+    
+    public WarningAnnotation(String role, T value) {
+        super();
+        this.role = role;
+        this.value = value;
+    }
 
-    abstract public T getValue();
+    public String getRole() {
+        return role;
+    }
+
+    public T getValue() {
+        return value;
+    }
     
     @Override
     public String toString() {
         return getRole()+": "+getValue();
     }
-
-    public static class TypeWarningAnnotation extends WarningAnnotation<String> {
-        private final String type;
-
-        public TypeWarningAnnotation(TypeReference type) {
-            this.type = type.getFullName();
-        }
-
-        @Override
-        public String getRole() {
-            return "TYPE";
-        }
-
-        @Override
-        public String getValue() {
-            return type;
-        }
+    
+    public static WarningAnnotation<String> forType(TypeReference type) {
+        return new WarningAnnotation<String>("TYPE", type.getFullName());
     }
 
-    public static class MethodWarningAnnotation extends WarningAnnotation<String> {
-        private final String method;
-        
-        public MethodWarningAnnotation(MethodReference method) {
-            this.method = method.getFullName();
-        }
-        
-        @Override
-        public String getRole() {
-            return "METHOD";
-        }
-        
-        @Override
-        public String getValue() {
-            return method;
-        }
+    public static WarningAnnotation<String> forMethod(MethodReference method) {
+        return new WarningAnnotation<String>("METHOD", method.getFullName());
     }
     
-    public static class NumberWarningAnnotation extends WarningAnnotation<Number> {
-        private final Number number;
-        
-        public NumberWarningAnnotation(Number number) {
-            this.number = number;
-        }
-        
-        @Override
-        public String getRole() {
-            return "NUMBER";
-        }
-
-        @Override
-        public Number getValue() {
-            return number;
-        }
+    public static WarningAnnotation<Number> forNumber(Number number) {
+        return new WarningAnnotation<Number>("NUMBER", number);
+    }
+    
+    public static WarningAnnotation<Integer> forByteCodeOffset(int offset) {
+        return new WarningAnnotation<Integer>("BYTECODE", offset);
+    }
+    
+    public static WarningAnnotation<Integer> forSourceLine(int line) {
+        return new WarningAnnotation<Integer>("LINE", line);
+    }
+    
+    public static WarningAnnotation<String> forSourceFile(String file) {
+        return new WarningAnnotation<String>("FILE", file);
+    }
+    
+    public static WarningAnnotation<String> forString(String str) {
+        return new WarningAnnotation<String>("STRING", str);
     }
 }

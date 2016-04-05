@@ -13,12 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package one.util.huntbugs;
+package one.util.huntbugs.util;
+
+import java.util.Objects;
+
+import com.strobel.decompiler.ast.Node;
 
 /**
  * @author lan
  *
  */
-public class AnalysisContext {
+public class NodeChain {
+    private final NodeChain parent;
+    private final Node cur;
+
+    public NodeChain(NodeChain parent, Node cur) {
+        this.parent = parent;
+        this.cur = Objects.requireNonNull(cur);
+    }
+
+    public NodeChain getParent() {
+        return parent;
+    }
+
+    public Node getNode() {
+        return cur;
+    }
     
+    @Override
+    public String toString() {
+        if(parent == null)
+            return cur.toString();
+        return cur + " -> "+parent;
+    }
 }

@@ -18,18 +18,9 @@ package one.util.huntbugs;
 import java.io.File;
 import java.net.URISyntaxException;
 
+import one.util.huntbugs.analysis.Context;
+
 import com.strobel.assembler.metadata.ClasspathTypeLoader;
-import com.strobel.assembler.metadata.MetadataSystem;
-import com.strobel.assembler.metadata.MethodBody;
-import com.strobel.assembler.metadata.MethodDefinition;
-import com.strobel.assembler.metadata.TypeDefinition;
-import com.strobel.decompiler.DecompilerContext;
-import com.strobel.decompiler.DecompilerSettings;
-import com.strobel.decompiler.PlainTextOutput;
-import com.strobel.decompiler.ast.AstBuilder;
-import com.strobel.decompiler.ast.AstOptimizationStep;
-import com.strobel.decompiler.ast.AstOptimizer;
-import com.strobel.decompiler.ast.Block;
 
 /**
  * @author lan
@@ -37,9 +28,15 @@ import com.strobel.decompiler.ast.Block;
  */
 public class ClassAnalysis {
     public static void main(String[] args) throws URISyntaxException {
-        DecompilerSettings settings = new DecompilerSettings();
+
         String classPath = new File(ClassAnalysis.class.getClassLoader().getResource(".").toURI()).toString();
         System.out.println(classPath);
+        Context ctx = new Context(new ClasspathTypeLoader(classPath));
+        ctx.analyzeClass(ClassAnalysis.class.getName().replace(".", "/"));
+        ctx.reportErrors(System.err);
+        ctx.reportWarnings(System.out);
+        
+/*        DecompilerSettings settings = new DecompilerSettings();
         ClasspathTypeLoader loader = new ClasspathTypeLoader(classPath);
         MetadataSystem ms = new MetadataSystem(loader);
         TypeDefinition type = ms.resolve(ms.lookupType(ClassAnalysis.class.getName().replace(".", "/")));
@@ -57,20 +54,30 @@ public class ClassAnalysis {
         }
         //new BytecodeAstLanguage().decompileType(type, output, new DecompilationOptions());
         System.out.println(output.toString());
-    }
+*/    }
     
-    private void test(long a, int b) {
-        char c = 'a';
-        if(a > b && b < 2) {
-            if(a > 1 || b > 3 && c > '0') {
-                if(a <= 5) {
-                    System.out.println("1");
-                } else {
-                    System.out.println("2");
-                }
-            }
-        } else {
-            System.out.println("3");
+    private void test() {
+        double a = 3.14;
+        double b = 3.141592;
+        double c = 2.7182;
+        double d[] = {3.14, 3.15, 3.16};
+        Double e[] = {3.141, 3.142, 3.143};
+        int x = 2, y = 3;
+        
+        if(e == null & e[0] == a) {
+            System.out.println("Ho-ho-ho!");
+        }
+        
+        if((x & y) == 3) {
+            System.out.println("Ho-ho-ho!");
+        }
+        
+        if(e[1] > 5 & e[2] < 4) {
+            System.out.println("Ho-ho-ho!");
+        }
+        
+        if(a > b & c > b) {
+            System.out.println("Ha-ha-ha!");
         }
     }
 }

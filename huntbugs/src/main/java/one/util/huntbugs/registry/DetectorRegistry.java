@@ -23,11 +23,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.strobel.assembler.metadata.MethodBody;
+import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.TypeDefinition;
+import com.strobel.decompiler.DecompilerContext;
+import com.strobel.decompiler.ast.AstBuilder;
+import com.strobel.decompiler.ast.AstOptimizationStep;
+import com.strobel.decompiler.ast.AstOptimizer;
+import com.strobel.decompiler.ast.Block;
+import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
+import one.util.huntbugs.detect.NonShortCircuit;
 import one.util.huntbugs.detect.RoughConstant;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.WarningType;
 
 /**
@@ -46,17 +59,9 @@ public class DetectorRegistry {
 
     private List<WarningDefinition> getDefinitions(Class<?> clazz) {
         WarningDefinition[] wds = clazz.getAnnotationsByType(WarningDefinition.class);
-        WarningDefinition wd = clazz.getAnnotation(WarningDefinition.class);
-        if (wd == null && wds == null)
-            return Collections.emptyList();
         if (wds == null)
-            return Collections.singletonList(wd);
-        if (wd == null)
-            return Arrays.asList(wds);
-        ArrayList<WarningDefinition> list = new ArrayList<>(wds.length + 1);
-        list.addAll(Arrays.asList(wds));
-        list.add(wd);
-        return list;
+            return Collections.emptyList();
+        return Arrays.asList(wds);
     }
 
     boolean addDetector(Class<?> clazz) {
@@ -77,5 +82,39 @@ public class DetectorRegistry {
 
     void init() {
         addDetector(RoughConstant.class);
+        addDetector(NonShortCircuit.class);
+    }
+    
+    private void visitChildren(Node node, NodeChain parents, MethodContext[] mcs) {
+        for(MethodContext mc : mcs) {
+            mc.visitNode(node, parents);
+        }
+        List<Node> children = node.getChildren();
+        if(!children.isEmpty()) {
+            NodeChain newChain = new NodeChain(parents, node);
+            for(Node child : children)
+                visitChildren(child, newChain, mcs);
+        }
+    }
+
+    public void analyzeClass(TypeDefinition type) {
+        ClassContext[] ccs = detectors.stream().map(d -> new ClassContext(ctx, type, d)).toArray(ClassContext[]::new);
+        
+        for(MethodDefinition md : type.getDeclaredMethods()) {
+            MethodBody body = md.getBody();
+            if(body == null)
+                continue;
+            final DecompilerContext context = new DecompilerContext();
+
+            context.setCurrentMethod(md);
+            context.setCurrentType(type);
+            final Block methodAst = new Block();
+            methodAst.getBody().addAll(AstBuilder.build(body, true, context));
+            AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
+            
+            MethodContext[] mcs = Stream.of(ccs).flatMap(cc -> cc.forMethod(md)).toArray(MethodContext[]::new);
+
+            visitChildren(methodAst, null, mcs);
+        }
     }
 }
