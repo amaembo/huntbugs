@@ -15,6 +15,14 @@
  */
 package one.util.huntbugs.repo;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+
 import com.strobel.assembler.metadata.ITypeLoader;
 
 /**
@@ -25,4 +33,22 @@ public interface Repository {
     ITypeLoader createTypeLoader();
     
     void visit(String rootPackage, RepositoryVisitor visitor);
+
+    public static CompositeRepository createSelfRepository() {
+        List<Repository> repos = new ArrayList<>();
+        try {
+            Enumeration<URL> resources = CompositeRepository.class.getClassLoader().getResources(".");
+            while(resources.hasMoreElements()) {
+                try {
+                    repos.add(new DirRepository(new File(resources.nextElement().toURI()).toPath()));
+                } catch (URISyntaxException e) {
+                    // ignore
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        CompositeRepository repo = new CompositeRepository(repos);
+        return repo;
+    }
 }

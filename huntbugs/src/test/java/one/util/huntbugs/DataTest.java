@@ -15,12 +15,9 @@
  */
 package one.util.huntbugs;
 
-import java.io.File;
 import java.io.PrintStream;
-import java.nio.file.Path;
-
 import one.util.huntbugs.analysis.Context;
-import one.util.huntbugs.repo.DirRepository;
+import one.util.huntbugs.repo.Repository;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -32,9 +29,7 @@ import org.junit.Test;
 public class DataTest {
     @Test
     public void test() throws Exception {
-        Path classPath = new File(ClassAnalysis.class.getClassLoader().getResource(".").toURI()).toPath();
-        System.out.println(classPath);
-        Context ctx = new Context(new DirRepository(classPath));
+        Context ctx = new Context(Repository.createSelfRepository());
         ctx.analyzePackage("one/util/huntbugs/testdata");
         ctx.reportErrors(System.err);
         

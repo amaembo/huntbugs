@@ -38,9 +38,10 @@ import com.strobel.decompiler.ast.Node;
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.assertions.MethodAsserter;
-import one.util.huntbugs.detect.NonShortCircuit;
-import one.util.huntbugs.detect.RoughConstant;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.repo.CompositeRepository;
+import one.util.huntbugs.repo.Repository;
+import one.util.huntbugs.repo.RepositoryVisitor;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.WarningType;
 
@@ -49,6 +50,7 @@ import one.util.huntbugs.warning.WarningType;
  *
  */
 public class DetectorRegistry {
+    private static final String DETECTORS_PACKAGE = "one/util/huntbugs/detect";
     private final Map<WarningType, Detector> typeToDetector = new HashMap<>();
     private final List<Detector> detectors = new ArrayList<>();
     private final Context ctx;
@@ -82,8 +84,24 @@ public class DetectorRegistry {
     }
 
     void init() {
-        addDetector(RoughConstant.class);
-        addDetector(NonShortCircuit.class);
+        CompositeRepository repo = Repository.createSelfRepository();
+        repo.visit(DETECTORS_PACKAGE, new RepositoryVisitor() {
+            @Override
+            public boolean visitPackage(String packageName) {
+                return packageName.equals(DETECTORS_PACKAGE);
+            }
+            
+            @Override
+            public void visitClass(String className) {
+                String name = className.replace('/', '.');
+                try {
+                    addDetector(Class.forName(name));
+                } catch (ClassNotFoundException e) {
+                    ctx.addError(new ErrorMessage(name, null, null, null, -1, e));
+                }
+            }
+        });
+        System.out.println("Loaded "+detectors.size()+" detectors");
     }
 
     private void visitChildren(Node node, NodeChain parents, MethodContext[] mcs) {
