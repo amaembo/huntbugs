@@ -23,6 +23,9 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestNonShortCircuit {
+    boolean f = true;
+    static boolean sf = true;
+    
     @AssertNoWarning(type="NonShortCircuit*")
     public int testNormal(int a, int b) {
         if(a > 0 && b > 0)
@@ -33,7 +36,17 @@ public class TestNonShortCircuit {
             return 3;
         if((a | b) > 0)
             return 4;
-        return 5;
+        boolean x = a > 0;
+        x |= b > 0;
+        if(x |= b > 0) {
+            return 1;
+        }
+        boolean[] bb = {true, false};
+        bb[0] |= x;
+        f |= x;
+        sf |= x;
+        a = (f ? 1 : 0) | (b << 1) | (b << 2);
+        return 5+(x?2:3);
     }
     
     @AssertWarning(type="NonShortCircuit", minRank=40, maxRank=60) 
