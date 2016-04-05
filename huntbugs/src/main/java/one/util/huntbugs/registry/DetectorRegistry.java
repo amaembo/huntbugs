@@ -37,6 +37,7 @@ import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
+import one.util.huntbugs.assertions.MethodAsserter;
 import one.util.huntbugs.detect.NonShortCircuit;
 import one.util.huntbugs.detect.RoughConstant;
 import one.util.huntbugs.registry.anno.WarningDefinition;
@@ -84,37 +85,41 @@ public class DetectorRegistry {
         addDetector(RoughConstant.class);
         addDetector(NonShortCircuit.class);
     }
-    
+
     private void visitChildren(Node node, NodeChain parents, MethodContext[] mcs) {
-        for(MethodContext mc : mcs) {
+        for (MethodContext mc : mcs) {
             mc.visitNode(node, parents);
         }
         List<Node> children = node.getChildren();
-        if(!children.isEmpty()) {
+        if (!children.isEmpty()) {
             NodeChain newChain = new NodeChain(parents, node);
-            for(Node child : children)
+            for (Node child : children)
                 visitChildren(child, newChain, mcs);
         }
     }
 
     public void analyzeClass(TypeDefinition type) {
         ClassContext[] ccs = detectors.stream().map(d -> new ClassContext(ctx, type, d)).toArray(ClassContext[]::new);
-        
-        for(MethodDefinition md : type.getDeclaredMethods()) {
+
+        for (MethodDefinition md : type.getDeclaredMethods()) {
+            MethodAsserter ma = MethodAsserter.forMethod(md);
+
             MethodBody body = md.getBody();
-            if(body == null)
-                continue;
-            final DecompilerContext context = new DecompilerContext();
+            if (body != null) {
+                final DecompilerContext context = new DecompilerContext();
 
-            context.setCurrentMethod(md);
-            context.setCurrentType(type);
-            final Block methodAst = new Block();
-            methodAst.getBody().addAll(AstBuilder.build(body, true, context));
-            AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
-            
-            MethodContext[] mcs = Stream.of(ccs).flatMap(cc -> cc.forMethod(md)).toArray(MethodContext[]::new);
+                context.setCurrentMethod(md);
+                context.setCurrentType(type);
+                final Block methodAst = new Block();
+                methodAst.getBody().addAll(AstBuilder.build(body, true, context));
+                AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
 
-            visitChildren(methodAst, null, mcs);
+                MethodContext[] mcs = Stream.of(ccs).flatMap(cc -> cc.forMethod(md)).peek(
+                    mc -> mc.setMethodAsserter(ma)).toArray(MethodContext[]::new);
+
+                visitChildren(methodAst, null, mcs);
+            }
+            ma.checkFinally(new MethodContext(ctx, null, md));
         }
     }
 }

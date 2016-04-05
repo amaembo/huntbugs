@@ -69,6 +69,6 @@ public class ClassContext {
     public Stream<MethodContext> forMethod(MethodDefinition md) {
         if(detector.astVisitors.isEmpty())
             return null;
-        return Stream.of(new MethodContext(this, md));
+        return Stream.of(new MethodContext(ctx, this, md));
     }
 }

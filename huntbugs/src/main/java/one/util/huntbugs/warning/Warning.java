@@ -23,8 +23,8 @@ import java.util.stream.Collectors;
  *
  */
 public class Warning {
-    private static final int MIN_RANK = 0;
-    private static final int MAX_RANK = 100;
+    public static final int MIN_RANK = 0;
+    public static final int MAX_RANK = 100;
     
     private final WarningType type;
     private final int rankAdjustment;
@@ -41,6 +41,10 @@ public class Warning {
         return saturateRank(type.getBaseRank()+rankAdjustment);
     }
     
+    public WarningType getType() {
+        return type;
+    }
+
     public static int saturateRank(int rank) {
         return rank < MIN_RANK ? MIN_RANK : rank > MAX_RANK ? MAX_RANK : rank;
     }

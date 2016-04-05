@@ -23,6 +23,7 @@ import java.util.List;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
+import one.util.huntbugs.assertions.MethodAsserter;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -48,13 +49,18 @@ public class MethodContext {
     private OffsetToLineNumberConverter ltc;
     private final ClassContext cc;
     List<WarningAnnotation<?>> annot;
+    private MethodAsserter ma;
 
-    MethodContext(ClassContext classCtx, MethodDefinition md) {
+    MethodContext(Context ctx, ClassContext classCtx, MethodDefinition md) {
         this.cc = classCtx;
-        this.ctx = classCtx.ctx;
         this.md = md;
-        this.detector = classCtx.detector;
-        this.det = classCtx.det;
+        this.ctx = ctx;
+        this.detector = classCtx == null ? null : classCtx.detector;
+        this.det = classCtx == null ? null : classCtx.det;
+    }
+    
+    void setMethodAsserter(MethodAsserter ma) {
+        this.ma = ma;
     }
     
     int getLineNumber(int offset) {
@@ -95,9 +101,7 @@ public class MethodContext {
             WarningAnnotation<?>... annotations) {
         WarningType wt = detector.getWarningType(warning);
         if (wt == null) {
-            ctx.addError(new ErrorMessage(detector, md, -1, 
-                    new IllegalStateException("Detector " + detector
-                        + " tries to report a warning of non-declared type: " + warning)));
+            error("Tries to report a warning of non-declared type: " + warning);
             return;
         }
         if (wt.getBaseRank() + rankAdjustment < 0) {
@@ -117,6 +121,13 @@ public class MethodContext {
             }
         }
         anno.addAll(Arrays.asList(annotations));
-        ctx.addWarning(new Warning(wt, rankAdjustment, anno));
+        Warning warn = new Warning(wt, rankAdjustment, anno);
+        ma.checkWarning(this, warn);
+        ctx.addWarning(warn);
+    }
+
+    public void error(String message) {
+        ctx.addError(new ErrorMessage(detector, md, -1, 
+            new IllegalStateException(message)));
     }
 }

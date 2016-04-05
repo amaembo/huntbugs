@@ -32,7 +32,8 @@ public class ErrorMessage {
     private final String detector;
     
     public ErrorMessage(Detector detector, MethodDefinition method, int line, Throwable error) {
-        this(detector.toString(), method.getDeclaringType().getFullName(), method.getFullName(), method.getSignature(), line, error);
+        this(detector == null ? null : detector.toString(), method.getDeclaringType().getFullName(), method
+                .getFullName(), method.getSignature(), line, error);
     }
 
     public ErrorMessage(String detector, String className, String elementName, String descriptor, int line, Throwable error) {

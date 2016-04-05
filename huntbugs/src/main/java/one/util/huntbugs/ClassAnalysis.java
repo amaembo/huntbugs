@@ -19,6 +19,7 @@ import java.io.File;
 import java.net.URISyntaxException;
 
 import one.util.huntbugs.analysis.Context;
+import one.util.huntbugs.registry.anno.AssertWarning;
 
 import com.strobel.assembler.metadata.ClasspathTypeLoader;
 
@@ -55,7 +56,8 @@ public class ClassAnalysis {
         //new BytecodeAstLanguage().decompileType(type, output, new DecompilationOptions());
         System.out.println(output.toString());
 */    }
-    
+
+    @AssertWarning(type="RoughConstantValue", minRank = 30, maxRank = 80)
     private void test() {
         double a = 3.14;
         double b = 3.141592;
