@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.warning;
 
+import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 
@@ -46,30 +47,34 @@ public class WarningAnnotation<T> {
     }
     
     public static WarningAnnotation<String> forType(TypeReference type) {
-        return new WarningAnnotation<String>("TYPE", type.getFullName());
+        return new WarningAnnotation<>("TYPE", type.getFullName());
     }
 
     public static WarningAnnotation<String> forMethod(MethodReference method) {
-        return new WarningAnnotation<String>("METHOD", method.getFullName());
+        return new WarningAnnotation<>("METHOD", method.getFullName());
     }
     
+    public static WarningAnnotation<String> forField(FieldReference field) {
+        return new WarningAnnotation<>("FIELD", field.getFullName());
+    }
+
     public static WarningAnnotation<Number> forNumber(Number number) {
-        return new WarningAnnotation<Number>("NUMBER", number);
+        return new WarningAnnotation<>("NUMBER", number);
     }
     
     public static WarningAnnotation<Integer> forByteCodeOffset(int offset) {
-        return new WarningAnnotation<Integer>("BYTECODE", offset);
+        return new WarningAnnotation<>("BYTECODE", offset);
     }
     
     public static WarningAnnotation<Integer> forSourceLine(int line) {
-        return new WarningAnnotation<Integer>("LINE", line);
+        return new WarningAnnotation<>("LINE", line);
     }
     
     public static WarningAnnotation<String> forSourceFile(String file) {
-        return new WarningAnnotation<String>("FILE", file);
+        return new WarningAnnotation<>("FILE", file);
     }
     
     public static WarningAnnotation<String> forString(String str) {
-        return new WarningAnnotation<String>("STRING", str);
+        return new WarningAnnotation<>("STRING", str);
     }
 }

@@ -130,4 +130,9 @@ public class MethodContext {
         ctx.addError(new ErrorMessage(detector, md, -1, 
             new IllegalStateException(message)));
     }
+    
+    @Override
+    public String toString() {
+        return "Analyzing method "+md+" with detector "+detector;
+    }
 }

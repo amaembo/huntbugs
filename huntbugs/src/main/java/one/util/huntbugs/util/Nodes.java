@@ -47,6 +47,27 @@ public class Nodes {
         return args.get(0).getCode() == AstCode.AConstNull ^ args.get(1).getCode() == AstCode.AConstNull;
     }
     
+    public static boolean isBinaryMath(Node node) {
+        if(!(node instanceof Expression) || node.getChildren().size() != 2)
+            return false;
+        switch (((Expression) node).getCode()) {
+        case Add:
+        case Sub:
+        case Mul:
+        case Div:
+        case Rem:
+        case Shl:
+        case Shr:
+        case UShr:
+        case And:
+        case Or:
+        case Xor:
+            return true;
+        default:
+            return false;
+        }
+    }
+    
     public static boolean isBoxing(Node node) {
         if(!isOp(node, AstCode.InvokeStatic))
             return false;
@@ -95,5 +116,19 @@ public class Nodes {
         if(type.getInternalName().equals("java/lang/Byte") && ref.getName().equals("byteValue"))
             return true;
         return false;
+    }
+    
+    public static Expression getThis(Expression node) {
+        if(node.getCode() == AstCode.GetField || node.getCode() == AstCode.PutField)
+            return node.getArguments().get(0);
+        if(node.getCode() == AstCode.GetStatic || node.getCode() == AstCode.PutStatic)
+            return null;
+        throw new IllegalArgumentException(node+": expected field operation");
+    }
+
+    public static boolean isEquivalent(Expression expr1, Expression expr2) {
+        if(expr1 == null)
+            return expr2 == null;
+        return expr1.isEquivalentTo(expr2);
     }
 }
