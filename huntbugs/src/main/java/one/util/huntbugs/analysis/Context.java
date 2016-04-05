@@ -104,4 +104,8 @@ public class Context {
     public int getErrorCount() {
         return errors.size();
     }
+
+    public int getWarningCount() {
+        return warnings.size();
+    }
 }

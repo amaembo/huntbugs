@@ -35,6 +35,6 @@ public class HuntBugs {
         ctx.reportErrors(new PrintStream("huntbugs.errors.txt"));
         ctx.reportWarnings(new PrintStream("huntbugs.warnings.txt"));
         System.out.println("Analyzed "+ctx.getClassesCount()+" classes");
-        System.out.println("Found "+ctx.getErrorCount()+" warnings");
+        System.out.println("Found "+ctx.getWarningCount()+" warnings");
     }
 }
