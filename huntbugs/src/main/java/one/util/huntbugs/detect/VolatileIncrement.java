@@ -51,7 +51,7 @@ public class VolatileIncrement {
         if(Nodes.isOp(node, AstCode.PutField) || Nodes.isOp(node, AstCode.PutStatic)) {
             Expression expr = (Expression)node;
             FieldDefinition field = ((FieldReference)expr.getOperand()).resolve();
-            if(field != null) {
+            if(field != null && Flags.testAny(field.getFlags(), Flags.VOLATILE)) {
                 Expression self = Nodes.getThis(expr);
                 Expression op = expr.getArguments().get(expr.getCode() == AstCode.PutStatic ? 0 : 1);
                 if(Nodes.isBinaryMath(op)) {

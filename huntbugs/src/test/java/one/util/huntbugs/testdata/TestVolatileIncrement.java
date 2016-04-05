@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.testdata;
 
+import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
 /**
@@ -25,12 +26,23 @@ public class TestVolatileIncrement {
     volatile int x;
     volatile long y;
     volatile double z;
+    int a;
+    long b;
+    double c;
+
+    @AssertNoWarning(type = "Volatile*")
+    public int testNonVolatile() {
+        a++;
+        ++b;
+        c*=2;
+        return (int) (a+b+c);
+    }
 
     @AssertWarning(type = "VolatileIncrement", minRank = 70)
     public int testPre() {
         return x += 2;
     }
-
+    
     @AssertWarning(type = "VolatileIncrement", minRank = 70)
     public int testPost() {
         return ++x;
