@@ -38,6 +38,8 @@ import one.util.huntbugs.warning.WarningType;
  *
  */
 public class Detector {
+    private static final MethodHandle ALWAYS_TRUE = MethodHandles.constant(boolean.class, true);
+    
     private final Map<String, WarningType> wts;
     private final Class<?> clazz;
     final List<MethodHandle> astVisitors = new ArrayList<>();
@@ -48,17 +50,22 @@ public class Detector {
         for(Method m : clazz.getMethods()) {
             if(m.getAnnotation(AstNodeVisitor.class) != null) {
                 MethodHandle mh = MethodHandles.publicLookup().unreflect(m);
-                MethodType wantedType = MethodType.methodType(void.class, clazz, Node.class, NodeChain.class,
+                MethodType wantedType = MethodType.methodType(boolean.class, clazz, Node.class, NodeChain.class,
                     MethodContext.class, MethodDefinition.class, TypeDefinition.class);
                 mh = adapt(mh, wantedType);
                 astVisitors.add(mh);
             }
         }
-        // TODO Auto-generated constructor stub
     }
     
     private MethodHandle adapt(MethodHandle mh, MethodType wantedType) {
         MethodType type = mh.type();
+        if(type.returnType() == void.class) {
+            mh = MethodHandles.filterReturnValue(mh, ALWAYS_TRUE);
+            type = mh.type();
+        } else if(type.returnType() != boolean.class) {
+            throw new IllegalStateException(mh+": Unexpected return type "+type.returnType());
+        }
         List<Class<?>> wantedTypes = new ArrayList<>(wantedType.parameterList());
         int[] map = new int[wantedTypes.size()];
         Arrays.fill(map, -1);

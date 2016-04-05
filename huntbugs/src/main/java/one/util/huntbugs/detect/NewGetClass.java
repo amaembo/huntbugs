@@ -35,7 +35,7 @@ public class NewGetClass {
     public void visit(Node node, MethodContext ctx) {
         if(Nodes.isOp(node, AstCode.InvokeVirtual)) {
             MethodReference ref = (MethodReference) ((Expression)node).getOperand();
-            if(ref.getFullName().equals("java/lang/Object.getClass") && ref.getSignature().equals("()Ljava/lang/Class;")
+            if(ref.getName().equals("getClass") && ref.getErasedSignature().equals("()Ljava/lang/Class;")
                     && ((Expression)node).getArguments().get(0).getCode() == AstCode.InitObject) {
                 ctx.report("NewForGetClass", 0, node);
             }

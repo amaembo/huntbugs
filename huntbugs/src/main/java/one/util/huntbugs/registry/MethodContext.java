@@ -19,6 +19,7 @@ import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import one.util.huntbugs.analysis.Context;
@@ -43,23 +44,13 @@ import com.strobel.decompiler.languages.java.OffsetToLineNumberConverter;
  *
  */
 public class MethodContext {
-    private final MethodDefinition md;
-    private final Detector detector;
-    private final Context ctx;
-    private final Object det;
-    private OffsetToLineNumberConverter ltc;
-    private final ClassContext cc;
-    List<WarningAnnotation<?>> annot;
-    private MethodAsserter ma;
-    private WarningInfo lastWarning;
-
     static class WarningInfo {
         private final WarningType type;
         private int rank;
         private final List<WarningAnnotation<?>> annotations;
         private Location bestLocation;
         private final List<Location> locations = new ArrayList<>();
-
+    
         public WarningInfo(WarningType type, int rank, Location loc, List<WarningAnnotation<?>> annotations) {
             super();
             this.type = type;
@@ -67,7 +58,7 @@ public class MethodContext {
             this.annotations = annotations;
             this.bestLocation = loc;
         }
-
+    
         boolean tryMerge(WarningInfo other) {
             if (!other.type.equals(type) || !other.annotations.equals(annotations)) {
                 return false;
@@ -94,12 +85,24 @@ public class MethodContext {
         }
     }
 
+    private final MethodDefinition md;
+    private final Detector detector;
+    private final Context ctx;
+    private final Object det;
+    private OffsetToLineNumberConverter ltc;
+    private final ClassContext cc;
+    List<WarningAnnotation<?>> annot;
+    private MethodAsserter ma;
+    private WarningInfo lastWarning;
+    private final List<MethodHandle> astHandlers;
+
     MethodContext(Context ctx, ClassContext classCtx, MethodDefinition md) {
         this.cc = classCtx;
         this.md = md;
         this.ctx = ctx;
         this.detector = classCtx == null ? null : classCtx.detector;
         this.det = classCtx == null ? null : classCtx.det;
+        this.astHandlers = detector == null ? Collections.emptyList() : new ArrayList<>(detector.astVisitors);
     }
 
     void setMethodAsserter(MethodAsserter ma) {
@@ -124,9 +127,12 @@ public class MethodContext {
     }
 
     void visitNode(Node node, NodeChain parents) {
-        for (MethodHandle mh : detector.astVisitors) {
+        for (Iterator<MethodHandle> it = astHandlers.iterator(); it.hasNext(); ) {
+            MethodHandle mh = it.next();
             try {
-                mh.invoke(det, node, parents, this, md, cc.type);
+                if(!(boolean)mh.invoke(det, node, parents, this, md, cc.type)) {
+                    it.remove();
+                }
             } catch (Throwable e) {
                 ctx.addError(new ErrorMessage(detector, md, -1, e));
             }

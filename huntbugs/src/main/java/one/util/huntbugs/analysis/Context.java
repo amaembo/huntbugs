@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import com.strobel.assembler.metadata.ClasspathTypeLoader;
+import com.strobel.assembler.metadata.CompositeTypeLoader;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
 
@@ -44,7 +46,9 @@ public class Context {
     public Context(Repository repository) {
         registry = new DetectorRegistry(this);
         this.repository = repository;
-        ms = new MetadataSystem(repository.createTypeLoader());
+        
+        ms = new MetadataSystem(new CompositeTypeLoader(new ClasspathTypeLoader(System
+                .getProperty("sun.boot.class.path")), repository.createTypeLoader()));
     }
     
     public void analyzePackage(String name) {
@@ -64,9 +68,9 @@ public class Context {
     
     public void analyzeClass(String name) {
         classesCount++;
-        System.out.println("Analyzing "+name);
         TypeDefinition type = ms.resolve(ms.lookupType(name));
-        registry.analyzeClass(type);
+        if(type != null)
+            registry.analyzeClass(type);
     }
     
     public void addError(ErrorMessage msg) {

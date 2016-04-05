@@ -90,7 +90,7 @@ public class DetectorRegistry {
             public boolean visitPackage(String packageName) {
                 return packageName.equals(DETECTORS_PACKAGE);
             }
-            
+
             @Override
             public void visitClass(String className) {
                 String name = className.replace('/', '.');
@@ -101,7 +101,7 @@ public class DetectorRegistry {
                 }
             }
         });
-        System.out.println("Loaded "+detectors.size()+" detectors");
+        System.out.println("Loaded " + detectors.size() + " detectors");
     }
 
     private void visitChildren(Node node, NodeChain parents, MethodContext[] mcs) {
@@ -117,6 +117,7 @@ public class DetectorRegistry {
     }
 
     public void analyzeClass(TypeDefinition type) {
+        System.out.println("Analyzing "+type.getFullName());
         ClassContext[] ccs = detectors.stream().map(d -> new ClassContext(ctx, type, d)).toArray(ClassContext[]::new);
 
         for (MethodDefinition md : type.getDeclaredMethods()) {
@@ -136,12 +137,16 @@ public class DetectorRegistry {
                     mc -> mc.setMethodAsserter(ma)).toArray(MethodContext[]::new);
 
                 visitChildren(methodAst, null, mcs);
-                
-                for(MethodContext mc : mcs) {
+
+                for (MethodContext mc : mcs) {
                     mc.finalizeMethod();
                 }
             }
             ma.checkFinally(new MethodContext(ctx, null, md));
+        }
+
+        for (TypeDefinition subType : type.getDeclaredTypes()) {
+            analyzeClass(subType);
         }
     }
 }

@@ -25,10 +25,10 @@ import java.util.stream.Collectors;
 public class Warning {
     public static final int MIN_RANK = 0;
     public static final int MAX_RANK = 100;
-    
+
     private final WarningType type;
     private final int rankAdjustment;
-    
+
     private final List<WarningAnnotation<?>> annotations;
 
     public Warning(WarningType type, int rankAdjustment, List<WarningAnnotation<?>> annotations) {
@@ -36,11 +36,11 @@ public class Warning {
         this.rankAdjustment = rankAdjustment;
         this.annotations = annotations;
     }
-    
+
     public int getRank() {
-        return saturateRank(type.getBaseRank()+rankAdjustment);
+        return saturateRank(type.getBaseRank() + rankAdjustment);
     }
-    
+
     public WarningType getType() {
         return type;
     }
@@ -51,7 +51,7 @@ public class Warning {
 
     @Override
     public String toString() {
-        return type.getName() + " (" + getRank() + ")\n"
+        return type.getCategory() + "/" + type.getName() + " (" + getRank() + ")\n"
             + annotations.stream().map(wa -> "\t" + wa + "\n").collect(Collectors.joining());
     }
 }
