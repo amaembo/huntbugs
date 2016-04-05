@@ -136,6 +136,10 @@ public class DetectorRegistry {
                     mc -> mc.setMethodAsserter(ma)).toArray(MethodContext[]::new);
 
                 visitChildren(methodAst, null, mcs);
+                
+                for(MethodContext mc : mcs) {
+                    mc.finalizeMethod();
+                }
             }
             ma.checkFinally(new MethodContext(ctx, null, md));
         }

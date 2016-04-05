@@ -27,6 +27,7 @@ import one.util.huntbugs.assertions.MethodAsserter;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.WarningAnnotation.Location;
 import one.util.huntbugs.warning.WarningType;
 
 import com.strobel.assembler.ir.attributes.LineNumberTableAttribute;
@@ -50,6 +51,48 @@ public class MethodContext {
     private final ClassContext cc;
     List<WarningAnnotation<?>> annot;
     private MethodAsserter ma;
+    private WarningInfo lastWarning;
+
+    static class WarningInfo {
+        private final WarningType type;
+        private int rank;
+        private final List<WarningAnnotation<?>> annotations;
+        private Location bestLocation;
+        private final List<Location> locations = new ArrayList<>();
+
+        public WarningInfo(WarningType type, int rank, Location loc, List<WarningAnnotation<?>> annotations) {
+            super();
+            this.type = type;
+            this.rank = rank;
+            this.annotations = annotations;
+            this.bestLocation = loc;
+        }
+
+        boolean tryMerge(WarningInfo other) {
+            if (!other.type.equals(type) || !other.annotations.equals(annotations)) {
+                return false;
+            }
+            if(other.rank > rank) {
+                this.rank = other.rank;
+                if(bestLocation != null)
+                    this.locations.add(bestLocation);
+                bestLocation = other.bestLocation;
+            } else {
+                if(other.bestLocation != null) {
+                    this.locations.add(other.bestLocation);
+                }
+            }
+            this.locations.addAll(other.locations);
+            return true;
+        }
+        
+        Warning build() {
+            if(bestLocation != null)
+                annotations.add(WarningAnnotation.forLocation(bestLocation));
+            locations.stream().map(WarningAnnotation::forAnotherInstance).forEach(annotations::add);
+            return new Warning(type, rank, annotations);
+        }
+    }
 
     MethodContext(Context ctx, ClassContext classCtx, MethodDefinition md) {
         this.cc = classCtx;
@@ -58,30 +101,30 @@ public class MethodContext {
         this.detector = classCtx == null ? null : classCtx.detector;
         this.det = classCtx == null ? null : classCtx.det;
     }
-    
+
     void setMethodAsserter(MethodAsserter ma) {
         this.ma = ma;
     }
-    
+
     int getLineNumber(int offset) {
-        if(ltc == null) {
+        if (ltc == null) {
             ltc = createConverter();
         }
         int line = ltc.getLineForOffset(offset);
         return line == OffsetToLineNumberConverter.UNKNOWN_LINE_NUMBER ? -1 : line;
     }
-    
+
     private OffsetToLineNumberConverter createConverter() {
-        for(SourceAttribute sa : md.getSourceAttributes()) {
-            if(sa instanceof LineNumberTableAttribute) {
+        for (SourceAttribute sa : md.getSourceAttributes()) {
+            if (sa instanceof LineNumberTableAttribute) {
                 return new LineNumberTableConverter((LineNumberTableAttribute) sa);
             }
         }
         return OffsetToLineNumberConverter.NOOP_CONVERTER;
     }
-    
+
     void visitNode(Node node, NodeChain parents) {
-        for(MethodHandle mh : detector.astVisitors) {
+        for (MethodHandle mh : detector.astVisitors) {
             try {
                 mh.invoke(det, node, parents, this, md, cc.type);
             } catch (Throwable e) {
@@ -89,16 +132,23 @@ public class MethodContext {
             }
         }
     }
-    
+
+    void finalizeMethod() {
+        if(lastWarning != null) {
+            Warning warn = lastWarning.build();
+            ma.checkWarning(this, warn);
+            ctx.addWarning(warn);
+        }
+    }
+
     List<WarningAnnotation<?>> getMethodSpecificAnnotations() {
-        if(annot == null) {
+        if (annot == null) {
             annot = Collections.singletonList(WarningAnnotation.forMethod(md));
         }
         return annot;
     }
 
-    public void report(String warning, int rankAdjustment, Node node, 
-            WarningAnnotation<?>... annotations) {
+    public void report(String warning, int rankAdjustment, Node node, WarningAnnotation<?>... annotations) {
         WarningType wt = detector.getWarningType(warning);
         if (wt == null) {
             error("Tries to report a warning of non-declared type: " + warning);
@@ -110,29 +160,31 @@ public class MethodContext {
         List<WarningAnnotation<?>> anno = new ArrayList<>();
         anno.addAll(cc.getTypeSpecificAnnotations());
         anno.addAll(getMethodSpecificAnnotations());
-        if(node instanceof Expression) {
-            int offset = ((Expression)node).getOffset();
-            if(offset != Expression.MYSTERY_OFFSET) {
-                anno.add(WarningAnnotation.forByteCodeOffset(offset));
-                int lineNumber = getLineNumber(offset);
-                if(lineNumber != -1) {
-                    anno.add(WarningAnnotation.forSourceLine(lineNumber));
-                }
+        Location loc = null;
+        if (node instanceof Expression) {
+            int offset = ((Expression) node).getOffset();
+            if (offset != Expression.MYSTERY_OFFSET) {
+                loc = new Location(offset, getLineNumber(offset));
             }
         }
         anno.addAll(Arrays.asList(annotations));
-        Warning warn = new Warning(wt, rankAdjustment, anno);
-        ma.checkWarning(this, warn);
-        ctx.addWarning(warn);
+        WarningInfo info = new WarningInfo(wt, rankAdjustment, loc, anno);
+        if(lastWarning == null) {
+            lastWarning = info;
+        } else if(!lastWarning.tryMerge(info)) {
+            Warning warn = lastWarning.build();
+            ma.checkWarning(this, warn);
+            ctx.addWarning(warn);
+            lastWarning = info;
+        }
     }
 
     public void error(String message) {
-        ctx.addError(new ErrorMessage(detector, md, -1, 
-            new IllegalStateException(message)));
+        ctx.addError(new ErrorMessage(detector, md, -1, new IllegalStateException(message)));
     }
-    
+
     @Override
     public String toString() {
-        return "Analyzing method "+md+" with detector "+detector;
+        return "Analyzing method " + md + " with detector " + detector;
     }
 }

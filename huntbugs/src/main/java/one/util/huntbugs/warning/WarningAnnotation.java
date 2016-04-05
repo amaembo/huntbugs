@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.warning;
 
+import java.util.Objects;
+
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
@@ -42,6 +44,38 @@ public class WarningAnnotation<T> {
     }
     
     @Override
+    public int hashCode() {
+        return role.hashCode() * 31 + ((value == null) ? 0 : value.hashCode());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null || getClass() != obj.getClass())
+            return false;
+        WarningAnnotation<?> other = (WarningAnnotation<?>) obj;
+        return Objects.equals(role, other.role) && Objects.equals(value, other.value);
+    }
+
+    public static class Location {
+        final int offset;
+        final int sourceLine;
+
+        public Location(int offset, int sourceLine) {
+            this.offset = offset;
+            this.sourceLine = sourceLine;
+        }
+        
+        @Override
+        public String toString() {
+            if(sourceLine != -1)
+                return "byteCode: "+offset+"; line: "+sourceLine;
+            return "byteCode: "+offset;
+        }
+    }
+    
+    @Override
     public String toString() {
         return getRole()+": "+getValue();
     }
@@ -62,12 +96,16 @@ public class WarningAnnotation<T> {
         return new WarningAnnotation<>("NUMBER", number);
     }
     
-    public static WarningAnnotation<Integer> forByteCodeOffset(int offset) {
-        return new WarningAnnotation<>("BYTECODE", offset);
+    public static WarningAnnotation<Location> forLocation(int offset, int line) {
+        return forLocation(new Location(offset, line));
     }
     
-    public static WarningAnnotation<Integer> forSourceLine(int line) {
-        return new WarningAnnotation<>("LINE", line);
+    public static WarningAnnotation<Location> forLocation(Location loc) {
+        return new WarningAnnotation<>("LOCATION", loc);
+    }
+    
+    public static WarningAnnotation<Location> forAnotherInstance(Location loc) {
+        return new WarningAnnotation<>("ANOTHER_INSTANCE", loc);
     }
     
     public static WarningAnnotation<String> forSourceFile(String file) {

@@ -55,6 +55,7 @@ public class TestVolatileIncrement {
 
     @AssertWarning(type = "VolatileMath", minRank = 80)
     public double testMulDouble() {
+        z *= 3;
         return z *= 2;
     }
 
