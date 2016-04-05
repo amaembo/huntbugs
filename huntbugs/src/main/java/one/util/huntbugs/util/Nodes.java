@@ -16,6 +16,7 @@
 package one.util.huntbugs.util;
 
 import java.util.List;
+import java.util.Objects;
 
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
@@ -47,6 +48,32 @@ public class Nodes {
         return args.get(0).getCode() == AstCode.AConstNull ^ args.get(1).getCode() == AstCode.AConstNull;
     }
     
+    public static boolean isConstant(Node node, Object value) {
+        return isOp(node, AstCode.LdC) && Objects.equals(((Expression)node).getOperand(), value);
+    }
+    
+    public static Object getConstant(Node node) {
+        if(!isOp(node, AstCode.LdC))
+            return null;
+        return ((Expression)node).getOperand();
+    }
+    
+    public static boolean isComparison(Node node) {
+        if(!(node instanceof Expression) || node.getChildren().size() != 2)
+            return false;
+        switch (((Expression) node).getCode()) {
+        case CmpEq:
+        case CmpGe:
+        case CmpGt:
+        case CmpLe:
+        case CmpLt:
+        case CmpNe:
+            return true;
+        default:
+            return false;
+        }
+    }
+
     public static boolean isBinaryMath(Node node) {
         if(!(node instanceof Expression) || node.getChildren().size() != 2)
             return false;

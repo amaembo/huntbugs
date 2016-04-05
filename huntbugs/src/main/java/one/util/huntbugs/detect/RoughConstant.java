@@ -99,12 +99,10 @@ public class RoughConstant {
 
     @AstNodeVisitor
     public void visit(Node node, MethodContext ctx, NodeChain parents) {
-        if(node instanceof Expression) {
+        if(Nodes.isOp(node, AstCode.LdC)) {
             Expression expr = (Expression)node;
-            if(expr.getCode() == AstCode.LdC) {
-                if(expr.getOperand() instanceof Float || expr.getOperand() instanceof Double) {
-                    checkConst(expr, parents, ctx);
-                }
+            if(expr.getOperand() instanceof Float || expr.getOperand() instanceof Double) {
+                checkConst(expr, parents, ctx);
             }
         }
     }
