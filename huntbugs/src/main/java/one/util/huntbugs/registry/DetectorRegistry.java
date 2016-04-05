@@ -43,6 +43,8 @@ import one.util.huntbugs.repo.CompositeRepository;
 import one.util.huntbugs.repo.Repository;
 import one.util.huntbugs.repo.RepositoryVisitor;
 import one.util.huntbugs.util.NodeChain;
+import one.util.huntbugs.warning.Warning;
+import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningType;
 
 /**
@@ -50,6 +52,10 @@ import one.util.huntbugs.warning.WarningType;
  *
  */
 public class DetectorRegistry {
+    public static final int MAX_CODE_SIZE = 8000;
+    
+    private static final WarningType METHOD_TOO_LARGE = new WarningType("System", "MethodTooLarge", 30);
+    
     private static final String DETECTORS_PACKAGE = "one/util/huntbugs/detect";
     private final Map<WarningType, Detector> typeToDetector = new HashMap<>();
     private final List<Detector> detectors = new ArrayList<>();
@@ -125,21 +131,26 @@ public class DetectorRegistry {
 
             MethodBody body = md.getBody();
             if (body != null) {
-                final DecompilerContext context = new DecompilerContext();
-
-                context.setCurrentMethod(md);
-                context.setCurrentType(type);
-                final Block methodAst = new Block();
-                methodAst.getBody().addAll(AstBuilder.build(body, true, context));
-                AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
-
-                MethodContext[] mcs = Stream.of(ccs).flatMap(cc -> cc.forMethod(md)).peek(
-                    mc -> mc.setMethodAsserter(ma)).toArray(MethodContext[]::new);
-
-                visitChildren(methodAst, null, mcs);
-
-                for (MethodContext mc : mcs) {
-                    mc.finalizeMethod();
+                if(body.getCodeSize() > MAX_CODE_SIZE) {
+                    ctx.addWarning(new Warning(METHOD_TOO_LARGE, 0, Arrays.asList(WarningAnnotation.forType(type), WarningAnnotation
+                            .forMethod(md), new WarningAnnotation<>("BYTECODE_SIZE", body.getCodeSize()))));
+                } else {
+                    final DecompilerContext context = new DecompilerContext();
+    
+                    context.setCurrentMethod(md);
+                    context.setCurrentType(type);
+                    final Block methodAst = new Block();
+                    methodAst.getBody().addAll(AstBuilder.build(body, true, context));
+                    AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
+    
+                    MethodContext[] mcs = Stream.of(ccs).flatMap(cc -> cc.forMethod(md)).peek(
+                        mc -> mc.setMethodAsserter(ma)).toArray(MethodContext[]::new);
+    
+                    visitChildren(methodAst, null, mcs);
+    
+                    for (MethodContext mc : mcs) {
+                        mc.finalizeMethod();
+                    }
                 }
             }
             ma.checkFinally(new MethodContext(ctx, null, md));

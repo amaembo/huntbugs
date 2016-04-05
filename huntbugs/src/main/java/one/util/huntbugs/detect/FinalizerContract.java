@@ -84,6 +84,6 @@ public class FinalizerContract {
             if(isFinalizer(child))
                 return child;
         }
-        return getSuperfinalizer(type);
+        return getSuperfinalizer(superType);
     }
 }

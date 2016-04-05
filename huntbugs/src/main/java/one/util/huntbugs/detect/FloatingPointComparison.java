@@ -22,6 +22,7 @@ import java.util.Locale;
 import com.strobel.assembler.metadata.JvmType;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
@@ -42,18 +43,21 @@ public class FloatingPointComparison {
     public void visit(Node node, MethodContext ctx, MethodDefinition md) {
         if (Nodes.isOp(node, AstCode.CmpEq) || Nodes.isOp(node, AstCode.CmpNe)) {
             List<Expression> args = ((Expression) node).getArguments();
-            JvmType type = args.get(0).getInferredType().getSimpleType();
-            if (type == JvmType.Double || type == JvmType.Float) {
-                Object left = Nodes.getConstant(args.get(0));
-                Object right = Nodes.getConstant(args.get(1));
-                int priority = tweakPriority(args.get(0)) + tweakPriority(args.get(1));
-                if(md.getName().toLowerCase(Locale.ENGLISH).contains("equal"))
-                    priority -= 20;
-                Number n = left instanceof Number ? (Number) left : right instanceof Number ? (Number) right : null;
-                if(n != null)
-                    ctx.report("FloatComparison", priority, node, WarningAnnotation.forNumber(n));
-                else
-                    ctx.report("FloatComparison", priority, node);
+            TypeReference inferredType = args.get(0).getInferredType();
+            if(inferredType != null) {
+                JvmType type = inferredType.getSimpleType();
+                if (type == JvmType.Double || type == JvmType.Float) {
+                    Object left = Nodes.getConstant(args.get(0));
+                    Object right = Nodes.getConstant(args.get(1));
+                    int priority = tweakPriority(args.get(0)) + tweakPriority(args.get(1));
+                    if(md.getName().toLowerCase(Locale.ENGLISH).contains("equal"))
+                        priority -= 20;
+                    Number n = left instanceof Number ? (Number) left : right instanceof Number ? (Number) right : null;
+                    if(n != null)
+                        ctx.report("FloatComparison", priority, node, WarningAnnotation.forNumber(n));
+                    else
+                        ctx.report("FloatComparison", priority, node);
+                }
             }
         }
     }

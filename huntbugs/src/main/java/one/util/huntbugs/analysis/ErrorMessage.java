@@ -56,6 +56,9 @@ public class ErrorMessage {
         if(detector != null)
             sb.append("\nDetector: ").append(detector);
         sb.append("\nError: ").append(error.getMessage());
+        for(StackTraceElement ste : error.getStackTrace()) {
+            sb.append("\n\t").append(ste);
+        }
         return sb.toString();
     }
 }
