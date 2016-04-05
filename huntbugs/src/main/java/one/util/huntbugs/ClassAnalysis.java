@@ -17,11 +17,11 @@ package one.util.huntbugs;
 
 import java.io.File;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.registry.anno.AssertWarning;
-
-import com.strobel.assembler.metadata.ClasspathTypeLoader;
+import one.util.huntbugs.repo.DirRepository;
 
 /**
  * @author lan
@@ -30,10 +30,11 @@ import com.strobel.assembler.metadata.ClasspathTypeLoader;
 public class ClassAnalysis {
     public static void main(String[] args) throws URISyntaxException {
 
-        String classPath = new File(ClassAnalysis.class.getClassLoader().getResource(".").toURI()).toString();
+        Path classPath = new File(ClassAnalysis.class.getClassLoader().getResource(".").toURI()).toPath();
         System.out.println(classPath);
-        Context ctx = new Context(new ClasspathTypeLoader(classPath));
-        ctx.analyzeClass(ClassAnalysis.class.getName().replace(".", "/"));
+        Context ctx = new Context(new DirRepository(classPath));
+        ctx.analyzePackage("");
+        //ctx.analyzeClass(ClassAnalysis.class.getName().replace(".", "/"));
         ctx.reportErrors(System.err);
         ctx.reportWarnings(System.out);
         
@@ -57,7 +58,7 @@ public class ClassAnalysis {
         System.out.println(output.toString());
 */    }
 
-    @AssertWarning(type="RoughConstantValue", minRank = 30, maxRank = 80)
+    @AssertWarning(type="RoughConstantValue", minRank = 20, maxRank = 80)
     private void test() {
         double a = 3.14;
         double b = 3.141592;

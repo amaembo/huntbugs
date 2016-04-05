@@ -41,7 +41,7 @@ public class Nodes {
     }
     
     public static boolean isNullCheck(Node node) {
-        if(!isOp(node, AstCode.CmpEq))
+        if(!isOp(node, AstCode.CmpEq) && !isOp(node, AstCode.CmpNe))
             return false;
         List<Expression> args = ((Expression)node).getArguments();
         return args.get(0).getCode() == AstCode.AConstNull ^ args.get(1).getCode() == AstCode.AConstNull;

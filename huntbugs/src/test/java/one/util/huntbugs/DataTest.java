@@ -16,12 +16,14 @@
 package one.util.huntbugs;
 
 import java.io.File;
+import java.io.PrintStream;
+import java.nio.file.Path;
 
 import one.util.huntbugs.analysis.Context;
+import one.util.huntbugs.repo.DirRepository;
 
+import org.junit.Assert;
 import org.junit.Test;
-
-import com.strobel.assembler.metadata.ClasspathTypeLoader;
 
 /**
  * @author lan
@@ -30,11 +32,15 @@ import com.strobel.assembler.metadata.ClasspathTypeLoader;
 public class DataTest {
     @Test
     public void test() throws Exception {
-        File classRoot = new File(ClassAnalysis.class.getClassLoader().getResource(".").toURI());
-        String classPath = classRoot.toString();
-        Context ctx = new Context(new ClasspathTypeLoader(classPath));
-        ctx.analyzeClass(ClassAnalysis.class.getName().replace(".", "/"));
+        Path classPath = new File(ClassAnalysis.class.getClassLoader().getResource(".").toURI()).toPath();
+        System.out.println(classPath);
+        Context ctx = new Context(new DirRepository(classPath));
+        ctx.analyzePackage("one/util/huntbugs/testdata");
         ctx.reportErrors(System.err);
-        ctx.reportWarnings(System.out);
+        
+        ctx.reportWarnings(new PrintStream("target/testWarnings.out"));
+        System.out.println("Analyzed "+ctx.getClassesCount()+" classes");
+        if(ctx.getErrorCount() > 0)
+            Assert.fail("Analysis finished with "+ctx.getErrorCount()+" errors");
     }
 }

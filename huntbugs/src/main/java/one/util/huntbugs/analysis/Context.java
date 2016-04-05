@@ -21,10 +21,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import com.strobel.assembler.metadata.ITypeLoader;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
+
 import one.util.huntbugs.registry.DetectorRegistry;
+import one.util.huntbugs.repo.Repository;
+import one.util.huntbugs.repo.RepositoryVisitor;
 import one.util.huntbugs.warning.Warning;
 
 /**
@@ -36,13 +38,33 @@ public class Context {
     private final List<Warning> warnings = Collections.synchronizedList(new ArrayList<>());
     private final DetectorRegistry registry;
     private final MetadataSystem ms;
+    private final Repository repository;
+    private int classesCount;
     
-    public Context(ITypeLoader loader) {
+    public Context(Repository repository) {
         registry = new DetectorRegistry(this);
-        ms = new MetadataSystem(loader);
+        this.repository = repository;
+        ms = new MetadataSystem(repository.createTypeLoader());
+    }
+    
+    public void analyzePackage(String name) {
+        repository.visit(name, new RepositoryVisitor() {
+            
+            @Override
+            public boolean visitPackage(String packageName) {
+                return true;
+            }
+            
+            @Override
+            public void visitClass(String className) {
+                analyzeClass(className);
+            }
+        });
     }
     
     public void analyzeClass(String name) {
+        classesCount++;
+        System.out.println("Analyzing "+name);
         TypeDefinition type = ms.resolve(ms.lookupType(name));
         registry.analyzeClass(type);
     }
@@ -73,5 +95,13 @@ public class Context {
                 throw new UncheckedIOException(e);
             }
         });
+    }
+    
+    public int getClassesCount() {
+        return classesCount;
+    }
+    
+    public int getErrorCount() {
+        return errors.size();
     }
 }
