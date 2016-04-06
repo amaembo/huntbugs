@@ -15,7 +15,6 @@
  */
 package one.util.huntbugs.detect;
 
-import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
@@ -51,7 +50,7 @@ public class InvalidMinMax {
     }
     
     @AstNodeVisitor
-    public void visit(Node node, MethodContext mc, MethodDefinition md) {
+    public void visit(Node node, MethodContext mc) {
         int outer = detectMethod(node);
         if(outer == NONE) return;
         Node left = node.getChildren().get(0);

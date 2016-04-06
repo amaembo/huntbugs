@@ -137,8 +137,12 @@ public class DetectorRegistry {
                     context.setCurrentMethod(md);
                     context.setCurrentType(type);
                     final Block methodAst = new Block();
-                    methodAst.getBody().addAll(AstBuilder.build(body, true, context));
-                    AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
+                    try {
+                        methodAst.getBody().addAll(AstBuilder.build(body, true, context));
+                        AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
+                    } catch (Throwable t) {
+                        ctx.addError(new ErrorMessage(null, type.getFullName(), md.getFullName(), md.getSignature(), -1, t));
+                    }
     
                     MethodContext[] mcs = Stream.of(ccs).flatMap(cc -> cc.forMethod(md)).peek(
                         mc -> mc.setMethodAsserter(ma)).toArray(MethodContext[]::new);

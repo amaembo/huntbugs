@@ -102,7 +102,13 @@ public class Context {
 
     public void analyzeClass(String name) {
         classesCount.incrementAndGet();
-        TypeDefinition type = ms.resolve(ms.lookupType(name));
+        TypeDefinition type;
+        try {
+            type = ms.resolve(ms.lookupType(name));
+        } catch (Throwable t) {
+            addError(new ErrorMessage(null, name, null, null, -1, t));
+            return;
+        }
         if (type != null)
             registry.analyzeClass(type);
     }
