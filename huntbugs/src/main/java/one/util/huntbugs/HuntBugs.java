@@ -17,6 +17,7 @@ package one.util.huntbugs;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,15 +49,21 @@ public class HuntBugs {
             System.out.printf("\r%70s\r[%d/%d] %s", "", ctx.getClassesCount(), ctx.getTotalClasses(), name);
             return true;
         });
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                ctx.reportErrors(new PrintStream("huntbugs.errors.txt"));
+                ctx.reportWarnings(new PrintStream("huntbugs.warnings.txt"));
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+            long end = System.nanoTime();
+            Duration dur = Duration.ofNanos(end - start);
+            System.out.printf("\r%70s\r\n", "");
+            System.out.println("Analyzed "+ctx.getClassesCount()+" of "+ctx.getTotalClasses()+" classes");
+            System.out.println("Found "+ctx.getWarningCount()+" warnings");
+            System.out.println("Encountered "+ctx.getErrorCount()+" analyzer errors");
+            System.out.println("Analyzis time "+dur.toMinutes()+"m"+dur.getSeconds()%60+"s");
+        }));
         ctx.analyzePackage("");
-        ctx.reportErrors(new PrintStream("huntbugs.errors.txt"));
-        ctx.reportWarnings(new PrintStream("huntbugs.warnings.txt"));
-        long end = System.nanoTime();
-        Duration dur = Duration.ofNanos(end - start);
-        System.out.printf("\r%70s\r\n", "");
-        System.out.println("Analyzed "+ctx.getClassesCount()+" classes");
-        System.out.println("Found "+ctx.getWarningCount()+" warnings");
-        System.out.println("Encountered "+ctx.getErrorCount()+" analyzer errors");
-        System.out.println("Analyzis time "+dur.toMinutes()+"m"+dur.getSeconds()%60+"s");
     }
 }
