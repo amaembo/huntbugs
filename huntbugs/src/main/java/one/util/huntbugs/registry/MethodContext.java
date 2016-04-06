@@ -203,7 +203,11 @@ public class MethodContext {
         }
     }
 
-    public void error(String message) {
+    public void forgetLastBug() {
+        lastWarning = null;
+	}
+
+	public void error(String message) {
         ctx.addError(new ErrorMessage(detector, md, -1, new IllegalStateException(message)));
     }
 

@@ -207,9 +207,6 @@ public class ValuesFlow {
 				} else if (n instanceof Expression) {
 					Expression expr = (Expression) n;
 					switch (expr.getCode()) {
-					case Return:
-					case AThrow:
-						continue;
 					case LoopOrSwitchBreak:
 					case LoopContinue:
 					case Ret:
