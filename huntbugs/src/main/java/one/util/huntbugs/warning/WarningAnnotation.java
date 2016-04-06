@@ -20,6 +20,7 @@ import java.util.Objects;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
+import com.strobel.decompiler.ast.Variable;
 
 /**
  * @author lan
@@ -88,10 +89,18 @@ public class WarningAnnotation<T> {
         return new WarningAnnotation<>("METHOD", method.getFullName());
     }
     
+    public static WarningAnnotation<?> forReturnValue(MethodReference method) {
+        return new WarningAnnotation<>("RETURN_VALUE_OF", method.getFullName());
+	}
+
     public static WarningAnnotation<String> forField(FieldReference field) {
         return new WarningAnnotation<>("FIELD", field.getFullName());
     }
-
+    
+    public static WarningAnnotation<String> forVariable(Variable var) {
+        return new WarningAnnotation<>("VARIABLE", var.getName());
+    }
+    
     public static WarningAnnotation<Number> forNumber(Number number) {
         return new WarningAnnotation<>("NUMBER", number);
     }

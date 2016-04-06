@@ -16,8 +16,6 @@
 package one.util.huntbugs.util;
 
 import java.util.List;
-import java.util.Objects;
-
 import one.util.huntbugs.flow.ValuesFlow;
 
 import com.strobel.assembler.metadata.MethodReference;
@@ -48,10 +46,6 @@ public class Nodes {
             return false;
         List<Expression> args = ((Expression)node).getArguments();
         return args.get(0).getCode() == AstCode.AConstNull ^ args.get(1).getCode() == AstCode.AConstNull;
-    }
-    
-    public static boolean isConstant(Node node, Object value) {
-        return isOp(node, AstCode.LdC) && Objects.equals(((Expression)node).getOperand(), value);
     }
     
     public static Node getOperand(Node node, int i) {

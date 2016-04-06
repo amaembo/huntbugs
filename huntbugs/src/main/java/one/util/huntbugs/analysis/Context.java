@@ -18,6 +18,7 @@ package one.util.huntbugs.analysis;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -124,14 +125,21 @@ public class Context {
     }
 
     public void reportWarnings(PrintStream app) {
-        warnings.forEach(msg -> app.append(msg.toString()).append("\n"));
+        List<Warning> warns = new ArrayList<>(warnings);
+        warns.sort(Comparator.comparingInt(Warning::getRank).reversed().thenComparing(w -> w.getType().getName()));
+        warns.forEach(w -> app.append(w.toString()).append("\n"));
     }
     
     public void reportStats(PrintStream app) {
         if(stat.isEmpty())
             return;
         app.append("Statistics:\n");
-        stat.forEach((k, v) -> app.append("\t").append(k).append(" = ").append(v.toString()).append("\n"));
+		stat.entrySet()
+				.stream()
+				.sorted(Map.Entry.comparingByKey())
+				.forEach(
+						e -> app.append("\t").append(e.getKey()).append(" = ")
+								.append(e.getValue().toString()).append("\n"));
     }
 
     public void reportErrors(PrintStream app) {

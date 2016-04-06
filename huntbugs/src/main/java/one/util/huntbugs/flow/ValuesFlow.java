@@ -17,15 +17,20 @@ package one.util.huntbugs.flow;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
 
 import one.util.huntbugs.analysis.Context;
+import one.util.huntbugs.util.Types;
 
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.ParameterDefinition;
+import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.assembler.metadata.VariableDefinition;
 import com.strobel.componentmodel.Key;
 import com.strobel.decompiler.ITextOutput;
+import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
@@ -65,17 +70,39 @@ public class ValuesFlow {
 		}
 	}
 
-	public static class ParameterLoad extends Node {
-		final ParameterDefinition pd;
-
-		ParameterLoad(ParameterDefinition pd) {
-			this.pd = pd;
+	static <T> T reduce(Node input, Function<Expression, T> mapper,
+			BinaryOperator<T> reducer) {
+		Node source = getSource(input);
+		if (source instanceof Expression)
+			return mapper.apply((Expression) source);
+		PhiNode phi = (PhiNode) source;
+		boolean first = true;
+		T result = null;
+		for (Node child : phi.sources) {
+			if (first) {
+				result = reduce(child, mapper, reducer);
+				first = false;
+			} else {
+				result = reducer.apply(result, reduce(child, mapper, reducer));
+			}
 		}
+		return result;
+	}
 
-		@Override
-		public void writeTo(ITextOutput output) {
-			output.write("param(" + pd + ")");
-		}
+	public static TypeReference reduceType(Expression input) {
+		return reduce(input, Expression::getInferredType, (t1, t2) -> {
+			if (t1 == null || t2 == null)
+				return null;
+			if (t1.equals(t2))
+				return t1;
+			List<TypeReference> chain1 = Types.getBaseTypes(t1);
+			List<TypeReference> chain2 = Types.getBaseTypes(t2);
+			for (int i = Math.min(chain1.size(), chain2.size())-1; i >= 0; i--) {
+				if (chain1.get(i).equals(chain2.get(i)))
+					return chain1.get(i);
+			}
+			return null;
+		});
 	}
 
 	public static Node getSource(Node input) {
@@ -92,7 +119,10 @@ public class ValuesFlow {
 		Frame(MethodDefinition md) {
 			this.sources = new Node[md.getBody().getMaxLocals()];
 			for (ParameterDefinition pd : md.getParameters()) {
-				sources[pd.getSlot()] = new ParameterLoad(pd);
+				Expression expression = new Expression(AstCode.Load, pd, 0);
+				expression.setInferredType(pd.getParameterType());
+				expression.setExpectedType(pd.getParameterType());
+				sources[pd.getSlot()] = expression;
 			}
 		}
 
@@ -117,15 +147,15 @@ public class ValuesFlow {
 				Frame target = process(child);
 				expr.putUserData(SOURCE_KEY, getSource(child));
 				VariableDefinition origVar = var.getOriginalVariable();
-				if(origVar != null)
-				    return target.replace(origVar.getSlot(), getSource(child));
+				if (origVar != null)
+					return target.replace(origVar.getSlot(), getSource(child));
 				return target;
 			}
 			case Load: {
 				Variable var = ((Variable) expr.getOperand());
-                VariableDefinition origVar = var.getOriginalVariable();
-                if(origVar != null)
-                    expr.putUserData(SOURCE_KEY, sources[origVar.getSlot()]);
+				VariableDefinition origVar = var.getOriginalVariable();
+				if (origVar != null)
+					expr.putUserData(SOURCE_KEY, sources[origVar.getSlot()]);
 				return this;
 			}
 			case TernaryOp: {
@@ -158,8 +188,10 @@ public class ValuesFlow {
 					Lambda lambda = (Lambda) expr.getOperand();
 					MethodReference method = lambda.getMethod();
 					// TODO: support lambdas
-					/*if (method != null)
-						new Frame(method).process(lambda.getBody());*/
+					/*
+					 * if (method != null) new
+					 * Frame(method).process(lambda.getBody());
+					 */
 				}
 				return result;
 			}
@@ -193,11 +225,11 @@ public class ValuesFlow {
 					if (left == null || right == null)
 						return null;
 					result = left.merge(right);
-				} else if (n instanceof Label){
-				    // Skip
+				} else if (n instanceof Label) {
+					// Skip
 				} else {
-				    // TODO: support switch, loops, exceptions
-				    return null;
+					// TODO: support switch, loops, exceptions
+					return null;
 				}
 			}
 			return result;
@@ -223,9 +255,9 @@ public class ValuesFlow {
 	}
 
 	public static void annotate(Context ctx, MethodDefinition md, Block method) {
-	    ctx.incStat("LoadsTracker.Total");
-		if(new Frame(md).process(method) != null) {
-		    ctx.incStat("LoadsTracker.Success");
+		ctx.incStat("LoadsTracker.Total");
+		if (new Frame(md).process(method) != null) {
+			ctx.incStat("LoadsTracker.Success");
 		}
 	}
 }

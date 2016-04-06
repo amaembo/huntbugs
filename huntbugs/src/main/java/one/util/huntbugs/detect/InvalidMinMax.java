@@ -72,16 +72,20 @@ public class InvalidMinMax {
 		Object outerConst = Nodes.getConstant(right);
 		if (!(outerConst instanceof Number))
 			return;
-		Object innerConst = Nodes.getConstant(Nodes.getOperand(left, 0));
-		if (!(innerConst instanceof Number))
-			innerConst = Nodes.getConstant(Nodes.getOperand(left, 1));
+		Node expr = left.getChildren().get(0);
+		Object innerConst = Nodes.getConstant(expr);
+		if (!(innerConst instanceof Number)) {
+			innerConst = Nodes.getConstant(left.getChildren().get(1));
+		} else {
+			expr = left.getChildren().get(1);
+		}
 		if (!(innerConst instanceof Number))
 			return;
 		@SuppressWarnings("unchecked")
 		int cmp = ((Comparable<Object>) outerConst).compareTo(innerConst)
 				* outer;
 		if (cmp > 0)
-			mc.report("InvalidMinMax", 0, node, new WarningAnnotation<>(
+			mc.report("InvalidMinMax", 0, expr, new WarningAnnotation<>(
 					"OUTER_NUMBER", outerConst), new WarningAnnotation<>(
 					"OUTER_FUNC", outer == MAX ? "max" : "min"),
 					new WarningAnnotation<>("INNER_NUMBER", innerConst),

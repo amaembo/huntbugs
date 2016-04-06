@@ -35,14 +35,18 @@ public class FloatingPointNaN {
     public void visit(Node node, MethodContext ctx) {
         if(Nodes.isComparison(node)) {
             List<Node> args = node.getChildren();
-            Object left = Nodes.getConstant(args.get(0));
-            Object right = Nodes.getConstant(args.get(1));
-            if(left instanceof Float && Float.isNaN((float) left) ||
-                    right instanceof Float && Float.isNaN((float) right)) {
-                ctx.report("FloatCompareToNaN", 0, node, new WarningAnnotation<>("REPLACEMENT", "Float.isNaN()"));
-            } else if(left instanceof Double && Double.isNaN((double) left) ||
-                    right instanceof Double && Double.isNaN((double) right)) {
-                ctx.report("FloatCompareToNaN", 0, node, new WarningAnnotation<>("REPLACEMENT", "Double.isNaN()"));
+            Node leftNode = args.get(0);
+            Node rightNode = args.get(1);
+			Object left = Nodes.getConstant(leftNode);
+			Object right = Nodes.getConstant(rightNode);
+            if(left instanceof Float && Float.isNaN((float) left)) {
+                ctx.report("FloatCompareToNaN", 0, rightNode, new WarningAnnotation<>("REPLACEMENT", "Float.isNaN()"));
+            } else if(right instanceof Float && Float.isNaN((float) right)) {
+                ctx.report("FloatCompareToNaN", 0, leftNode, new WarningAnnotation<>("REPLACEMENT", "Float.isNaN()"));
+            } else if(left instanceof Double && Double.isNaN((double) left)) {
+                ctx.report("FloatCompareToNaN", 0, rightNode, new WarningAnnotation<>("REPLACEMENT", "Double.isNaN()"));
+            } else if(right instanceof Double && Double.isNaN((double) right)) {
+                ctx.report("FloatCompareToNaN", 0, leftNode, new WarningAnnotation<>("REPLACEMENT", "Double.isNaN()"));
             }
         }
     }

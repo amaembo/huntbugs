@@ -28,7 +28,6 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodeVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author lan
@@ -75,8 +74,7 @@ public class VolatileIncrement {
 
     private void report(Node node, MethodContext ctx, FieldDefinition field, boolean increment) {
         JvmType type = field.getFieldType().getSimpleType();
-        ctx.report(increment ? "VolatileIncrement" : "VolatileMath", type == JvmType.Long || type == JvmType.Double ? 10 : 0, node,
-            WarningAnnotation.forField(field));
+        ctx.report(increment ? "VolatileIncrement" : "VolatileMath", type == JvmType.Long || type == JvmType.Double ? 10 : 0, node);
     }
 
 }

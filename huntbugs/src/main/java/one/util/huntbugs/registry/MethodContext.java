@@ -25,6 +25,7 @@ import java.util.List;
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.assertions.MethodAsserter;
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -33,9 +34,12 @@ import one.util.huntbugs.warning.WarningType;
 
 import com.strobel.assembler.ir.attributes.LineNumberTableAttribute;
 import com.strobel.assembler.ir.attributes.SourceAttribute;
+import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
+import com.strobel.decompiler.ast.Variable;
 import com.strobel.decompiler.languages.java.LineNumberTableConverter;
 import com.strobel.decompiler.languages.java.OffsetToLineNumberConverter;
 
@@ -168,9 +172,23 @@ public class MethodContext {
         anno.addAll(getMethodSpecificAnnotations());
         Location loc = null;
         if (node instanceof Expression) {
-            int offset = ((Expression) node).getOffset();
+            Expression expr = (Expression) node;
+			int offset = expr.getOffset();
             if (offset != Expression.MYSTERY_OFFSET) {
                 loc = new Location(offset, getLineNumber(offset));
+            }
+            Object operand = expr.getOperand();
+            if(operand instanceof Variable) {
+                anno.add(WarningAnnotation.forVariable((Variable) operand));
+                Node src = ValuesFlow.getSource(expr);
+                if(src instanceof Expression)
+                    operand = ((Expression) src).getOperand();
+            }
+            if(operand instanceof FieldReference) {
+                anno.add(WarningAnnotation.forField((FieldReference) operand));
+            }
+            if(operand instanceof MethodReference) {
+                anno.add(WarningAnnotation.forReturnValue((MethodReference) operand));
             }
         }
         anno.addAll(Arrays.asList(annotations));

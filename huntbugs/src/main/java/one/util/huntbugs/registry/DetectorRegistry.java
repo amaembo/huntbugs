@@ -80,7 +80,10 @@ public class DetectorRegistry {
             Map<String, WarningType> wts = wds.stream().map(WarningType::new).collect(
                 Collectors.toMap(WarningType::getName, Function.identity()));
             Detector detector = new Detector(wts, clazz);
-            wts.values().forEach(wt -> typeToDetector.put(wt, detector));
+            wts.values().forEach(wt -> {
+                typeToDetector.put(wt, detector);
+                ctx.incStat("WarningTypes");
+            });
             detectors.add(detector);
         } catch (Exception e) {
             ctx.addError(new ErrorMessage(clazz.getName(), null, null, null, -1, e));
@@ -101,12 +104,12 @@ public class DetectorRegistry {
                 String name = className.replace('/', '.');
                 try {
                     addDetector(Class.forName(name));
+                    ctx.incStat("Detectors");
                 } catch (ClassNotFoundException e) {
                     ctx.addError(new ErrorMessage(name, null, null, null, -1, e));
                 }
             }
         });
-        System.out.println("Loaded " + detectors.size() + " detectors");
     }
 
     private void visitChildren(Node node, NodeChain parents, MethodContext[] mcs) {

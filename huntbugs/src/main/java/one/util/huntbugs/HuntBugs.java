@@ -53,6 +53,7 @@ public class HuntBugs {
             try {
                 ctx.reportErrors(new PrintStream("huntbugs.errors.txt"));
                 ctx.reportWarnings(new PrintStream("huntbugs.warnings.txt"));
+                ctx.reportStats(new PrintStream("huntbugs.stats.txt"));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
