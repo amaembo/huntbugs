@@ -59,4 +59,10 @@ public class Types {
 	    return isInstance(bt, wantedType);
 	}
 
+	public static boolean isRandomClass(TypeReference type) {
+	    String typeName = type.getInternalName();
+		return typeName.equals("java/util/Random") || typeName.equals("java/security/SecureRandom") ||
+		        typeName.equals("java/util/concurrent/ThreadLocalRandom") || typeName.equals("java/util/SplittableRandom");
+	}
+
 }

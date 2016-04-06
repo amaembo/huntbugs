@@ -25,6 +25,7 @@ import one.util.huntbugs.registry.anno.AstNodeVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.util.Types;
 
 /**
  * @author lan
@@ -57,11 +58,9 @@ public class MinValueHandling {
 		            MethodReference sourceCall = (MethodReference)((Expression)source).getOperand();
 		            String methodName = sourceCall.getName();
 					String methodSig = sourceCall.getSignature();
-					String typeName = sourceCall.getDeclaringType().getInternalName();
 					if((methodName.equals("nextInt") || methodName.equals("nextLong"))
 		                    && (methodSig.equals("()I") || methodSig.equals("()J"))
-		                    && (typeName.equals("java/util/Random") || typeName.equals("java/security/SecureRandom") ||
-		                            typeName.equals("java/util/concurrent/ThreadLocalRandom") || typeName.equals("java/util/SplittableRandom"))) {
+		                    && Types.isRandomClass(sourceCall.getDeclaringType())) {
 					    if(methodSig.equals("()J"))
 					        priority -= 5;
 					    if(forget)
