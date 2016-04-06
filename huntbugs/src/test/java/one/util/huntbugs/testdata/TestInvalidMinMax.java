@@ -48,14 +48,25 @@ public class TestInvalidMinMax {
         return Math.max(Math.min(0, rawInput), 100);
     }
 
-//    TODO: support such cases
-//    @AssertWarning(type = "InvalidMinMax")
-//    public int checkBounds6(int rawInput) {
-//        rawInput = Math.min(0, rawInput);
-//        rawInput = Math.max(100, rawInput);
-//        return rawInput;
-//    }
+    @AssertWarning(type = "InvalidMinMax")
+    public int checkBounds6(int rawInput) {
+        rawInput = Math.min(0, rawInput);
+        rawInput = Math.max(100, rawInput);
+        return rawInput;
+    }
 
+    @AssertWarning(type = "InvalidMinMax")
+    public int checkWithVars(int rawInput) {
+        int min = 0;
+        int max = 100;
+        if(rawInput > 50) {
+            System.out.println("Phew...");
+        }
+        rawInput = Math.min(min, rawInput);
+        rawInput = Math.max(max, rawInput);
+        return rawInput;
+    }
+    
     @AssertWarning(type = "InvalidMinMax")
     public int getScore(int totalCount, int failCount, double scaleFactor) {
         // Based on

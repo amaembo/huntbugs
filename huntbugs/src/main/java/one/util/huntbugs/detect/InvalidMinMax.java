@@ -32,51 +32,60 @@ import one.util.huntbugs.warning.WarningAnnotation;
  */
 @WarningDefinition(category = "Correctness", name = "InvalidMinMax", baseRank = 80)
 public class InvalidMinMax {
-    private static final int NONE = 0;
-    private static final int MIN = -1;
-    private static final int MAX = 1;
-    
-    private static int detectMethod(Node node) {
-        if(!Nodes.isOp(node, AstCode.InvokeStatic) || node.getChildren().size() != 2)
-            return NONE;
-        MethodReference mr = (MethodReference)((Expression)node).getOperand();
-        if(!mr.getDeclaringType().getPackageName().equals("java.lang"))
-            return NONE;
-        if(mr.getName().equals("max"))
-            return MAX;
-        if(mr.getName().equals("min"))
-            return MIN;
-        return NONE;
-    }
-    
-    @AstNodeVisitor
-    public void visit(Node node, MethodContext mc) {
-        int outer = detectMethod(node);
-        if(outer == NONE) return;
-        Node left = node.getChildren().get(0);
-        Node right = node.getChildren().get(1);
-        int leftChild = detectMethod(left);
-        int rightChild = detectMethod(right);
-        if(leftChild == NONE && rightChild == NONE)
-            return;
-        if(outer == leftChild || outer == rightChild || leftChild == rightChild)
-            return;
-        if(rightChild != NONE) {
-            Node tmp = left;
-            left = right;
-            right = tmp;
-        }
-        Object outerConst = Nodes.getConstant(right);
-        if(!(outerConst instanceof Number))
-            return;
-        Object innerConst = Nodes.getConstant(left.getChildren().get(0));
-        if(!(innerConst instanceof Number))
-            innerConst = Nodes.getConstant(left.getChildren().get(1));
-        if(!(innerConst instanceof Number))
-            return;
-        @SuppressWarnings("unchecked")
-        int cmp = ((Comparable<Object>)outerConst).compareTo(innerConst) * outer;
-        if(cmp > 0)
-            mc.report("InvalidMinMax", 0, node, new WarningAnnotation<>("OUTER_NUMBER", outerConst), new WarningAnnotation<>("OUTER_FUNC", outer), new WarningAnnotation<>("INNER_NUMBER", innerConst), new WarningAnnotation<>("INNER_FUNC", outer));
-    }
+	private static final int NONE = 0;
+	private static final int MIN = -1;
+	private static final int MAX = 1;
+
+	private static int detectMethod(Node node) {
+		if (!Nodes.isOp(node, AstCode.InvokeStatic)
+				|| node.getChildren().size() != 2)
+			return NONE;
+		MethodReference mr = (MethodReference) ((Expression) node).getOperand();
+		if (!mr.getDeclaringType().getPackageName().equals("java.lang"))
+			return NONE;
+		if (mr.getName().equals("max"))
+			return MAX;
+		if (mr.getName().equals("min"))
+			return MIN;
+		return NONE;
+	}
+
+	@AstNodeVisitor
+	public void visit(Node node, MethodContext mc) {
+		int outer = detectMethod(node);
+		if (outer == NONE)
+			return;
+		Node left = Nodes.getOperand(node, 0);
+		Node right = Nodes.getOperand(node, 1);
+		int leftChild = detectMethod(left);
+		int rightChild = detectMethod(right);
+		if (leftChild == NONE && rightChild == NONE)
+			return;
+		if (outer == leftChild || outer == rightChild
+				|| leftChild == rightChild)
+			return;
+		if (rightChild != NONE) {
+			Node tmp = left;
+			left = right;
+			right = tmp;
+		}
+		Object outerConst = Nodes.getConstant(right);
+		if (!(outerConst instanceof Number))
+			return;
+		Object innerConst = Nodes.getConstant(Nodes.getOperand(left, 0));
+		if (!(innerConst instanceof Number))
+			innerConst = Nodes.getConstant(Nodes.getOperand(left, 1));
+		if (!(innerConst instanceof Number))
+			return;
+		@SuppressWarnings("unchecked")
+		int cmp = ((Comparable<Object>) outerConst).compareTo(innerConst)
+				* outer;
+		if (cmp > 0)
+			mc.report("InvalidMinMax", 0, node, new WarningAnnotation<>(
+					"OUTER_NUMBER", outerConst), new WarningAnnotation<>(
+					"OUTER_FUNC", outer == MAX ? "max" : "min"),
+					new WarningAnnotation<>("INNER_NUMBER", innerConst),
+					new WarningAnnotation<>("INNER_FUNC", outer == MAX ? "min"
+							: "max"));
+	}
 }

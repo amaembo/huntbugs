@@ -62,6 +62,7 @@ public class HuntBugs {
             System.out.println("Analyzed "+ctx.getClassesCount()+" of "+ctx.getTotalClasses()+" classes");
             System.out.println("Found "+ctx.getWarningCount()+" warnings");
             System.out.println("Encountered "+ctx.getErrorCount()+" analyzer errors");
+            ctx.reportStats(System.out);
             System.out.println("Analyzis time "+dur.toMinutes()+"m"+dur.getSeconds()%60+"s");
         }));
         ctx.analyzePackage("");

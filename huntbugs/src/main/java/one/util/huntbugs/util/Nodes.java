@@ -18,6 +18,8 @@ package one.util.huntbugs.util;
 import java.util.List;
 import java.util.Objects;
 
+import one.util.huntbugs.flow.ValuesFlow;
+
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
@@ -52,7 +54,15 @@ public class Nodes {
         return isOp(node, AstCode.LdC) && Objects.equals(((Expression)node).getOperand(), value);
     }
     
+    public static Node getOperand(Node node, int i) {
+        if(node instanceof Expression) {
+            return ValuesFlow.getSource(((Expression)node).getArguments().get(i));
+        }
+        return node.getChildren().get(i);
+    }
+    
     public static Object getConstant(Node node) {
+		node = ValuesFlow.getSource(node);
         if(!isOp(node, AstCode.LdC))
             return null;
         return ((Expression)node).getOperand();

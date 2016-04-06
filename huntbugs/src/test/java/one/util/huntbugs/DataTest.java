@@ -33,8 +33,8 @@ public class DataTest {
     public void test() throws Exception {
         Context ctx = new Context(Repository.createSelfRepository(), new AnalysisOptions());
         ctx.analyzePackage("one/util/huntbugs/testdata");
+        ctx.reportStats(System.out);
         ctx.reportErrors(System.err);
-        
         ctx.reportWarnings(new PrintStream("target/testWarnings.out"));
         System.out.println("Analyzed "+ctx.getClassesCount()+" classes");
         if(ctx.getErrorCount() > 0)

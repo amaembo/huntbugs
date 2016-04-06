@@ -41,7 +41,7 @@ public class RoughConstant {
         double value;
         int basePriority;
 
-        Set<Number> approxSet = new HashSet<Number>();
+        Set<Number> approxSet = new HashSet<>();
 
         BadConstant(double base, double factor, String replacement, int basePriority) {
             this.base = base;
@@ -99,10 +99,35 @@ public class RoughConstant {
 
     @AstNodeVisitor
     public void visit(Node node, MethodContext ctx, NodeChain parents) {
-        if(Nodes.isOp(node, AstCode.LdC)) {
-            Expression expr = (Expression)node;
-            if(expr.getOperand() instanceof Float || expr.getOperand() instanceof Double) {
-                checkConst(expr, parents, ctx);
+        // Not use Nodes.getConstant here as direct usage should only be reported
+        if(!Nodes.isOp(node, AstCode.LdC))
+            return;
+        Object constant = ((Expression) node).getOperand();
+        if(constant instanceof Float || constant instanceof Double) {
+            Number constValue = (Number)constant;
+            double candidate = constValue.doubleValue();
+            if (Double.isNaN(candidate) || Double.isInfinite(candidate)) {
+                return;
+            }
+            for (BadConstant badConstant : badConstants) {
+                int priority = getPriority(badConstant, constValue, candidate);
+                if(priority > -100) {
+                    Node parent = parents.getNode();
+                    if(Nodes.isBoxing(parent))
+                        parent = parents.getParent().getNode();
+                    if(Nodes.isOp(parent, AstCode.InitArray)) {
+                        int children = parent.getChildren().size();
+                        if(children > 100)
+                            priority -= 30;
+                        else if(children > 10)
+                            priority -= 20;
+                        else if(children > 5)
+                            priority -= 10;
+                        else if(children > 1)
+                            priority -= 5;
+                    }
+                    ctx.report("RoughConstantValue", priority, node, WarningAnnotation.forNumber(constValue));
+                }
             }
         }
     }
@@ -126,33 +151,5 @@ public class RoughConstant {
             return -100;
         }
         return badConstant.basePriority-10;
-    }
-
-    private void checkConst(Expression expr, NodeChain parents, MethodContext ctx) {
-        Number constValue = (Number)expr.getOperand();
-        double candidate = constValue.doubleValue();
-        if (Double.isNaN(candidate) || Double.isInfinite(candidate)) {
-            return;
-        }
-        for (BadConstant badConstant : badConstants) {
-            int priority = getPriority(badConstant, constValue, candidate);
-            if(priority > -100) {
-                Node parent = parents.getNode();
-                if(Nodes.isBoxing(parent))
-                    parent = parents.getParent().getNode();
-                if(Nodes.isOp(parent, AstCode.InitArray)) {
-                    int children = parent.getChildren().size();
-                    if(children > 100)
-                        priority -= 30;
-                    else if(children > 10)
-                        priority -= 20;
-                    else if(children > 5)
-                        priority -= 10;
-                    else if(children > 1)
-                        priority -= 5;
-                }
-                ctx.report("RoughConstantValue", priority, expr, WarningAnnotation.forNumber((Number) expr.getOperand()));
-            }
-        }
     }
 }

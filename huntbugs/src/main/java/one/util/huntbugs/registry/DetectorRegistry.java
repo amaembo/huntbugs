@@ -38,6 +38,7 @@ import com.strobel.decompiler.ast.Node;
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.assertions.MethodAsserter;
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.repo.CompositeRepository;
 import one.util.huntbugs.repo.Repository;
@@ -121,6 +122,7 @@ public class DetectorRegistry {
     }
 
     public void analyzeClass(TypeDefinition type) {
+        ctx.incStat("TotalClasses");
         ClassContext[] ccs = detectors.stream().map(d -> new ClassContext(ctx, type, d)).toArray(ClassContext[]::new);
 
         for (MethodDefinition md : type.getDeclaredMethods()) {
@@ -140,6 +142,7 @@ public class DetectorRegistry {
                     try {
                         methodAst.getBody().addAll(AstBuilder.build(body, true, context));
                         AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
+                        ValuesFlow.annotate(ctx, md, methodAst);
                     } catch (Throwable t) {
                         ctx.addError(new ErrorMessage(null, type.getFullName(), md.getFullName(), md.getSignature(), -1, t));
                     }

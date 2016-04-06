@@ -22,6 +22,11 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestFloatNaN {
+    void testLambda() {
+        Runnable r = () -> System.out.println();
+        Runnable r2 = System.out::println;
+    }
+    
     @AssertWarning(type="FloatCompareToNaN")
     void testFloat(float a) {
         if(a == Float.NaN)

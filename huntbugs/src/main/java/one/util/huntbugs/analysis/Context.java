@@ -15,11 +15,12 @@
  */
 package one.util.huntbugs.analysis;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -48,6 +49,7 @@ public class Context {
     private int totalClasses = 0;
     private final AnalysisOptions options;
     private final List<AnalysisListener> listeners = new CopyOnWriteArrayList<>();
+    private final Map<String, Long> stat = new ConcurrentHashMap<>();
 
     public Context(Repository repository, AnalysisOptions options) {
         registry = new DetectorRegistry(this);
@@ -121,24 +123,19 @@ public class Context {
         warnings.add(warning);
     }
 
-    public void reportWarnings(Appendable app) {
-        warnings.forEach(msg -> {
-            try {
-                app.append(msg.toString()).append("\n");
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        });
+    public void reportWarnings(PrintStream app) {
+        warnings.forEach(msg -> app.append(msg.toString()).append("\n"));
+    }
+    
+    public void reportStats(PrintStream app) {
+        if(stat.isEmpty())
+            return;
+        app.append("Statistics:\n");
+        stat.forEach((k, v) -> app.append("\t").append(k).append(" = ").append(v.toString()).append("\n"));
     }
 
-    public void reportErrors(Appendable app) {
-        errors.forEach(msg -> {
-            try {
-                app.append(msg.toString()).append("\n");
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        });
+    public void reportErrors(PrintStream app) {
+        errors.forEach(msg -> app.append(msg.toString()).append("\n"));
     }
 
     public int getClassesCount() {
@@ -156,4 +153,8 @@ public class Context {
     public int getWarningCount() {
         return warnings.size();
     }
+
+	public void incStat(String key) {
+	    stat.merge(key, 1L, Long::sum);
+	}
 }
