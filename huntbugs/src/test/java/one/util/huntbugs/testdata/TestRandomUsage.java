@@ -31,7 +31,7 @@ public class TestRandomUsage {
         return (int) Math.random();
     }
 
-    @AssertWarning(type="RandomNextIntViaNextDouble", maxRank=35)
+    @AssertWarning(type="RandomNextIntViaNextDouble", maxScore=35)
     public int testMul() {
         return (int) (10*Math.random());
     }

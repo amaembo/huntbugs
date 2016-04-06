@@ -32,14 +32,14 @@ public class TestFinalizer {
     
     static class Nullify extends SuperClass {
         @Override
-        @AssertWarning(type="FinalizeNullifiesSuper", minRank=40, maxRank = 60)
+        @AssertWarning(type="FinalizeNullifiesSuper", minScore=40, maxScore = 60)
         protected void finalize() throws Throwable {
         }
     }
     
     static class Useless extends SuperClass {
         @Override
-        @AssertWarning(type="FinalizeUselessSuper", minRank=30, maxRank = 50)
+        @AssertWarning(type="FinalizeUselessSuper", minScore=30, maxScore = 50)
         protected void finalize() throws Throwable {
             super.finalize();
         }
@@ -61,7 +61,7 @@ public class TestFinalizer {
     }
 
     @Override
-    @AssertWarning(type="FinalizeEmpty", minRank=20, maxRank = 40)
+    @AssertWarning(type="FinalizeEmpty", minScore=20, maxScore = 40)
     @AssertNoWarning(type="FinalizeNullifiesSuper")
     protected void finalize() {
     }

@@ -31,8 +31,8 @@ import one.util.huntbugs.util.Types;
  * @author lan
  *
  */
-@WarningDefinition(category="Correctness", name="AbsoluteValueOfHashCode", baseRank=90)
-@WarningDefinition(category="Correctness", name="AbsoluteValueOfRandomInt", baseRank=80)
+@WarningDefinition(category="Correctness", name="AbsoluteValueOfHashCode", baseScore=90)
+@WarningDefinition(category="Correctness", name="AbsoluteValueOfRandomInt", baseScore=80)
 public class MinValueHandling {
     @AstNodeVisitor
     public void visit(Node node, NodeChain chain, MethodContext mc) {

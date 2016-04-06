@@ -23,35 +23,35 @@ import java.util.stream.Collectors;
  *
  */
 public class Warning {
-    public static final int MIN_RANK = 0;
-    public static final int MAX_RANK = 100;
+    public static final int MIN_SCORE = 0;
+    public static final int MAX_SCORE = 100;
 
     private final WarningType type;
-    private final int rankAdjustment;
+    private final int scoreAdjustment;
 
     private final List<WarningAnnotation<?>> annotations;
 
-    public Warning(WarningType type, int rankAdjustment, List<WarningAnnotation<?>> annotations) {
+    public Warning(WarningType type, int scoreAdjustment, List<WarningAnnotation<?>> annotations) {
         this.type = type;
-        this.rankAdjustment = rankAdjustment;
+        this.scoreAdjustment = scoreAdjustment;
         this.annotations = annotations;
     }
 
-    public int getRank() {
-        return saturateRank(type.getBaseRank() + rankAdjustment);
+    public int getScore() {
+        return saturateScore(type.getBaseScore() + scoreAdjustment);
     }
 
     public WarningType getType() {
         return type;
     }
 
-    public static int saturateRank(int rank) {
-        return rank < MIN_RANK ? MIN_RANK : rank > MAX_RANK ? MAX_RANK : rank;
+    public static int saturateScore(int score) {
+        return score < MIN_SCORE ? MIN_SCORE : score > MAX_SCORE ? MAX_SCORE : score;
     }
 
     @Override
     public String toString() {
-        return type.getCategory() + "/" + type.getName() + " (" + getRank() + ")\n"
+        return type.getCategory() + "/" + type.getName() + " (" + getScore() + ")\n"
             + annotations.stream().map(wa -> "\t" + wa + "\n").collect(Collectors.joining());
     }
 }

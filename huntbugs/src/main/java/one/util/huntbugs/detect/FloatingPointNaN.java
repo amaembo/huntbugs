@@ -30,7 +30,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
  * @author lan
  *
  */
-@WarningDefinition(category="Correctness", name="FloatCompareToNaN", baseRank = 90)
+@WarningDefinition(category="Correctness", name="FloatCompareToNaN", baseScore = 90)
 public class FloatingPointNaN {
     @AstNodeVisitor
     public void visit(Expression node, MethodContext ctx) {

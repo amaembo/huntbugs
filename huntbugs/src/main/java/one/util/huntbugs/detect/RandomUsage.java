@@ -30,8 +30,8 @@ import one.util.huntbugs.util.Types;
  * @author lan
  *
  */
-@WarningDefinition(category="Performance", name="RandomNextIntViaNextDouble", baseRank=50)
-@WarningDefinition(category="Correctness", name="RandomDoubleToInt", baseRank=80)
+@WarningDefinition(category="Performance", name="RandomNextIntViaNextDouble", baseScore=50)
+@WarningDefinition(category="Correctness", name="RandomDoubleToInt", baseScore=80)
 public class RandomUsage {
 
     @AstExpressionVisitor

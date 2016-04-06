@@ -49,28 +49,28 @@ public class TestNonShortCircuit {
         return 5+(x?2:3);
     }
     
-    @AssertWarning(type="NonShortCircuit", minRank=40, maxRank=60) 
+    @AssertWarning(type="NonShortCircuit", minScore=40, maxScore=60) 
     public int testAnd(int a, int b) {
         if(a > 0 & b > 0)
             return 1;
         return 2;
     }
     
-    @AssertWarning(type="NonShortCircuit", minRank=40, maxRank=60) 
+    @AssertWarning(type="NonShortCircuit", minScore=40, maxScore=60) 
     public int testOr(int a, int b) {
         if(a > 0 | b > 0)
             return 1;
         return 2;
     }
     
-    @AssertWarning(type="NonShortCircuit", minRank=40, maxRank=60) 
+    @AssertWarning(type="NonShortCircuit", minScore=40, maxScore=60) 
     public int testOrBoxing(Integer a, Integer b) {
         if(a > 0 | ++b > 0)
             return 1;
         return 2;
     }
     
-    @AssertWarning(type="NonShortCircuitDangerous", minRank=70) 
+    @AssertWarning(type="NonShortCircuitDangerous", minScore=70) 
     @AssertNoWarning(type="NonShortCircuit") 
     public int testMethod(Integer a, Integer b) {
         if(Math.abs(a) > 0 | ++b > 0)
@@ -78,7 +78,7 @@ public class TestNonShortCircuit {
         return 2;
     }
     
-    @AssertWarning(type="NonShortCircuitDangerous", minRank=85) 
+    @AssertWarning(type="NonShortCircuitDangerous", minScore=85) 
     @AssertNoWarning(type="NonShortCircuit") 
     public int testNull(String s) {
         if(s != null & s.length() > 2)
@@ -86,7 +86,7 @@ public class TestNonShortCircuit {
         return 2;
     }
     
-    @AssertWarning(type="NonShortCircuitDangerous", minRank=85) 
+    @AssertWarning(type="NonShortCircuitDangerous", minScore=85) 
     @AssertNoWarning(type="NonShortCircuit") 
     public int testInstanceOf(Object s) {
         if(s instanceof String & ((String)s).length() > 2)

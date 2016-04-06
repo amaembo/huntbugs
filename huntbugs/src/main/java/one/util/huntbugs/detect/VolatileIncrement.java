@@ -34,8 +34,8 @@ import one.util.huntbugs.util.Nodes;
  * @author lan
  *
  */
-@WarningDefinition(category="Multithreading", name="VolatileIncrement", baseRank=75)
-@WarningDefinition(category="Multithreading", name="VolatileMath", baseRank=75)
+@WarningDefinition(category="Multithreading", name="VolatileIncrement", baseScore=75)
+@WarningDefinition(category="Multithreading", name="VolatileMath", baseScore=75)
 public class VolatileIncrement {
     @AstExpressionVisitor
     public void visitNode(Expression node, MethodContext ctx) {

@@ -27,8 +27,8 @@ import one.util.huntbugs.util.Nodes;
  * @author lan
  *
  */
-@WarningDefinition(category="BadPractice", name="SystemExit", baseRank=60)
-@WarningDefinition(category="BadPractice", name="ThreadStopThrowable", baseRank=60)
+@WarningDefinition(category="BadPractice", name="SystemExit", baseScore=60)
+@WarningDefinition(category="BadPractice", name="ThreadStopThrowable", baseScore=60)
 public class BadMethodCalls {
     @AstExpressionVisitor
     public void visit(Expression node, MethodContext ctx) {

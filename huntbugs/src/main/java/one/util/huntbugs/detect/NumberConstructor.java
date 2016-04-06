@@ -28,7 +28,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
  * @author lan
  *
  */
-@WarningDefinition(category="Performance", name="NumberConstructor", baseRank = 40)
+@WarningDefinition(category="Performance", name="NumberConstructor", baseScore = 40)
 public class NumberConstructor {
     @AstExpressionVisitor
     public void visit(Expression expr, MethodContext ctx) {

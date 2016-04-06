@@ -54,15 +54,15 @@ import com.strobel.decompiler.languages.java.OffsetToLineNumberConverter;
 public class MethodContext {
     static class WarningInfo {
         private final WarningType type;
-        private int rank;
+        private int score;
         private final List<WarningAnnotation<?>> annotations;
         private Location bestLocation;
         private final List<Location> locations = new ArrayList<>();
     
-        public WarningInfo(WarningType type, int rank, Location loc, List<WarningAnnotation<?>> annotations) {
+        public WarningInfo(WarningType type, int score, Location loc, List<WarningAnnotation<?>> annotations) {
             super();
             this.type = type;
-            this.rank = rank;
+            this.score = score;
             this.annotations = annotations;
             this.bestLocation = loc;
         }
@@ -71,8 +71,8 @@ public class MethodContext {
             if (!other.type.equals(type) || !other.annotations.equals(annotations)) {
                 return false;
             }
-            if(other.rank > rank) {
-                this.rank = other.rank;
+            if(other.score > score) {
+                this.score = other.score;
                 if(bestLocation != null)
                     this.locations.add(bestLocation);
                 bestLocation = other.bestLocation;
@@ -89,7 +89,7 @@ public class MethodContext {
             if(bestLocation != null)
                 annotations.add(WarningAnnotation.forLocation(bestLocation));
             locations.stream().map(WarningAnnotation::forAnotherInstance).forEach(annotations::add);
-            return new Warning(type, rank, annotations);
+            return new Warning(type, score, annotations);
         }
     }
 
@@ -190,13 +190,13 @@ public class MethodContext {
         return annot;
     }
 
-    public void report(String warning, int rankAdjustment, Node node, WarningAnnotation<?>... annotations) {
+    public void report(String warning, int scoreAdjustment, Node node, WarningAnnotation<?>... annotations) {
         WarningType wt = detector.getWarningType(warning);
         if (wt == null) {
             error("Tries to report a warning of non-declared type: " + warning);
             return;
         }
-        if (wt.getBaseRank() + rankAdjustment < 0) {
+        if (wt.getBaseScore() + scoreAdjustment < 0) {
             return;
         }
         List<WarningAnnotation<?>> anno = new ArrayList<>();
@@ -224,7 +224,7 @@ public class MethodContext {
             }
         }
         anno.addAll(Arrays.asList(annotations));
-        WarningInfo info = new WarningInfo(wt, rankAdjustment, loc, anno);
+        WarningInfo info = new WarningInfo(wt, scoreAdjustment, loc, anno);
         if(lastWarning == null) {
             lastWarning = info;
         } else if(!lastWarning.tryMerge(info)) {

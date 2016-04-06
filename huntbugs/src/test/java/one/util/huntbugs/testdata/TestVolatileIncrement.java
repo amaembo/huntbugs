@@ -38,33 +38,33 @@ public class TestVolatileIncrement {
         return (int) (a+b+c);
     }
 
-    @AssertWarning(type = "VolatileIncrement", minRank = 70)
+    @AssertWarning(type = "VolatileIncrement", minScore = 70)
     public int testPre() {
         return x += 2;
     }
     
-    @AssertWarning(type = "VolatileIncrement", minRank = 70)
+    @AssertWarning(type = "VolatileIncrement", minScore = 70)
     public int testPost() {
         return ++x;
     }
 
-    @AssertWarning(type = "VolatileMath", minRank = 70)
+    @AssertWarning(type = "VolatileMath", minScore = 70)
     public int testMul() {
         return x *= 2;
     }
 
-    @AssertWarning(type = "VolatileMath", minRank = 80)
+    @AssertWarning(type = "VolatileMath", minScore = 80)
     public double testMulDouble() {
         z *= 3;
         return z *= 2;
     }
 
-    @AssertWarning(type = "VolatileIncrement", minRank = 80)
+    @AssertWarning(type = "VolatileIncrement", minScore = 80)
     public long testPreLong() {
         return y += 2;
     }
 
-    @AssertWarning(type = "VolatileIncrement", minRank = 80)
+    @AssertWarning(type = "VolatileIncrement", minScore = 80)
     public long testPostLong() {
         return ++y;
     }

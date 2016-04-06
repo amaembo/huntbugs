@@ -27,13 +27,13 @@ class AssertionData {
     private final boolean hasWarning;
     private final boolean isPrefix;
     private final String type;
-    private final int minRank, maxRank;
+    private final int minScore, maxScore;
     
     enum Status {
         PASS, FAIL, NONE
     }
 
-    AssertionData(boolean hasWarning, String type, int minRank, int maxRank) {
+    AssertionData(boolean hasWarning, String type, int minScore, int maxScore) {
         super();
         this.hasWarning = hasWarning;
         if(type.endsWith("*")) {
@@ -43,8 +43,8 @@ class AssertionData {
             this.isPrefix = false;
             this.type = type;
         }
-        this.minRank = minRank;
-        this.maxRank = maxRank;
+        this.minScore = minScore;
+        this.maxScore = maxScore;
     }
     
     
@@ -58,8 +58,8 @@ class AssertionData {
             return Status.NONE;
         if(!hasWarning)
             return Status.FAIL;
-        int rank = warning.getRank();
-        if(rank < minRank || rank > maxRank)
+        int score = warning.getScore();
+        if(score < minScore || score > maxScore)
             return Status.FAIL;
         return Status.PASS;
     }
@@ -71,8 +71,7 @@ class AssertionData {
     @Override
     public String toString() {
         if(hasWarning)
-            return "AssertWarning(type = "+type+(isPrefix?"*":"")+"; rank = "+minRank+".."+maxRank+")";
-        else
-            return "AssertNoWarning(type = "+type+(isPrefix?"*":"")+")";
+            return "AssertWarning(type = "+type+(isPrefix?"*":"")+"; score = "+minScore+".."+maxScore+")";
+		return "AssertNoWarning(type = "+type+(isPrefix?"*":"")+")";
     }
 }

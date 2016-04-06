@@ -51,23 +51,23 @@ public class MethodAsserter {
         for(CustomAnnotation anno : md.getAnnotations()) {
             if(anno.getAnnotationType().getFullName().equals(AssertWarning.class.getName())) {
                 String type = "";
-                int minRank = 0, maxRank = 100;
+                int minScore = 0, maxScore = 100;
                 for(AnnotationParameter param : anno.getParameters()) {
                     if(param.getMember().equals("type"))
                         type = (String) ((ConstantAnnotationElement)param.getValue()).getConstantValue();
-                    else if(param.getMember().equals("minRank"))
-                        minRank = (int) ((ConstantAnnotationElement)param.getValue()).getConstantValue();
-                    else if(param.getMember().equals("maxRank"))
-                        maxRank = (int) ((ConstantAnnotationElement)param.getValue()).getConstantValue();
+                    else if(param.getMember().equals("minScore"))
+                        minScore = (int) ((ConstantAnnotationElement)param.getValue()).getConstantValue();
+                    else if(param.getMember().equals("maxScore"))
+                        maxScore = (int) ((ConstantAnnotationElement)param.getValue()).getConstantValue();
                 }
-                assertions.add(new AssertionData(true, type, minRank, maxRank));
+                assertions.add(new AssertionData(true, type, minScore, maxScore));
             } else if(anno.getAnnotationType().getFullName().equals(AssertNoWarning.class.getName())) {
                 String type = "";
                 for(AnnotationParameter param : anno.getParameters()) {
                     if(param.getMember().equals("type"))
                         type = (String) ((ConstantAnnotationElement)param.getValue()).getConstantValue();
                 }
-                assertions.add(new AssertionData(false, type, Warning.MIN_RANK, Warning.MAX_RANK));
+                assertions.add(new AssertionData(false, type, Warning.MIN_SCORE, Warning.MAX_SCORE));
             }
         }
         if(assertions.isEmpty())

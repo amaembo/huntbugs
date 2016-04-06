@@ -25,8 +25,8 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 
-@WarningDefinition(category = "CodeStyle", name = "NonShortCircuit", baseRank = 50)
-@WarningDefinition(category = "Correctness", name = "NonShortCircuitDangerous", baseRank = 80)
+@WarningDefinition(category = "CodeStyle", name = "NonShortCircuit", baseScore = 50)
+@WarningDefinition(category = "Correctness", name = "NonShortCircuitDangerous", baseScore = 80)
 public class NonShortCircuit {
     @AstExpressionVisitor
     public void visitNode(Expression node, NodeChain nc, MethodContext ctx) {

@@ -31,7 +31,7 @@ import one.util.huntbugs.warning.Warning;
 public @interface AssertWarning {
     String type();
 
-    int minRank() default Warning.MIN_RANK;
+    int minScore() default Warning.MIN_SCORE;
 
-    int maxRank() default Warning.MAX_RANK;
+    int maxScore() default Warning.MAX_SCORE;
 }

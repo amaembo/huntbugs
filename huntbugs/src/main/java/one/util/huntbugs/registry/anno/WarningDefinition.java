@@ -29,5 +29,5 @@ public @interface WarningDefinition {
     
     String name();
     
-    int baseRank();
+    int baseScore();
 }

@@ -33,11 +33,11 @@ import one.util.huntbugs.util.Nodes;
  * @author lan
  *
  */
-@WarningDefinition(category="BadPractice", name="FinalizeNullifiesSuper", baseRank = 50)
-@WarningDefinition(category="BadPractice", name="FinalizeEmpty", baseRank = 35)
-@WarningDefinition(category="BadPractice", name="FinalizeUselessSuper", baseRank = 40)
-@WarningDefinition(category="BadPractice", name="FinalizeInvocation", baseRank = 50)
-@WarningDefinition(category="MaliciousCode", name="FinalizePublic", baseRank = 60)
+@WarningDefinition(category="BadPractice", name="FinalizeNullifiesSuper", baseScore = 50)
+@WarningDefinition(category="BadPractice", name="FinalizeEmpty", baseScore = 35)
+@WarningDefinition(category="BadPractice", name="FinalizeUselessSuper", baseScore = 40)
+@WarningDefinition(category="BadPractice", name="FinalizeInvocation", baseScore = 50)
+@WarningDefinition(category="MaliciousCode", name="FinalizePublic", baseScore = 60)
 public class FinalizerContract {
     @AstBodyVisitor
     public void visitFinalizer(Block node, MethodContext mc, MethodDefinition md) {

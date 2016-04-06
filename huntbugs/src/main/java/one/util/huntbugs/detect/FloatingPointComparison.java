@@ -35,7 +35,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
  * @author lan
  *
  */
-@WarningDefinition(category = "BadPractice", name = "FloatComparison", baseRank = 40)
+@WarningDefinition(category = "BadPractice", name = "FloatComparison", baseScore = 40)
 public class FloatingPointComparison {
     @AstExpressionVisitor
     public void visit(Expression node, MethodContext ctx, MethodDefinition md) {

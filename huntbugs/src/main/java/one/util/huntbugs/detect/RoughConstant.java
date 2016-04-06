@@ -32,7 +32,7 @@ import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation;
 
-@WarningDefinition(category="BadPractice", name="RoughConstantValue", baseRank=30)
+@WarningDefinition(category="BadPractice", name="RoughConstantValue", baseScore=30)
 public class RoughConstant {
     static class BadConstant {
         double base;
