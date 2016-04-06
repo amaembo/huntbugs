@@ -24,6 +24,7 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
+import one.util.huntbugs.registry.anno.AstBodyVisitor;
 import one.util.huntbugs.registry.anno.AstNodeVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
@@ -38,31 +39,28 @@ import one.util.huntbugs.util.Nodes;
 @WarningDefinition(category="BadPractice", name="FinalizeInvocation", baseRank = 50)
 @WarningDefinition(category="MaliciousCode", name="FinalizePublic", baseRank = 60)
 public class FinalizerContract {
-    @AstNodeVisitor
-    public boolean visitFinalizer(Node node, MethodContext mc, MethodDefinition md) {
+    @AstBodyVisitor
+    public void visitFinalizer(Block node, MethodContext mc, MethodDefinition md) {
         if(!isFinalizer(md))
-            return false;
+            return;
         MethodDefinition superfinalizer = getSuperfinalizer(md.getDeclaringType());
         if(md.isPublic()) {
             mc.report("FinalizePublic", 0, node);
         }
-        if(node instanceof Block) {
-            if(superfinalizer != null) {
-                if(node.getChildren().isEmpty())
-                    mc.report("FinalizeNullifiesSuper", 0, node);
-                else if(node.getChildren().size() == 1) {
-                    Node child = node.getChildren().get(0);
-                    if(Nodes.isOp(child, AstCode.InvokeSpecial) && isFinalizer((MethodReference)(((Expression)child).getOperand()))) {
-                        mc.report("FinalizeUselessSuper", 0, child);
-                    }
-                }
-            } else {
-                if(node.getChildren().isEmpty() && !md.isFinal()) {
-                    mc.report("FinalizeEmpty", 0, node);
+        if(superfinalizer != null) {
+            if(node.getChildren().isEmpty())
+                mc.report("FinalizeNullifiesSuper", 0, node);
+            else if(node.getChildren().size() == 1) {
+                Node child = node.getChildren().get(0);
+                if(Nodes.isOp(child, AstCode.InvokeSpecial) && isFinalizer((MethodReference)(((Expression)child).getOperand()))) {
+                    mc.report("FinalizeUselessSuper", 0, child);
                 }
             }
+        } else {
+            if(node.getChildren().isEmpty() && !md.isFinal()) {
+                mc.report("FinalizeEmpty", 0, node);
+            }
         }
-        return false;
     }
     
     @AstNodeVisitor

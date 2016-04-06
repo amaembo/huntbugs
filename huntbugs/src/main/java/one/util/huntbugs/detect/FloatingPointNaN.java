@@ -17,6 +17,7 @@ package one.util.huntbugs.detect;
 
 import java.util.List;
 
+import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
@@ -32,9 +33,9 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category="Correctness", name="FloatCompareToNaN", baseRank = 90)
 public class FloatingPointNaN {
     @AstNodeVisitor
-    public void visit(Node node, MethodContext ctx) {
+    public void visit(Expression node, MethodContext ctx) {
         if(Nodes.isComparison(node)) {
-            List<Node> args = node.getChildren();
+            List<Expression> args = node.getArguments();
             Node leftNode = args.get(0);
             Node rightNode = args.get(1);
 			Object left = Nodes.getConstant(leftNode);

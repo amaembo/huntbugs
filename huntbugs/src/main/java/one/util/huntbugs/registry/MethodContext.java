@@ -19,13 +19,17 @@ import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.assertions.MethodAsserter;
 import one.util.huntbugs.flow.ValuesFlow;
+import one.util.huntbugs.registry.Detector.VisitorType;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -98,7 +102,7 @@ public class MethodContext {
     List<WarningAnnotation<?>> annot;
     private MethodAsserter ma;
     private WarningInfo lastWarning;
-    private final List<MethodHandle> astHandlers;
+    private final Map<VisitorType, List<MethodHandle>> visitors;
 
     MethodContext(Context ctx, ClassContext classCtx, MethodDefinition md) {
         this.cc = classCtx;
@@ -106,7 +110,12 @@ public class MethodContext {
         this.ctx = ctx;
         this.detector = classCtx == null ? null : classCtx.detector;
         this.det = classCtx == null ? null : classCtx.det;
-        this.astHandlers = detector == null ? Collections.emptyList() : new ArrayList<>(detector.astVisitors);
+        if(detector == null) {
+            visitors = Collections.emptyMap();
+        } else {
+            visitors = new EnumMap<>(detector.visitors);
+            visitors.replaceAll((k, v) -> new ArrayList<>(v));
+        }
     }
 
     void setMethodAsserter(MethodAsserter ma) {
@@ -131,11 +140,34 @@ public class MethodContext {
     }
 
     void visitNode(Node node, NodeChain parents) {
-        for (Iterator<MethodHandle> it = astHandlers.iterator(); it.hasNext(); ) {
-            MethodHandle mh = it.next();
+        for (Entry<VisitorType, List<MethodHandle>> entry : visitors.entrySet()) {
             try {
-                if(!(boolean)mh.invoke(det, node, parents, this, md, cc.type)) {
-                    it.remove();
+                switch(entry.getKey()) {
+                case AST_NODE_VISITOR:
+                    for(Iterator<MethodHandle> it = entry.getValue().iterator(); it.hasNext();) {
+                        MethodHandle mh = it.next();
+                        if(!(boolean)mh.invoke(det, node, parents, this, md, cc.type)) {
+                            it.remove();
+                        }
+                    }
+                    break;
+                case AST_EXPRESSION_VISITOR:
+                    if(node instanceof Expression) {
+                        for(Iterator<MethodHandle> it = entry.getValue().iterator(); it.hasNext();) {
+                            MethodHandle mh = it.next();
+                            if(!(boolean)mh.invoke(det, (Expression)node, parents, this, md, cc.type)) {
+                                it.remove();
+                            }
+                        }
+                    }
+                    break;
+                case AST_BODY_VISITOR:
+                    if(parents == null) {
+                        for(MethodHandle mh : entry.getValue()) {
+                            mh.invoke(det, node, this, md, cc.type);
+                        }
+                    }
+                    break;
                 }
             } catch (Throwable e) {
                 ctx.addError(new ErrorMessage(detector, md, -1, e));
@@ -208,7 +240,7 @@ public class MethodContext {
 	}
 
 	public void error(String message) {
-        ctx.addError(new ErrorMessage(detector, md, -1, new IllegalStateException(message)));
+        ctx.addError(new ErrorMessage(detector, md, -1, message));
     }
 
     @Override

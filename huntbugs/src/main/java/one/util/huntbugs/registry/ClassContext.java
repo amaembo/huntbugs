@@ -48,7 +48,7 @@ public class ClassContext {
     
     List<WarningAnnotation<?>> getTypeSpecificAnnotations() {
         if(annot == null) {
-            annot = new ArrayList<WarningAnnotation<?>>();
+            annot = new ArrayList<>();
             annot.add(WarningAnnotation.forType(type));
             String sourceFile = getSourceFile();
             if(sourceFile != null)
@@ -67,7 +67,7 @@ public class ClassContext {
     }
 
     public Stream<MethodContext> forMethod(MethodDefinition md) {
-        if(detector.astVisitors.isEmpty())
+        if(detector.visitors.isEmpty())
             return null;
         return Stream.of(new MethodContext(ctx, this, md));
     }

@@ -25,10 +25,8 @@ import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
-import com.strobel.decompiler.ast.Node;
-
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstNodeVisitor;
+import one.util.huntbugs.registry.anno.AstExpressionVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -39,10 +37,10 @@ import one.util.huntbugs.warning.WarningAnnotation;
  */
 @WarningDefinition(category = "BadPractice", name = "FloatComparison", baseRank = 40)
 public class FloatingPointComparison {
-    @AstNodeVisitor
-    public void visit(Node node, MethodContext ctx, MethodDefinition md) {
-        if (Nodes.isOp(node, AstCode.CmpEq) || Nodes.isOp(node, AstCode.CmpNe)) {
-            List<Expression> args = ((Expression) node).getArguments();
+    @AstExpressionVisitor
+    public void visit(Expression node, MethodContext ctx, MethodDefinition md) {
+        if (node.getCode() == AstCode.CmpEq || node.getCode() == AstCode.CmpNe) {
+            List<Expression> args = node.getArguments();
             TypeReference inferredType = args.get(0).getInferredType();
             if(inferredType != null) {
                 JvmType type = inferredType.getSimpleType();

@@ -35,9 +35,11 @@ public class TestMinValueHandling {
 
     @AssertWarning(type="AbsoluteValueOfRandomInt", minRank=70, maxRank=78)
     public long testRandomLong() {
-        long h = new SplittableRandom().nextLong();
-        long v = Math.abs(h);
-        return v % 15;
+        synchronized(this) {
+            long h = new SplittableRandom().nextLong();
+            long v = Math.abs(h);
+            return v % 15;
+        }
     }
     
     @AssertWarning(type="AbsoluteValueOfHashCode", minRank=85)
@@ -65,5 +67,11 @@ public class TestMinValueHandling {
     static int falsePositive(Object key) {
         int rawHash = key.hashCode();
         return rawHash == Integer.MIN_VALUE ? 0 : Math.abs(rawHash);
+    }
+
+    @AssertNoWarning(type="AbsoluteValueOfHashCode")
+    static int unaryMinus(Object key) {
+        int rawHash = key.hashCode();
+        return -Math.abs(rawHash);
     }
 }

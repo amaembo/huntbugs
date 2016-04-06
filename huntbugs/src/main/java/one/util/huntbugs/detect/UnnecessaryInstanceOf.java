@@ -18,13 +18,10 @@ package one.util.huntbugs.detect;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
-import com.strobel.decompiler.ast.Node;
-
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstNodeVisitor;
+import one.util.huntbugs.registry.anno.AstExpressionVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
-import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.WarningAnnotation;
 
@@ -35,11 +32,11 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "RedundantCode", name = "UnnecessaryInstanceOf", baseRank = 60)
 @WarningDefinition(category = "RedundantCode", name = "UnnecessaryInstanceOfInferred", baseRank = 70)
 public class UnnecessaryInstanceOf {
-    @AstNodeVisitor
-    public void visit(Node node, MethodContext mc) {
-        if(Nodes.isOp(node, AstCode.InstanceOf)) {
-            TypeReference typeRef = (TypeReference)((Expression)node).getOperand();
-            Expression expr = ((Expression)node).getArguments().get(0);
+    @AstExpressionVisitor
+    public void visit(Expression node, MethodContext mc) {
+        if(node.getCode() == AstCode.InstanceOf) {
+            TypeReference typeRef = (TypeReference)node.getOperand();
+            Expression expr = node.getArguments().get(0);
             TypeReference exprType = expr.getInferredType();
 			if(Types.isInstance(exprType, typeRef)) {
                 mc.report("UnnecessaryInstanceOf", 0, node, new WarningAnnotation<>("INSTANCEOF_TYPE", typeRef.getFullName()), 

@@ -21,7 +21,7 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstNodeVisitor;
+import one.util.huntbugs.registry.anno.AstExpressionVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
@@ -34,13 +34,13 @@ import one.util.huntbugs.util.Types;
 @WarningDefinition(category="Correctness", name="RandomDoubleToInt", baseRank=80)
 public class RandomUsage {
 
-    @AstNodeVisitor
-    public void visit(Node node, MethodContext ctx) {
-        if(Nodes.isOp(node, AstCode.D2I)) {
+    @AstExpressionVisitor
+    public void visit(Expression node, MethodContext ctx) {
+        if(node.getCode() == AstCode.D2I) {
             if(isRandomDouble(Nodes.getOperand(node, 0))) {
                 ctx.report("RandomDoubleToInt", 0, node);
             }
-            Expression mul = ((Expression)node).getArguments().get(0);
+            Expression mul = node.getArguments().get(0);
             if(mul.getCode() == AstCode.Mul) {
                 mul.getArguments().stream().filter(this::isRandomDouble).findFirst().ifPresent(expr -> {
                     int priority = 0;

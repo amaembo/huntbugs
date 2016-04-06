@@ -63,6 +63,9 @@ public class MinValueHandling {
 		                    && Types.isRandomClass(sourceCall.getDeclaringType())) {
 					    if(methodSig.equals("()J"))
 					        priority -= 5;
+					    if(Nodes.isOp(parent, AstCode.Neg)) {
+					        return;
+					    }
 					    if(forget)
 					        mc.forgetLastBug();
 					    mc.report("AbsoluteValueOfRandomInt", priority, source);
@@ -73,6 +76,9 @@ public class MinValueHandling {
 							if(Nodes.isComparison(comparison) && (minValue.equals(Nodes.getConstant(Nodes.getOperand(comparison, 0))) ||
 		                            minValue.equals(Nodes.getConstant(Nodes.getOperand(comparison, 1)))))
 		                        return;
+		                }
+		                if(Nodes.isOp(parent, AstCode.Neg)) {
+		                    return;
 		                }
                         if(forget)
                             mc.forgetLastBug();

@@ -29,6 +29,7 @@ public class ErrorMessage {
     private final String descriptor;
     private final int line;
     private final Throwable error;
+    private final String errorMessage;
     private final String detector;
     
     public ErrorMessage(Detector detector, MethodDefinition method, int line, Throwable error) {
@@ -36,6 +37,11 @@ public class ErrorMessage {
                 .getFullName(), method.getSignature(), line, error);
     }
 
+    public ErrorMessage(Detector detector, MethodDefinition method, int line, String message) {
+        this(detector == null ? null : detector.toString(), method.getDeclaringType().getFullName(), method
+                .getFullName(), method.getSignature(), line, message);
+    }
+    
     public ErrorMessage(String detector, String className, String elementName, String descriptor, int line, Throwable error) {
         this.detector = detector;
         this.className = className;
@@ -43,6 +49,17 @@ public class ErrorMessage {
         this.descriptor = descriptor;
         this.line = line;
         this.error = error;
+        this.errorMessage = null;
+    }
+    
+    public ErrorMessage(String detector, String className, String elementName, String descriptor, int line, String message) {
+        this.detector = detector;
+        this.className = className;
+        this.elementName = elementName;
+        this.descriptor = descriptor;
+        this.line = line;
+        this.error = null;
+        this.errorMessage = message;
     }
     
     @Override
@@ -55,9 +72,13 @@ public class ErrorMessage {
             sb.append("\nElement: ").append(elementName).append(": ").append(descriptor);
         if(detector != null)
             sb.append("\nDetector: ").append(detector);
-        sb.append("\nError: ").append(error.getMessage());
-        for(StackTraceElement ste : error.getStackTrace()) {
-            sb.append("\n\t").append(ste);
+        if(error != null) {
+            sb.append("\nError: ").append(error.getMessage());
+            for(StackTraceElement ste : error.getStackTrace()) {
+                sb.append("\n\t").append(ste);
+            }
+        } else {
+            sb.append("\nError: ").append(errorMessage);
         }
         return sb.toString();
     }

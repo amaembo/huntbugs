@@ -16,6 +16,7 @@
 package one.util.huntbugs.detect;
 
 import java.util.List;
+
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.Flags;
@@ -25,7 +26,7 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstNodeVisitor;
+import one.util.huntbugs.registry.anno.AstExpressionVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 
@@ -36,23 +37,21 @@ import one.util.huntbugs.util.Nodes;
 @WarningDefinition(category="Multithreading", name="VolatileIncrement", baseRank=75)
 @WarningDefinition(category="Multithreading", name="VolatileMath", baseRank=75)
 public class VolatileIncrement {
-    @AstNodeVisitor
-    public void visitNode(Node node, MethodContext ctx) {
-        if(Nodes.isOp(node, AstCode.PreIncrement) || Nodes.isOp(node, AstCode.PostIncrement)) {
-            Expression expr = (Expression)node;
-            Expression arg = expr.getArguments().get(0);
+    @AstExpressionVisitor
+    public void visitNode(Expression node, MethodContext ctx) {
+        if(node.getCode() == AstCode.PreIncrement || node.getCode() == AstCode.PostIncrement) {
+            Expression arg = node.getArguments().get(0);
             if(arg.getCode() == AstCode.GetField || arg.getCode() == AstCode.GetStatic) {
                 FieldDefinition field = ((FieldReference)arg.getOperand()).resolve();
                 if (field != null && Flags.testAny(field.getFlags(), Flags.VOLATILE))
                     report(node, ctx, field, true);
             }
         }
-        if(Nodes.isOp(node, AstCode.PutField) || Nodes.isOp(node, AstCode.PutStatic)) {
-            Expression expr = (Expression)node;
-            FieldDefinition field = ((FieldReference)expr.getOperand()).resolve();
+        if(node.getCode() == AstCode.PutField || node.getCode() == AstCode.PutStatic) {
+            FieldDefinition field = ((FieldReference)node.getOperand()).resolve();
             if(field != null && Flags.testAny(field.getFlags(), Flags.VOLATILE)) {
-                Expression self = Nodes.getThis(expr);
-                Expression op = expr.getArguments().get(expr.getCode() == AstCode.PutStatic ? 0 : 1);
+                Expression self = Nodes.getThis(node);
+                Expression op = node.getArguments().get(node.getCode() == AstCode.PutStatic ? 0 : 1);
                 if(Nodes.isBinaryMath(op)) {
                     List<Expression> opArgs = op.getArguments();
                     Expression left = opArgs.get(0);

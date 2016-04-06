@@ -21,6 +21,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Function;
 
 import one.util.huntbugs.analysis.Context;
+import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 
 import com.strobel.assembler.metadata.MethodDefinition;
@@ -37,6 +38,7 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Label;
 import com.strobel.decompiler.ast.Lambda;
 import com.strobel.decompiler.ast.Node;
+import com.strobel.decompiler.ast.TryCatchBlock;
 import com.strobel.decompiler.ast.Variable;
 
 /**
@@ -200,6 +202,7 @@ public class ValuesFlow {
 
 		Frame process(Block method) {
 			Frame result = this;
+			boolean wasMonitor = false;
 			for (Node n : method.getBody()) {
 				if (result == null) {
 					// Something unsupported occurred
@@ -211,6 +214,10 @@ public class ValuesFlow {
 					case LoopContinue:
 					case Ret:
 						return null;
+					case MonitorEnter:
+					    result = result.process(expr);
+					    wasMonitor = true;
+					    continue;
 					default:
 					}
 					result = result.process(expr);
@@ -224,10 +231,23 @@ public class ValuesFlow {
 					result = left.merge(right);
 				} else if (n instanceof Label) {
 					// Skip
+				} else if (n instanceof TryCatchBlock) {
+				    TryCatchBlock tryCatch = (TryCatchBlock) n;
+				    if(wasMonitor && tryCatch.getCatchBlocks().isEmpty()) {
+				        Block block = tryCatch.getFinallyBlock();
+				        if(block != null && block.getBody().size() == 1 && Nodes.isOp(block.getBody().get(0), AstCode.MonitorExit)) {
+				            result = result.process(tryCatch.getTryBlock());
+				            wasMonitor = false;
+				            continue;
+				        }
+				    }
+				    // TODO: support
+				    return null;
 				} else {
 					// TODO: support switch, loops, exceptions
 					return null;
 				}
+				wasMonitor = false;
 			}
 			return result;
 		}

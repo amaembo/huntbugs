@@ -26,7 +26,7 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstNodeVisitor;
+import one.util.huntbugs.registry.anno.AstExpressionVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
@@ -97,12 +97,12 @@ public class RoughConstant {
         new BadConstant(Math.E, 1, "Math.E", 3)
     };
 
-    @AstNodeVisitor
-    public void visit(Node node, MethodContext ctx, NodeChain parents) {
+    @AstExpressionVisitor
+    public void visit(Expression expr, MethodContext ctx, NodeChain parents) {
         // Not use Nodes.getConstant here as direct usage should only be reported
-        if(!Nodes.isOp(node, AstCode.LdC))
+        if(expr.getCode() != AstCode.LdC)
             return;
-        Object constant = ((Expression) node).getOperand();
+        Object constant = expr.getOperand();
         if(constant instanceof Float || constant instanceof Double) {
             Number constValue = (Number)constant;
             double candidate = constValue.doubleValue();
@@ -126,7 +126,8 @@ public class RoughConstant {
                         else if(children > 1)
                             priority -= 5;
                     }
-                    ctx.report("RoughConstantValue", priority, node, WarningAnnotation.forNumber(constValue));
+                    ctx.report("RoughConstantValue", priority, expr, WarningAnnotation.forNumber(constValue),
+                        new WarningAnnotation<>("REPLACEMENT", badConstant.replacement));
                 }
             }
         }

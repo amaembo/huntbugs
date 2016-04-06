@@ -15,20 +15,26 @@
  */
 package one.util.huntbugs.registry;
 
+import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
+import com.strobel.decompiler.ast.Block;
+import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
+import one.util.huntbugs.registry.anno.AstBodyVisitor;
+import one.util.huntbugs.registry.anno.AstExpressionVisitor;
 import one.util.huntbugs.registry.anno.AstNodeVisitor;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.WarningType;
@@ -42,29 +48,53 @@ public class Detector {
     
     private final Map<String, WarningType> wts;
     private final Class<?> clazz;
-    final List<MethodHandle> astVisitors = new ArrayList<>();
+    final Map<VisitorType, List<MethodHandle>> visitors = new EnumMap<>(VisitorType.class);
+    
+    static enum VisitorType {
+        AST_NODE_VISITOR(AstNodeVisitor.class, MethodType.methodType(boolean.class, Object.class, Node.class, NodeChain.class,
+                    MethodContext.class, MethodDefinition.class, TypeDefinition.class)),
+        AST_EXPRESSION_VISITOR(AstExpressionVisitor.class, MethodType.methodType(boolean.class, Object.class, Expression.class, NodeChain.class,
+            MethodContext.class, MethodDefinition.class, TypeDefinition.class)),
+        AST_BODY_VISITOR(AstBodyVisitor.class, MethodType.methodType(void.class, Object.class, Block.class,
+                        MethodContext.class, MethodDefinition.class, TypeDefinition.class));
+        
+        Class<? extends Annotation> anno;
+        MethodType wantedType;
+
+        private VisitorType(Class<? extends Annotation> anno, MethodType wantedType) {
+			this.anno = anno;
+			this.wantedType = wantedType;
+		}
+    }
 
     public Detector(Map<String, WarningType> wts, Class<?> clazz) throws IllegalAccessException {
         this.wts = Objects.requireNonNull(wts);
         this.clazz = Objects.requireNonNull(clazz);
         for(Method m : clazz.getMethods()) {
-            if(m.getAnnotation(AstNodeVisitor.class) != null) {
-                MethodHandle mh = MethodHandles.publicLookup().unreflect(m);
-                MethodType wantedType = MethodType.methodType(boolean.class, clazz, Node.class, NodeChain.class,
-                    MethodContext.class, MethodDefinition.class, TypeDefinition.class);
-                mh = adapt(mh, wantedType);
-                astVisitors.add(mh);
+            for(VisitorType type : VisitorType.values()) {
+                if(m.getAnnotation(type.anno) != null) {
+                    MethodHandle mh = MethodHandles.publicLookup().unreflect(m);
+                    MethodType wantedType = type.wantedType.changeParameterType(0, clazz);
+                    mh = adapt(mh, wantedType);
+                    visitors.computeIfAbsent(type, k -> new ArrayList<>()).add(mh);
+                }
             }
         }
     }
     
     private MethodHandle adapt(MethodHandle mh, MethodType wantedType) {
         MethodType type = mh.type();
-        if(type.returnType() == void.class) {
-            mh = MethodHandles.filterReturnValue(mh, ALWAYS_TRUE);
-            type = mh.type();
-        } else if(type.returnType() != boolean.class) {
-            throw new IllegalStateException(mh+": Unexpected return type "+type.returnType());
+        if(wantedType.returnType() == boolean.class) {
+            if(type.returnType() == void.class) {
+                mh = MethodHandles.filterReturnValue(mh, ALWAYS_TRUE);
+                type = mh.type();
+            } else if(type.returnType() != boolean.class) {
+                throw new IllegalStateException(mh+": Unexpected return type "+type.returnType());
+            }
+        } else {
+            if(type.returnType() != wantedType.returnType()) {
+                throw new IllegalStateException(mh+": Unexpected return type "+type.returnType());
+            }
         }
         List<Class<?>> wantedTypes = new ArrayList<>(wantedType.parameterList());
         int[] map = new int[wantedTypes.size()];

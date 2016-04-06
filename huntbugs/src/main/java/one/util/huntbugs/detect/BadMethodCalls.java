@@ -21,21 +21,28 @@ import com.strobel.decompiler.ast.Expression;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstExpressionVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Nodes;
 
 /**
  * @author lan
  *
  */
-@WarningDefinition(category="Performance", name="NewForGetClass", baseRank=50)
-public class NewGetClass {
+@WarningDefinition(category="BadPractice", name="SystemExit", baseRank=60)
+@WarningDefinition(category="BadPractice", name="ThreadStopThrowable", baseRank=60)
+public class BadMethodCalls {
     @AstExpressionVisitor
     public void visit(Expression node, MethodContext ctx) {
-        if(node.getCode() == AstCode.InvokeVirtual) {
-            MethodReference ref = (MethodReference) node.getOperand();
-            if(ref.getName().equals("getClass") && ref.getErasedSignature().equals("()Ljava/lang/Class;")
-                    && node.getArguments().get(0).getCode() == AstCode.InitObject) {
-                ctx.report("NewForGetClass", 0, node);
-            }
+        if(Nodes.isInvoke(node) && node.getCode() != AstCode.InvokeDynamic) {
+            check(node, (MethodReference)node.getOperand(), ctx);
         }
     }
+
+	private void check(Expression node, MethodReference mr,
+			MethodContext ctx) {
+	    if(mr.getDeclaringType().getInternalName().equals("java/lang/System") && mr.getName().equals("exit"))
+	        ctx.report("SystemExit", 0, node);
+	    else if(mr.getDeclaringType().getInternalName().equals("java/lang/Thread") && mr.getName().equals("stop")
+	            && mr.getSignature().equals("(Ljava/lang/Throwable;)V"))
+	        ctx.report("ThreadStopThrowable", 0, node);
+	}
 }
