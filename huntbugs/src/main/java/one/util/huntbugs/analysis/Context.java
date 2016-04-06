@@ -20,6 +20,8 @@ import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.strobel.assembler.metadata.ClasspathTypeLoader;
 import com.strobel.assembler.metadata.CompositeTypeLoader;
@@ -42,8 +44,10 @@ public class Context {
     private final DetectorRegistry registry;
     private final MetadataSystem ms;
     private final Repository repository;
-    private int classesCount;
+    private final AtomicInteger classesCount = new AtomicInteger();
+    private int totalClasses = 0;
     private final AnalysisOptions options;
+    private final List<AnalysisListener> listeners = new CopyOnWriteArrayList<>();
 
     public Context(Repository repository, AnalysisOptions options) {
         registry = new DetectorRegistry(this);
@@ -59,8 +63,23 @@ public class Context {
     public AnalysisOptions getOptions() {
         return options;
     }
+    
+    public void addListener(AnalysisListener listener) {
+        listeners.add(listener);
+    }
+    
+    boolean fireEvent(String stepName, String className) {
+        for(AnalysisListener listener : listeners) {
+            if(!listener.eventOccurred(stepName, className))
+                return false;
+        }
+        return true;
+    }
 
     public void analyzePackage(String name) {
+        if(!fireEvent("Gathering statistics", null))
+            return;
+        List<String> classes = new ArrayList<>();
         repository.visit(name, new RepositoryVisitor() {
 
             @Override
@@ -70,13 +89,19 @@ public class Context {
 
             @Override
             public void visitClass(String className) {
-                analyzeClass(className);
+                classes.add(className);
             }
         });
+        totalClasses = classes.size();
+        for(String className : classes) {
+            if(!fireEvent("Analyzing class", className))
+                return;
+            analyzeClass(className);
+        }
     }
 
     public void analyzeClass(String name) {
-        classesCount++;
+        classesCount.incrementAndGet();
         TypeDefinition type = ms.resolve(ms.lookupType(name));
         if (type != null)
             registry.analyzeClass(type);
@@ -111,9 +136,13 @@ public class Context {
     }
 
     public int getClassesCount() {
-        return classesCount;
+        return classesCount.get();
     }
 
+    public int getTotalClasses() {
+        return totalClasses;
+    }
+    
     public int getErrorCount() {
         return errors.size();
     }

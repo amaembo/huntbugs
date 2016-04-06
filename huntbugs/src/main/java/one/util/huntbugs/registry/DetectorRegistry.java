@@ -121,7 +121,6 @@ public class DetectorRegistry {
     }
 
     public void analyzeClass(TypeDefinition type) {
-        System.out.println("Analyzing "+type.getFullName());
         ClassContext[] ccs = detectors.stream().map(d -> new ClassContext(ctx, type, d)).toArray(ClassContext[]::new);
 
         for (MethodDefinition md : type.getDeclaredMethods()) {

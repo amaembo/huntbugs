@@ -41,11 +41,19 @@ public class HuntBugs {
         Repository repository = Files.isDirectory(root) ? new DirRepository(root) : new JarRepository(new JarFile(root
                 .toFile()));
         Context ctx = new Context(repository, new AnalysisOptions());
+        ctx.addListener((stage, className) -> {
+            if(className == null)
+                return true;
+            String name = className.length() > 50 ? "..."+className.substring(className.length()-47) : className;
+            System.out.printf("\r%70s\r[%d/%d] %s", "", ctx.getClassesCount(), ctx.getTotalClasses(), name);
+            return true;
+        });
         ctx.analyzePackage("");
         ctx.reportErrors(new PrintStream("huntbugs.errors.txt"));
         ctx.reportWarnings(new PrintStream("huntbugs.warnings.txt"));
         long end = System.nanoTime();
         Duration dur = Duration.ofNanos(end - start);
+        System.out.printf("\r%70s\r\n", "");
         System.out.println("Analyzed "+ctx.getClassesCount()+" classes");
         System.out.println("Found "+ctx.getWarningCount()+" warnings");
         System.out.println("Encountered "+ctx.getErrorCount()+" analyzer errors");
