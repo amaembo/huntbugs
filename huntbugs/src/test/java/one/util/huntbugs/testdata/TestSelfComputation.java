@@ -23,18 +23,29 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestSelfComputation {
-    @AssertWarning(type="SelfComputation")
+    @AssertWarning(type = "SelfComputation")
     public int test(int a, int b) {
-        return (a-b) - (a-b);
+        return (a - b) - (a - b);
     }
 
-    @AssertWarning(type="SelfComputation")
+    @AssertWarning(type = "SelfComputation")
     public int test(int[] x) {
         return x[1] - x[1];
     }
-    
-    @AssertNoWarning(type="SelfComputation")
+
+    @AssertNoWarning(type = "SelfComputation")
     public int test(int[] x, int idx) {
         return x[idx++] - x[idx++];
     }
+
+    // Fails due to Procyon bug, reported https://bitbucket.org/mstrobel/procyon/issues/287/variables-incorerctly-merged
+//    @AssertNoWarning(type = "SelfComputation")
+//    public int appendDigits(long num, int maxdigits) {
+//        char[] buf = new char[maxdigits];
+//        int ix = maxdigits;
+//        while (ix > 0) {
+//            buf[--ix] = '0';
+//        }
+//        return maxdigits - ix;
+//    }
 }
