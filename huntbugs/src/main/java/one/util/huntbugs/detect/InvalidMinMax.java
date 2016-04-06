@@ -55,8 +55,8 @@ public class InvalidMinMax {
 		int outer = detectMethod(node);
 		if (outer == NONE)
 			return;
-		Node left = Nodes.getOperand(node, 0);
-		Node right = Nodes.getOperand(node, 1);
+		Node left = Nodes.getChild(node, 0);
+		Node right = Nodes.getChild(node, 1);
 		int leftChild = detectMethod(left);
 		int rightChild = detectMethod(right);
 		if (leftChild == NONE && rightChild == NONE)

@@ -37,7 +37,7 @@ public class RandomUsage {
     @AstExpressionVisitor
     public void visit(Expression node, MethodContext ctx) {
         if(node.getCode() == AstCode.D2I) {
-            if(isRandomDouble(Nodes.getOperand(node, 0))) {
+            if(isRandomDouble(Nodes.getChild(node, 0))) {
                 ctx.report("RandomDoubleToInt", 0, node);
             }
             Expression mul = node.getArguments().get(0);

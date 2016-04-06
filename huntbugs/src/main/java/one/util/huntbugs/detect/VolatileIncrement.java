@@ -21,49 +21,53 @@ import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.Flags;
 import com.strobel.assembler.metadata.JvmType;
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
-import com.strobel.decompiler.ast.Node;
-
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstExpressionVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 
 /**
  * @author lan
  *
  */
-@WarningDefinition(category="Multithreading", name="VolatileIncrement", baseScore=75)
-@WarningDefinition(category="Multithreading", name="VolatileMath", baseScore=75)
+@WarningDefinition(category = "Multithreading", name = "VolatileIncrement", baseScore = 85)
+@WarningDefinition(category = "Multithreading", name = "VolatileMath", baseScore = 85)
 public class VolatileIncrement {
     @AstExpressionVisitor
-    public void visitNode(Expression node, MethodContext ctx) {
-        if(node.getCode() == AstCode.PreIncrement || node.getCode() == AstCode.PostIncrement) {
+    public void visitNode(Expression node, MethodContext ctx, NodeChain parents, MethodDefinition md) {
+        if (node.getCode() == AstCode.PreIncrement || node.getCode() == AstCode.PostIncrement) {
             Expression arg = node.getArguments().get(0);
-            if(arg.getCode() == AstCode.GetField || arg.getCode() == AstCode.GetStatic) {
-                FieldDefinition field = ((FieldReference)arg.getOperand()).resolve();
+            if (arg.getCode() == AstCode.GetField || arg.getCode() == AstCode.GetStatic) {
+                FieldDefinition field = ((FieldReference) arg.getOperand()).resolve();
                 if (field != null && Flags.testAny(field.getFlags(), Flags.VOLATILE))
-                    report(node, ctx, field, true);
+                    ctx.report("VolatileIncrement", computeScore(field, md, parents), node);
             }
         }
-        if(node.getCode() == AstCode.PutField || node.getCode() == AstCode.PutStatic) {
-            FieldDefinition field = ((FieldReference)node.getOperand()).resolve();
-            if(field != null && Flags.testAny(field.getFlags(), Flags.VOLATILE)) {
+        if (node.getCode() == AstCode.PutField || node.getCode() == AstCode.PutStatic) {
+            FieldDefinition field = ((FieldReference) node.getOperand()).resolve();
+            if (field != null && Flags.testAny(field.getFlags(), Flags.VOLATILE)) {
                 Expression self = Nodes.getThis(node);
                 Expression op = node.getArguments().get(node.getCode() == AstCode.PutStatic ? 0 : 1);
-                if(Nodes.isBinaryMath(op)) {
+                if (Nodes.isBinaryMath(op)) {
                     List<Expression> opArgs = op.getArguments();
                     Expression left = opArgs.get(0);
                     Expression right = opArgs.get(1);
-                    if(left.getCode() == AstCode.GetField || left.getCode() == AstCode.GetStatic) {
-                        if(((FieldReference)left.getOperand()).resolve() == field && Nodes.isEquivalent(self, Nodes.getThis(left))) {
-                            report(node, ctx, field, op.getCode() == AstCode.Add);
+                    if (left.getCode() == AstCode.GetField || left.getCode() == AstCode.GetStatic) {
+                        if (((FieldReference) left.getOperand()).resolve() == field
+                            && Nodes.isEquivalent(self, Nodes.getThis(left))) {
+                            ctx.report(op.getCode() == AstCode.Add ? "VolatileIncrement" : "VolatileMath",
+                                computeScore(field, md, parents), node);
                         }
                     }
-                    if(right.getCode() == AstCode.GetField || right.getCode() == AstCode.GetStatic) {
-                        if(((FieldReference)right.getOperand()).resolve() == field && Nodes.isEquivalent(self, Nodes.getThis(right))) {
-                            report(node, ctx, field, op.getCode() == AstCode.Add);
+                    if (right.getCode() == AstCode.GetField || right.getCode() == AstCode.GetStatic) {
+                        if (((FieldReference) right.getOperand()).resolve() == field
+                            && Nodes.isEquivalent(self, Nodes.getThis(right))) {
+                            ctx.report(op.getCode() == AstCode.Add ? "VolatileIncrement" : "VolatileMath",
+                                computeScore(field, md, parents), node);
                         }
                     }
                 }
@@ -71,9 +75,15 @@ public class VolatileIncrement {
         }
     }
 
-    private void report(Node node, MethodContext ctx, FieldDefinition field, boolean increment) {
+    private int computeScore(FieldDefinition field, MethodDefinition md, NodeChain parents) {
+        int score = 0;
         JvmType type = field.getFieldType().getSimpleType();
-        ctx.report(increment ? "VolatileIncrement" : "VolatileMath", type == JvmType.Long || type == JvmType.Double ? 10 : 0, node);
+        if (type != JvmType.Long && type != JvmType.Double)
+            score -= 10;
+
+        if (Flags.testAny(md.getFlags(), Flags.SYNCHRONIZED) || Nodes.isSynchorizedBlock(parents))
+            score -= 30;
+        return score;
     }
 
 }

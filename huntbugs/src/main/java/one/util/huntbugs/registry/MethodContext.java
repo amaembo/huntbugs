@@ -212,9 +212,7 @@ public class MethodContext {
             Object operand = expr.getOperand();
             if(operand instanceof Variable) {
                 anno.add(WarningAnnotation.forVariable((Variable) operand));
-                Node src = ValuesFlow.getSource(expr);
-                if(src instanceof Expression)
-                    operand = ((Expression) src).getOperand();
+                operand = ValuesFlow.getSource(expr).getOperand();
             }
             if(operand instanceof FieldReference) {
                 anno.add(WarningAnnotation.forField((FieldReference) operand));

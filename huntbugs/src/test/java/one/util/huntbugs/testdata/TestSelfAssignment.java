@@ -68,4 +68,27 @@ public class TestSelfAssignment {
         Object a = st;
         st = a;
     }
+    
+    @AssertNoWarning(type="SelfAssignmentField")
+    void testSideEffectStatic() {
+        Object a = st;
+        st = null;
+        System.out.println(st);
+        st = a;
+    }
+    
+    @AssertNoWarning(type="SelfAssignmentField")
+    void testSideEffect() {
+        Object a = f;
+        f = null;
+        System.out.println(f);
+        f = a;
+    }
+
+    @AssertNoWarning(type="SelfAssignmentField")
+    void testTwoObjects() {
+        TestSelfAssignment t1 = new TestSelfAssignment();
+        TestSelfAssignment t2 = new TestSelfAssignment();
+        t1.f = t2.f;
+    }
 }

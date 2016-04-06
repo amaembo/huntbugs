@@ -37,13 +37,12 @@ public class SelfAssignment {
         if(expr.getCode() == AstCode.PutField) {
             FieldDefinition frPut = ((FieldReference) expr.getOperand()).resolve();
             if(frPut != null) {
-                Node val = Nodes.getOperand(expr, 1);
-                if(Nodes.isOp(val, AstCode.GetField)) {
-                    Expression getField = (Expression) val;
+                Expression getField = Nodes.getChild(expr, 1);
+                if(getField.getCode() == AstCode.GetField) {
                     FieldReference frGet = (FieldReference) getField.getOperand();
                     if(frPut.equals(frGet.resolve())) {
-                        Node selfPut = Nodes.getOperand(expr, 0);
-                        Node selfGet = Nodes.getOperand(getField, 0);
+                        Node selfPut = Nodes.getChild(expr, 0);
+                        Node selfGet = Nodes.getChild(getField, 0);
                         if(Nodes.isEquivalent(selfGet, selfPut)) {
                             mc.report("SelfAssignmentField", 0, expr);
                         }
@@ -53,10 +52,9 @@ public class SelfAssignment {
         } else if(expr.getCode() == AstCode.PutStatic) {
             FieldDefinition frPut = ((FieldReference) expr.getOperand()).resolve();
             if(frPut != null) {
-                Node val = Nodes.getOperand(expr, 0);
-                if(Nodes.isOp(val, AstCode.GetStatic)) {
-                    Expression getField = (Expression) val;
-                    FieldReference frGet = (FieldReference) getField.getOperand();
+                Expression getStatic = Nodes.getChild(expr, 0);
+                if(getStatic.getCode() == AstCode.GetStatic) {
+                    FieldReference frGet = (FieldReference) getStatic.getOperand();
                     if(frPut.equals(frGet.resolve())) {
                         mc.report("SelfAssignmentField", 0, expr);
                     }

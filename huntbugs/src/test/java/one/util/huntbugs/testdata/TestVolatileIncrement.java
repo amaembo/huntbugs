@@ -48,6 +48,18 @@ public class TestVolatileIncrement {
         return ++x;
     }
 
+    @AssertWarning(type = "VolatileIncrement", minScore = 40, maxScore = 50)
+    public synchronized int testPostSynchronized() {
+        return ++x;
+    }
+    
+    @AssertWarning(type = "VolatileIncrement", minScore = 40, maxScore = 50)
+    public int testPostSynchronizedBlock() {
+        synchronized (this) {
+            return ++x;
+        }
+    }
+    
     @AssertWarning(type = "VolatileMath", minScore = 70)
     public int testMul() {
         return x *= 2;

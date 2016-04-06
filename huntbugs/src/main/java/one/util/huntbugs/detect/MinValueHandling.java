@@ -37,8 +37,8 @@ public class MinValueHandling {
     @AstNodeVisitor
     public void visit(Node node, NodeChain chain, MethodContext mc) {
         if(Nodes.isOp(node, AstCode.Rem)) {
-            Node body = Nodes.getOperand(node, 0);
-            Object modulus = Nodes.getConstant(Nodes.getOperand(node, 1));
+            Node body = Nodes.getChild(node, 0);
+            Object modulus = Nodes.getConstant(Nodes.getChild(node, 1));
             int priority = 0;
             if((modulus instanceof Integer || modulus instanceof Long) && Long.bitCount(((Number)modulus).longValue()) == 1) {
                 priority -= 40;
@@ -53,7 +53,7 @@ public class MinValueHandling {
 		if(Nodes.isOp(body, AstCode.InvokeStatic)) {
 		    MethodReference absCandidate = (MethodReference)((Expression)body).getOperand();
 		    if(absCandidate.getName().equals("abs") && absCandidate.getDeclaringType().getInternalName().equals("java/lang/Math")) {
-		        Node source = Nodes.getOperand(body, 0);
+		        Node source = Nodes.getChild(body, 0);
 		        if(Nodes.isOp(source, AstCode.InvokeVirtual)) {
 		            MethodReference sourceCall = (MethodReference)((Expression)source).getOperand();
 		            String methodName = sourceCall.getName();
@@ -71,10 +71,10 @@ public class MinValueHandling {
 					    mc.report("AbsoluteValueOfRandomInt", priority, source);
 		            } else if(methodName.equals("hashCode") && methodSig.equals("()I")) {
 		                if(Nodes.isOp(parent, AstCode.TernaryOp)) {
-		                    Node comparison = Nodes.getOperand(parent, 0);
+		                    Node comparison = Nodes.getChild(parent, 0);
 		                    Integer minValue = Integer.MIN_VALUE;
-							if(Nodes.isComparison(comparison) && (minValue.equals(Nodes.getConstant(Nodes.getOperand(comparison, 0))) ||
-		                            minValue.equals(Nodes.getConstant(Nodes.getOperand(comparison, 1)))))
+							if(Nodes.isComparison(comparison) && (minValue.equals(Nodes.getConstant(Nodes.getChild(comparison, 0))) ||
+		                            minValue.equals(Nodes.getConstant(Nodes.getChild(comparison, 1)))))
 		                        return;
 		                }
 		                if(Nodes.isOp(parent, AstCode.Neg)) {

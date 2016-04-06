@@ -43,7 +43,7 @@ public class EqualsContract {
         if(list.size() == 1) {
             Node node = list.get(0);
             if(Nodes.isOp(node, AstCode.Return)) {
-                Object constant = Nodes.getConstant(Nodes.getOperand(node, 0));
+                Object constant = Nodes.getConstant(Nodes.getChild(node, 0));
                 int score = 0;
                 if(td.isNonPublic())
                     score -= 30;

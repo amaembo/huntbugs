@@ -16,13 +16,16 @@
 package one.util.huntbugs.util;
 
 import java.util.List;
+
 import one.util.huntbugs.flow.ValuesFlow;
 
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
+import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
+import com.strobel.decompiler.ast.TryCatchBlock;
 
 /**
  * @author lan
@@ -48,18 +51,24 @@ public class Nodes {
         return args.get(0).getCode() == AstCode.AConstNull ^ args.get(1).getCode() == AstCode.AConstNull;
     }
     
-    public static Node getOperand(Node node, int i) {
+    public static Node getChild(Node node, int i) {
         if(node instanceof Expression) {
             return ValuesFlow.getSource(((Expression)node).getArguments().get(i));
         }
         return node.getChildren().get(i);
     }
     
+    public static Expression getChild(Expression node, int i) {
+        return ValuesFlow.getSource(node.getArguments().get(i));
+    }
+    
     public static Object getConstant(Node node) {
-		node = ValuesFlow.getSource(node);
-        if(!isOp(node, AstCode.LdC))
+        if(!(node instanceof Expression))
             return null;
-        return ((Expression)node).getOperand();
+		Expression expr = ValuesFlow.getSource((Expression) node);
+        if(expr.getCode() != AstCode.LdC)
+            return null;
+        return expr.getOperand();
     }
     
     public static boolean isComparison(Node node) {
@@ -183,6 +192,8 @@ public class Nodes {
 	    case CompoundAssignment:
 	    case PutField:
 	    case PutStatic:
+	    case InitArray:
+	    case InitObject:
 	        return false;
 	    case InvokeSpecial:
 	    case InvokeStatic:
@@ -196,5 +207,24 @@ public class Nodes {
 	        }
 	    }
 		return true;
+	}
+	
+	public static boolean isSynchorizedBlock(Node node) {
+	    if(!(node instanceof TryCatchBlock)) {
+	        return false;
+	    }
+	    Block finallyBlock = ((TryCatchBlock)node).getFinallyBlock();
+	    if(finallyBlock == null)
+	        return false;
+	    return finallyBlock.getBody().stream().anyMatch(n -> Nodes.isOp(n, AstCode.MonitorExit));
+	}
+	
+	public static boolean isSynchorizedBlock(NodeChain chain) {
+	    while(chain != null) {
+	        if(isSynchorizedBlock(chain.getNode()))
+	            return true;
+	        chain = chain.getParent();
+	    }
+	    return false;
 	}
 }
