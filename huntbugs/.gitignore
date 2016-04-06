@@ -1,3 +1,4 @@
 /target/
 /huntbugs*.txt
 /run.bat
+/procyon-decompiler-*.jar
