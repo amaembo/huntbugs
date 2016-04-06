@@ -52,8 +52,6 @@ import one.util.huntbugs.warning.WarningType;
  *
  */
 public class DetectorRegistry {
-    public static final int MAX_CODE_SIZE = 8000;
-    
     private static final WarningType METHOD_TOO_LARGE = new WarningType("System", "MethodTooLarge", 30);
     
     private static final String DETECTORS_PACKAGE = "one/util/huntbugs/detect";
@@ -131,7 +129,7 @@ public class DetectorRegistry {
 
             MethodBody body = md.getBody();
             if (body != null) {
-                if(body.getCodeSize() > MAX_CODE_SIZE) {
+                if(body.getCodeSize() > ctx.getOptions().maxMethodSize) {
                     ctx.addWarning(new Warning(METHOD_TOO_LARGE, 0, Arrays.asList(WarningAnnotation.forType(type), WarningAnnotation
                             .forMethod(md), new WarningAnnotation<>("BYTECODE_SIZE", body.getCodeSize()))));
                 } else {

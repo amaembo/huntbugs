@@ -16,6 +16,8 @@
 package one.util.huntbugs;
 
 import java.io.PrintStream;
+
+import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.repo.Repository;
 
@@ -29,7 +31,7 @@ import org.junit.Test;
 public class DataTest {
     @Test
     public void test() throws Exception {
-        Context ctx = new Context(Repository.createSelfRepository());
+        Context ctx = new Context(Repository.createSelfRepository(), new AnalysisOptions());
         ctx.analyzePackage("one/util/huntbugs/testdata");
         ctx.reportErrors(System.err);
         

@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.jar.JarFile;
 
+import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.repo.DirRepository;
 import one.util.huntbugs.repo.JarRepository;
@@ -39,7 +40,7 @@ public class HuntBugs {
         Path root = Paths.get(classPath);
         Repository repository = Files.isDirectory(root) ? new DirRepository(root) : new JarRepository(new JarFile(root
                 .toFile()));
-        Context ctx = new Context(repository);
+        Context ctx = new Context(repository, new AnalysisOptions());
         ctx.analyzePackage("");
         ctx.reportErrors(new PrintStream("huntbugs.errors.txt"));
         ctx.reportWarnings(new PrintStream("huntbugs.warnings.txt"));

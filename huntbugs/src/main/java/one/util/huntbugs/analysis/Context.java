@@ -23,6 +23,7 @@ import java.util.List;
 
 import com.strobel.assembler.metadata.ClasspathTypeLoader;
 import com.strobel.assembler.metadata.CompositeTypeLoader;
+import com.strobel.assembler.metadata.ITypeLoader;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
 
@@ -42,45 +43,53 @@ public class Context {
     private final MetadataSystem ms;
     private final Repository repository;
     private int classesCount;
-    
-    public Context(Repository repository) {
+    private final AnalysisOptions options;
+
+    public Context(Repository repository, AnalysisOptions options) {
         registry = new DetectorRegistry(this);
         this.repository = repository;
-        
-        ms = new MetadataSystem(new CompositeTypeLoader(new ClasspathTypeLoader(System
-                .getProperty("sun.boot.class.path")), repository.createTypeLoader()));
+        this.options = options;
+        ITypeLoader loader = repository.createTypeLoader();
+        if (options.addBootClassPath) {
+            loader = new CompositeTypeLoader(new ClasspathTypeLoader(System.getProperty("sun.boot.class.path")), loader);
+        }
+        ms = new MetadataSystem(loader);
     }
-    
+
+    public AnalysisOptions getOptions() {
+        return options;
+    }
+
     public void analyzePackage(String name) {
         repository.visit(name, new RepositoryVisitor() {
-            
+
             @Override
             public boolean visitPackage(String packageName) {
                 return true;
             }
-            
+
             @Override
             public void visitClass(String className) {
                 analyzeClass(className);
             }
         });
     }
-    
+
     public void analyzeClass(String name) {
         classesCount++;
         TypeDefinition type = ms.resolve(ms.lookupType(name));
-        if(type != null)
+        if (type != null)
             registry.analyzeClass(type);
     }
-    
+
     public void addError(ErrorMessage msg) {
         errors.add(msg);
     }
-    
+
     public void addWarning(Warning warning) {
         warnings.add(warning);
     }
-    
+
     public void reportWarnings(Appendable app) {
         warnings.forEach(msg -> {
             try {
@@ -90,7 +99,7 @@ public class Context {
             }
         });
     }
-    
+
     public void reportErrors(Appendable app) {
         errors.forEach(msg -> {
             try {
@@ -100,11 +109,11 @@ public class Context {
             }
         });
     }
-    
+
     public int getClassesCount() {
         return classesCount;
     }
-    
+
     public int getErrorCount() {
         return errors.size();
     }
