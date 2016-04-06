@@ -157,9 +157,44 @@ public class Nodes {
         throw new IllegalArgumentException(node+": expected field operation");
     }
 
-    public static boolean isEquivalent(Expression expr1, Expression expr2) {
+    public static boolean isEquivalent(Node expr1, Node expr2) {
+        if(expr1 == expr2)
+            return true;
         if(expr1 == null)
             return expr2 == null;
-        return expr1.isEquivalentTo(expr2);
+        if(expr1 instanceof Expression && expr2 instanceof Expression)
+            return ((Expression)expr1).isEquivalentTo((Expression) expr2)
+                    && isSideEffectFree(expr1);
+        return false;
     }
+
+	public static boolean isSideEffectFree(Node node) {
+	    if(node == null)
+	        return true;
+	    if(!(node instanceof Expression))
+	        return false;
+	    Expression expr = (Expression)node;
+		switch(expr.getCode()) {
+	    case PreIncrement:
+	    case PostIncrement:
+	    case InvokeDynamic:
+	    case Store:
+	    case StoreElement:
+	    case CompoundAssignment:
+	    case PutField:
+	    case PutStatic:
+	        return false;
+	    case InvokeSpecial:
+	    case InvokeStatic:
+	    case InvokeVirtual:
+	        if(!isBoxing(node) && !isUnboxing(node))
+	            return false;
+	    default:
+	        for(Expression child : expr.getArguments()) {
+	            if(!isSideEffectFree(child))
+	                return false;
+	        }
+	    }
+		return true;
+	}
 }

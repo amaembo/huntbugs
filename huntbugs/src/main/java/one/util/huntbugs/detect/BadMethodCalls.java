@@ -15,9 +15,13 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.Locale;
+
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
+
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstExpressionVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
@@ -31,18 +35,40 @@ import one.util.huntbugs.util.Nodes;
 @WarningDefinition(category="BadPractice", name="ThreadStopThrowable", baseScore=60)
 public class BadMethodCalls {
     @AstExpressionVisitor
-    public void visit(Expression node, MethodContext ctx) {
+    public void visit(Expression node, MethodContext ctx, MethodDefinition curMethod) {
         if(Nodes.isInvoke(node) && node.getCode() != AstCode.InvokeDynamic) {
-            check(node, (MethodReference)node.getOperand(), ctx);
+            check(node, (MethodReference)node.getOperand(), ctx, curMethod);
         }
     }
 
 	private void check(Expression node, MethodReference mr,
-			MethodContext ctx) {
-	    if(mr.getDeclaringType().getInternalName().equals("java/lang/System") && mr.getName().equals("exit"))
-	        ctx.report("SystemExit", 0, node);
+			MethodContext ctx, MethodDefinition curMethod) {
+	    if(mr.getDeclaringType().getInternalName().equals("java/lang/System") && mr.getName().equals("exit")) {
+	        String curName = curMethod.getName();
+			if (isMain(curMethod) || curName.equals("processWindowEvent")
+					|| curName.startsWith("windowClos"))
+				return;
+			int score = 0;
+	        curName = curName.toLowerCase(Locale.ENGLISH);
+			if (curName.indexOf("exit") > -1 || curName.indexOf("crash") > -1
+					|| curName.indexOf("die") > -1
+					|| curName.indexOf("main") > -1)
+				score -= 20;
+			if(curMethod.isStatic())
+			    score -= 10;
+	        if(curMethod.getDeclaringType().getDeclaredMethods().stream().anyMatch(BadMethodCalls::isMain))
+	            score -= 20;
+			ctx.report("SystemExit", score, node);
+	    }
 	    else if(mr.getDeclaringType().getInternalName().equals("java/lang/Thread") && mr.getName().equals("stop")
 	            && mr.getSignature().equals("(Ljava/lang/Throwable;)V"))
 	        ctx.report("ThreadStopThrowable", 0, node);
+	}
+
+	private static boolean isMain(MethodDefinition curMethod) {
+		return curMethod.getName().equals("main")
+				&& curMethod.isStatic()
+				&& curMethod.getErasedSignature().startsWith(
+						"([Ljava/lang/String;)");
 	}
 }

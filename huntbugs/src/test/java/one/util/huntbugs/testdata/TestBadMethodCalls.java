@@ -23,10 +23,15 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestBadMethodCalls {
-    @AssertWarning(type="SystemExit")
+    @AssertWarning(type="SystemExit", maxScore = 30)
     public void systemExit() {
         System.exit(0);
     }
+    
+    @AssertNoWarning(type="SystemExit")
+    public static void main(String[] args) {
+        System.exit(0);
+	}
 
     @AssertWarning(type="ThreadStopThrowable")
     public void threadStopThrowable() {
