@@ -27,9 +27,55 @@ public class TestBadMethodCalls {
     public void systemExit() {
         System.exit(0);
     }
+
+    @AssertWarning(type="SystemExit", minScore = 40)
+    public void doSomething() {
+        System.exit(0);
+    }
+
+    @AssertWarning(type="SystemGc", maxScore = 40)
+    public void collectSomeGarbage() {
+        System.gc();
+    }
     
-    @AssertNoWarning(type="SystemExit")
+    @AssertNoWarning(type="SystemGc")
+    public void collectGarbageInCatch() {
+        try {
+            System.out.println();
+        }
+        catch(OutOfMemoryError ex) {
+            System.gc();
+        }
+        try {
+            System.out.println();
+        }
+        catch(StackOverflowError | OutOfMemoryError ex) {
+            System.gc();
+        }
+    }
+    
+    @AssertNoWarning(type="SystemGc")
+    public void collectGarbageTimeMeasure() {
+        System.gc();
+        long start = System.nanoTime();
+        System.out.println();
+        long end = System.nanoTime();
+        System.out.println(end - start);
+    }
+    
+    @AssertWarning(type="SystemGc")
+    public void collectGarbageInGeneralCatch() {
+        try {
+            System.out.println();
+        }
+        catch(Exception ex) {
+            System.gc();
+        }
+    }
+    
+    @AssertNoWarning(type="System*")
     public static void main(String[] args) {
+        System.gc();
         System.exit(0);
 	}
 

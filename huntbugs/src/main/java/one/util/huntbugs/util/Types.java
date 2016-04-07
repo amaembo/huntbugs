@@ -44,7 +44,11 @@ public class Types {
 	}
 	
 	public static boolean isInstance(TypeReference type, TypeReference wantedType) {
-	    if(type.equals(wantedType))
+	    return isInstance(type, wantedType.getInternalName());
+	}
+
+	public static boolean isInstance(TypeReference type, String wantedType) {
+	    if(type.getInternalName().equals(wantedType))
 	        return true;
 	    TypeDefinition td = type.resolve();
 	    if(td == null)

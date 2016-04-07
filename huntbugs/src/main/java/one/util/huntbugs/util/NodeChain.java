@@ -17,6 +17,8 @@ package one.util.huntbugs.util;
 
 import java.util.Objects;
 
+import com.strobel.assembler.metadata.TypeReference;
+import com.strobel.decompiler.ast.CatchBlock;
 import com.strobel.decompiler.ast.Node;
 
 /**
@@ -45,5 +47,39 @@ public class NodeChain {
         if(parent == null)
             return cur.toString();
         return cur + " -> "+parent;
+    }
+    
+    public Node getRoot() {
+        NodeChain nc = this;
+        while(nc.getParent() != null) {
+            nc = nc.getParent();
+        }
+        return nc.getNode();
+    }
+    
+    public boolean isSynchronized() {
+        NodeChain chain = this;
+        while(chain != null) {
+            if(Nodes.isSynchorizedBlock(chain.getNode()))
+                return true;
+            chain = chain.getParent();
+        }
+        return false;
+    }
+    
+    public boolean isInCatch(String wantedException) {
+        NodeChain nc = this;
+        while(nc != null) {
+            if(nc.getNode() instanceof CatchBlock) {
+                CatchBlock catchBlock = (CatchBlock)nc.getNode();
+                TypeReference exType = catchBlock.getExceptionType();
+                if(exType != null && Types.isInstance(exType, wantedException))
+                    return true;
+                if(catchBlock.getCaughtTypes().stream().anyMatch(t -> Types.isInstance(t, wantedException)))
+                    return true;
+            }
+            nc = nc.getParent();
+        }
+        return false;
     }
 }

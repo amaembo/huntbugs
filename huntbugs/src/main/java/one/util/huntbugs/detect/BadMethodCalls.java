@@ -21,54 +21,74 @@ import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
+import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstExpressionVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 
 /**
  * @author lan
  *
  */
-@WarningDefinition(category="BadPractice", name="SystemExit", baseScore=60)
-@WarningDefinition(category="BadPractice", name="ThreadStopThrowable", baseScore=60)
+@WarningDefinition(category = "BadPractice", name = "SystemExit", baseScore = 60)
+@WarningDefinition(category = "BadPractice", name = "SystemGc", baseScore = 50)
+@WarningDefinition(category = "BadPractice", name = "ThreadStopThrowable", baseScore = 60)
 public class BadMethodCalls {
     @AstExpressionVisitor
-    public void visit(Expression node, MethodContext ctx, MethodDefinition curMethod) {
-        if(Nodes.isInvoke(node) && node.getCode() != AstCode.InvokeDynamic) {
-            check(node, (MethodReference)node.getOperand(), ctx, curMethod);
+    public void visit(Expression node, NodeChain nc, MethodContext ctx, MethodDefinition curMethod) {
+        if (Nodes.isInvoke(node) && node.getCode() != AstCode.InvokeDynamic) {
+            check(node, (MethodReference) node.getOperand(), nc, ctx, curMethod);
         }
     }
 
-	private void check(Expression node, MethodReference mr,
-			MethodContext ctx, MethodDefinition curMethod) {
-	    if(mr.getDeclaringType().getInternalName().equals("java/lang/System") && mr.getName().equals("exit")) {
-	        String curName = curMethod.getName();
-			if (isMain(curMethod) || curName.equals("processWindowEvent")
-					|| curName.startsWith("windowClos"))
-				return;
-			int score = 0;
-	        curName = curName.toLowerCase(Locale.ENGLISH);
-			if (curName.indexOf("exit") > -1 || curName.indexOf("crash") > -1
-					|| curName.indexOf("die") > -1
-					|| curName.indexOf("main") > -1)
-				score -= 20;
-			if(curMethod.isStatic())
-			    score -= 10;
-	        if(curMethod.getDeclaringType().getDeclaredMethods().stream().anyMatch(BadMethodCalls::isMain))
-	            score -= 20;
-			ctx.report("SystemExit", score, node);
-	    }
-	    else if(mr.getDeclaringType().getInternalName().equals("java/lang/Thread") && mr.getName().equals("stop")
-	            && mr.getSignature().equals("(Ljava/lang/Throwable;)V"))
-	        ctx.report("ThreadStopThrowable", 0, node);
-	}
+    private void check(Expression node, MethodReference mr, NodeChain nc, MethodContext ctx, MethodDefinition curMethod) {
+        String typeName = mr.getDeclaringType().getInternalName();
+        String name = mr.getName();
+        String signature = mr.getSignature();
+        if (typeName.equals("java/lang/System") && name.equals("exit")) {
+            String curName = curMethod.getName();
+            if (isMain(curMethod) || curName.equals("processWindowEvent") || curName.startsWith("windowClos"))
+                return;
+            int score = 0;
+            curName = curName.toLowerCase(Locale.ENGLISH);
+            if (curName.indexOf("exit") > -1 || curName.indexOf("crash") > -1 || curName.indexOf("die") > -1
+                || curName.indexOf("main") > -1)
+                score -= 20;
+            if (curMethod.isStatic())
+                score -= 10;
+            if (curMethod.getDeclaringType().getDeclaredMethods().stream().anyMatch(BadMethodCalls::isMain))
+                score -= 20;
+            ctx.report("SystemExit", score, node);
+        } else if ((typeName.equals("java/lang/System") || typeName.equals("java/lang/Runtime")) && name.equals("gc")
+            && signature.equals("()V")) {
+            String curName = curMethod.getName();
+            if (isMain(curMethod) || curName.startsWith("test"))
+                return;
+            if (nc.isInCatch("java/lang/OutOfMemoryError"))
+                return;
+            if (Nodes.find(nc.getRoot(), BadMethodCalls::isTimeMeasure) != null)
+                return;
+            int score = 0;
+            if (curName.toLowerCase(Locale.ENGLISH).contains("garbage") || curName.startsWith("gc") || curName.endsWith("gc"))
+                score -= 10;
+            ctx.report("SystemGc", score, node);
+        } else if (typeName.equals("java/lang/Thread") && name.equals("stop")
+            && signature.equals("(Ljava/lang/Throwable;)V"))
+            ctx.report("ThreadStopThrowable", 0, node);
+    }
 
-	private static boolean isMain(MethodDefinition curMethod) {
-		return curMethod.getName().equals("main")
-				&& curMethod.isStatic()
-				&& curMethod.getErasedSignature().startsWith(
-						"([Ljava/lang/String;)");
-	}
+    private static boolean isMain(MethodDefinition curMethod) {
+        return curMethod.getName().equals("main") && curMethod.isStatic()
+            && curMethod.getErasedSignature().startsWith("([Ljava/lang/String;)");
+    }
+    
+    private static boolean isTimeMeasure(Node node) {
+        if (!Nodes.isOp(node, AstCode.InvokeStatic))
+            return false;
+        MethodReference mr = (MethodReference) ((Expression)node).getOperand();
+        return mr.getName().equals("currentTimeMillis") || mr.getName().equals("nanoTime");
+    }
 }

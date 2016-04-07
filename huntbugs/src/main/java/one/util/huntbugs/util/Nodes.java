@@ -16,6 +16,7 @@
 package one.util.huntbugs.util;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 import one.util.huntbugs.flow.ValuesFlow;
 
@@ -219,12 +220,14 @@ public class Nodes {
 	    return finallyBlock.getBody().stream().anyMatch(n -> Nodes.isOp(n, AstCode.MonitorExit));
 	}
 	
-	public static boolean isSynchorizedBlock(NodeChain chain) {
-	    while(chain != null) {
-	        if(isSynchorizedBlock(chain.getNode()))
-	            return true;
-	        chain = chain.getParent();
+	public static Node find(Node node, Predicate<Node> predicate) {
+	    if(predicate.test(node))
+	        return node;
+	    for(Node child : node.getChildren()) {
+	        Node result = find(child, predicate);
+	        if(result != null)
+	            return result;
 	    }
-	    return false;
+	    return null;
 	}
 }

@@ -81,7 +81,7 @@ public class VolatileIncrement {
         if (type != JvmType.Long && type != JvmType.Double)
             score -= 10;
 
-        if (Flags.testAny(md.getFlags(), Flags.SYNCHRONIZED) || Nodes.isSynchorizedBlock(parents))
+        if (Flags.testAny(md.getFlags(), Flags.SYNCHRONIZED) || parents.isSynchronized())
             score -= 30;
         return score;
     }

@@ -73,7 +73,7 @@ public class ErrorMessage {
         if(detector != null)
             sb.append("\nDetector: ").append(detector);
         if(error != null) {
-            sb.append("\nError: ").append(error.getMessage());
+            sb.append("\nError: ").append(error);
             for(StackTraceElement ste : error.getStackTrace()) {
                 sb.append("\n\t").append(ste);
             }
