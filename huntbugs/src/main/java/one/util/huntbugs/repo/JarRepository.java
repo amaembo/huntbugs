@@ -57,7 +57,8 @@ public class JarRepository implements Repository {
                 if(entry.getName().endsWith(".class")) {
                     String className = entry.getName();
                     className = className.substring(0, className.length()-".class".length());
-                    visitor.visitClass(className);
+                    if(!className.contains("$"))
+                        visitor.visitClass(className);
                 }
             }
         }
