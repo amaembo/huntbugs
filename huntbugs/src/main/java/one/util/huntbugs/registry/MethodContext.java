@@ -218,7 +218,9 @@ public class MethodContext {
                 anno.add(WarningAnnotation.forField((FieldReference) operand));
             }
             if(operand instanceof MethodReference) {
-                anno.add(WarningAnnotation.forReturnValue((MethodReference) operand));
+                MethodReference mr = (MethodReference) operand;
+                if(!mr.getReturnType().isVoid())
+                    anno.add(WarningAnnotation.forReturnValue(mr));
             }
         }
         anno.addAll(Arrays.asList(annotations));
