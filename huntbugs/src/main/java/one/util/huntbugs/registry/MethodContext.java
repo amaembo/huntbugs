@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
@@ -41,6 +42,8 @@ import com.strobel.assembler.ir.attributes.SourceAttribute;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.decompiler.ast.Block;
+import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 import com.strobel.decompiler.ast.Variable;
@@ -202,13 +205,9 @@ public class MethodContext {
         List<WarningAnnotation<?>> anno = new ArrayList<>();
         anno.addAll(cc.getTypeSpecificAnnotations());
         anno.addAll(getMethodSpecificAnnotations());
-        Location loc = null;
+        Location loc = getLocation(node);
         if (node instanceof Expression) {
             Expression expr = (Expression) node;
-			int offset = expr.getOffset();
-            if (offset != Expression.MYSTERY_OFFSET) {
-                loc = new Location(offset, getLineNumber(offset));
-            }
             Object operand = expr.getOperand();
             if(operand instanceof Variable) {
                 anno.add(WarningAnnotation.forVariable((Variable) operand));
@@ -233,6 +232,24 @@ public class MethodContext {
             ctx.addWarning(warn);
             lastWarning = info;
         }
+    }
+    
+    public Location getLocation(Node node) {
+        int offset = Expression.MYSTERY_OFFSET;
+        if(node instanceof Expression) {
+            Expression expr = (Expression) node;
+            offset = expr.getOffset();
+        } else if(node instanceof Condition) {
+            offset = ((Condition) node).getCondition().getOffset();
+        } else if(node instanceof Block) {
+            List<Node> body = ((Block) node).getBody();
+            return body.stream().map(this::getLocation).filter(Objects::nonNull).findFirst()
+                    .orElse(new Location(0, getLineNumber(0)));
+        }
+        if (offset != Expression.MYSTERY_OFFSET) {
+            return new Location(offset, getLineNumber(offset));
+        }
+        return null;
     }
 
     public void forgetLastBug() {

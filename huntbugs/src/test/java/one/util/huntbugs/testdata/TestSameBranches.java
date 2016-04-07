@@ -101,4 +101,56 @@ public class TestSameBranches {
             System.out.println("Bar");
         }
     }
+    
+    @AssertWarning(type="SameBranchesSwitch")
+    public void testSwitch(int a) {
+        switch(a) {
+        case 1:
+            System.out.println("Foo");
+            break;
+        case 2:
+            System.out.println("Bar");
+            break;
+        case 3:
+            System.out.println("Bar");
+            break;
+        case 4:
+            System.out.println("Bar");
+            break;
+        case 5:
+            System.out.println("Foo");
+            break;
+        default:
+            System.out.println("Baz");
+        }
+    }
+    
+    @AssertNoWarning(type="SameBranchesSwitch")
+    public void testSwitchFallthrough(int a) {
+        switch(a) {
+        case 1:
+            System.out.println("Foo");
+        case 4:
+            System.out.println("Foo");
+        case 5:
+            System.out.println("Foo");
+        default:
+            System.out.println("Baz");
+        }
+    }
+    
+    @AssertNoWarning(type="SameBranchesDefault")
+    public void testSwitchDefault(int a) {
+        switch(a) {
+        case 1:
+            System.out.println("Foo");
+            break;
+        case 4:
+            System.out.println("Bar");
+            break;
+        default:
+            System.out.println("Foo");
+            break;
+        }
+    }
 }
