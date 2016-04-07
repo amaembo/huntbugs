@@ -33,6 +33,16 @@ public class TestSelfComputation {
         return x[1] - x[1];
     }
 
+    @AssertWarning(type = "SelfComparison")
+    public boolean testCmp(int[] x) {
+        return x[1] == x[1];
+    }
+    
+    @AssertWarning(type = "SelfComparison")
+    public boolean testCmp(double[] x, double[] y) {    
+        return x[1] + y[0] >= x[1] + y[0];
+    }
+    
     @AssertNoWarning(type = "SelfComputation")
     public int test(int[] x, int idx) {
         return x[idx++] - x[idx++];

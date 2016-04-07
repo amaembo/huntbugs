@@ -48,7 +48,7 @@ public class TestNumberConstructor {
         return new Character(x);
     }
 
-    @AssertWarning(type = "NumberConstructor", maxScore = 42)
+    @AssertWarning(type = "BooleanConstructor", minScore = 42, maxScore=55)
     public Boolean testBoolean(boolean x) {
         return new Boolean(x);
     }

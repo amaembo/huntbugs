@@ -18,6 +18,7 @@ package one.util.huntbugs.detect;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
+
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstExpressionVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
@@ -29,6 +30,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
  *
  */
 @WarningDefinition(category="Performance", name="NumberConstructor", baseScore = 40)
+@WarningDefinition(category="Performance", name="BooleanConstructor", baseScore = 50)
 public class NumberConstructor {
     @AstExpressionVisitor
     public void visit(Expression expr, MethodContext ctx) {
@@ -36,9 +38,13 @@ public class NumberConstructor {
             MethodReference ctor = (MethodReference) expr.getOperand();
             if(ctor.getDeclaringType().getPackageName().equals("java.lang")) {
                 String simpleName = ctor.getDeclaringType().getSimpleName();
-                if(simpleName.equals("Integer") || simpleName.equals("Long") || simpleName.equals("Short") || simpleName.equals("Byte")
-                        || simpleName.equals("Boolean") || simpleName.equals("Character")) {
+                if(simpleName.equals("Boolean")) {
+                    ctx.report("BooleanConstructor", 0, expr, new WarningAnnotation<>("REPLACEMENT", "Boolean.valueOf()"));
+                }
+                else if(simpleName.equals("Integer") || simpleName.equals("Long") || simpleName.equals("Short") || simpleName.equals("Byte")
+                        || simpleName.equals("Character")) {
                     Object val = Nodes.getConstant(expr.getArguments().get(0));
+                    WarningAnnotation<String> replacement = new WarningAnnotation<>("REPLACEMENT", simpleName+".valueOf()");
                     if(val instanceof Number) {
                         long value = ((Number)val).longValue();
                         int priority;
@@ -46,9 +52,9 @@ public class NumberConstructor {
                             priority = 5;
                         else
                             priority = simpleName.equals("Integer") ? -10 : -30;
-                        ctx.report("NumberConstructor", priority, expr, WarningAnnotation.forNumber((Number) val));
+                        ctx.report("NumberConstructor", priority, expr, WarningAnnotation.forNumber((Number) val), replacement);
                     } else {
-                        ctx.report("NumberConstructor", 0, expr);
+                        ctx.report("NumberConstructor", 0, expr, replacement);
                     }
                 }
             }

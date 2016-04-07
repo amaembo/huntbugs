@@ -28,15 +28,22 @@ import one.util.huntbugs.util.Nodes;
  *
  */
 @WarningDefinition(category = "Correctness", name = "SelfComputation", baseScore = 70)
+@WarningDefinition(category = "Correctness", name = "SelfComparison", baseScore = 70)
 public class SelfComputation {
 	@AstExpressionVisitor
 	public void visit(Expression expr, MethodContext mc) {
 		if (expr.getCode() == AstCode.And || expr.getCode() == AstCode.Or
+		        || expr.getCode() == AstCode.Xor
 				|| expr.getCode() == AstCode.Sub
 				|| expr.getCode() == AstCode.Div
 				|| expr.getCode() == AstCode.Rem) {
 		    if(expr.getArguments().size() == 2 && Nodes.isEquivalent(expr.getArguments().get(0), expr.getArguments().get(1))) {
 		        mc.report("SelfComputation", 0, expr);
+		    }
+		}
+		if (Nodes.isComparison(expr)) {
+		    if(expr.getArguments().size() == 2 && Nodes.isEquivalent(expr.getArguments().get(0), expr.getArguments().get(1))) {
+		        mc.report("SelfComparison", 0, expr);
 		    }
 		}
 	}
