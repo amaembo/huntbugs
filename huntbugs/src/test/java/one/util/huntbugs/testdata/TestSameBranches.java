@@ -46,7 +46,7 @@ public class TestSameBranches {
                 try {
                     while (b < 10) {
                         System.out.println("Foo");
-                        b += Stream.of(1, 2, 3).reduce((x, y) -> x + y).get();
+                        b += Stream.of(1, 2, 3).reduce((m, n) -> n + m).get();
                     }
                 } catch (NullPointerException | IllegalAccessError e) {
                     System.out.println("oops..." + e);
@@ -66,6 +66,15 @@ public class TestSameBranches {
         }
     }
 
+    @AssertNoWarning(type = "SameBranchesIf")
+    public void testSameDiffLambda(int a, int b) {
+        if (a > 0) {
+            System.out.println(Stream.of(1, 2, 3).reduce((m, n) -> n - m));
+        } else {
+            System.out.println(Stream.of(1, 2, 3).reduce((m, n) -> m - n));
+        }
+    }
+    
     @AssertNoWarning(type = "SameBranchesIf")
     public void testDiffComplex(int a, int b) {
         if (a > 0) {

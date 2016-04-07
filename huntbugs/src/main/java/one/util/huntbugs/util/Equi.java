@@ -134,6 +134,24 @@ public class Equi {
         if (left.getArguments().size() != right.getArguments().size()) {
             return false;
         }
+        
+        if (left.getArguments().size() == 2) {
+            // Commutative operators check
+            switch(left.getCode()) {
+            case And:
+            case Or:
+            case Xor:
+            case Add:
+            case Mul:
+            case CmpEq:
+            case CmpNe:
+                return (equiExpressions(left.getArguments().get(0), right.getArguments().get(0)) &&
+                        equiExpressions(left.getArguments().get(1), right.getArguments().get(1))) ||
+                        (equiExpressions(left.getArguments().get(0), right.getArguments().get(1)) &&
+                                equiExpressions(left.getArguments().get(1), right.getArguments().get(0)));
+            default:
+            }
+        }
 
         for (int i = 0, n = left.getArguments().size(); i < n; i++) {
             final Expression a1 = left.getArguments().get(i);
