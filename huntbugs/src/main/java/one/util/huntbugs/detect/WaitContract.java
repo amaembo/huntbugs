@@ -15,12 +15,16 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.List;
+
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
+import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Loop;
 import com.strobel.decompiler.ast.LoopType;
+import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstExpressionVisitor;
@@ -34,7 +38,8 @@ import one.util.huntbugs.util.Nodes;
  */
 @WarningDefinition(category = "Multithreading", name = "WaitUnconditional", baseScore = 65)
 @WarningDefinition(category = "Multithreading", name = "WaitNotInLoop", baseScore = 65)
-public class UnconditionalWait {
+@WarningDefinition(category = "Multithreading", name = "NotifyNaked", baseScore = 50)
+public class WaitContract {
     @AstExpressionVisitor
     public void visit(Expression expr, NodeChain parents, MethodContext mc) {
         if (expr.getCode() == AstCode.InvokeVirtual) {
@@ -62,6 +67,16 @@ public class UnconditionalWait {
                 if (!sawLoop || !sawCondition) {
                     mc.report(sawCondition ? "WaitNotInLoop" : "WaitUnconditional", mr.getSignature().equals("()V") ? 0
                             : -15, expr.getArguments().get(0));
+                }
+            }
+            if((mr.getName().equals("notify") || mr.getName().equals("notifyAll")) && mr.getSignature().equals("()V")) {
+                if(parents.getNode() instanceof Block) {
+                    List<Node> body = ((Block) parents.getNode()).getBody();
+                    if (!body.isEmpty() && body.get(0) == expr
+                        && (body.size() == 1 || body.size() == 2 && Nodes.isOp(body.get(1), AstCode.MonitorExit))
+                        && Nodes.isSynchorizedBlock(parents.getParent().getNode())) {
+                        mc.report("NotifyNaked", 0, expr.getArguments().get(0));
+                    }
                 }
             }
         }

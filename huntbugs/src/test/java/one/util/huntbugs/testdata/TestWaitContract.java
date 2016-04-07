@@ -22,11 +22,12 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  * @author lan
  *
  */
-public class TestUnconditionalWait {
+public class TestWaitContract {
     private boolean condition;
 
     private final Object object = new Object();
 
+    @AssertNoWarning(type = "NotifyNaked")
     public void setCondition() {
         synchronized (object) {
             condition = true;
@@ -42,6 +43,13 @@ public class TestUnconditionalWait {
         }
     }
 
+    @AssertWarning(type = "NotifyNaked")
+    public void nakedNotify() throws Exception {
+        synchronized (object) {
+            object.notify();
+        }
+    }
+    
     @AssertWarning(type = "WaitNotInLoop")
     public void noLoop() throws Exception {
 
