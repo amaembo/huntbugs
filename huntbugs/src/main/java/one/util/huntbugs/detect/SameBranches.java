@@ -98,7 +98,7 @@ public class SameBranches {
     public void visitExpr(Expression expr, MethodContext mc) {
         if (expr.getCode() == AstCode.TernaryOp
             && Equi.equiExpressions(expr.getArguments().get(1), expr.getArguments().get(2))) {
-            mc.report("SameBranchesTernary", computeScore(expr.getArguments().get(1), 2), expr);
+            mc.report("SameBranchesTernary", computeScore(expr.getArguments().get(1), 10), expr);
         }
     }
 
