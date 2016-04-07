@@ -38,14 +38,14 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
  */
 @WarningDefinition(category = "RedundantCode", name = "SameBranchesIf", baseScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "SameBranchesTernary", baseScore = 60)
-@WarningDefinition(category = "RedundantCode", name = "EmptyCondition", baseScore = 25)
+@WarningDefinition(category = "RedundantCode", name = "EmptyBranch", baseScore = 25)
 public class SameBranches {
     @AstNodeVisitor
     public void visit(Node node, MethodContext mc) {
         if (node instanceof Condition) {
             Condition cond = (Condition) node;
             if (sameBlocks(cond.getTrueBlock(), cond.getFalseBlock())) {
-                mc.report(cond.getTrueBlock() == null || cond.getTrueBlock().getBody().isEmpty() ? "EmptyCondition"
+                mc.report(cond.getTrueBlock() == null || cond.getTrueBlock().getBody().isEmpty() ? "EmptyBranch"
                         : "SameBranchesIf", 0, cond.getCondition());
             }
         }

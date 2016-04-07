@@ -28,6 +28,11 @@ public class TestBadMethodCalls {
         System.exit(0);
     }
 
+    @AssertWarning(type="SystemRunFinalizersOnExit")
+    public void runFinalizers() {
+        System.runFinalizersOnExit(true);
+    }
+    
     @AssertWarning(type="SystemExit", minScore = 40)
     public void doSomething() {
         System.exit(0);

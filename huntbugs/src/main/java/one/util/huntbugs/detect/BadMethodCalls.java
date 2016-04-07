@@ -35,6 +35,7 @@ import one.util.huntbugs.util.Nodes;
  */
 @WarningDefinition(category = "BadPractice", name = "SystemExit", baseScore = 60)
 @WarningDefinition(category = "BadPractice", name = "SystemGc", baseScore = 50)
+@WarningDefinition(category = "BadPractice", name = "SystemRunFinalizersOnExit", baseScore = 60)
 @WarningDefinition(category = "BadPractice", name = "ThreadStopThrowable", baseScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "UselessThread", baseScore = 60)
 public class BadMethodCalls {
@@ -81,6 +82,8 @@ public class BadMethodCalls {
                 || curName.endsWith("gc"))
                 score -= 10;
             ctx.report("SystemGc", score, node);
+        } else if ((typeName.equals("java/lang/System") || typeName.equals("java/lang/Runtime")) && name.equals("runFinalizersOnExit")) {
+            ctx.report("SystemRunFinalizersOnExit", 0, node);
         } else if (typeName.equals("java/lang/Thread") && name.equals("stop")
             && signature.equals("(Ljava/lang/Throwable;)V")) {
             ctx.report("ThreadStopThrowable", 0, node);
