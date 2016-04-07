@@ -191,8 +191,7 @@ public class Nodes {
         if(expr1 == null)
             return expr2 == null;
         if(expr1 instanceof Expression && expr2 instanceof Expression)
-            return ((Expression)expr1).isEquivalentTo((Expression) expr2)
-                    && isSideEffectFree(expr1);
+            return Equi.equiExpressions((Expression) expr1, (Expression) expr2) && isSideEffectFree(expr1);
         return false;
     }
 

@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.util.stream.Stream;
+
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -23,77 +25,77 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestSameBranches {
-    @AssertWarning(type="SameBranchesIf")
+    @AssertWarning(type = "SameBranchesIf")
     public void testSame(int a) {
-        if(a > 0) {
+        if (a > 0) {
             System.out.println("Foo");
         } else {
             System.out.println("Foo");
         }
     }
-    
-    @AssertWarning(type="SameBranchesTernary")
+
+    @AssertWarning(type = "SameBranchesTernary")
     public int testSame(int a, int[] b) {
         return a > 0 ? b[a++] : b[a++];
     }
-    
-    @AssertWarning(type="SameBranchesIf")
+
+    @AssertWarning(type = "SameBranchesIf")
     public void testSameComplex(int a, int b) {
-        if(a > 0) {
-            if(b > 0) {
+        if (a > 0) {
+            if (b > 0) {
                 try {
-                    while(b < 10) {
+                    while (b < 10) {
                         System.out.println("Foo");
-                        b++;
+                        b += Stream.of(1, 2, 3).reduce((x, y) -> x + y).get();
                     }
                 } catch (NullPointerException | IllegalAccessError e) {
-                    System.out.println("oops..."+e);
+                    System.out.println("oops..." + e);
                 }
             }
         } else {
-            if(b > 0) {
+            if (b > 0) {
                 try {
-                    while(b < 10) {
+                    while (b < 10) {
                         System.out.println("Foo");
-                        b++;
+                        b += Stream.of(1, 2, 3).reduce((x, y) -> x + y).get();
                     }
                 } catch (NullPointerException | IllegalAccessError e) {
-                    System.out.println("oops..."+e);
+                    System.out.println("oops..." + e);
                 }
             }
         }
     }
-    
-    @AssertNoWarning(type="SameBranchesIf")
+
+    @AssertNoWarning(type = "SameBranchesIf")
     public void testDiffComplex(int a, int b) {
-        if(a > 0) {
-            if(b > 0) {
+        if (a > 0) {
+            if (b > 0) {
                 try {
-                    while(b < 10) {
+                    while (b < 10) {
                         System.out.println("Foo");
                         b++;
                     }
                 } catch (NullPointerException | IllegalAccessError e) {
-                    System.out.println("oops..."+e);
+                    System.out.println("oops..." + e);
                 }
             }
         } else {
-            if(b > 0) {
+            if (b > 0) {
                 try {
-                    while(b < 10) {
+                    while (b < 10) {
                         System.out.println("Foo");
                         b++;
                     }
                 } catch (NullPointerException | IllegalAccessError e) {
-                    System.out.println("oopss..."+e);
+                    System.out.println("oopss..." + e);
                 }
             }
         }
     }
-    
-    @AssertNoWarning(type="SameBranchesIf")
+
+    @AssertNoWarning(type = "SameBranchesIf")
     public void testDiff(int a) {
-        if(a > 0) {
+        if (a > 0) {
             System.out.println("Foo");
         } else {
             System.out.println("Bar");

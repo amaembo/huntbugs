@@ -48,6 +48,8 @@ public class Types {
 	}
 
 	public static boolean isInstance(TypeReference type, String wantedType) {
+	    if(type == null)
+	        return false;
 	    if(type.getInternalName().equals(wantedType))
 	        return true;
 	    TypeDefinition td = type.resolve();
