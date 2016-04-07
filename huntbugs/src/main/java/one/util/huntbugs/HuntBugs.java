@@ -61,8 +61,6 @@ public class HuntBugs {
             Duration dur = Duration.ofNanos(end - start);
             System.out.printf("\r%70s\r\n", "");
             System.out.println("Analyzed "+ctx.getClassesCount()+" of "+ctx.getTotalClasses()+" classes");
-            System.out.println("Found "+ctx.getWarningCount()+" warnings");
-            System.out.println("Encountered "+ctx.getErrorCount()+" analyzer errors");
             ctx.reportStats(System.out);
             System.out.println("Analyzis time "+dur.toMinutes()+"m"+dur.getSeconds()%60+"s");
         }));

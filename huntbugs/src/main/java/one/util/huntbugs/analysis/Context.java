@@ -117,10 +117,12 @@ public class Context {
     }
 
     public void addError(ErrorMessage msg) {
+        incStat("InternalErrors");
         errors.add(msg);
     }
 
     public void addWarning(Warning warning) {
+        incStat("Warnings");
         warnings.add(warning);
     }
 
@@ -156,10 +158,6 @@ public class Context {
     
     public int getErrorCount() {
         return errors.size();
-    }
-
-    public int getWarningCount() {
-        return warnings.size();
     }
 
 	public void incStat(String key) {
