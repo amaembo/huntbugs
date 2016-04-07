@@ -16,6 +16,7 @@
 package one.util.huntbugs.detect;
 
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
@@ -32,6 +33,7 @@ import one.util.huntbugs.util.Types;
  */
 @WarningDefinition(category="Performance", name="RandomNextIntViaNextDouble", baseScore=50)
 @WarningDefinition(category="Correctness", name="RandomDoubleToInt", baseScore=80)
+@WarningDefinition(category="Correctness", name="RandomUsedOnlyOnce", baseScore=80)
 public class RandomUsage {
 
     @AstExpressionVisitor
@@ -48,6 +50,13 @@ public class RandomUsage {
                         priority = -20;
                     ctx.report("RandomNextIntViaNextDouble", priority, node);
                 });
+            }
+        }
+        if(node.getCode() == AstCode.InvokeVirtual && node.getArguments().get(0).getCode() == AstCode.InitObject) {
+            MethodReference mr = (MethodReference) node.getArguments().get(0).getOperand();
+            TypeReference type = mr.getDeclaringType();
+            if(Types.isRandomClass(type) && !type.getInternalName().equals("java/security/SecureRandom")) {
+                ctx.report("RandomUsedOnlyOnce", 0, node);
             }
         }
     }

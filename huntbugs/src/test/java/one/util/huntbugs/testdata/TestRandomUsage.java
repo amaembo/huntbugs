@@ -15,7 +15,9 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.security.SecureRandom;
 import java.util.Random;
+import java.util.SplittableRandom;
 import java.util.concurrent.ThreadLocalRandom;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
@@ -51,8 +53,18 @@ public class TestRandomUsage {
         return (int) ThreadLocalRandom.current().nextDouble();
     }
     
-    @AssertNoWarning(type="RandomDoubleToInt")
+    @AssertNoWarning(type="Random*")
     public int testRndOk() {
         return (int) ThreadLocalRandom.current().nextDouble(100);
+    }
+    
+    @AssertWarning(type="RandomUsedOnlyOnce")
+    public int testRndOnce() {
+        return new SplittableRandom().nextInt(10, 20);
+    }
+    
+    @AssertNoWarning(type="RandomUsedOnlyOnce")
+    public int testRndOnceSecure() {
+        return new SecureRandom().nextInt();
     }
 }
