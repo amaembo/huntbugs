@@ -16,6 +16,8 @@
 package one.util.huntbugs.util;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
 import one.util.huntbugs.flow.ValuesFlow;
@@ -70,6 +72,22 @@ public class Nodes {
         if(expr.getCode() != AstCode.LdC)
             return null;
         return expr.getOperand();
+    }
+
+    public static void ifBinaryWithConst(Expression expr, BiConsumer<Expression, Object> consumer) {
+        if(expr.getArguments().size() == 2) {
+            Expression left = expr.getArguments().get(0);
+            Expression right = expr.getArguments().get(1);
+            Object constant = getConstant(left);
+            if(constant != null) {
+                consumer.accept(right, constant);
+            } else {
+                constant = getConstant(right);
+                if(constant != null) {
+                    consumer.accept(left, constant);
+                }
+            }
+        }
     }
     
     public static boolean isComparison(Node node) {
@@ -218,6 +236,19 @@ public class Nodes {
 	    if(finallyBlock == null)
 	        return false;
 	    return finallyBlock.getBody().stream().anyMatch(n -> Nodes.isOp(n, AstCode.MonitorExit));
+	}
+	
+	public static boolean isCompoundAssignment(Node node) {
+	    if(!(node instanceof Expression))
+	        return false;
+	    Expression store = (Expression) node;
+	    if(store.getCode() != AstCode.Store)
+	        return false;
+	    Expression expr = store.getArguments().get(0);
+	    if(!isBinaryMath(expr))
+	        return false;
+	    Expression load = expr.getArguments().get(0);
+	    return load.getCode() == AstCode.Load && Objects.equals(load.getOperand(), store.getOperand());
 	}
 	
 	public static Node find(Node node, Predicate<Node> predicate) {

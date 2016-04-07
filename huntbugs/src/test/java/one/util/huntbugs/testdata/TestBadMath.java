@@ -96,4 +96,56 @@ public class TestBadMath {
         y &= ~1;
         return (x ^ y) > 0;
     }
+    
+    @AssertWarning(type="CompareBitAndIncompatible")
+    public void testIncompatibleAnd(int x) {
+        if((x & 1) == 2) {
+            System.out.println();
+        }
+    }
+    
+    @AssertWarning(type="CompareBitAndIncompatible")
+    public void testIncompatibleAnd2(int x) {
+        if((x & 1) == 3) {
+            System.out.println();
+        }
+    }
+    
+    @AssertNoWarning(type="CompareBitAndIncompatible")
+    public void testCompatibleAnd(int x) {
+        if((x & 3) == 2) {
+            System.out.println();
+        }
+    }
+
+    @AssertWarning(type="CompareBitOrIncompatible")
+    public void testIncompatibleOr(int x) {
+        if((x | 1) == 2) {
+            System.out.println();
+        }
+    }
+    
+    @AssertWarning(type="CompareBitOrIncompatible")
+    public void testIncompatibleOr2(int x) {
+        if((x | 3) == 2) {
+            System.out.println();
+        }
+    }
+    
+    @AssertNoWarning(type="CompareBitOrIncompatible")
+    public void testCompatibleOr(int x) {
+        if((x | 1) == 3) {
+            System.out.println();
+        }
+    }
+    
+    @AssertWarning(type="CompareBitOrIncompatible")
+    public void testInCompatibleOrObscure(int x) {
+        int mask = 0xFF;
+        int subMask = mask & 0x20;
+        if((x | mask) == subMask) {
+            System.out.println();
+        }
+    }
+    
 }

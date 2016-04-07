@@ -16,6 +16,8 @@
 package one.util.huntbugs.detect;
 
 import com.strobel.assembler.metadata.JvmType;
+import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
@@ -24,50 +26,82 @@ import one.util.huntbugs.registry.anno.AstExpressionVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author lan
  *
  */
 @WarningDefinition(category = "Correctness", name = "RemOne", baseScore = 70)
+@WarningDefinition(category = "Correctness", name = "CompareBitAndIncompatible", baseScore = 70)
+@WarningDefinition(category = "Correctness", name = "CompareBitOrIncompatible", baseScore = 70)
 @WarningDefinition(category = "RedundantCode", name = "UselessOrWithZero", baseScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "UselessAndWithMinusOne", baseScore = 60)
+// @WarningDefinition(category = "RedundantCode", name = "UselessAndWithZero",
+// baseScore = 70) TODO: procyon optimizes too hard to detect this
 public class BadMath {
     @AstExpressionVisitor
-    public void visit(Expression expr, NodeChain nc, MethodContext mc) {
+    public void visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md) {
+        TypeReference inferredType = expr.getInferredType();
+        if (inferredType == null)
+            return;
+        JvmType exprType = inferredType.getSimpleType();
         if (expr.getCode() == AstCode.Rem) {
             if (isConst(expr.getArguments().get(1), 1)) {
                 mc.report("RemOne", 0, expr.getArguments().get(0));
             }
         }
-        if (expr.getCode() == AstCode.Or || expr.getCode() == AstCode.Xor) {
-            Expression left = expr.getArguments().get(0);
-            Expression right = expr.getArguments().get(1);
-            if (left.getInferredType().getSimpleType() != JvmType.Boolean && isConst(right, 0)) {
-                mc.report("UselessOrWithZero", 0, left);
-            } else if (right.getInferredType().getSimpleType() != JvmType.Boolean && isConst(left, 0)
-                && !isCompoundAssignment(nc, left))
-                mc.report("UselessOrWithZero", 0, right);
+        if ((expr.getCode() == AstCode.Or || expr.getCode() == AstCode.Xor)
+            && (exprType == JvmType.Long || exprType == JvmType.Integer)) {
+            Nodes.ifBinaryWithConst(expr, (child, constant) -> {
+                if (constant instanceof Number && ((Number) constant).longValue() == 0
+                    && !Nodes.isCompoundAssignment(nc.getNode())) {
+                    mc.report("UselessOrWithZero", 0, child);
+                }
+            });
         }
         if (expr.getCode() == AstCode.And) {
-            Expression left = expr.getArguments().get(0);
-            Expression right = expr.getArguments().get(1);
-            if (isConst(right, -1)) {
-                mc.report("UselessAndWithMinusOne", 0, left);
-            } else if (isConst(left, -1) && !isCompoundAssignment(nc, left)) {
-                mc.report("UselessAndWithMinusOne", 0, right);
-            }
+            Nodes.ifBinaryWithConst(expr, (child, constant) -> {
+                if (constant instanceof Number) {
+                    long val = ((Number) constant).longValue();
+                    if (val == -1 && !Nodes.isCompoundAssignment(nc.getNode()))
+                        mc.report("UselessAndWithMinusOne", 0, child);
+                    else if (val == 0)
+                        mc.report("UselessAndWithZero", 0, child);
+                }
+            });
+        }
+        if (expr.getCode() == AstCode.CmpEq || expr.getCode() == AstCode.CmpNe) {
+            Nodes.ifBinaryWithConst(expr, (child, outerConst) -> {
+                if (isIntegral(outerConst) && (child.getCode() == AstCode.And || child.getCode() == AstCode.Or)) {
+                    long outerVal = ((Number) outerConst).longValue();
+                    Nodes.ifBinaryWithConst(child, (grandChild, innerConst) -> {
+                        if (isIntegral(innerConst)) {
+                            long innerVal = ((Number) innerConst).longValue();
+                            if(child.getCode() == AstCode.And) {
+                                if ((outerVal & ~innerVal) != 0) {
+                                    mc.report("CompareBitAndIncompatible", 0, expr, new WarningAnnotation<>("AND_OPERAND",
+                                            innerVal), new WarningAnnotation<>("COMPARED_TO", outerVal));
+                                }
+                            } else {
+                                if ((~outerVal & innerVal) != 0) {
+                                    mc.report("CompareBitOrIncompatible", 0, expr, new WarningAnnotation<>("OR_OPERAND",
+                                            innerVal), new WarningAnnotation<>("COMPARED_TO", outerVal));
+                                }
+                            }
+                        }
+                    });
+                }
+            });
         }
     }
 
     private static boolean isConst(Expression expr, long wantedValue) {
         Object constant = Nodes.getConstant(expr);
-        return (constant instanceof Integer || constant instanceof Long)
-            && ((Number) constant).longValue() == wantedValue;
+        return isIntegral(constant) && ((Number) constant).longValue() == wantedValue;
     }
 
-    private static boolean isCompoundAssignment(NodeChain nc, Expression left) {
-        return left.getCode() == AstCode.Load && Nodes.isOp(nc.getNode(), AstCode.Store)
-            && ((Expression) nc.getNode()).getOperand() == left.getOperand();
+    private static boolean isIntegral(Object constant) {
+        return constant instanceof Integer || constant instanceof Long;
     }
 }
