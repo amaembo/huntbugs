@@ -15,6 +15,9 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -70,6 +73,29 @@ public class TestFinalizer {
         @Override
         @AssertNoWarning(type="Finalize*")
         protected final void finalize() {
+        }
+    }
+    
+    static class NullFields {
+        InputStream is = new ByteArrayInputStream(new byte[1]);
+        
+        @AssertWarning(type="FinalizeNullsFields")
+        @Override
+        protected void finalize() throws Throwable {
+            System.out.println("Finalizer");
+            is = null;
+        }
+    }
+    
+    static class NullFieldsOnly {
+        InputStream is = new ByteArrayInputStream(new byte[1]);
+        Object obj = new Object();
+        
+        @AssertWarning(type="FinalizeOnlyNullsFields")
+        @Override
+        protected void finalize() throws Throwable {
+            is = null;
+            obj = null;
         }
     }
 }

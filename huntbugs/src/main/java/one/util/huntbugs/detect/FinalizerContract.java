@@ -37,29 +37,41 @@ import one.util.huntbugs.util.Nodes;
 @WarningDefinition(category="BadPractice", name="FinalizeEmpty", baseScore = 35)
 @WarningDefinition(category="BadPractice", name="FinalizeUselessSuper", baseScore = 40)
 @WarningDefinition(category="BadPractice", name="FinalizeInvocation", baseScore = 50)
+@WarningDefinition(category="BadPractice", name="FinalizeNullsFields", baseScore = 50)
+@WarningDefinition(category="BadPractice", name="FinalizeOnlyNullsFields", baseScore = 65)
 @WarningDefinition(category="MaliciousCode", name="FinalizePublic", baseScore = 60)
 public class FinalizerContract {
     @AstBodyVisitor
-    public void visitFinalizer(Block node, MethodContext mc, MethodDefinition md) {
+    public void visitFinalizer(Block body, MethodContext mc, MethodDefinition md) {
         if(!isFinalizer(md))
             return;
         MethodDefinition superfinalizer = getSuperfinalizer(md.getDeclaringType());
         if(md.isPublic()) {
-            mc.report("FinalizePublic", 0, node);
+            mc.report("FinalizePublic", 0, body);
         }
         if(superfinalizer != null) {
-            if(node.getChildren().isEmpty())
-                mc.report("FinalizeNullifiesSuper", 0, node);
-            else if(node.getChildren().size() == 1) {
-                Node child = node.getChildren().get(0);
+            if(body.getBody().isEmpty())
+                mc.report("FinalizeNullifiesSuper", 0, body);
+            else if(body.getBody().size() == 1) {
+                Node child = body.getBody().get(0);
                 if(Nodes.isOp(child, AstCode.InvokeSpecial) && isFinalizer((MethodReference)(((Expression)child).getOperand()))) {
                     mc.report("FinalizeUselessSuper", 0, child);
                 }
             }
         } else {
-            if(node.getChildren().isEmpty() && !md.isFinal()) {
-                mc.report("FinalizeEmpty", 0, node);
+            if(body.getBody().isEmpty() && !md.isFinal()) {
+                mc.report("FinalizeEmpty", 0, body);
             }
+        }
+        boolean hasNullField = false, hasSomethingElse = false;
+        for(Node node : body.getBody()) {
+            if(Nodes.isOp(node, AstCode.PutField) && Nodes.isOp(Nodes.getChild(node, 1), AstCode.AConstNull))
+                hasNullField = true;
+            else
+                hasSomethingElse = true;
+        }
+        if(hasNullField) {
+            mc.report(hasSomethingElse ? "FinalizeNullsFields" : "FinalizeOnlyNullsFields", 0, body);
         }
     }
     
