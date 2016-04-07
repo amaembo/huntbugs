@@ -33,7 +33,7 @@ public class TestMinValueHandling {
         return v % 15;
     }
 
-    @AssertWarning(type="AbsoluteValueOfRandomInt", minScore=70, maxScore=78)
+    @AssertWarning(type="AbsoluteValueOfRandomInt", minScore=55, maxScore=65)
     public long testRandomLong() {
         synchronized(this) {
             long h = new SplittableRandom().nextLong();

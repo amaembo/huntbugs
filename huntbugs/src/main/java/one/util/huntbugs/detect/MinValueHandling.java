@@ -62,7 +62,7 @@ public class MinValueHandling {
 		                    && (methodSig.equals("()I") || methodSig.equals("()J"))
 		                    && Types.isRandomClass(sourceCall.getDeclaringType())) {
 					    if(methodSig.equals("()J"))
-					        priority -= 5;
+					        priority -= 20;
 					    if(Nodes.isOp(parent, AstCode.Neg)) {
 					        return;
 					    }

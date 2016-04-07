@@ -39,7 +39,7 @@ public class UnnecessaryInstanceOf {
             Expression expr = node.getArguments().get(0);
             TypeReference exprType = expr.getInferredType();
 			if(Types.isInstance(exprType, typeRef)) {
-                mc.report("UnnecessaryInstanceOf", 0, node, new WarningAnnotation<>("INSTANCEOF_TYPE", typeRef.getFullName()), 
+                mc.report("UnnecessaryInstanceOf", 0, expr, new WarningAnnotation<>("INSTANCEOF_TYPE", typeRef.getFullName()), 
                     new WarningAnnotation<>("ACTUAL_TYPE", exprType.getFullName()));
             } else {
                 TypeReference inferredType = ValuesFlow.reduceType(expr);

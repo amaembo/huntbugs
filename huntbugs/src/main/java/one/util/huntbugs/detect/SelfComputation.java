@@ -38,12 +38,12 @@ public class SelfComputation {
 				|| expr.getCode() == AstCode.Div
 				|| expr.getCode() == AstCode.Rem) {
 		    if(expr.getArguments().size() == 2 && Nodes.isEquivalent(expr.getArguments().get(0), expr.getArguments().get(1))) {
-		        mc.report("SelfComputation", 0, expr);
+		        mc.report("SelfComputation", 0, expr.getArguments().get(0));
 		    }
 		}
 		if (Nodes.isComparison(expr)) {
 		    if(expr.getArguments().size() == 2 && Nodes.isEquivalent(expr.getArguments().get(0), expr.getArguments().get(1))) {
-		        mc.report("SelfComparison", 0, expr);
+		        mc.report("SelfComparison", 0, expr.getArguments().get(0));
 		    }
 		}
 	}
