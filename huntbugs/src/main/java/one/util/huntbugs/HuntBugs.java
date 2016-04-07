@@ -36,6 +36,10 @@ import one.util.huntbugs.repo.Repository;
  */
 public class HuntBugs {
     public static void main(String[] args) throws IOException {
+        if(args.length != 1) {
+            System.out.println("Provide exactly one argument (jar or class files folder)");
+            return;
+        }
         long start = System.nanoTime();
         String classPath = args[0];
         Path root = Paths.get(classPath);

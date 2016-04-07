@@ -22,6 +22,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.jar.JarFile;
 
 import com.strobel.assembler.metadata.ITypeLoader;
 
@@ -31,14 +32,14 @@ import com.strobel.assembler.metadata.ITypeLoader;
  */
 public interface Repository {
     ITypeLoader createTypeLoader();
-    
+
     void visit(String rootPackage, RepositoryVisitor visitor);
 
     public static CompositeRepository createSelfRepository() {
         List<Repository> repos = new ArrayList<>();
         try {
             Enumeration<URL> resources = CompositeRepository.class.getClassLoader().getResources(".");
-            while(resources.hasMoreElements()) {
+            while (resources.hasMoreElements()) {
                 try {
                     repos.add(new DirRepository(new File(resources.nextElement().toURI()).toPath()));
                 } catch (URISyntaxException e) {
@@ -47,6 +48,16 @@ public interface Repository {
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+        if (repos.isEmpty()) {
+            try {
+                repos.add(new JarRepository(new JarFile(CompositeRepository.class.getProtectionDomain().getCodeSource()
+                        .getLocation().toURI().getPath())));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (URISyntaxException e) {
+                // ignore
+            }
         }
         CompositeRepository repo = new CompositeRepository(repos);
         return repo;

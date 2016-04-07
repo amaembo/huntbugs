@@ -2,3 +2,4 @@
 /huntbugs*.txt
 /run.bat
 /procyon-decompiler-*.jar
+/dependency-reduced-pom.xml

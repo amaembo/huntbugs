@@ -25,6 +25,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.MethodBody;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
@@ -103,7 +104,7 @@ public class DetectorRegistry {
             public void visitClass(String className) {
                 String name = className.replace('/', '.');
                 try {
-                    addDetector(Class.forName(name));
+                    addDetector(MetadataSystem.class.getClassLoader().loadClass(name));
                     ctx.incStat("Detectors");
                 } catch (ClassNotFoundException e) {
                     ctx.addError(new ErrorMessage(name, null, null, null, -1, e));
