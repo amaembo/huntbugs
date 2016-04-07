@@ -294,6 +294,36 @@ public class ValuesFlow {
                 }
                 return target;
             }
+            case Xor: {
+                switch (expr.getInferredType().getSimpleType()) {
+                case Integer:
+                    return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a ^ b);
+                case Long:
+                    return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a ^ b);
+                default:
+                }
+                return target;
+            }
+            case Or: {
+                switch (expr.getInferredType().getSimpleType()) {
+                case Integer:
+                    return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a | b);
+                case Long:
+                    return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a | b);
+                default:
+                }
+                return target;
+            }
+            case And: {
+                switch (expr.getInferredType().getSimpleType()) {
+                case Integer:
+                    return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a & b);
+                case Long:
+                    return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a & b);
+                default:
+                }
+                return target;
+            }
             case Shl: {
                 switch (expr.getInferredType().getSimpleType()) {
                 case Integer:
