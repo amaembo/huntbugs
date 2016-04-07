@@ -27,7 +27,7 @@ import one.util.huntbugs.warning.Warning;
  *
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD})
+@Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.CONSTRUCTOR})
 public @interface AssertWarning {
     String type();
 

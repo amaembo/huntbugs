@@ -36,10 +36,11 @@ import one.util.huntbugs.util.Nodes;
 @WarningDefinition(category = "BadPractice", name = "SystemExit", baseScore = 60)
 @WarningDefinition(category = "BadPractice", name = "SystemGc", baseScore = 50)
 @WarningDefinition(category = "BadPractice", name = "ThreadStopThrowable", baseScore = 60)
+@WarningDefinition(category = "RedundantCode", name = "UselessThread", baseScore = 60)
 public class BadMethodCalls {
     @AstExpressionVisitor
     public void visit(Expression node, NodeChain nc, MethodContext ctx, MethodDefinition curMethod) {
-        if (Nodes.isInvoke(node) && node.getCode() != AstCode.InvokeDynamic) {
+        if (Nodes.isInvoke(node) && node.getCode() != AstCode.InvokeDynamic || Nodes.isOp(node, AstCode.InitObject)) {
             check(node, (MethodReference) node.getOperand(), nc, ctx, curMethod);
         }
     }
@@ -81,8 +82,12 @@ public class BadMethodCalls {
                 score -= 10;
             ctx.report("SystemGc", score, node);
         } else if (typeName.equals("java/lang/Thread") && name.equals("stop")
-            && signature.equals("(Ljava/lang/Throwable;)V"))
+            && signature.equals("(Ljava/lang/Throwable;)V")) {
             ctx.report("ThreadStopThrowable", 0, node);
+        } else if (node.getCode() == AstCode.InitObject && typeName.equals("java/lang/Thread") && name.equals("<init>")
+            && !signature.contains("Runnable")) {
+            ctx.report("UselessThread", 0, node);
+        }
     }
 
     private static boolean isMain(MethodDefinition curMethod) {

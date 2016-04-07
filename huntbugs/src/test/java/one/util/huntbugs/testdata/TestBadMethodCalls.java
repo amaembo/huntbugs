@@ -88,4 +88,26 @@ public class TestBadMethodCalls {
     public void threadStop() {
         Thread.currentThread().stop();
     }
+
+    @AssertWarning(type="UselessThread")
+    public String testCreateThread() {
+        return new Thread().getName();
+    }
+    
+    static class MyThread extends Thread
+    {
+        @AssertNoWarning(type="UselessThread")
+        public MyThread() {
+        }
+        
+        @AssertWarning(type="UselessThread")
+        public MyThread(int x) {
+            System.out.println(new Thread().getName()+x);
+        }
+        
+        @Override
+        public void run() {
+            System.out.println("My thread");
+        }
+    }
 }
