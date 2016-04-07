@@ -55,9 +55,12 @@ public class BadMethodCalls {
             int score = 0;
             curName = curName.toLowerCase(Locale.ENGLISH);
             if (curName.indexOf("exit") > -1 || curName.indexOf("crash") > -1 || curName.indexOf("die") > -1
-                || curName.indexOf("main") > -1)
+                || curName.indexOf("destroy") > -1 || curName.indexOf("close") > -1 || curName.indexOf("main") > -1)
                 score -= 20;
             if (curMethod.isStatic())
+                score -= 10;
+            String curType = curMethod.getDeclaringType().getInternalName();
+            if (curType.endsWith("Applet") || curType.endsWith("App") || curType.endsWith("Application"))
                 score -= 10;
             if (curMethod.getDeclaringType().getDeclaredMethods().stream().anyMatch(BadMethodCalls::isMain))
                 score -= 20;
@@ -72,7 +75,9 @@ public class BadMethodCalls {
             if (Nodes.find(nc.getRoot(), BadMethodCalls::isTimeMeasure) != null)
                 return;
             int score = 0;
-            if (curName.toLowerCase(Locale.ENGLISH).contains("garbage") || curName.startsWith("gc") || curName.endsWith("gc"))
+            if (curName.toLowerCase(Locale.ENGLISH).contains("garbage")
+                || curName.toLowerCase(Locale.ENGLISH).contains("memory") || curName.startsWith("gc")
+                || curName.endsWith("gc"))
                 score -= 10;
             ctx.report("SystemGc", score, node);
         } else if (typeName.equals("java/lang/Thread") && name.equals("stop")

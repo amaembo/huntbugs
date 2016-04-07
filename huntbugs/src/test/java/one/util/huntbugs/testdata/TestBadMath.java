@@ -78,4 +78,22 @@ public class TestBadMath {
         int mask = 0xFFFFFFFF;
         return x & mask;
     }
+    
+    @AssertNoWarning(type="Useless*")
+    public boolean testBoolean() {
+        boolean x = false, z = false, y = true;
+        x |= y;
+        z = y | z;
+        return x ^ y ^ z;
+    }
+    
+    @AssertNoWarning(type="Useless*")
+    public boolean testCompound() {
+        int x = 0;
+        int y = 0xFFFFFFFF;
+        x |= 0x100;
+        x |= 0x400;
+        y &= ~1;
+        return (x ^ y) > 0;
+    }
 }
