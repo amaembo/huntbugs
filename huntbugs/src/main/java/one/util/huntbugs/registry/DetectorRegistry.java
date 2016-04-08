@@ -79,13 +79,14 @@ public class DetectorRegistry {
             return false;
         try {
             wds.forEach(wd -> ctx.incStat("WarningTypes.Total"));
-            Map<String, WarningType> wts = wds.stream().map(WarningType::new).filter(
-                wt -> wt.getMaxScore() >= ctx.getOptions().minScore).collect(
+            Map<String, WarningType> wts = wds.stream().map(WarningType::new).collect(
                 Collectors.toMap(WarningType::getName, Function.identity()));
-            if(wts.isEmpty())
+            List<WarningType> activeWts = wts.values().stream().filter(
+                wt -> wt.getMaxScore() >= ctx.getOptions().minScore).collect(Collectors.toList());
+            if(activeWts.isEmpty())
                 return false;
             Detector detector = new Detector(wts, clazz);
-            wts.values().forEach(wt -> {
+            activeWts.forEach(wt -> {
                 typeToDetector.put(wt, detector);
                 ctx.incStat("WarningTypes");
             });

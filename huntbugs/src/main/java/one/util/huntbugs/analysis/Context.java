@@ -123,6 +123,8 @@ public class Context {
     }
 
     public void addWarning(Warning warning) {
+        if(warning.getScore() < getOptions().minScore)
+            return;
         incStat("Warnings");
         warnings.add(warning);
     }
