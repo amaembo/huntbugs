@@ -84,6 +84,8 @@ public class SameBranches {
                 }
                 if (!eqLocations.isEmpty()) {
                     int n = eqLocations.size() + (hasDefault ? 0 : 1);
+                    if (n > 3)
+                        n = (n - 3) / 2 + 3;
                     CaseBlock block = blocks.get(i);
                     mc.report(hasDefault ? "SameBranchesSwitchDefault" : "SameBranchesSwitch", computeScore(block, n), block,
                         eqLocations.toArray(new WarningAnnotation[0]));
@@ -98,7 +100,7 @@ public class SameBranches {
     public void visitExpr(Expression expr, MethodContext mc) {
         if (expr.getCode() == AstCode.TernaryOp
             && Equi.equiExpressions(expr.getArguments().get(1), expr.getArguments().get(2))) {
-            mc.report("SameBranchesTernary", computeScore(expr.getArguments().get(1), 10), expr);
+            mc.report("SameBranchesTernary", computeScore(expr.getArguments().get(1), 30), expr);
         }
     }
 
