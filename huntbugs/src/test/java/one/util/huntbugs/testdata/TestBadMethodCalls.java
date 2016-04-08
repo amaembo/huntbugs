@@ -128,7 +128,7 @@ public class TestBadMethodCalls {
         return new BigDecimal(Double.POSITIVE_INFINITY);
     }
     
-    @AssertNoWarning(type="BigDecimalConstructedFromDouble") 
+    @AssertNoWarning(type="BigDecimal*") 
     public BigDecimal testBigDecimalRound(double x) {
         return new BigDecimal(1.5).add(new BigDecimal(x));
     }

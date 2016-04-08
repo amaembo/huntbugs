@@ -86,31 +86,36 @@ public class BadMethodCalls {
                 || curName.endsWith("gc"))
                 priority += 10;
             ctx.report("SystemGc", priority, node);
-        } else if ((typeName.equals("java/lang/System") || typeName.equals("java/lang/Runtime")) && name.equals("runFinalizersOnExit")) {
+        } else if ((typeName.equals("java/lang/System") || typeName.equals("java/lang/Runtime"))
+            && name.equals("runFinalizersOnExit")) {
             ctx.report("SystemRunFinalizersOnExit", 0, node);
         } else if (typeName.equals("java/lang/Thread") && name.equals("stop")
             && signature.equals("(Ljava/lang/Throwable;)V")) {
             ctx.report("ThreadStopThrowable", 0, node);
-        } else if (node.getCode() == AstCode.InitObject && typeName.equals("java/lang/Thread") 
+        } else if (node.getCode() == AstCode.InitObject && typeName.equals("java/lang/Thread")
             && !signature.contains("Runnable")) {
             ctx.report("UselessThread", 0, node);
-        } else if(node.getCode() == AstCode.InitObject && typeName.equals("java/math/BigDecimal") && signature.equals("(D)V")) {
+        } else if (node.getCode() == AstCode.InitObject && typeName.equals("java/math/BigDecimal")
+            && signature.equals("(D)V")) {
             Object value = Nodes.getConstant(node.getArguments().get(0));
-            if (value instanceof Double && !((Double)value).isInfinite() && !((Double)value).isNaN()) {
-                double arg = ((Double) value).doubleValue();
-                String dblString = value.toString();
-                String bigDecimalString = new BigDecimal(arg).toString();
-                boolean ok = dblString.equals(bigDecimalString) || dblString.equals(bigDecimalString + ".0");
+            if (value instanceof Double) {
+                Double val = (Double) value;
+                if (val.isInfinite() || val.isNaN()) {
+                    ctx.report("BigDecimalConstructedFromInfiniteOrNaN", 0, node, WarningAnnotation.forNumber(val));
+                } else {
+                    double arg = val.doubleValue();
+                    String dblString = value.toString();
+                    String bigDecimalString = new BigDecimal(arg).toString();
+                    boolean ok = dblString.equals(bigDecimalString) || dblString.equals(bigDecimalString + ".0");
 
-                if (!ok) {
-                    boolean scary = dblString.length() <= 8 && bigDecimalString.length() > 12
+                    if (!ok) {
+                        boolean scary = dblString.length() <= 8 && bigDecimalString.length() > 12
                             && dblString.toUpperCase().indexOf('E') == -1;
-                    ctx.report("BigDecimalConstructedFromDouble", scary ? 0 : -15, node, new WarningAnnotation<>(
-                            "REPLACEMENT", "BigDecimal.valueOf(double)"), new WarningAnnotation<>("DOUBLE_NUMBER",
-                            dblString), new WarningAnnotation<>("BIGDECIMAL_NUMBER", bigDecimalString));
+                        ctx.report("BigDecimalConstructedFromDouble", scary ? 0 : -15, node, new WarningAnnotation<>(
+                                "REPLACEMENT", "BigDecimal.valueOf(double)"), new WarningAnnotation<>("DOUBLE_NUMBER",
+                                dblString), new WarningAnnotation<>("BIGDECIMAL_NUMBER", bigDecimalString));
+                    }
                 }
-            } else {
-                ctx.report("BigDecimalConstructedFromInfiniteOrNaN", 0, node, WarningAnnotation.forNumber((Double)value));
             }
         }
     }
@@ -119,11 +124,11 @@ public class BadMethodCalls {
         return curMethod.getName().equals("main") && curMethod.isStatic()
             && curMethod.getErasedSignature().startsWith("([Ljava/lang/String;)");
     }
-    
+
     private static boolean isTimeMeasure(Node node) {
         if (!Nodes.isOp(node, AstCode.InvokeStatic))
             return false;
-        MethodReference mr = (MethodReference) ((Expression)node).getOperand();
+        MethodReference mr = (MethodReference) ((Expression) node).getOperand();
         return mr.getName().equals("currentTimeMillis") || mr.getName().equals("nanoTime");
     }
 }
