@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.registry;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,7 +42,6 @@ import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.assertions.MethodAsserter;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.anno.WarningDefinition;
-import one.util.huntbugs.repo.CompositeRepository;
 import one.util.huntbugs.repo.Repository;
 import one.util.huntbugs.repo.RepositoryVisitor;
 import one.util.huntbugs.util.NodeChain;
@@ -93,7 +93,7 @@ public class DetectorRegistry {
     }
 
     void init() {
-        CompositeRepository repo = Repository.createSelfRepository();
+        Repository repo = Repository.createSelfRepository();
         repo.visit(DETECTORS_PACKAGE, new RepositoryVisitor() {
             @Override
             public boolean visitPackage(String packageName) {
@@ -167,5 +167,28 @@ public class DetectorRegistry {
         for (TypeDefinition subType : type.getDeclaredTypes()) {
             analyzeClass(subType);
         }
+    }
+    
+    public void printWarnings(PrintStream out) {
+        List<String> result = new ArrayList<>();
+        
+        String arrow = " --> ";
+        typeToDetector.forEach((wt, detector) -> {
+            result.add(wt.getCategory()+arrow+wt.getName()+arrow+detector.toString().replace(DETECTORS_PACKAGE.replace("/", "."), "internal"));
+        });
+        result.sort(null);
+        String lastCategory = arrow;
+        for(int i=0; i<result.size(); i++) {
+            String str = result.get(i);
+            if(str.startsWith(lastCategory)) {
+                out.printf("%" + lastCategory.length() + "s%s%n", i == result.size() - 1
+                    || !result.get(i + 1).startsWith(lastCategory) ? "\\-> " : "|-> ", str.substring(lastCategory
+                        .length()));
+            } else {
+                out.println(str);
+                lastCategory = str.substring(0, str.indexOf(arrow)+arrow.length());
+            }
+        }
+        out.println("Total types: "+typeToDetector.size());
     }
 }

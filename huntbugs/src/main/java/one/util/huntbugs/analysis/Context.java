@@ -148,6 +148,10 @@ public class Context {
         errors.forEach(msg -> app.append(msg.toString()).append("\n"));
     }
 
+    public void reportWarningTypes(PrintStream out) {
+        registry.printWarnings(out);
+    }
+
     public int getClassesCount() {
         return classesCount.get();
     }

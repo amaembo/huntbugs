@@ -22,10 +22,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.jar.JarFile;
 
 import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
+import one.util.huntbugs.repo.CompositeRepository;
 import one.util.huntbugs.repo.DirRepository;
 import one.util.huntbugs.repo.JarRepository;
 import one.util.huntbugs.repo.Repository;
@@ -35,17 +38,74 @@ import one.util.huntbugs.repo.Repository;
  *
  */
 public class HuntBugs {
-    public static void main(String[] args) throws IOException {
-        if(args.length != 1) {
-            System.out.println("Provide exactly one argument (jar or class files folder)");
-            return;
+    private boolean listDetectors = false;
+    private boolean listOptions = false;
+    private final AnalysisOptions options = new AnalysisOptions();
+    private Repository repo;
+    
+    private void parseCommandLine(String[] args) {
+        List<Repository> repos = new ArrayList<>();
+        for(String arg : args) {
+            if(arg.equals("-lw")) {
+                listDetectors = true;
+            } else if(arg.equals("-lv")) {
+                listOptions = true;
+            } else if(arg.startsWith("-D")) {
+                int pos = arg.indexOf('=');
+                if(pos == 0) {
+                    throw new IllegalArgumentException("Illegal option: "+arg+" (expected -Dname=value)");
+                }
+                String name = arg.substring(2, pos).trim();
+                String value = arg.substring(pos+1).trim();
+                options.set(name, value);
+            } else {
+                Path root = Paths.get(arg);
+                try {
+                    repos.add(Files.isDirectory(root) ? new DirRepository(root) : new JarRepository(new JarFile(root
+                            .toFile())));
+                } catch (IOException e) {
+                    throw new IllegalArgumentException("Cannot open JAR file "+arg);
+                }
+            }
+        }
+        if(!repos.isEmpty()) {
+            repo = new CompositeRepository(repos);
+        }
+    }
+    
+    private int run(String[] args) {
+        if(args.length == 0) {
+            System.out.println("Welcome to HuntBugs");
+            System.out.println("Please specify at least one option or at least one directory/jar to analyze");
+            System.out.println("Options are:");
+            System.out.println("    -lw          -- list all warning types");
+            System.out.println("    -lv          -- list all variables");
+            System.out.println("    -Dname=value -- set given variable");
+            return -1;
+        }
+        try {
+            parseCommandLine(args);
+        } catch (IllegalArgumentException ex) {
+            System.err.println(ex.getMessage());
+            return -3;
+        }
+        if(listDetectors) {
+            System.out.println("List of warning types:");
+            Context ctx = new Context(Repository.createNullRepository(), options);
+            ctx.reportWarningTypes(System.out);
+            return 0;
+        }
+        if(listOptions) {
+            System.out.println("List of variables:");
+            options.report(System.out);
+            return 0;
+        }
+        if(repo == null) {
+            System.err.println("No repositories specified");
+            return -2;
         }
         long start = System.nanoTime();
-        String classPath = args[0];
-        Path root = Paths.get(classPath);
-        Repository repository = Files.isDirectory(root) ? new DirRepository(root) : new JarRepository(new JarFile(root
-                .toFile()));
-        Context ctx = new Context(repository, new AnalysisOptions());
+        Context ctx = new Context(repo, options);
         ctx.addListener((stage, className) -> {
             if(className == null)
                 return true;
@@ -69,5 +129,10 @@ public class HuntBugs {
             System.out.println("Analyzis time "+dur.toMinutes()+"m"+dur.getSeconds()%60+"s");
         }));
         ctx.analyzePackage("");
+        return 0;
+    }
+    
+    public static void main(String[] args) {
+        System.exit(new HuntBugs().run(args));
     }
 }

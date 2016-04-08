@@ -35,7 +35,7 @@ public interface Repository {
 
     void visit(String rootPackage, RepositoryVisitor visitor);
 
-    public static CompositeRepository createSelfRepository() {
+    public static Repository createSelfRepository() {
         List<Repository> repos = new ArrayList<>();
         try {
             Enumeration<URL> resources = CompositeRepository.class.getClassLoader().getResources(".");
@@ -61,5 +61,18 @@ public interface Repository {
         }
         CompositeRepository repo = new CompositeRepository(repos);
         return repo;
+    }
+    
+    public static Repository createNullRepository() {
+        return new Repository() {
+            @Override
+            public void visit(String rootPackage, RepositoryVisitor visitor) {
+            }
+            
+            @Override
+            public ITypeLoader createTypeLoader() {
+                return (internalName, buffer) -> false;
+            }
+        };
     }
 }

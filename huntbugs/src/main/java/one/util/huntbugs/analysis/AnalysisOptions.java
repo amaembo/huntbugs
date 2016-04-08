@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.analysis;
 
+import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.util.Objects;
 
@@ -51,6 +52,17 @@ public class AnalysisOptions {
             throw new IllegalArgumentException("Unknown option: " + name);
         } catch (SecurityException | IllegalAccessException e) {
             throw new InternalError(e);
+        }
+    }
+
+    public void report(PrintStream out) {
+        for(Field field : getClass().getFields()) {
+            String type = field.getType().getSimpleName();
+            try {
+                out.println(field.getName()+" ("+type+") = "+field.get(this));
+            } catch (IllegalArgumentException | IllegalAccessException e) {
+                throw new InternalError(e);
+            }
         }
     }
 }
