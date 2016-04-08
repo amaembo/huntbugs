@@ -38,6 +38,12 @@ public class TestSelfAssignment {
         arr[0].f = arr[0].f;
     }
     
+    @AssertWarning(type="SelfAssignmentField")
+    void testArray(int a) {
+        TestSelfAssignment[] arr = {new TestSelfAssignment()};
+        arr[a+1].f = arr[1+a].f;
+    }
+    
     @AssertNoWarning(type="SelfAssignmentField")
     void testArrayOk() {
         TestSelfAssignment[] arr = {new TestSelfAssignment(), new TestSelfAssignment()};
