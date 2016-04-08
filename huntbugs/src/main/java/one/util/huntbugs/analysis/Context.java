@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -53,9 +54,9 @@ public class Context {
     private final Map<String, Long> stat = new ConcurrentHashMap<>();
 
     public Context(Repository repository, AnalysisOptions options) {
+        this.options = options;
         registry = new DetectorRegistry(this);
         this.repository = repository;
-        this.options = options;
         ITypeLoader loader = repository.createTypeLoader();
         if (options.addBootClassPath) {
             loader = new CompositeTypeLoader(new ClasspathTypeLoader(System.getProperty("sun.boot.class.path")), loader);
@@ -66,21 +67,21 @@ public class Context {
     public AnalysisOptions getOptions() {
         return options;
     }
-    
+
     public void addListener(AnalysisListener listener) {
         listeners.add(listener);
     }
-    
+
     boolean fireEvent(String stepName, String className) {
-        for(AnalysisListener listener : listeners) {
-            if(!listener.eventOccurred(stepName, className))
+        for (AnalysisListener listener : listeners) {
+            if (!listener.eventOccurred(stepName, className))
                 return false;
         }
         return true;
     }
 
     public void analyzePackage(String name) {
-        if(!fireEvent("Gathering statistics", null))
+        if (!fireEvent("Gathering statistics", null))
             return;
         List<String> classes = new ArrayList<>();
         repository.visit(name, new RepositoryVisitor() {
@@ -96,8 +97,8 @@ public class Context {
             }
         });
         totalClasses = classes.size();
-        for(String className : classes) {
-            if(!fireEvent("Analyzing class", className))
+        for (String className : classes) {
+            if (!fireEvent("Analyzing class", className))
                 return;
             analyzeClass(className);
         }
@@ -131,17 +132,23 @@ public class Context {
         warns.sort(Comparator.comparingInt(Warning::getScore).reversed().thenComparing(w -> w.getType().getName()));
         warns.forEach(w -> app.append(w.toString()).append("\n"));
     }
-    
+
     public void reportStats(PrintStream app) {
-        if(stat.isEmpty())
+        if (stat.isEmpty())
             return;
         app.append("Statistics:\n");
-		stat.entrySet()
-				.stream()
-				.sorted(Map.Entry.comparingByKey())
-				.forEach(
-						e -> app.append("\t").append(e.getKey()).append(" = ")
-								.append(e.getValue().toString()).append("\n"));
+        stat.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(e -> {
+            String key = e.getKey();
+            Long value = e.getValue();
+            if(stat.containsKey(key+".Total"))
+                return;
+            if(key.endsWith(".Total")) {
+                String subKey = key.substring(0, key.length()-".Total".length());
+                Long part = stat.getOrDefault(subKey, 0L);
+                app.printf(Locale.ENGLISH, "\t%s: %d of %d (%.2f%%)%n", subKey, part, value, part*100.0/value);
+            } else 
+                app.printf(Locale.ENGLISH, "\t%s: %d%n", key, value);
+        });
     }
 
     public void reportErrors(PrintStream app) {
@@ -159,12 +166,12 @@ public class Context {
     public int getTotalClasses() {
         return totalClasses;
     }
-    
+
     public int getErrorCount() {
         return errors.size();
     }
 
-	public void incStat(String key) {
-	    stat.merge(key, 1L, Long::sum);
-	}
+    public void incStat(String key) {
+        stat.merge(key, 1L, Long::sum);
+    }
 }

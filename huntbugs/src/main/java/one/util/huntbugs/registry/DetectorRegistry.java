@@ -78,8 +78,12 @@ public class DetectorRegistry {
         if (wds.isEmpty())
             return false;
         try {
-            Map<String, WarningType> wts = wds.stream().map(WarningType::new).collect(
+            wds.forEach(wd -> ctx.incStat("WarningTypes.Total"));
+            Map<String, WarningType> wts = wds.stream().map(WarningType::new).filter(
+                wt -> wt.getMaxScore() >= ctx.getOptions().minScore).collect(
                 Collectors.toMap(WarningType::getName, Function.identity()));
+            if(wts.isEmpty())
+                return false;
             Detector detector = new Detector(wts, clazz);
             wts.values().forEach(wt -> {
                 typeToDetector.put(wt, detector);
@@ -104,8 +108,9 @@ public class DetectorRegistry {
             public void visitClass(String className) {
                 String name = className.replace('/', '.');
                 try {
-                    addDetector(MetadataSystem.class.getClassLoader().loadClass(name));
-                    ctx.incStat("Detectors");
+                    ctx.incStat("Detectors.Total");
+                    if(addDetector(MetadataSystem.class.getClassLoader().loadClass(name)))
+                        ctx.incStat("Detectors");
                 } catch (ClassNotFoundException e) {
                     ctx.addError(new ErrorMessage(name, null, null, null, -1, e));
                 }

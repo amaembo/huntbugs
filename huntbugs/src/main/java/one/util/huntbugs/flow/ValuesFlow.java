@@ -557,9 +557,9 @@ public class ValuesFlow {
     }
 
     public static void annotate(Context ctx, MethodDefinition md, Block method) {
-        ctx.incStat("LoadsTracker.Total");
+        ctx.incStat("ValuesFlow.Total");
         if (new Frame(md).process(method) != null) {
-            ctx.incStat("LoadsTracker.Success");
+            ctx.incStat("ValuesFlow");
         }
     }
 }
