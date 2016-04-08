@@ -51,7 +51,7 @@ public class Detector {
         NodeChain.class, MethodContext.class, MethodDefinition.class, TypeDefinition.class);
 
     private final Map<String, WarningType> wts;
-    private final Map<Class<?>, Function<TypeReference, ?>> dbFetchers = new HashMap<>();
+    final Map<Class<?>, Function<TypeReference, ?>> dbFetchers = new HashMap<>();
     private final Class<?> clazz;
     final List<VisitorInfo> astVisitors = new ArrayList<>();
     
@@ -202,7 +202,7 @@ public class Detector {
 
     @Override
     public String toString() {
-        return clazz.getName();
+        return clazz.getName().replace(DetectorRegistry.DETECTORS_PACKAGE, "internal");
     }
 
     public Object newInstance() {

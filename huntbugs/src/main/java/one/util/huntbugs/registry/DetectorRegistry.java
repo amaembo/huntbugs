@@ -56,7 +56,8 @@ import one.util.huntbugs.warning.WarningType;
 public class DetectorRegistry {
     private static final WarningType METHOD_TOO_LARGE = new WarningType("System", "MethodTooLarge", 30);
     
-    private static final String DETECTORS_PACKAGE = "one/util/huntbugs/detect";
+    static final String DETECTORS_PACKAGE = "one.util.huntbugs.detect";
+    
     private final Map<WarningType, Detector> typeToDetector = new HashMap<>();
     private final List<Detector> detectors = new ArrayList<>();
     private final Context ctx;
@@ -102,10 +103,11 @@ public class DetectorRegistry {
 
     void init() {
         Repository repo = Repository.createSelfRepository();
-        repo.visit(DETECTORS_PACKAGE, new RepositoryVisitor() {
+        String pkg = DETECTORS_PACKAGE.replace('.', '/');
+        repo.visit(pkg, new RepositoryVisitor() {
             @Override
             public boolean visitPackage(String packageName) {
-                return packageName.equals(DETECTORS_PACKAGE);
+                return packageName.equals(pkg);
             }
 
             @Override
@@ -132,6 +134,14 @@ public class DetectorRegistry {
             for (Node child : children)
                 visitChildren(child, newChain, mcs);
         }
+    }
+    
+    public boolean hasDatabases() {
+        return !databases.instances.isEmpty();
+    }
+    
+    public void populateDatabases(TypeDefinition type) {
+        databases.visitType(type);
     }
 
     public void analyzeClass(TypeDefinition type) {
@@ -178,13 +188,7 @@ public class DetectorRegistry {
         }
     }
     
-    public void reportWarningTypes(PrintStream out) {
-        List<String> result = new ArrayList<>();
-        
-        String arrow = " --> ";
-        typeToDetector.forEach((wt, detector) -> {
-            result.add(wt.getCategory()+arrow+wt.getName()+arrow+detector.toString().replace(DETECTORS_PACKAGE.replace("/", "."), "internal"));
-        });
+    private void printTree(PrintStream out, List<String> result, String arrow) {
         result.sort(null);
         String lastCategory = arrow;
         for(int i=0; i<result.size(); i++) {
@@ -198,11 +202,29 @@ public class DetectorRegistry {
                 lastCategory = str.substring(0, str.indexOf(arrow)+arrow.length());
             }
         }
+    }
+
+    public void reportWarningTypes(PrintStream out) {
+        List<String> result = new ArrayList<>();
+        
+        String arrow = " --> ";
+        typeToDetector.forEach((wt, detector) -> {
+            result.add(wt.getCategory()+arrow+wt.getName()+arrow+detector);
+        });
+        printTree(out, result, arrow);
         out.println("Total types: "+typeToDetector.size());
     }
-    
+
     public void reportDatabases(PrintStream out) {
-        databases.instances.keySet().forEach(System.out::println);
+        List<String> result = new ArrayList<>();
+        String arrow = " --> ";
+        detectors.forEach(det -> det.dbFetchers.keySet().forEach(db -> result.add(db.getName()+arrow+det)));
+        databases.instances.forEach((db, dbi) -> {
+            if(dbi.parentDb != null) {
+                result.add(dbi.parentDb.getClass().getName()+arrow+"Derived DB: "+db.getName());
+            }
+        });
+        printTree(out, result, arrow);
         out.println("Total databases: "+databases.instances.size());
     }
 }

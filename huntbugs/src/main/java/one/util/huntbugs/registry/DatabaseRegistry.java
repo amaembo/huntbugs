@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 
 import one.util.huntbugs.analysis.Context;
@@ -34,8 +35,8 @@ public class DatabaseRegistry {
     Map<Class<?>, DatabaseInfo<?>> instances = new HashMap<>();
 
     static class DatabaseInfo<T> {
-        private final T db;
-        private final AbstractTypeDatabase<T> parentDb;
+        final T db;
+        final AbstractTypeDatabase<T> parentDb;
 
         public DatabaseInfo(T db, AbstractTypeDatabase<T> parentDb) {
             this.db = db;
@@ -56,6 +57,15 @@ public class DatabaseRegistry {
 
     public <T> Function<TypeReference, T> queryDatabase(Class<T> clazz) {
         return getDatabaseInfo(clazz)::getDatabase;
+    }
+    
+    void visitType(TypeDefinition td) {
+        for(DatabaseInfo<?> dbi : instances.values()) {
+            Object db = dbi.db;
+            if(db instanceof AbstractTypeDatabase) {
+                ((AbstractTypeDatabase<?>) db).visitType(td);
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")

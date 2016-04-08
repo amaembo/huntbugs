@@ -97,6 +97,23 @@ public class Context {
             }
         });
         totalClasses = classes.size();
+        if(registry.hasDatabases()) {
+            for (String className : classes) {
+                if (!fireEvent("Preparing", className))
+                    return;
+                classesCount.incrementAndGet();
+                TypeDefinition type;
+                try {
+                    type = ms.resolve(ms.lookupType(className));
+                } catch (Throwable t) {
+                    addError(new ErrorMessage(null, className, null, null, -1, t));
+                    continue;
+                }
+                if (type != null)
+                    registry.populateDatabases(type);
+            }
+        }
+        classesCount.set(0);
         for (String className : classes) {
             if (!fireEvent("Analyzing class", className))
                 return;
@@ -104,7 +121,7 @@ public class Context {
         }
     }
 
-    public void analyzeClass(String name) {
+    void analyzeClass(String name) {
         classesCount.incrementAndGet();
         TypeDefinition type;
         try {

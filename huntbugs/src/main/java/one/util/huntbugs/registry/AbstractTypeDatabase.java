@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
+import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 
 /**
@@ -32,6 +33,10 @@ public abstract class AbstractTypeDatabase<E> {
     
     protected AbstractTypeDatabase(Function<String, E> elementSupplier) {
         this.fn = Objects.requireNonNull(elementSupplier);
+    }
+    
+    protected void visitType(TypeDefinition td) {
+        
     }
     
     protected E getOrCreate(TypeReference ref) {
