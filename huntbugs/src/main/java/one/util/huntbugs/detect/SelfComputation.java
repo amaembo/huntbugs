@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.detect;
 
+import com.strobel.assembler.metadata.JvmType;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
@@ -43,7 +44,9 @@ public class SelfComputation {
 		}
 		if (Nodes.isComparison(expr)) {
 		    if(expr.getArguments().size() == 2 && Nodes.isEquivalent(expr.getArguments().get(0), expr.getArguments().get(1))) {
-		        mc.report("SelfComparison", 0, expr.getArguments().get(0));
+		        JvmType type = expr.getArguments().get(0).getInferredType().getSimpleType();
+		        if(type != JvmType.Double && type != JvmType.Float)
+		            mc.report("SelfComparison", 0, expr.getArguments().get(0));
 		    }
 		}
 	}
