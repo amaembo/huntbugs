@@ -73,7 +73,7 @@ public class TestNonShortCircuit {
     @AssertWarning(type = "NonShortCircuitDangerous", minScore = 60, maxScore = 70)
     @AssertNoWarning(type="NonShortCircuit") 
     public int testMethod(Integer a, Integer b) {
-        if(Math.abs(a) > 0 | ++b > 0)
+        if(testOrBoxing(a, a) > 0 | ++b > 0)
             return 1;
         return 2;
     }
