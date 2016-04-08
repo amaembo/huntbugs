@@ -227,7 +227,7 @@ public class Nodes {
 	    case InvokeSpecial:
 	    case InvokeStatic:
 	    case InvokeVirtual:
-	        if(!isSideEffectFree(node))
+	        if(!isSideEffectFreeMethod(node))
 	            return false;
 	    default:
 	        for(Expression child : expr.getArguments()) {
@@ -271,4 +271,19 @@ public class Nodes {
 	    }
 	    return null;
 	}
+
+    public static boolean isEmptyOrBreak(Block block) {
+        List<Node> body = block.getBody();
+        if (body.isEmpty())
+            return true;
+        if(body.size() > 1)
+            return false;
+        Node node = body.get(0);
+        if(isOp(node, AstCode.LoopOrSwitchBreak) || isOp(node, AstCode.Return) || isOp(node, AstCode.LoopContinue)) {
+            Expression expr = (Expression)node;
+            if(expr.getOperand() == null && expr.getArguments().size() == 0)
+                return true;
+        }
+        return false;
+    }
 }

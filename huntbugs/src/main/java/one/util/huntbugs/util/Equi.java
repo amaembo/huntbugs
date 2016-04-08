@@ -22,6 +22,7 @@ import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.core.StringUtilities;
+import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.CatchBlock;
 import com.strobel.decompiler.ast.Condition;
@@ -147,8 +148,17 @@ public class Equi {
             return false;
         if (right == null)
             return false;
-        if (left.getCode() != right.getCode())
+        if (left.getCode() != right.getCode()) {
+            if((left.getCode() == AstCode.CmpGe && right.getCode() == AstCode.CmpLe) ||
+                    (left.getCode() == AstCode.CmpGt && right.getCode() == AstCode.CmpLt) ||
+                    (left.getCode() == AstCode.CmpLe && right.getCode() == AstCode.CmpGe) ||
+                    (left.getCode() == AstCode.CmpLt && right.getCode() == AstCode.CmpGt)) {
+                return left.getArguments().size() == 2 && right.getArguments().size() == 2 &&
+                        equiExpressions(left.getArguments().get(0), right.getArguments().get(1), count) &&
+                        equiExpressions(left.getArguments().get(1), right.getArguments().get(0), count);
+            }
             return false;
+        }
         
         Object leftOp = left.getOperand();
         Object rightOp = right.getOperand();

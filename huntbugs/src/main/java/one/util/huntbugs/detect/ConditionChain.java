@@ -72,15 +72,25 @@ public class ConditionChain {
             Condition condNode = (Condition) node;
             Expression condition = condNode.getCondition();
             if(Nodes.isEquivalent(expr, condition)) {
-                mc.report(excluding ? "SameConditionsExcluding" : "SameConditions", 0, expr, new WarningAnnotation<>("SAME_CONDITION", mc.getLocation(condition)));
+                int priority = 0;
+                if(Nodes.isEmptyOrBreak(condNode.getTrueBlock())) {
+                    excluding = !excluding;
+                    priority = 10;
+                }
+                mc.report(excluding ? "SameConditionsExcluding" : "SameConditions", priority, expr, new WarningAnnotation<>("SAME_CONDITION", mc.getLocation(condition)));
                 return;
             }
-            if(expr.getCode() == AstCode.LogicalAnd && Nodes.isSideEffectFree(expr)) {
+            if(expr.getCode() == AstCode.LogicalAnd && !excluding && Nodes.isSideEffectFree(expr)) {
                 check(expr.getArguments().get(0), block, mc, excluding);
+                check(expr.getArguments().get(1), block, mc, excluding);
+            }
+            if(expr.getCode() == AstCode.LogicalOr && excluding && Nodes.isSideEffectFree(expr)) {
+                check(expr.getArguments().get(0), block, mc, excluding);
+                check(expr.getArguments().get(1), block, mc, excluding);
             }
             if(Nodes.isSideEffectFree(condition)) {
                 check(expr, condNode.getTrueBlock(), mc, excluding);
-                check(expr, condNode.getFalseBlock(), mc, true);
+                check(expr, condNode.getFalseBlock(), mc, excluding);
             }
         }
     }

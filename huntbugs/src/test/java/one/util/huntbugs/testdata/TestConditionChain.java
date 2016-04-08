@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.testdata;
 
+import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
 /**
@@ -25,9 +26,18 @@ public class TestConditionChain {
     @AssertWarning(type = "SameConditions")
     public void testSameConditions(int x) {
         if (x > 2) {
-            if (x > 2) {
+            if (2 < x) {
                 System.out.println(x);
             }
+        }
+    }
+
+    @AssertNoWarning(type = "*")
+    public void testExcludingConditions(float x) {
+        if (x <= 0) {
+            System.out.println("ok");
+        } else if (x > 0) {
+            System.out.println(x);
         }
     }
 
@@ -41,7 +51,7 @@ public class TestConditionChain {
             }
         }
     }
-    
+
     @AssertWarning(type = "SameConditions")
     public void testSameConditionsChain(int x) {
         if (x > 2) {
@@ -65,7 +75,7 @@ public class TestConditionChain {
             }
         }
     }
-    
+
     @AssertWarning(type = "SameConditions")
     public void testSameConditionsChainElse2(int x) {
         if (x > 2) {
@@ -80,7 +90,7 @@ public class TestConditionChain {
             }
         }
     }
-    
+
     @AssertWarning(type = "SameConditionsExcluding")
     public void testSameConditionsExcluding(int x) {
         if (x > 2) {
@@ -95,4 +105,16 @@ public class TestConditionChain {
             System.out.println("foo2");
         }
     }
+
+    @AssertNoWarning(type="SameConditionsExcluding")
+    @AssertWarning(type="SameConditions", maxScore = 50)
+    void testCondition(int vc, short value) {
+        for (int i = vc; --i >= 0;) {
+            if (value <= 0)
+                System.out.println("1");
+            else if (value > 0)
+                System.out.println("2");
+        }
+    }
+
 }

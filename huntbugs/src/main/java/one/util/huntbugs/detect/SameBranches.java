@@ -62,9 +62,8 @@ public class SameBranches {
         }
         if (node instanceof Switch) {
             Switch sw = (Switch) node;
-            List<CaseBlock> blocks = sw.getCaseBlocks().stream().filter(cb -> nonFallThrough(cb.getBody())
-                && !isEmpty(cb.getBody())).collect(
-                Collectors.toList());
+            List<CaseBlock> blocks = sw.getCaseBlocks().stream().filter(
+                cb -> nonFallThrough(cb.getBody()) && !Nodes.isEmptyOrBreak(cb)).collect(Collectors.toList());
             BitSet marked = new BitSet();
             boolean hasDefault = false;
             List<WarningAnnotation<Location>> eqLocations = new ArrayList<>();
@@ -116,19 +115,5 @@ public class SameBranches {
         Node last = body.get(body.size() - 1);
         return Nodes.isOp(last, AstCode.LoopOrSwitchBreak) || Nodes.isOp(last, AstCode.Return)
             || Nodes.isOp(last, AstCode.LoopContinue) || Nodes.isOp(last, AstCode.AThrow);
-    }
-
-    private boolean isEmpty(List<Node> body) {
-        if (body.isEmpty())
-            return true;
-        if(body.size() > 1)
-            return false;
-        Node node = body.get(0);
-        if(Nodes.isOp(node, AstCode.LoopOrSwitchBreak) || Nodes.isOp(node, AstCode.Return) || Nodes.isOp(node, AstCode.LoopContinue)) {
-            Expression expr = (Expression)node;
-            if(expr.getOperand() == null && expr.getArguments().size() == 0)
-                return true;
-        }
-        return false;
     }
 }
