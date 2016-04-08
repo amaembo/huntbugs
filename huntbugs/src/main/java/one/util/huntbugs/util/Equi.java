@@ -37,9 +37,29 @@ import com.strobel.decompiler.ast.Variable;
  *
  */
 public class Equi {
+    static class Counter {
+        private static final int MAX_COUNT = 1000;
+        
+        int count;
+        
+        boolean addAndCheck() {
+            if(++count > MAX_COUNT) {
+                System.out.println("Max-count reached!");
+                return false;
+            }
+            return true;
+        }
+    }
+    
     public static boolean equiBlocks(Block left, Block right) {
+        return equiBlocks(left, right, new Counter());
+    }
+    
+    public static boolean equiBlocks(Block left, Block right, Counter count) {
         if (left == null)
             return right == null;
+        if (!count.addAndCheck())
+            return false;
         if (right == null)
             return false;
         List<Node> leftBody = left.getBody();
@@ -57,30 +77,30 @@ public class Equi {
             Node leftNode = leftBody.get(i);
             Node rightNode = rightBody.get(i);
             if (leftNode instanceof Expression) {
-                if (!equiExpressions((Expression) leftNode, (Expression) rightNode))
+                if (!equiExpressions((Expression) leftNode, (Expression) rightNode, count))
                     return false;
             } else if (leftNode instanceof Condition) {
                 Condition leftCond = (Condition) leftNode;
                 Condition rightCond = (Condition) rightNode;
-                if (!equiExpressions(leftCond.getCondition(), rightCond.getCondition()))
+                if (!equiExpressions(leftCond.getCondition(), rightCond.getCondition(), count))
                     return false;
-                if (!equiBlocks(leftCond.getTrueBlock(), rightCond.getTrueBlock()))
+                if (!equiBlocks(leftCond.getTrueBlock(), rightCond.getTrueBlock(), count))
                     return false;
-                if (!equiBlocks(leftCond.getFalseBlock(), rightCond.getFalseBlock()))
+                if (!equiBlocks(leftCond.getFalseBlock(), rightCond.getFalseBlock(), count))
                     return false;
             } else if (leftNode instanceof Loop) {
                 Loop leftLoop = (Loop) leftNode;
                 Loop rightLoop = (Loop) rightNode;
                 if (leftLoop.getLoopType() != rightLoop.getLoopType())
                     return false;
-                if (!equiExpressions(leftLoop.getCondition(), rightLoop.getCondition()))
+                if (!equiExpressions(leftLoop.getCondition(), rightLoop.getCondition(), count))
                     return false;
-                if (!equiBlocks(leftLoop.getBody(), rightLoop.getBody()))
+                if (!equiBlocks(leftLoop.getBody(), rightLoop.getBody(), count))
                     return false;
             } else if (leftNode instanceof TryCatchBlock) {
                 TryCatchBlock leftTry = (TryCatchBlock) leftNode;
                 TryCatchBlock rightTry = (TryCatchBlock) rightNode;
-                if (!equiTryCatch(leftTry, rightTry))
+                if (!equiTryCatch(leftTry, rightTry, count))
                     return false;
             } else
                 // TODO: support switch
@@ -89,7 +109,7 @@ public class Equi {
         return true;
     }
 
-    private static boolean equiTryCatch(TryCatchBlock leftTry, TryCatchBlock rightTry) {
+    private static boolean equiTryCatch(TryCatchBlock leftTry, TryCatchBlock rightTry, Counter count) {
         List<CatchBlock> leftCatches = leftTry.getCatchBlocks();
         List<CatchBlock> rightCatches = rightTry.getCatchBlocks();
         if (leftCatches.size() != rightCatches.size())
@@ -107,19 +127,25 @@ public class Equi {
                 if (!equiTypes(leftTypes.get(k), rightTypes.get(k)))
                     return false;
             }
-            if (!equiBlocks(leftCatch, rightCatch))
+            if (!equiBlocks(leftCatch, rightCatch, count))
                 return false;
         }
-        if (!equiBlocks(leftTry.getTryBlock(), rightTry.getTryBlock()))
+        if (!equiBlocks(leftTry.getTryBlock(), rightTry.getTryBlock(), count))
             return false;
-        if (!equiBlocks(leftTry.getFinallyBlock(), rightTry.getFinallyBlock()))
+        if (!equiBlocks(leftTry.getFinallyBlock(), rightTry.getFinallyBlock(), count))
             return false;
         return true;
     }
     
     public static boolean equiExpressions(Expression left, Expression right) {
+        return equiExpressions(left, right, new Counter());
+    }
+    
+    public static boolean equiExpressions(Expression left, Expression right, Counter count) {
         if (left == null)
             return right == null;
+        if (!count.addAndCheck())
+            return false;
         if (right == null)
             return false;
         if (left.getCode() != right.getCode())
@@ -128,7 +154,7 @@ public class Equi {
         Object leftOp = left.getOperand();
         Object rightOp = right.getOperand();
 
-        if (!equiOperands(leftOp, rightOp))
+        if (!equiOperands(leftOp, rightOp, count))
             return false;
 
         if (left.getArguments().size() != right.getArguments().size()) {
@@ -165,7 +191,7 @@ public class Equi {
         return true;
     }
 
-    private static boolean equiOperands(Object left, Object right) {
+    private static boolean equiOperands(Object left, Object right, Counter count) {
         if (left == null)
             return right == null;
         if (right == null)
@@ -183,7 +209,7 @@ public class Equi {
         if (left instanceof Lambda) {
             if(right.getClass() != left.getClass())
                 return false;
-            return equiLambdas((Lambda)left, (Lambda)right);
+            return equiLambdas((Lambda)left, (Lambda)right, count);
         }
         if (left instanceof Variable) {
             if(right.getClass() != left.getClass())
@@ -209,10 +235,10 @@ public class Equi {
         return StringUtilities.equals(left.getFullName(), right.getFullName());
     }
 
-    private static boolean equiLambdas(Lambda left, Lambda right) {
+    private static boolean equiLambdas(Lambda left, Lambda right, Counter count) {
         return equiMethods(left.getMethod(), right.getMethod())
                 && equiTypes(left.getFunctionType(), right.getFunctionType())
-                && equiBlocks(left.getBody(), right.getBody());
+                && equiBlocks(left.getBody(), right.getBody(), count);
     }
 
     private static boolean equiTypes(TypeReference left, TypeReference right) {
