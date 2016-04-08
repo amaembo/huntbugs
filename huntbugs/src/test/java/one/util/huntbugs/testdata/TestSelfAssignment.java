@@ -97,4 +97,38 @@ public class TestSelfAssignment {
         TestSelfAssignment t2 = new TestSelfAssignment();
         t1.f = t2.f;
     }
+
+    @AssertWarning(type="SelfAssignmentArrayElement")
+    void testArraySelf(int[] a, int idx) {
+        a[idx] = a[idx];
+    }
+    
+    @AssertNoWarning(type="SelfAssignmentArrayElement")
+    void testArraySelfDiffArray(int[] a, int[] b, int idx) {
+        a[idx] = b[idx];
+    }
+    
+    @AssertWarning(type="SelfAssignmentArrayElement")
+    void testArraySelfCopyArray(int[] a, int[] b, int idx) {
+        a = b;
+        a[idx] = b[idx];
+    }
+    
+    @AssertWarning(type="SelfAssignmentArrayElement")
+    void testArraySelfVar(int[] a, int idx) {
+        int x = a[idx];
+        a[idx] = x;
+    }
+    
+    @AssertNoWarning(type="SelfAssignmentArrayElement")
+    void testArraySelfChanged(int[] a, int idx) {
+        int x = a[idx];
+        a[idx] = 1;
+        a[idx] = x;
+    }
+    
+    @AssertNoWarning(type="SelfAssignmentArrayElement")
+    void testArraySelfDiffIndex(int[] a, int idx) {
+        a[idx++] = a[idx++];
+    }
 }

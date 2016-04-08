@@ -31,6 +31,7 @@ import one.util.huntbugs.util.Nodes;
  *
  */
 @WarningDefinition(category="Correctness", name="SelfAssignmentField", maxScore=80)
+@WarningDefinition(category="Correctness", name="SelfAssignmentArrayElement", maxScore=80)
 public class SelfAssignment {
     @AstExpressionVisitor
     public void visit(Expression expr, MethodContext mc) {
@@ -58,6 +59,17 @@ public class SelfAssignment {
                     if(frPut.equals(frGet.resolve())) {
                         mc.report("SelfAssignmentField", 0, expr);
                     }
+                }
+            }
+        } else if(expr.getCode() == AstCode.StoreElement) {
+            Expression sourceRef = Nodes.getChild(expr, 2);
+            if(sourceRef.getCode() == AstCode.LoadElement) {
+                Expression storeArrayRef = Nodes.getChild(expr, 0);
+                Expression storeIndexRef = Nodes.getChild(expr, 1);
+                Expression loadArrayRef = Nodes.getChild(sourceRef, 0);
+                Expression loadIndexRef = Nodes.getChild(sourceRef, 1);
+                if(Nodes.isEquivalent(storeArrayRef, loadArrayRef) && Nodes.isEquivalent(storeIndexRef, loadIndexRef)) {
+                    mc.report("SelfAssignmentArrayElement", 0, expr);
                 }
             }
         }

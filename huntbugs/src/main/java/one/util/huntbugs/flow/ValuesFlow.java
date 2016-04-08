@@ -426,6 +426,9 @@ public class ValuesFlow {
                             src -> src.getCode() == AstCode.GetField || src.getCode() == AstCode.GetStatic ? makeUpdatedNode(src)
                                     : src);
             }
+            case StoreElement: {
+                return target.replaceAll(src -> src.getCode() == AstCode.LoadElement ? makeUpdatedNode(src) : src);
+            }
             case PutField: {
                 FieldDefinition fr = ((FieldReference) expr.getOperand()).resolve();
                 return target.replaceAll(src -> src.getCode() == AstCode.GetField
