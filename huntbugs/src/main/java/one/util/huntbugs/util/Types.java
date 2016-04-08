@@ -16,8 +16,11 @@
 package one.util.huntbugs.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
@@ -29,6 +32,9 @@ import com.strobel.decompiler.ast.Variable;
  *
  */
 public class Types {
+    private static final Set<String> SIDE_EFFECT_FREE_TYPES = new HashSet<>(Arrays.asList("java/lang/Integer", "java/lang/Long",
+        "java/lang/Short", "java/lang/Double", "java/lang/Byte", "java/lang/Character", "java/lang/Boolean", "java/lang/Float",
+        "java/lang/Math"));
 
 	public static List<TypeReference> getBaseTypes(TypeReference input) {
 		List<TypeReference> result = new ArrayList<>();
@@ -82,6 +88,10 @@ public class Types {
                 exprType = var.getOriginalParameter().getParameterType();
         }
         return exprType;
+    }
+
+    public static boolean isSideEffectFreeType(TypeReference type) {
+        return SIDE_EFFECT_FREE_TYPES.contains(type.getInternalName());
     }
 
 }

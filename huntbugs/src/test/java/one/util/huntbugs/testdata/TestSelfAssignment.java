@@ -128,6 +128,17 @@ public class TestSelfAssignment {
     }
     
     @AssertNoWarning(type="SelfAssignmentArrayElement")
+    void testArraySelfSideEffect(int[] a, int idx) {
+        int x = a[idx];
+        update(a);
+        a[idx] = x;
+    }
+    
+    private void update(int[] arr) {
+        arr[0] = 2;
+    }
+    
+    @AssertNoWarning(type="SelfAssignmentArrayElement")
     void testArraySelfDiffIndex(int[] a, int idx) {
         a[idx++] = a[idx++];
     }

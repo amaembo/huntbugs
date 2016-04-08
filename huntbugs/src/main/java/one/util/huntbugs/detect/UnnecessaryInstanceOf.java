@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.detect;
 
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
@@ -34,7 +35,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "RedundantCode", name = "UnnecessaryInstanceOfInferred", maxScore = 70)
 public class UnnecessaryInstanceOf {
     @AstExpressionVisitor
-    public void visit(Expression node, MethodContext mc) {
+    public void visit(Expression node, MethodContext mc, MethodDefinition md) {
         if(node.getCode() == AstCode.InstanceOf) {
             TypeReference typeRef = (TypeReference)node.getOperand();
             Expression expr = node.getArguments().get(0);

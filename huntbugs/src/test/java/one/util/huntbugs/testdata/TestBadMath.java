@@ -26,7 +26,7 @@ public class TestBadMath {
     @AssertWarning(type="RemOne")
     public int testRem(int x) {
         int mod = 1;
-        int add = 0;
+        Integer add = 0;
         if (x == 2)
             mod += add;
         return x % mod;
@@ -146,6 +146,12 @@ public class TestBadMath {
         if((x | mask) == subMask) {
             System.out.println();
         }
+    }
+
+    @AssertWarning(type="UselessAndWithMinusOne")
+    public int testUselessAnd(long input) {
+        for(int i=0; i<input; i++) input--;
+        return (int)(input & 0xFFFFFFFF);
     }
     
 }

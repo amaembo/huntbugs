@@ -20,7 +20,6 @@ import java.util.BitSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.CaseBlock;
 import com.strobel.decompiler.ast.Condition;
@@ -48,7 +47,7 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
 @WarningDefinition(category = "RedundantCode", name = "EmptyBranch", maxScore = 25)
 public class SameBranches {
     @AstNodeVisitor
-    public void visit(Node node, MethodContext mc, MethodDefinition md) {
+    public void visit(Node node, MethodContext mc) {
         if (node instanceof Condition) {
             Condition cond = (Condition) node;
             if (Equi.equiBlocks(cond.getTrueBlock(), cond.getFalseBlock())) {
@@ -63,7 +62,8 @@ public class SameBranches {
         }
         if (node instanceof Switch) {
             Switch sw = (Switch) node;
-            List<CaseBlock> blocks = sw.getCaseBlocks().stream().filter(cb -> nonFallThrough(cb.getBody())).collect(
+            List<CaseBlock> blocks = sw.getCaseBlocks().stream().filter(cb -> nonFallThrough(cb.getBody())
+                && !isEmpty(cb.getBody())).collect(
                 Collectors.toList());
             BitSet marked = new BitSet();
             boolean hasDefault = false;
@@ -116,5 +116,19 @@ public class SameBranches {
         Node last = body.get(body.size() - 1);
         return Nodes.isOp(last, AstCode.LoopOrSwitchBreak) || Nodes.isOp(last, AstCode.Return)
             || Nodes.isOp(last, AstCode.LoopContinue) || Nodes.isOp(last, AstCode.AThrow);
+    }
+
+    private boolean isEmpty(List<Node> body) {
+        if (body.isEmpty())
+            return true;
+        if(body.size() > 1)
+            return false;
+        Node node = body.get(0);
+        if(Nodes.isOp(node, AstCode.LoopOrSwitchBreak) || Nodes.isOp(node, AstCode.Return) || Nodes.isOp(node, AstCode.LoopContinue)) {
+            Expression expr = (Expression)node;
+            if(expr.getOperand() == null && expr.getArguments().size() == 0)
+                return true;
+        }
+        return false;
     }
 }

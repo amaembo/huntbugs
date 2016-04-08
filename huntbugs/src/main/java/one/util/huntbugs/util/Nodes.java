@@ -68,10 +68,10 @@ public class Nodes {
     public static Object getConstant(Node node) {
         if(!(node instanceof Expression))
             return null;
-		Expression expr = ValuesFlow.getSource((Expression) node);
-        if(expr.getCode() != AstCode.LdC)
-            return null;
-        return expr.getOperand();
+		Expression expr = (Expression) node;
+		if(expr.getCode() == AstCode.LdC)
+		    return expr.getOperand();
+        return ValuesFlow.getValue(expr);
     }
 
     public static void ifBinaryWithConst(Expression expr, BiConsumer<Expression, Object> consumer) {
@@ -194,6 +194,16 @@ public class Nodes {
             return Equi.equiExpressions((Expression) expr1, (Expression) expr2) && isSideEffectFree(expr1);
         return false;
     }
+    
+    public static boolean isSideEffectFreeMethod(Node node) {
+        if(!(node instanceof Expression))
+            return false;
+        Object operand = ((Expression)node).getOperand();
+        if(!(operand instanceof MethodReference))
+            return false;
+        MethodReference mr = (MethodReference) operand;
+        return Types.isSideEffectFreeType(mr.getDeclaringType());
+    }
 
 	public static boolean isSideEffectFree(Node node) {
 	    if(node == null)
@@ -217,7 +227,7 @@ public class Nodes {
 	    case InvokeSpecial:
 	    case InvokeStatic:
 	    case InvokeVirtual:
-	        if(!isBoxing(node) && !isUnboxing(node))
+	        if(!isSideEffectFree(node))
 	            return false;
 	    default:
 	        for(Expression child : expr.getArguments()) {

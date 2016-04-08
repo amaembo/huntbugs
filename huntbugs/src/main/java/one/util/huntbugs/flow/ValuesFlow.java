@@ -50,6 +50,7 @@ import com.strobel.decompiler.ast.Variable;
  */
 public class ValuesFlow {
     private static final Key<Expression> SOURCE_KEY = Key.create("hb.valueSource");
+    private static final Key<Object> VALUE_KEY = Key.create("hb.value");
 
     private static final AstCode PHI_TYPE = AstCode.Wrap;
     private static final AstCode UPDATE_TYPE = AstCode.Nop;
@@ -92,6 +93,10 @@ public class ValuesFlow {
         return source == null ? input : source;
     }
 
+    public static Object getValue(Expression input) {
+        return input.getUserData(VALUE_KEY);
+    }
+    
     static class Frame {
         final Expression[] sources;
 
@@ -136,25 +141,25 @@ public class ValuesFlow {
         <A, B> Frame processBinaryOp(Expression expr, Class<A> leftType, Class<B> rightType, BiFunction<A, B, ?> op) {
             if (expr.getArguments().size() != 2)
                 return this;
-            Object left = Nodes.getConstant(getSource(expr.getArguments().get(0)));
+            Object left = getValue(expr.getArguments().get(0));
             if (left == null || left.getClass() != leftType)
                 return this;
-            Object right = Nodes.getConstant(getSource(expr.getArguments().get(1)));
+            Object right = getValue(expr.getArguments().get(1));
             if (right == null || right.getClass() != rightType)
                 return this;
             Object result = op.apply(leftType.cast(left), rightType.cast(right));
-            expr.putUserData(SOURCE_KEY, new Expression(AstCode.LdC, result, 0));
+            expr.putUserData(VALUE_KEY, result);
             return this;
         }
 
         <A> Frame processUnaryOp(Expression expr, Class<A> type, Function<A, ?> op) {
             if (expr.getArguments().size() != 1)
                 return this;
-            Object arg = Nodes.getConstant(getSource(expr.getArguments().get(0)));
-            if (arg == null || arg.getClass() != type)
+            Object arg = getValue(expr.getArguments().get(0));
+            if (!type.isInstance(arg))
                 return this;
             Object result = op.apply(type.cast(arg));
-            expr.putUserData(SOURCE_KEY, new Expression(AstCode.LdC, result, 0));
+            expr.putUserData(VALUE_KEY, result);
             return this;
         }
 
@@ -182,6 +187,8 @@ public class ValuesFlow {
                     default:
                     }
                 }
+            } else if(Nodes.isBoxing(expr) || Nodes.isUnboxing(expr)) {
+                processUnaryOp(expr, Number.class, Function.identity());
             }
             return this;
         }
@@ -217,11 +224,19 @@ public class ValuesFlow {
             switch (expr.getCode()) {
             case Store: {
                 Variable var = ((Variable) expr.getOperand());
-                Expression source = getSource(expr.getArguments().get(0));
+                Expression arg = expr.getArguments().get(0);
+                Expression source = getSource(arg);
                 expr.putUserData(SOURCE_KEY, source);
+                Object val = arg.getUserData(VALUE_KEY);
+                if(val != null)
+                    expr.putUserData(VALUE_KEY, val);
                 VariableDefinition origVar = var.getOriginalVariable();
                 if (origVar != null)
                     return target.replace(origVar.getSlot(), source);
+                return target;
+            }
+            case LdC: {
+                expr.putUserData(VALUE_KEY, expr.getOperand());
                 return target;
             }
             case Add: {
@@ -401,8 +416,15 @@ public class ValuesFlow {
             case Load: {
                 Variable var = ((Variable) expr.getOperand());
                 VariableDefinition origVar = var.getOriginalVariable();
-                if (origVar != null)
-                    expr.putUserData(SOURCE_KEY, sources[origVar.getSlot()]);
+                if (origVar != null) {
+                    Expression source = sources[origVar.getSlot()];
+                    if(source != null) {
+                        expr.putUserData(SOURCE_KEY, source);
+                        Object val = getValue(source);
+                        if(val != null)
+                            expr.putUserData(VALUE_KEY, val);
+                    }
+                }
                 return this;
             }
             case PostIncrement:
@@ -411,6 +433,7 @@ public class ValuesFlow {
                     Variable var = ((Variable) expr.getOperand());
                     Expression child = expr.getArguments().get(0);
                     expr.putUserData(SOURCE_KEY, target.sources[var.getOriginalVariable().getSlot()]);
+                    // TODO: pass values
                     return target.replace(var.getOriginalVariable().getSlot(), child);
                 }
                 return target;
@@ -420,11 +443,11 @@ public class ValuesFlow {
             case InvokeStatic:
             case InvokeVirtual: {
                 MethodReference mr = (MethodReference) expr.getOperand();
-                return target
-                        .processKnownMethods(expr, mr)
-                        .replaceAll(
-                            src -> src.getCode() == AstCode.GetField || src.getCode() == AstCode.GetStatic ? makeUpdatedNode(src)
-                                    : src);
+                target.processKnownMethods(expr, mr);
+                if(Nodes.isSideEffectFreeMethod(expr))
+                    return target; 
+                return target.replaceAll(src -> src.getCode() == AstCode.GetField || src.getCode() == AstCode.GetStatic
+                    || src.getCode() == AstCode.LoadElement ? makeUpdatedNode(src) : src);
             }
             case StoreElement: {
                 return target.replaceAll(src -> src.getCode() == AstCode.LoadElement ? makeUpdatedNode(src) : src);
@@ -520,7 +543,12 @@ public class ValuesFlow {
         }
 
         private Expression makePhiNode(Expression left, Expression right) {
-            return new Expression(PHI_TYPE, null, 0, left, right);
+            Expression phi = new Expression(PHI_TYPE, null, 0, left, right);
+            Object leftValue = getValue(left);
+            Object rightValue = getValue(right);
+            if(leftValue != null && leftValue.equals(rightValue))
+                phi.putUserData(VALUE_KEY, leftValue);
+            return phi;
         }
 
         private static Expression makeUpdatedNode(Expression src) {
