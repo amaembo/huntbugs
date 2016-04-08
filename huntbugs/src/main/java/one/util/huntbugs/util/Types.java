@@ -21,6 +21,8 @@ import java.util.List;
 
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
+import com.strobel.decompiler.ast.Expression;
+import com.strobel.decompiler.ast.Variable;
 
 /**
  * @author lan
@@ -70,5 +72,16 @@ public class Types {
 		return typeName.equals("java/util/Random") || typeName.equals("java/security/SecureRandom") ||
 		        typeName.equals("java/util/concurrent/ThreadLocalRandom") || typeName.equals("java/util/SplittableRandom");
 	}
+
+    public static TypeReference getExpressionType(Expression expr) {
+        TypeReference exprType = expr.getInferredType();
+        if(expr.getOperand() instanceof Variable) {
+            Variable var = (Variable)expr.getOperand();
+            exprType = var.getType();
+            if(var.getOriginalParameter() != null)
+                exprType = var.getOriginalParameter().getParameterType();
+        }
+        return exprType;
+    }
 
 }

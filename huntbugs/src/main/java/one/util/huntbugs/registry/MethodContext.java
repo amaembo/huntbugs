@@ -125,6 +125,7 @@ public class MethodContext {
         this.ma = ma;
     }
 
+    // TODO: fix line numbers in lambdas
     int getLineNumber(int offset) {
         if (ltc == null) {
             ltc = createConverter();

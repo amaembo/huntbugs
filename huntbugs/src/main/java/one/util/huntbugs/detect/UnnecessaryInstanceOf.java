@@ -18,6 +18,7 @@ package one.util.huntbugs.detect;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
+
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstExpressionVisitor;
@@ -37,7 +38,7 @@ public class UnnecessaryInstanceOf {
         if(node.getCode() == AstCode.InstanceOf) {
             TypeReference typeRef = (TypeReference)node.getOperand();
             Expression expr = node.getArguments().get(0);
-            TypeReference exprType = expr.getInferredType();
+            TypeReference exprType = Types.getExpressionType(expr);
 			if(Types.isInstance(exprType, typeRef)) {
                 mc.report("UnnecessaryInstanceOf", 0, expr, new WarningAnnotation<>("INSTANCEOF_TYPE", typeRef.getFullName()), 
                     new WarningAnnotation<>("ACTUAL_TYPE", exprType.getFullName()));

@@ -72,7 +72,7 @@ public class ValuesFlow {
     }
 
     public static TypeReference reduceType(Expression input) {
-        return reduce(input, Expression::getInferredType, (t1, t2) -> {
+        return reduce(input, Types::getExpressionType, (t1, t2) -> {
             if (t1 == null || t2 == null)
                 return null;
             if (t1.equals(t2))
