@@ -44,7 +44,6 @@ public class Equi {
         
         boolean addAndCheck() {
             if(++count > MAX_COUNT) {
-                System.out.println("Max-count reached!");
                 return false;
             }
             return true;

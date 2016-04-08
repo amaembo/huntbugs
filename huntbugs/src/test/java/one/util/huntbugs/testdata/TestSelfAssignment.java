@@ -131,4 +131,11 @@ public class TestSelfAssignment {
     void testArraySelfDiffIndex(int[] a, int idx) {
         a[idx++] = a[idx++];
     }
+    
+    @AssertNoWarning(type="SelfAssignmentArrayElement")
+    void testNew() {
+        int[] a = new int[10];
+        int[] b = new int[10];
+        a[0] = b[0];
+    }
 }

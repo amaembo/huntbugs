@@ -210,6 +210,7 @@ public class Nodes {
 	    case CompoundAssignment:
 	    case PutField:
 	    case PutStatic:
+	    case NewArray:
 	    case InitArray:
 	    case InitObject:
 	        return false;
