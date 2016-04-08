@@ -40,10 +40,10 @@ public class NonShortCircuit {
             if(left.getInferredType().getSimpleType() == JvmType.Boolean &&
                     right.getInferredType().getSimpleType() == JvmType.Boolean) {
                 if(left.getCode() == AstCode.InstanceOf || Nodes.isNullCheck(left))
-                    ctx.report("NonShortCircuitDangerous", 0, node);
+                    ctx.report("NonShortCircuitDangerous", -10, node);
                 else if (left.getChildrenAndSelfRecursive().stream().anyMatch(
-                    n -> Nodes.isInvoke(n) && !Nodes.isBoxing(n) && !Nodes.isUnboxing(n)))
-                    ctx.report("NonShortCircuitDangerous", 10, node);
+                    n -> Nodes.isInvoke(n) && !Nodes.isSideEffectFreeMethod(n)))
+                    ctx.report("NonShortCircuitDangerous", 0, node);
                 else
                     ctx.report("NonShortCircuit", 0, node);
             }
