@@ -49,7 +49,7 @@ public class FloatingPointComparison {
                     Object right = Nodes.getConstant(args.get(1));
                     int priority = tweakPriority(args.get(0)) + tweakPriority(args.get(1));
                     if(md.getName().toLowerCase(Locale.ENGLISH).contains("equal"))
-                        priority -= 20;
+                        priority += 20;
                     Number n = left instanceof Number ? (Number) left : right instanceof Number ? (Number) right : null;
                     if(n != null)
                         ctx.report("FloatComparison", priority, node, WarningAnnotation.forNumber(n));
@@ -65,23 +65,23 @@ public class FloatingPointComparison {
         if (val instanceof Double || val instanceof Float) {
             double v = ((Number) val).doubleValue();
             if (v == 0.0 || Double.isInfinite(v) || Double.isNaN(v))
-                return -50;
+                return 50;
             if (v == 1.0 || v == 2.0 || v == -1.0 || v == -2.0 || v == Double.MIN_VALUE || v == Double.MAX_VALUE
                 || v == -Double.MAX_VALUE || v == -Double.MIN_VALUE)
-                return -30;
+                return 30;
             int prec = new BigDecimal(v).precision();
             if (prec < 3)
-                return -25;
+                return 25;
             if (prec < 7)
-                return -20;
+                return 20;
             if (prec < 10)
-                return -15;
-            return -5;
+                return 15;
+            return 5;
         }
         if (expr.getCode() == AstCode.InvokeStatic) {
             MethodReference method = (MethodReference) expr.getOperand();
             if(method.getName().equals("floor") || method.getName().equals("round") || method.getName().equals("rint")) {
-                return method.getDeclaringType().getInternalName().equals("java/lang/Math") ? -50 : -35;
+                return method.getDeclaringType().getInternalName().equals("java/lang/Math") ? 50 : 35;
             }
         }
         return 0;

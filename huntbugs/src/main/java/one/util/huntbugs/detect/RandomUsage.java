@@ -47,7 +47,7 @@ public class RandomUsage {
                 mul.getArguments().stream().filter(this::isRandomDouble).findFirst().ifPresent(expr -> {
                     int priority = 0;
                     if(((MethodReference)expr.getOperand()).getDeclaringType().getInternalName().equals("java/lang/Math"))
-                        priority = -20;
+                        priority = 20;
                     ctx.report("RandomNextIntViaNextDouble", priority, node);
                 });
             }

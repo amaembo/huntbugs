@@ -43,7 +43,7 @@ public class NonShortCircuit {
                     ctx.report("NonShortCircuitDangerous", 0, node);
                 else if (left.getChildrenAndSelfRecursive().stream().anyMatch(
                     n -> Nodes.isInvoke(n) && !Nodes.isBoxing(n) && !Nodes.isUnboxing(n)))
-                    ctx.report("NonShortCircuitDangerous", -10, node);
+                    ctx.report("NonShortCircuitDangerous", 10, node);
                 else
                     ctx.report("NonShortCircuit", 0, node);
             }

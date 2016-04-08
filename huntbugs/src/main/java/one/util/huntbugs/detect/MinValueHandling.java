@@ -41,11 +41,11 @@ public class MinValueHandling {
             Object modulus = Nodes.getConstant(Nodes.getChild(node, 1));
             int priority = 0;
             if((modulus instanceof Integer || modulus instanceof Long) && Long.bitCount(((Number)modulus).longValue()) == 1) {
-                priority -= 40;
+                priority += 40;
             }
             checkAbs(mc, body, null, priority, true);
         } else if(chain != null) {
-            checkAbs(mc, node, chain.getNode(), -10, false);
+            checkAbs(mc, node, chain.getNode(), 10, false);
         }
     }
 
@@ -62,7 +62,7 @@ public class MinValueHandling {
 		                    && (methodSig.equals("()I") || methodSig.equals("()J"))
 		                    && Types.isRandomClass(sourceCall.getDeclaringType())) {
 					    if(methodSig.equals("()J"))
-					        priority -= 20;
+					        priority += 20;
 					    if(Nodes.isOp(parent, AstCode.Neg)) {
 					        return;
 					    }

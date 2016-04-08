@@ -47,14 +47,14 @@ public class NumberConstructor {
                     WarningAnnotation<String> replacement = new WarningAnnotation<>("REPLACEMENT", simpleName+".valueOf()");
                     if(val instanceof Number) {
                         long value = ((Number)val).longValue();
-                        int score;
+                        int priority;
                         if(value >= -128 && value < 127)
-                            score = 0;
+                            priority = 0;
                         else
-                            score = simpleName.equals("Integer") ? -15 : -35;
-                        ctx.report("NumberConstructor", score, expr, WarningAnnotation.forNumber((Number) val), replacement);
+                            priority = simpleName.equals("Integer") ? 15 : 35;
+                        ctx.report("NumberConstructor", priority, expr, WarningAnnotation.forNumber((Number) val), replacement);
                     } else {
-                        ctx.report("NumberConstructor", -5, expr, replacement);
+                        ctx.report("NumberConstructor", 5, expr, replacement);
                     }
                 }
             }

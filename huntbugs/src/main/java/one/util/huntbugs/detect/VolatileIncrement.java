@@ -44,7 +44,7 @@ public class VolatileIncrement {
             if (arg.getCode() == AstCode.GetField || arg.getCode() == AstCode.GetStatic) {
                 FieldDefinition field = ((FieldReference) arg.getOperand()).resolve();
                 if (field != null && Flags.testAny(field.getFlags(), Flags.VOLATILE))
-                    ctx.report("VolatileIncrement", computeScore(field, md, parents), node);
+                    ctx.report("VolatileIncrement", computePriority(field, md, parents), node);
             }
         }
         if (node.getCode() == AstCode.PutField || node.getCode() == AstCode.PutStatic) {
@@ -60,14 +60,14 @@ public class VolatileIncrement {
                         if (((FieldReference) left.getOperand()).resolve() == field
                             && Nodes.isEquivalent(self, Nodes.getThis(left))) {
                             ctx.report(op.getCode() == AstCode.Add ? "VolatileIncrement" : "VolatileMath",
-                                computeScore(field, md, parents), node);
+                                computePriority(field, md, parents), node);
                         }
                     }
                     if (right.getCode() == AstCode.GetField || right.getCode() == AstCode.GetStatic) {
                         if (((FieldReference) right.getOperand()).resolve() == field
                             && Nodes.isEquivalent(self, Nodes.getThis(right))) {
                             ctx.report(op.getCode() == AstCode.Add ? "VolatileIncrement" : "VolatileMath",
-                                computeScore(field, md, parents), node);
+                                computePriority(field, md, parents), node);
                         }
                     }
                 }
@@ -75,15 +75,15 @@ public class VolatileIncrement {
         }
     }
 
-    private int computeScore(FieldDefinition field, MethodDefinition md, NodeChain parents) {
-        int score = 0;
+    private int computePriority(FieldDefinition field, MethodDefinition md, NodeChain parents) {
+        int priority = 0;
         JvmType type = field.getFieldType().getSimpleType();
         if (type != JvmType.Long && type != JvmType.Double)
-            score -= 10;
+            priority += 10;
 
         if (Flags.testAny(md.getFlags(), Flags.SYNCHRONIZED) || parents.isSynchronized())
-            score -= 30;
-        return score;
+            priority += 30;
+        return priority;
     }
 
 }

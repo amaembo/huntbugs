@@ -78,7 +78,7 @@ public class FinalizerContract {
     @AstNodeVisitor
     public void visit(Node node, MethodContext mc, MethodDefinition md) {
         if(Nodes.isOp(node, AstCode.InvokeVirtual) && isFinalizer((MethodReference) ((Expression)node).getOperand())) {
-            mc.report("FinalizeInvocation", isFinalizer(md) ? -10 : 0, node);
+            mc.report("FinalizeInvocation", isFinalizer(md) ? 10 : 0, node);
         }
     }
 

@@ -66,7 +66,7 @@ public class WaitContract {
                 }
                 if (!sawLoop || !sawCondition) {
                     mc.report(sawCondition ? "WaitNotInLoop" : "WaitUnconditional", mr.getSignature().equals("()V") ? 0
-                            : -15, expr.getArguments().get(0));
+                            : 15, expr.getArguments().get(0));
                 }
             }
             if((mr.getName().equals("notify") || mr.getName().equals("notifyAll")) && mr.getSignature().equals("()V")) {

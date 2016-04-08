@@ -44,15 +44,15 @@ public class EqualsContract {
             Node node = list.get(0);
             if(Nodes.isOp(node, AstCode.Return)) {
                 Object constant = Nodes.getConstant(Nodes.getChild(node, 0));
-                int score = 0;
+                int priority = 0;
                 if(td.isNonPublic())
-                    score -= 30;
+                    priority += 30;
                 if(td.isFinal())
-                    score -= 5;
+                    priority += 5;
                 if(((Integer)1).equals(constant))
-                    mc.report("EqualsReturnsTrue", score, node);
+                    mc.report("EqualsReturnsTrue", priority, node);
                 else if(((Integer)0).equals(constant))
-                    mc.report("EqualsReturnsFalse", score, node);
+                    mc.report("EqualsReturnsFalse", priority, node);
             }
         }
     }

@@ -16,7 +16,6 @@
 package one.util.huntbugs.detect;
 
 import com.strobel.assembler.metadata.JvmType;
-import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
@@ -41,7 +40,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
 // TODO: procyon optimizes too hard to detect "UselessAndWithZero"
 public class BadMath {
     @AstExpressionVisitor
-    public void visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md) {
+    public void visit(Expression expr, NodeChain nc, MethodContext mc) {
         TypeReference inferredType = expr.getInferredType();
         if (inferredType == null)
             return;

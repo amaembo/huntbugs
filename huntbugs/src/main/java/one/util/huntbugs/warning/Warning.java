@@ -27,21 +27,21 @@ public class Warning {
     public static final int MAX_SCORE = 100;
 
     private final WarningType type;
-    private final int scoreAdjustment;
+    private final int priority;
 
     private final List<WarningAnnotation<?>> annotations;
 
-    public Warning(WarningType type, int scoreAdjustment, List<WarningAnnotation<?>> annotations) {
+    public Warning(WarningType type, int priority, List<WarningAnnotation<?>> annotations) {
         this.type = type;
-        if(scoreAdjustment > 0) {
-            throw new IllegalArgumentException("Adjustment is positive: "+scoreAdjustment+" (warning: "+type.getName()+")");
+        if(priority < 0) {
+            throw new IllegalArgumentException("Priority is negative: "+priority+" (warning: "+type.getName()+")");
         }
-        this.scoreAdjustment = scoreAdjustment;
+        this.priority = priority;
         this.annotations = annotations;
     }
 
     public int getScore() {
-        return saturateScore(type.getMaxScore() + scoreAdjustment);
+        return saturateScore(type.getMaxScore() - priority);
     }
 
     public WarningType getType() {

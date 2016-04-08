@@ -56,7 +56,7 @@ public class SameBranches {
                     mc.report("EmptyBranch", 0, cond.getCondition());
 
                 } else {
-                    mc.report("SameBranchesIf", computeScore(cond.getTrueBlock(), 2), cond.getTrueBlock(), new WarningAnnotation<>("SAME_BRANCH", mc
+                    mc.report("SameBranchesIf", computePriority(cond.getTrueBlock(), 2), cond.getTrueBlock(), new WarningAnnotation<>("SAME_BRANCH", mc
                             .getLocation(cond.getFalseBlock())));
                 }
             }
@@ -87,7 +87,7 @@ public class SameBranches {
                     if (n > 3)
                         n = (n - 3) / 2 + 3;
                     CaseBlock block = blocks.get(i);
-                    mc.report(hasDefault ? "SameBranchesSwitchDefault" : "SameBranchesSwitch", computeScore(block, n), block,
+                    mc.report(hasDefault ? "SameBranchesSwitchDefault" : "SameBranchesSwitch", computePriority(block, n), block,
                         eqLocations.toArray(new WarningAnnotation[0]));
                     eqLocations.clear();
                     hasDefault = false;
@@ -100,13 +100,13 @@ public class SameBranches {
     public void visitExpr(Expression expr, MethodContext mc) {
         if (expr.getCode() == AstCode.TernaryOp
             && Equi.equiExpressions(expr.getArguments().get(1), expr.getArguments().get(2))) {
-            mc.report("SameBranchesTernary", computeScore(expr.getArguments().get(1), 30), expr);
+            mc.report("SameBranchesTernary", computePriority(expr.getArguments().get(1), 30), expr);
         }
     }
 
-    private int computeScore(Node block, int n) {
+    private int computePriority(Node block, int n) {
         int codeSize = block.getChildrenAndSelfRecursive().size();
-        return Math.min(0, ((int) (Math.sqrt(n * codeSize) * 5) - 55));
+        return Math.max(0, 55 - ((int) (Math.sqrt(n * codeSize) * 5)));
     }
 
     // This check is not complete: it's still possible that it will return false for nonFallThrough

@@ -194,17 +194,17 @@ public class MethodContext {
         return annot;
     }
 
-    public void report(String warning, int scoreAdjustment, Node node, WarningAnnotation<?>... annotations) {
+    public void report(String warning, int priority, Node node, WarningAnnotation<?>... annotations) {
         WarningType wt = detector.getWarningType(warning);
         if (wt == null) {
             error("Tries to report a warning of non-declared type: " + warning);
             return;
         }
-        if (scoreAdjustment > 0) {
-            error("Tries to report a warning "+warning+" with positive score "+scoreAdjustment);
+        if (priority < 0) {
+            error("Tries to report a warning "+warning+" with negative priority "+priority);
             return;
         }
-        if (wt.getMaxScore() + scoreAdjustment < 0) {
+        if (wt.getMaxScore() - priority < ctx.getOptions().minScore) {
             return;
         }
         List<WarningAnnotation<?>> anno = new ArrayList<>();
@@ -228,7 +228,7 @@ public class MethodContext {
             }
         }
         anno.addAll(Arrays.asList(annotations));
-        WarningInfo info = new WarningInfo(wt, scoreAdjustment, loc, anno);
+        WarningInfo info = new WarningInfo(wt, priority, loc, anno);
         if(lastWarning == null) {
             lastWarning = info;
         } else if(!lastWarning.tryMerge(info)) {
