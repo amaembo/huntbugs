@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.math.BigDecimal;
+
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -114,5 +116,20 @@ public class TestBadMethodCalls {
         public void run() {
             System.out.println("My thread");
         }
+    }
+    
+    @AssertWarning(type="BigDecimalConstructedFromDouble") 
+    public BigDecimal testBigDecimal() {
+        return new BigDecimal(1.33);
+    }
+    
+    @AssertWarning(type="BigDecimalConstructedFromInfiniteOrNaN") 
+    public BigDecimal testBigDecimalInf() {
+        return new BigDecimal(Double.POSITIVE_INFINITY);
+    }
+    
+    @AssertNoWarning(type="BigDecimalConstructedFromDouble") 
+    public BigDecimal testBigDecimalRound(double x) {
+        return new BigDecimal(1.5).add(new BigDecimal(x));
     }
 }
