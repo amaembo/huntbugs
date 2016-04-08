@@ -42,10 +42,11 @@ public class SelfComputation {
 		        mc.report("SelfComputation", 0, expr.getArguments().get(0));
 		    }
 		}
-		if (Nodes.isComparison(expr)) {
+		if (expr.getCode().isComparison()) {
 		    if(expr.getArguments().size() == 2 && Nodes.isEquivalent(expr.getArguments().get(0), expr.getArguments().get(1))) {
 		        JvmType type = expr.getArguments().get(0).getInferredType().getSimpleType();
-		        if(type != JvmType.Double && type != JvmType.Float)
+                if ((expr.getCode() != AstCode.CmpEq && expr.getCode() != AstCode.CmpNe)
+                    || (type != JvmType.Double && type != JvmType.Float))
 		            mc.report("SelfComparison", 0, expr.getArguments().get(0));
 		    }
 		}

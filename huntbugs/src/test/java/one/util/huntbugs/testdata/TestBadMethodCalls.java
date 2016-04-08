@@ -16,6 +16,7 @@
 package one.util.huntbugs.testdata;
 
 import java.math.BigDecimal;
+import java.net.URL;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
@@ -131,5 +132,15 @@ public class TestBadMethodCalls {
     @AssertNoWarning(type="BigDecimal*") 
     public BigDecimal testBigDecimalRound(double x) {
         return new BigDecimal(1.5).add(new BigDecimal(x));
+    }
+    
+    @AssertWarning(type="URLBlockingMethod")
+    public int urlHashCode(URL url) {
+        return url.hashCode();
+    }
+    
+    @AssertWarning(type="URLBlockingMethod")
+    public boolean urlEquals(URL url1, URL url2) {
+        return url1.equals(url2);
     }
 }

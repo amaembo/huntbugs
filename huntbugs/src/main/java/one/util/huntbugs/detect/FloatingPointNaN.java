@@ -34,7 +34,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
 public class FloatingPointNaN {
     @AstExpressionVisitor
     public void visit(Expression node, MethodContext ctx) {
-        if(Nodes.isComparison(node)) {
+        if(node.getCode().isComparison()) {
             List<Expression> args = node.getArguments();
             Node leftNode = args.get(0);
             Node rightNode = args.get(1);

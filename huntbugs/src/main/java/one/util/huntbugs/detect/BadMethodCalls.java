@@ -39,14 +39,48 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "BadPractice", name = "SystemGc", maxScore = 50)
 @WarningDefinition(category = "BadPractice", name = "SystemRunFinalizersOnExit", maxScore = 60)
 @WarningDefinition(category = "BadPractice", name = "ThreadStopThrowable", maxScore = 60)
+@WarningDefinition(category = "Performance", name = "URLBlockingMethod", maxScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "UselessThread", maxScore = 60)
 @WarningDefinition(category = "Correctness", name = "BigDecimalConstructedFromDouble", maxScore = 50)
 @WarningDefinition(category = "Correctness", name = "BigDecimalConstructedFromInfiniteOrNaN", maxScore = 70)
 public class BadMethodCalls {
     @AstExpressionVisitor
     public void visit(Expression node, NodeChain nc, MethodContext ctx, MethodDefinition curMethod) {
-        if (Nodes.isInvoke(node) && node.getCode() != AstCode.InvokeDynamic || Nodes.isOp(node, AstCode.InitObject)) {
+        if (Nodes.isInvoke(node) && node.getCode() != AstCode.InvokeDynamic) {
             check(node, (MethodReference) node.getOperand(), nc, ctx, curMethod);
+        } else if (Nodes.isOp(node, AstCode.InitObject)) {
+            checkConstructor(node, (MethodReference) node.getOperand(), ctx);
+        }
+    }
+
+    private void checkConstructor(Expression node, MethodReference mr, MethodContext ctx) {
+        String typeName = mr.getDeclaringType().getInternalName();
+        String signature = mr.getSignature();
+        if (typeName.equals("java/lang/Thread")
+            && !signature.contains("Runnable")) {
+            ctx.report("UselessThread", 0, node);
+        } else if (typeName.equals("java/math/BigDecimal")
+            && signature.equals("(D)V")) {
+            Object value = Nodes.getConstant(node.getArguments().get(0));
+            if (value instanceof Double) {
+                Double val = (Double) value;
+                if (val.isInfinite() || val.isNaN()) {
+                    ctx.report("BigDecimalConstructedFromInfiniteOrNaN", 0, node, WarningAnnotation.forNumber(val));
+                } else {
+                    double arg = val.doubleValue();
+                    String dblString = value.toString();
+                    String bigDecimalString = new BigDecimal(arg).toString();
+                    boolean ok = dblString.equals(bigDecimalString) || dblString.equals(bigDecimalString + ".0");
+
+                    if (!ok) {
+                        boolean scary = dblString.length() <= 8 && bigDecimalString.length() > 12
+                            && dblString.toUpperCase().indexOf('E') == -1;
+                        ctx.report("BigDecimalConstructedFromDouble", scary ? 0 : -15, node, new WarningAnnotation<>(
+                                "REPLACEMENT", "BigDecimal.valueOf(double)"), new WarningAnnotation<>("DOUBLE_NUMBER",
+                                dblString), new WarningAnnotation<>("BIGDECIMAL_NUMBER", bigDecimalString));
+                    }
+                }
+            }
         }
     }
 
@@ -92,31 +126,8 @@ public class BadMethodCalls {
         } else if (typeName.equals("java/lang/Thread") && name.equals("stop")
             && signature.equals("(Ljava/lang/Throwable;)V")) {
             ctx.report("ThreadStopThrowable", 0, node);
-        } else if (node.getCode() == AstCode.InitObject && typeName.equals("java/lang/Thread")
-            && !signature.contains("Runnable")) {
-            ctx.report("UselessThread", 0, node);
-        } else if (node.getCode() == AstCode.InitObject && typeName.equals("java/math/BigDecimal")
-            && signature.equals("(D)V")) {
-            Object value = Nodes.getConstant(node.getArguments().get(0));
-            if (value instanceof Double) {
-                Double val = (Double) value;
-                if (val.isInfinite() || val.isNaN()) {
-                    ctx.report("BigDecimalConstructedFromInfiniteOrNaN", 0, node, WarningAnnotation.forNumber(val));
-                } else {
-                    double arg = val.doubleValue();
-                    String dblString = value.toString();
-                    String bigDecimalString = new BigDecimal(arg).toString();
-                    boolean ok = dblString.equals(bigDecimalString) || dblString.equals(bigDecimalString + ".0");
-
-                    if (!ok) {
-                        boolean scary = dblString.length() <= 8 && bigDecimalString.length() > 12
-                            && dblString.toUpperCase().indexOf('E') == -1;
-                        ctx.report("BigDecimalConstructedFromDouble", scary ? 0 : -15, node, new WarningAnnotation<>(
-                                "REPLACEMENT", "BigDecimal.valueOf(double)"), new WarningAnnotation<>("DOUBLE_NUMBER",
-                                dblString), new WarningAnnotation<>("BIGDECIMAL_NUMBER", bigDecimalString));
-                    }
-                }
-            }
+        } else if (typeName.equals("java/net/URL") && (name.equals("equals") || name.equals("hashCode"))) {
+            ctx.report("URLBlockingMethod", 0, node);
         }
     }
 
