@@ -19,18 +19,14 @@ import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.assertions.MethodAsserter;
 import one.util.huntbugs.flow.ValuesFlow;
-import one.util.huntbugs.registry.Detector.VisitorType;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -61,7 +57,7 @@ public class MethodContext {
         private final List<WarningAnnotation<?>> annotations;
         private Location bestLocation;
         private final List<Location> locations = new ArrayList<>();
-    
+
         public WarningInfo(WarningType type, int score, Location loc, List<WarningAnnotation<?>> annotations) {
             super();
             this.type = type;
@@ -69,27 +65,27 @@ public class MethodContext {
             this.annotations = annotations;
             this.bestLocation = loc;
         }
-    
+
         boolean tryMerge(WarningInfo other) {
             if (!other.type.equals(type) || !other.annotations.equals(annotations)) {
                 return false;
             }
-            if(other.score > score) {
+            if (other.score > score) {
                 this.score = other.score;
-                if(bestLocation != null)
+                if (bestLocation != null)
                     this.locations.add(bestLocation);
                 bestLocation = other.bestLocation;
             } else {
-                if(other.bestLocation != null) {
+                if (other.bestLocation != null) {
                     this.locations.add(other.bestLocation);
                 }
             }
             this.locations.addAll(other.locations);
             return true;
         }
-        
+
         Warning build() {
-            if(bestLocation != null)
+            if (bestLocation != null)
                 annotations.add(WarningAnnotation.forLocation(bestLocation));
             locations.stream().map(WarningAnnotation::forAnotherInstance).forEach(annotations::add);
             return new Warning(type, score, annotations);
@@ -105,7 +101,7 @@ public class MethodContext {
     List<WarningAnnotation<?>> annot;
     private MethodAsserter ma;
     private WarningInfo lastWarning;
-    private final Map<VisitorType, List<MethodHandle>> visitors;
+    private final List<MethodHandle> astVisitors;
 
     MethodContext(Context ctx, ClassContext classCtx, MethodDefinition md) {
         this.cc = classCtx;
@@ -113,11 +109,10 @@ public class MethodContext {
         this.ctx = ctx;
         this.detector = classCtx == null ? null : classCtx.detector;
         this.det = classCtx == null ? null : classCtx.det;
-        if(detector == null) {
-            visitors = Collections.emptyMap();
+        if (detector == null) {
+            astVisitors = Collections.emptyList();
         } else {
-            visitors = new EnumMap<>(detector.visitors);
-            visitors.replaceAll((k, v) -> new ArrayList<>(v));
+            astVisitors = new ArrayList<>(detector.astVisitors);
         }
     }
 
@@ -144,34 +139,11 @@ public class MethodContext {
     }
 
     void visitNode(Node node, NodeChain parents) {
-        for (Entry<VisitorType, List<MethodHandle>> entry : visitors.entrySet()) {
+        for (Iterator<MethodHandle> it = astVisitors.iterator(); it.hasNext();) {
             try {
-                switch(entry.getKey()) {
-                case AST_NODE_VISITOR:
-                    for(Iterator<MethodHandle> it = entry.getValue().iterator(); it.hasNext();) {
-                        MethodHandle mh = it.next();
-                        if(!(boolean)mh.invoke(det, node, parents, this, md, cc.type)) {
-                            it.remove();
-                        }
-                    }
-                    break;
-                case AST_EXPRESSION_VISITOR:
-                    if(node instanceof Expression) {
-                        for(Iterator<MethodHandle> it = entry.getValue().iterator(); it.hasNext();) {
-                            MethodHandle mh = it.next();
-                            if(!(boolean)mh.invoke(det, (Expression)node, parents, this, md, cc.type)) {
-                                it.remove();
-                            }
-                        }
-                    }
-                    break;
-                case AST_BODY_VISITOR:
-                    if(parents == null) {
-                        for(MethodHandle mh : entry.getValue()) {
-                            mh.invoke(det, node, this, md, cc.type);
-                        }
-                    }
-                    break;
+                MethodHandle mh = it.next();
+                if (!(boolean) mh.invoke(det, node, parents, this, md, cc.type)) {
+                    it.remove();
                 }
             } catch (Throwable e) {
                 ctx.addError(new ErrorMessage(detector, md, -1, e));
@@ -180,7 +152,7 @@ public class MethodContext {
     }
 
     void finalizeMethod() {
-        if(lastWarning != null) {
+        if (lastWarning != null) {
             Warning warn = lastWarning.build();
             ma.checkWarning(this, warn);
             ctx.addWarning(warn);
@@ -201,7 +173,7 @@ public class MethodContext {
             return;
         }
         if (priority < 0) {
-            error("Tries to report a warning "+warning+" with negative priority "+priority);
+            error("Tries to report a warning " + warning + " with negative priority " + priority);
             return;
         }
         if (wt.getMaxScore() - priority < ctx.getOptions().minScore) {
@@ -214,42 +186,42 @@ public class MethodContext {
         if (node instanceof Expression) {
             Expression expr = (Expression) node;
             Object operand = expr.getOperand();
-            if(operand instanceof Variable) {
+            if (operand instanceof Variable) {
                 anno.add(WarningAnnotation.forVariable((Variable) operand));
                 operand = ValuesFlow.getSource(expr).getOperand();
             }
-            if(operand instanceof FieldReference) {
+            if (operand instanceof FieldReference) {
                 anno.add(WarningAnnotation.forField((FieldReference) operand));
             }
-            if(operand instanceof MethodReference) {
+            if (operand instanceof MethodReference) {
                 MethodReference mr = (MethodReference) operand;
-                if(!mr.getReturnType().isVoid())
+                if (!mr.getReturnType().isVoid())
                     anno.add(WarningAnnotation.forReturnValue(mr));
             }
         }
         anno.addAll(Arrays.asList(annotations));
         WarningInfo info = new WarningInfo(wt, priority, loc, anno);
-        if(lastWarning == null) {
+        if (lastWarning == null) {
             lastWarning = info;
-        } else if(!lastWarning.tryMerge(info)) {
+        } else if (!lastWarning.tryMerge(info)) {
             Warning warn = lastWarning.build();
             ma.checkWarning(this, warn);
             ctx.addWarning(warn);
             lastWarning = info;
         }
     }
-    
+
     public Location getLocation(Node node) {
         int offset = Expression.MYSTERY_OFFSET;
-        if(node instanceof Expression) {
+        if (node instanceof Expression) {
             Expression expr = (Expression) node;
             offset = expr.getOffset();
-        } else if(node instanceof Condition) {
+        } else if (node instanceof Condition) {
             offset = ((Condition) node).getCondition().getOffset();
-        } else if(node instanceof Block) {
+        } else if (node instanceof Block) {
             List<Node> body = ((Block) node).getBody();
-            return body.stream().map(this::getLocation).filter(Objects::nonNull).findFirst()
-                    .orElse(new Location(0, getLineNumber(0)));
+            return body.stream().map(this::getLocation).filter(Objects::nonNull).findFirst().orElse(
+                new Location(0, getLineNumber(0)));
         }
         if (offset != Expression.MYSTERY_OFFSET) {
             return new Location(offset, getLineNumber(offset));
@@ -259,9 +231,9 @@ public class MethodContext {
 
     public void forgetLastBug() {
         lastWarning = null;
-	}
+    }
 
-	public void error(String message) {
+    public void error(String message) {
         ctx.addError(new ErrorMessage(detector, md, -1, message));
     }
 
