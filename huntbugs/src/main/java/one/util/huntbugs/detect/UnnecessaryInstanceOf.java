@@ -30,8 +30,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
  * @author lan
  *
  */
-@WarningDefinition(category = "RedundantCode", name = "UnnecessaryInstanceOf", baseScore = 60)
-@WarningDefinition(category = "RedundantCode", name = "UnnecessaryInstanceOfInferred", baseScore = 70)
+@WarningDefinition(category = "RedundantCode", name = "UnnecessaryInstanceOf", maxScore = 60)
+@WarningDefinition(category = "RedundantCode", name = "UnnecessaryInstanceOfInferred", maxScore = 70)
 public class UnnecessaryInstanceOf {
     @AstExpressionVisitor
     public void visit(Expression node, MethodContext mc) {

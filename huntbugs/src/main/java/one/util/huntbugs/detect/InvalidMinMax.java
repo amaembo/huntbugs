@@ -30,7 +30,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
  * @author lan
  *
  */
-@WarningDefinition(category = "Correctness", name = "InvalidMinMax", baseScore = 80)
+@WarningDefinition(category = "Correctness", name = "InvalidMinMax", maxScore = 80)
 public class InvalidMinMax {
 	private static final int NONE = 0;
 	private static final int MIN = -1;

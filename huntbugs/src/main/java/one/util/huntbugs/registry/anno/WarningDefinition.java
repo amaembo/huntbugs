@@ -29,5 +29,5 @@ public @interface WarningDefinition {
     
     String name();
     
-    int baseScore();
+    int maxScore();
 }

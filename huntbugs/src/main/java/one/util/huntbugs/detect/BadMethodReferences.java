@@ -35,7 +35,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
  * @author lan
  *
  */
-@WarningDefinition(category="Correctness", name="MaxMinMethodReferenceForComparator", baseScore=90)
+@WarningDefinition(category="Correctness", name="MaxMinMethodReferenceForComparator", maxScore=90)
 public class BadMethodReferences {
     @AstExpressionVisitor
     public void visit(Expression expr, MethodContext mc) {

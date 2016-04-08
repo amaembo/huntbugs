@@ -26,7 +26,7 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
  * @author lan
  *
  */
-@WarningDefinition(category="Performance", name="NewForGetClass", baseScore=50)
+@WarningDefinition(category="Performance", name="NewForGetClass", maxScore=50)
 public class NewGetClass {
     @AstExpressionVisitor
     public void visit(Expression node, MethodContext ctx) {

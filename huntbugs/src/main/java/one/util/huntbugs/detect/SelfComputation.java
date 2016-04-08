@@ -27,8 +27,8 @@ import one.util.huntbugs.util.Nodes;
  * @author lan
  *
  */
-@WarningDefinition(category = "Correctness", name = "SelfComputation", baseScore = 70)
-@WarningDefinition(category = "Correctness", name = "SelfComparison", baseScore = 70)
+@WarningDefinition(category = "Correctness", name = "SelfComputation", maxScore = 70)
+@WarningDefinition(category = "Correctness", name = "SelfComparison", maxScore = 70)
 public class SelfComputation {
 	@AstExpressionVisitor
 	public void visit(Expression expr, MethodContext mc) {

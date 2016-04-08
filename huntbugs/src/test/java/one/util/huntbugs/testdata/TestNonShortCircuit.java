@@ -70,7 +70,7 @@ public class TestNonShortCircuit {
         return 2;
     }
     
-    @AssertWarning(type="NonShortCircuitDangerous", minScore=70) 
+    @AssertWarning(type = "NonShortCircuitDangerous", minScore = 60, maxScore = 70)
     @AssertNoWarning(type="NonShortCircuit") 
     public int testMethod(Integer a, Integer b) {
         if(Math.abs(a) > 0 | ++b > 0)
@@ -78,7 +78,7 @@ public class TestNonShortCircuit {
         return 2;
     }
     
-    @AssertWarning(type="NonShortCircuitDangerous", minScore=85) 
+    @AssertWarning(type="NonShortCircuitDangerous", minScore=75) 
     @AssertNoWarning(type="NonShortCircuit") 
     public int testNull(String s) {
         if(s != null & s.length() > 2)
@@ -86,7 +86,7 @@ public class TestNonShortCircuit {
         return 2;
     }
     
-    @AssertWarning(type="NonShortCircuitDangerous", minScore=85) 
+    @AssertWarning(type="NonShortCircuitDangerous", minScore=75) 
     @AssertNoWarning(type="NonShortCircuit") 
     public int testInstanceOf(Object s) {
         if(s instanceof String & ((String)s).length() > 2)

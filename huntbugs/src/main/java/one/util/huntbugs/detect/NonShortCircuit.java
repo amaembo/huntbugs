@@ -25,8 +25,8 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 
-@WarningDefinition(category = "CodeStyle", name = "NonShortCircuit", baseScore = 50)
-@WarningDefinition(category = "Correctness", name = "NonShortCircuitDangerous", baseScore = 80)
+@WarningDefinition(category = "CodeStyle", name = "NonShortCircuit", maxScore = 50)
+@WarningDefinition(category = "Correctness", name = "NonShortCircuitDangerous", maxScore = 80)
 public class NonShortCircuit {
     @AstExpressionVisitor
     public void visitNode(Expression node, NodeChain nc, MethodContext ctx) {
@@ -40,10 +40,10 @@ public class NonShortCircuit {
             if(left.getInferredType().getSimpleType() == JvmType.Boolean &&
                     right.getInferredType().getSimpleType() == JvmType.Boolean) {
                 if(left.getCode() == AstCode.InstanceOf || Nodes.isNullCheck(left))
-                    ctx.report("NonShortCircuitDangerous", 10, node);
+                    ctx.report("NonShortCircuitDangerous", 0, node);
                 else if (left.getChildrenAndSelfRecursive().stream().anyMatch(
                     n -> Nodes.isInvoke(n) && !Nodes.isBoxing(n) && !Nodes.isUnboxing(n)))
-                    ctx.report("NonShortCircuitDangerous", 0, node);
+                    ctx.report("NonShortCircuitDangerous", -10, node);
                 else
                     ctx.report("NonShortCircuit", 0, node);
             }

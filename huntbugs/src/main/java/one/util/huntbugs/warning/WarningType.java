@@ -24,16 +24,16 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 public class WarningType {
     private final String category;
     private final String name;
-    private final int baseScore;
+    private final int maxScore;
 
-    public WarningType(String category, String name, int baseScore) {
+    public WarningType(String category, String name, int maxScore) {
         this.category = category;
         this.name = name;
-        this.baseScore = baseScore;
+        this.maxScore = maxScore;
     }
     
     public WarningType(WarningDefinition def) {
-        this(def.category(), def.name(), def.baseScore());
+        this(def.category(), def.name(), def.maxScore());
     }
 
     public String getCategory() {
@@ -44,12 +44,12 @@ public class WarningType {
         return name;
     }
 
-    public int getBaseScore() {
-        return baseScore;
+    public int getMaxScore() {
+        return maxScore;
     }
 
     @Override
     public String toString() {
-        return "WarningType [category=" + category + ", name=" + name + ", baseScore=" + baseScore + "]";
+        return "WarningType [category=" + category + ", name=" + name + ", maxScore=" + maxScore + "]";
     }
 }

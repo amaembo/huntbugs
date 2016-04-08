@@ -30,7 +30,7 @@ import one.util.huntbugs.util.Nodes;
  * @author lan
  *
  */
-@WarningDefinition(category="Correctness", name="SelfAssignmentField", baseScore=80)
+@WarningDefinition(category="Correctness", name="SelfAssignmentField", maxScore=80)
 public class SelfAssignment {
     @AstExpressionVisitor
     public void visit(Expression expr, MethodContext mc) {

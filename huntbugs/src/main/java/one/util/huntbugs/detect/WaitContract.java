@@ -36,9 +36,9 @@ import one.util.huntbugs.util.Nodes;
  * @author lan
  *
  */
-@WarningDefinition(category = "Multithreading", name = "WaitUnconditional", baseScore = 65)
-@WarningDefinition(category = "Multithreading", name = "WaitNotInLoop", baseScore = 65)
-@WarningDefinition(category = "Multithreading", name = "NotifyNaked", baseScore = 50)
+@WarningDefinition(category = "Multithreading", name = "WaitUnconditional", maxScore = 65)
+@WarningDefinition(category = "Multithreading", name = "WaitNotInLoop", maxScore = 65)
+@WarningDefinition(category = "Multithreading", name = "NotifyNaked", maxScore = 50)
 public class WaitContract {
     @AstExpressionVisitor
     public void visit(Expression expr, NodeChain parents, MethodContext mc) {

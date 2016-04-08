@@ -32,8 +32,8 @@ import one.util.huntbugs.util.Nodes;
  * @author lan
  *
  */
-@WarningDefinition(category="BadPractice", name="EqualsReturnsTrue", baseScore=50)
-@WarningDefinition(category="BadPractice", name="EqualsReturnsFalse", baseScore=50)
+@WarningDefinition(category="BadPractice", name="EqualsReturnsTrue", maxScore=50)
+@WarningDefinition(category="BadPractice", name="EqualsReturnsFalse", maxScore=50)
 public class EqualsContract {
     @AstBodyVisitor
     public void visitMethod(Block body, MethodContext mc, MethodDefinition md, TypeDefinition td) {

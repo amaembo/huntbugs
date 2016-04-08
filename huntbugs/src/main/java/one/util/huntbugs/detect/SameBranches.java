@@ -41,11 +41,11 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
  * @author lan
  *
  */
-@WarningDefinition(category = "RedundantCode", name = "SameBranchesIf", baseScore = 70)
-@WarningDefinition(category = "RedundantCode", name = "SameBranchesTernary", baseScore = 70)
-@WarningDefinition(category = "RedundantCode", name = "SameBranchesSwitch", baseScore = 70)
-@WarningDefinition(category = "RedundantCode", name = "SameBranchesSwitchDefault", baseScore = 70)
-@WarningDefinition(category = "RedundantCode", name = "EmptyBranch", baseScore = 25)
+@WarningDefinition(category = "RedundantCode", name = "SameBranchesIf", maxScore = 70)
+@WarningDefinition(category = "RedundantCode", name = "SameBranchesTernary", maxScore = 70)
+@WarningDefinition(category = "RedundantCode", name = "SameBranchesSwitch", maxScore = 70)
+@WarningDefinition(category = "RedundantCode", name = "SameBranchesSwitchDefault", maxScore = 70)
+@WarningDefinition(category = "RedundantCode", name = "EmptyBranch", maxScore = 25)
 public class SameBranches {
     @AstNodeVisitor
     public void visit(Node node, MethodContext mc, MethodDefinition md) {

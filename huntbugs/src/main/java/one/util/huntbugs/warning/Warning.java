@@ -33,12 +33,15 @@ public class Warning {
 
     public Warning(WarningType type, int scoreAdjustment, List<WarningAnnotation<?>> annotations) {
         this.type = type;
+        if(scoreAdjustment > 0) {
+            throw new IllegalArgumentException("Adjustment is positive: "+scoreAdjustment+" (warning: "+type.getName()+")");
+        }
         this.scoreAdjustment = scoreAdjustment;
         this.annotations = annotations;
     }
 
     public int getScore() {
-        return saturateScore(type.getBaseScore() + scoreAdjustment);
+        return saturateScore(type.getMaxScore() + scoreAdjustment);
     }
 
     public WarningType getType() {

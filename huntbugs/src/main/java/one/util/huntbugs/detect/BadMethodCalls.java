@@ -33,11 +33,11 @@ import one.util.huntbugs.util.Nodes;
  * @author lan
  *
  */
-@WarningDefinition(category = "BadPractice", name = "SystemExit", baseScore = 60)
-@WarningDefinition(category = "BadPractice", name = "SystemGc", baseScore = 50)
-@WarningDefinition(category = "BadPractice", name = "SystemRunFinalizersOnExit", baseScore = 60)
-@WarningDefinition(category = "BadPractice", name = "ThreadStopThrowable", baseScore = 60)
-@WarningDefinition(category = "RedundantCode", name = "UselessThread", baseScore = 60)
+@WarningDefinition(category = "BadPractice", name = "SystemExit", maxScore = 60)
+@WarningDefinition(category = "BadPractice", name = "SystemGc", maxScore = 50)
+@WarningDefinition(category = "BadPractice", name = "SystemRunFinalizersOnExit", maxScore = 60)
+@WarningDefinition(category = "BadPractice", name = "ThreadStopThrowable", maxScore = 60)
+@WarningDefinition(category = "RedundantCode", name = "UselessThread", maxScore = 60)
 public class BadMethodCalls {
     @AstExpressionVisitor
     public void visit(Expression node, NodeChain nc, MethodContext ctx, MethodDefinition curMethod) {

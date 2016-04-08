@@ -32,12 +32,12 @@ import one.util.huntbugs.warning.WarningAnnotation;
  * @author lan
  *
  */
-@WarningDefinition(category = "Correctness", name = "RemOne", baseScore = 70)
-@WarningDefinition(category = "Correctness", name = "CompareBitAndIncompatible", baseScore = 70)
-@WarningDefinition(category = "Correctness", name = "CompareBitOrIncompatible", baseScore = 70)
-@WarningDefinition(category = "RedundantCode", name = "UselessOrWithZero", baseScore = 60)
-@WarningDefinition(category = "RedundantCode", name = "UselessAndWithMinusOne", baseScore = 60)
-@WarningDefinition(category = "RedundantCode", name = "UselessAndWithZero", baseScore = 70)
+@WarningDefinition(category = "Correctness", name = "RemOne", maxScore = 70)
+@WarningDefinition(category = "Correctness", name = "CompareBitAndIncompatible", maxScore = 70)
+@WarningDefinition(category = "Correctness", name = "CompareBitOrIncompatible", maxScore = 70)
+@WarningDefinition(category = "RedundantCode", name = "UselessOrWithZero", maxScore = 60)
+@WarningDefinition(category = "RedundantCode", name = "UselessAndWithMinusOne", maxScore = 60)
+@WarningDefinition(category = "RedundantCode", name = "UselessAndWithZero", maxScore = 70)
 // TODO: procyon optimizes too hard to detect "UselessAndWithZero"
 public class BadMath {
     @AstExpressionVisitor

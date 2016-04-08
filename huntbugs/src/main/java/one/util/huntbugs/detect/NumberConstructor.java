@@ -29,8 +29,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
  * @author lan
  *
  */
-@WarningDefinition(category="Performance", name="NumberConstructor", baseScore = 40)
-@WarningDefinition(category="Performance", name="BooleanConstructor", baseScore = 50)
+@WarningDefinition(category="Performance", name="NumberConstructor", maxScore = 45)
+@WarningDefinition(category="Performance", name="BooleanConstructor", maxScore = 55)
 public class NumberConstructor {
     @AstExpressionVisitor
     public void visit(Expression expr, MethodContext ctx) {
@@ -47,14 +47,14 @@ public class NumberConstructor {
                     WarningAnnotation<String> replacement = new WarningAnnotation<>("REPLACEMENT", simpleName+".valueOf()");
                     if(val instanceof Number) {
                         long value = ((Number)val).longValue();
-                        int priority;
+                        int score;
                         if(value >= -128 && value < 127)
-                            priority = 5;
+                            score = 0;
                         else
-                            priority = simpleName.equals("Integer") ? -10 : -30;
-                        ctx.report("NumberConstructor", priority, expr, WarningAnnotation.forNumber((Number) val), replacement);
+                            score = simpleName.equals("Integer") ? -15 : -35;
+                        ctx.report("NumberConstructor", score, expr, WarningAnnotation.forNumber((Number) val), replacement);
                     } else {
-                        ctx.report("NumberConstructor", 0, expr, replacement);
+                        ctx.report("NumberConstructor", -5, expr, replacement);
                     }
                 }
             }

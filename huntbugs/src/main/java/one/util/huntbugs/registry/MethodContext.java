@@ -200,7 +200,11 @@ public class MethodContext {
             error("Tries to report a warning of non-declared type: " + warning);
             return;
         }
-        if (wt.getBaseScore() + scoreAdjustment < 0) {
+        if (scoreAdjustment > 0) {
+            error("Tries to report a warning "+warning+" with positive score "+scoreAdjustment);
+            return;
+        }
+        if (wt.getMaxScore() + scoreAdjustment < 0) {
             return;
         }
         List<WarningAnnotation<?>> anno = new ArrayList<>();

@@ -26,9 +26,9 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
  * @author lan
  *
  */
-@WarningDefinition(category="Performance", name="StringConstructor", baseScore=50)
-@WarningDefinition(category="Performance", name="StringConstructorEmpty", baseScore=50)
-@WarningDefinition(category="RedundantCode", name="StringToString", baseScore=40)
+@WarningDefinition(category="Performance", name="StringConstructor", maxScore=50)
+@WarningDefinition(category="Performance", name="StringConstructorEmpty", maxScore=50)
+@WarningDefinition(category="RedundantCode", name="StringToString", maxScore=40)
 public class StringUsage {
     @AstExpressionVisitor
     public void visit(Expression node, MethodContext mc) {

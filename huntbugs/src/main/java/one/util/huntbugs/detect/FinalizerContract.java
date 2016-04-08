@@ -33,13 +33,13 @@ import one.util.huntbugs.util.Nodes;
  * @author lan
  *
  */
-@WarningDefinition(category="BadPractice", name="FinalizeNullifiesSuper", baseScore = 50)
-@WarningDefinition(category="BadPractice", name="FinalizeEmpty", baseScore = 35)
-@WarningDefinition(category="BadPractice", name="FinalizeUselessSuper", baseScore = 40)
-@WarningDefinition(category="BadPractice", name="FinalizeInvocation", baseScore = 50)
-@WarningDefinition(category="BadPractice", name="FinalizeNullsFields", baseScore = 50)
-@WarningDefinition(category="BadPractice", name="FinalizeOnlyNullsFields", baseScore = 65)
-@WarningDefinition(category="MaliciousCode", name="FinalizePublic", baseScore = 60)
+@WarningDefinition(category="BadPractice", name="FinalizeNullifiesSuper", maxScore = 50)
+@WarningDefinition(category="BadPractice", name="FinalizeEmpty", maxScore = 35)
+@WarningDefinition(category="BadPractice", name="FinalizeUselessSuper", maxScore = 40)
+@WarningDefinition(category="BadPractice", name="FinalizeInvocation", maxScore = 60)
+@WarningDefinition(category="BadPractice", name="FinalizeNullsFields", maxScore = 50)
+@WarningDefinition(category="BadPractice", name="FinalizeOnlyNullsFields", maxScore = 65)
+@WarningDefinition(category="MaliciousCode", name="FinalizePublic", maxScore = 60)
 public class FinalizerContract {
     @AstBodyVisitor
     public void visitFinalizer(Block body, MethodContext mc, MethodDefinition md) {
@@ -78,7 +78,7 @@ public class FinalizerContract {
     @AstNodeVisitor
     public void visit(Node node, MethodContext mc, MethodDefinition md) {
         if(Nodes.isOp(node, AstCode.InvokeVirtual) && isFinalizer((MethodReference) ((Expression)node).getOperand())) {
-            mc.report("FinalizeInvocation", isFinalizer(md) ? 0 : 10, node);
+            mc.report("FinalizeInvocation", isFinalizer(md) ? -10 : 0, node);
         }
     }
 
