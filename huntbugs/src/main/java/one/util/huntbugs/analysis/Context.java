@@ -56,8 +56,8 @@ public class Context {
     public Context(Repository repository, AnalysisOptions options) {
         this.options = options;
         registry = new DetectorRegistry(this);
-        this.repository = repository;
-        ITypeLoader loader = repository.createTypeLoader();
+        this.repository = repository == null ? Repository.createNullRepository() : repository;
+        ITypeLoader loader = this.repository.createTypeLoader();
         if (options.addBootClassPath) {
             loader = new CompositeTypeLoader(new ClasspathTypeLoader(System.getProperty("sun.boot.class.path")), loader);
         }
@@ -158,9 +158,13 @@ public class Context {
     }
 
     public void reportWarningTypes(PrintStream out) {
-        registry.printWarnings(out);
+        registry.reportWarningTypes(out);
     }
 
+    public void reportDatabases(PrintStream out) {
+        registry.reportDatabases(out);
+    }
+    
     public int getClassesCount() {
         return classesCount.get();
     }

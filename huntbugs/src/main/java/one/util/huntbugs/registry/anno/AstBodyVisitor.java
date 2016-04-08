@@ -21,6 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import one.util.huntbugs.registry.MethodContext;
+
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.ast.Block;
@@ -30,6 +31,7 @@ import com.strobel.decompiler.ast.Block;
  * 
  * Allowed parameter types (no repeats):
  * {@link Block}, {@link MethodContext}, {@link MethodDefinition}, {@link TypeDefinition}
+ * or any registered databases (see {@link TypeDatabase}, {@link TypeDatabaseItem})
  * 
  * Return void
  */

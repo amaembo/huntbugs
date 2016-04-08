@@ -39,7 +39,8 @@ import one.util.huntbugs.repo.Repository;
  */
 public class HuntBugs {
     private boolean listDetectors = false;
-    private boolean listOptions = false;
+    private boolean listVariables = false;
+    private boolean listDatabases = false;
     private final AnalysisOptions options = new AnalysisOptions();
     private Repository repo;
     
@@ -49,7 +50,9 @@ public class HuntBugs {
             if(arg.equals("-lw")) {
                 listDetectors = true;
             } else if(arg.equals("-lv")) {
-                listOptions = true;
+                listVariables = true;
+            } else if(arg.equals("-ldb")) {
+                listDatabases = true;
             } else if(arg.startsWith("-D")) {
                 int pos = arg.indexOf('=');
                 if(pos == 0) {
@@ -80,6 +83,7 @@ public class HuntBugs {
             System.out.println("Options are:");
             System.out.println("    -lw          -- list all warning types");
             System.out.println("    -lv          -- list all variables");
+            System.out.println("    -ldb         -- list all databases");
             System.out.println("    -Dname=value -- set given variable");
             return -1;
         }
@@ -89,23 +93,30 @@ public class HuntBugs {
             System.err.println(ex.getMessage());
             return -3;
         }
+        boolean list = false;
+        Context ctx = new Context(repo, options);
         if(listDetectors) {
             System.out.println("List of warning types:");
-            Context ctx = new Context(Repository.createNullRepository(), options);
             ctx.reportWarningTypes(System.out);
-            return 0;
+            list = true;
         }
-        if(listOptions) {
+        if(listVariables) {
             System.out.println("List of variables:");
             options.report(System.out);
-            return 0;
+            list = true;
+        }
+        if(listDatabases) {
+            System.out.println("List of databases:");
+            ctx.reportDatabases(System.out);
+            list = true;
         }
         if(repo == null) {
+            if(list)
+                return 0;
             System.err.println("No repositories specified");
             return -2;
         }
         long start = System.nanoTime();
-        Context ctx = new Context(repo, options);
         ctx.addListener((stage, className) -> {
             if(className == null)
                 return true;

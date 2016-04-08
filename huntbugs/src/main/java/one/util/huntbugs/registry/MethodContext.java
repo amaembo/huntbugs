@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
@@ -112,7 +113,7 @@ public class MethodContext {
         if (detector == null) {
             astVisitors = Collections.emptyList();
         } else {
-            astVisitors = new ArrayList<>(detector.astVisitors);
+            astVisitors = detector.astVisitors.stream().map(vi -> vi.bind(classCtx.type)).collect(Collectors.toCollection(ArrayList::new));
         }
     }
 

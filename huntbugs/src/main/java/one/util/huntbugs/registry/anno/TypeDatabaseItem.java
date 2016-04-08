@@ -20,23 +20,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.util.NodeChain;
-
-import com.strobel.assembler.metadata.MethodDefinition;
-import com.strobel.assembler.metadata.TypeDefinition;
+import one.util.huntbugs.registry.AbstractTypeDatabase;
 
 /**
- * Method in detector class which called for every expression in AST tree 
- * 
- * Allowed parameter types (no repeats):
- * {@link Expression}, {@link NodeChain}, {@link MethodContext}, {@link MethodDefinition}, {@link TypeDefinition}
- * or any registered databases (see {@link TypeDatabase}, {@link TypeDatabaseItem})
- * 
- * Return void or boolean (in later case: true if continue; false if wanted to skip the rest of the method)
+ * @author lan
+ *
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface AstExpressionVisitor {
-
+@Target(ElementType.TYPE)
+public @interface TypeDatabaseItem {
+    Class<? extends AbstractTypeDatabase<?>> parentDatabase();
 }

@@ -32,6 +32,7 @@ import com.strobel.decompiler.ast.Node;
  * 
  * Allowed parameter types (no repeats):
  * {@link Node}, {@link NodeChain}, {@link MethodContext}, {@link MethodDefinition}, {@link TypeDefinition}
+ * or any registered databases (see {@link TypeDatabase}, {@link TypeDatabaseItem})
  * 
  * Return void or boolean (in later case: true if continue; false if wanted to skip the rest of the method)
  */

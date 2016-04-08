@@ -61,8 +61,11 @@ public class DetectorRegistry {
     private final List<Detector> detectors = new ArrayList<>();
     private final Context ctx;
 
+    private final DatabaseRegistry databases;
+
     public DetectorRegistry(Context ctx) {
         this.ctx = ctx;
+        this.databases = new DatabaseRegistry(ctx);
         init();
     }
 
@@ -85,7 +88,7 @@ public class DetectorRegistry {
                 wt -> wt.getMaxScore() >= ctx.getOptions().minScore).collect(Collectors.toList());
             if(activeWts.isEmpty())
                 return false;
-            Detector detector = new Detector(wts, clazz);
+            Detector detector = new Detector(wts, clazz, databases);
             activeWts.forEach(wt -> {
                 typeToDetector.put(wt, detector);
                 ctx.incStat("WarningTypes");
@@ -175,7 +178,7 @@ public class DetectorRegistry {
         }
     }
     
-    public void printWarnings(PrintStream out) {
+    public void reportWarningTypes(PrintStream out) {
         List<String> result = new ArrayList<>();
         
         String arrow = " --> ";
@@ -196,5 +199,10 @@ public class DetectorRegistry {
             }
         }
         out.println("Total types: "+typeToDetector.size());
+    }
+    
+    public void reportDatabases(PrintStream out) {
+        databases.instances.keySet().forEach(System.out::println);
+        out.println("Total databases: "+databases.instances.size());
     }
 }
