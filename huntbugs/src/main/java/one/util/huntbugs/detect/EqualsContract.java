@@ -36,10 +36,8 @@ import one.util.huntbugs.util.Nodes;
 @WarningDefinition(category="BadPractice", name="EqualsReturnsTrue", maxScore=50)
 @WarningDefinition(category="BadPractice", name="EqualsReturnsFalse", maxScore=50)
 public class EqualsContract {
-    @AstVisitor(nodes=AstNodes.ROOT)
+    @AstVisitor(nodes=AstNodes.ROOT, methodName="equals", methodSignature="(Ljava/lang/Object;)Z")
     public void visitMethod(Block body, MethodContext mc, MethodDefinition md, TypeDefinition td) {
-        if(!md.getName().equals("equals") || !md.getErasedSignature().equals("(Ljava/lang/Object;)Z"))
-            return;
         List<Node> list = body.getBody();
         if(list.size() == 1) {
             Node node = list.get(0);

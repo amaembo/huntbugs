@@ -56,8 +56,10 @@ public class Detector {
     class VisitorInfo {
         final VisitorType type;
         final MethodHandle mh;
+        final AstVisitor anno;
 
-        public VisitorInfo(VisitorType type, MethodHandle mh) {
+        public VisitorInfo(AstVisitor anno, VisitorType type, MethodHandle mh) {
+            this.anno = anno;
             this.type = type;
             this.mh = mh;
         }
@@ -74,6 +76,14 @@ public class Detector {
                 mh = MethodHandles.insertArguments(mh, count, params);
             }
             return type.adapt(mh);
+        }
+
+        public boolean isApplicable(MethodDefinition md) {
+            if(!anno.methodName().isEmpty() && !anno.methodName().equals(md.getName()))
+                return false;
+            if(!anno.methodSignature().isEmpty() && !anno.methodSignature().equals(md.getSignature()))
+                return false;
+            return true;
         }
     }
 
@@ -131,7 +141,8 @@ public class Detector {
             if (annotation != null) { 
                 for (VisitorType type : VisitorType.values()) {
                     if (annotation.nodes() == type.nodeTypes) {
-                        astVisitors.add(new VisitorInfo(type, adapt(MethodHandles.publicLookup().unreflect(m), type.wantedType, databases)));
+                        astVisitors.add(new VisitorInfo(annotation, type, adapt(MethodHandles.publicLookup().unreflect(
+                            m), type.wantedType, databases)));
                     }
                 }
             }

@@ -38,7 +38,6 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
 
 /**
  * @author lan
- *
  */
 @WarningDefinition(category = "RedundantCode", name = "SameBranchesIf", maxScore = 70)
 @WarningDefinition(category = "RedundantCode", name = "SameBranchesTernary", maxScore = 70)

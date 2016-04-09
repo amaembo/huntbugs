@@ -41,10 +41,8 @@ import one.util.huntbugs.util.Nodes;
 @WarningDefinition(category="BadPractice", name="FinalizeOnlyNullsFields", maxScore = 65)
 @WarningDefinition(category="MaliciousCode", name="FinalizePublic", maxScore = 60)
 public class FinalizerContract {
-    @AstVisitor(nodes=AstNodes.ROOT)
+    @AstVisitor(nodes=AstNodes.ROOT, methodName="finalize", methodSignature="()V")
     public void visitFinalizer(Block body, MethodContext mc, MethodDefinition md) {
-        if(!isFinalizer(md))
-            return;
         MethodDefinition superfinalizer = getSuperfinalizer(md.getDeclaringType());
         if(md.isPublic()) {
             mc.report("FinalizePublic", 0, body);

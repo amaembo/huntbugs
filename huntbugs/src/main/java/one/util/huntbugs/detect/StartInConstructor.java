@@ -38,9 +38,9 @@ import one.util.huntbugs.util.Types;
  */
 @WarningDefinition(category="Multithreading", name="StartInConstructor", maxScore=50)
 public class StartInConstructor {
-    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS, methodName="<init>")
     public boolean visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md, TypeDefinition td, TypeHierarchy th) {
-        if (!md.isConstructor() || !td.isPublic() || td.isFinal() || md.isPrivate() || md.isPackagePrivate())
+        if (!td.isPublic() || td.isFinal() || md.isPrivate() || md.isPackagePrivate())
             return false;
         if(expr.getCode() == AstCode.InvokeVirtual) {
             MethodReference mr = (MethodReference) expr.getOperand();

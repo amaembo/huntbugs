@@ -40,4 +40,8 @@ import com.strobel.assembler.metadata.TypeDefinition;
 @Target(ElementType.METHOD)
 public @interface AstVisitor {
     AstNodes nodes() default AstNodes.ALL;
+    
+    String methodName() default "";
+
+    String methodSignature() default "";
 }

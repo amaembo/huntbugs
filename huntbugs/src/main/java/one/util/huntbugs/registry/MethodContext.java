@@ -114,7 +114,8 @@ public class MethodContext {
         if (detector == null) {
             astVisitors = Collections.emptyList();
         } else {
-            astVisitors = detector.astVisitors.stream().map(vi -> vi.bind(classCtx.type)).collect(Collectors.toCollection(ArrayList::new));
+            astVisitors = detector.astVisitors.stream().filter(vi -> vi.isApplicable(md)).map(
+                vi -> vi.bind(classCtx.type)).collect(Collectors.toCollection(ArrayList::new));
         }
     }
 
@@ -145,7 +146,7 @@ public class MethodContext {
         return OffsetToLineNumberConverter.NOOP_CONVERTER;
     }
 
-    void visitNode(Node node, NodeChain parents, MethodDefinition realMethod) {
+    boolean visitNode(Node node, NodeChain parents, MethodDefinition realMethod) {
         this.realMethod = realMethod;
         for (Iterator<MethodHandle> it = astVisitors.iterator(); it.hasNext();) {
             try {
@@ -157,6 +158,7 @@ public class MethodContext {
                 ctx.addError(new ErrorMessage(detector, md, -1, e));
             }
         }
+        return !astVisitors.isEmpty();
     }
 
     void finalizeMethod() {
