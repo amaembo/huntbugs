@@ -21,7 +21,7 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstNodeVisitor;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
@@ -34,7 +34,7 @@ import one.util.huntbugs.util.Types;
 @WarningDefinition(category="Correctness", name="AbsoluteValueOfHashCode", maxScore=90)
 @WarningDefinition(category="Correctness", name="AbsoluteValueOfRandomInt", maxScore=80)
 public class MinValueHandling {
-    @AstNodeVisitor
+    @AstVisitor
     public void visit(Node node, NodeChain chain, MethodContext mc) {
         if(Nodes.isOp(node, AstCode.Rem)) {
             Node body = Nodes.getChild(node, 0);

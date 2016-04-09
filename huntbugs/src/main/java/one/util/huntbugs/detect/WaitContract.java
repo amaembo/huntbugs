@@ -27,7 +27,8 @@ import com.strobel.decompiler.ast.LoopType;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
@@ -40,7 +41,7 @@ import one.util.huntbugs.util.Nodes;
 @WarningDefinition(category = "Multithreading", name = "WaitNotInLoop", maxScore = 65)
 @WarningDefinition(category = "Multithreading", name = "NotifyNaked", maxScore = 50)
 public class WaitContract {
-    @AstExpressionVisitor
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression expr, NodeChain parents, MethodContext mc) {
         if (expr.getCode() == AstCode.InvokeVirtual) {
             MethodReference mr = (MethodReference) expr.getOperand();

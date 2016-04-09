@@ -22,7 +22,8 @@ import com.strobel.decompiler.ast.Expression;
 
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -34,7 +35,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "RedundantCode", name = "UnnecessaryInstanceOf", maxScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "UnnecessaryInstanceOfInferred", maxScore = 70)
 public class UnnecessaryInstanceOf {
-    @AstExpressionVisitor
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression node, MethodContext mc, MethodDefinition md) {
         if(node.getCode() == AstCode.InstanceOf) {
             TypeReference typeRef = (TypeReference)node.getOperand();

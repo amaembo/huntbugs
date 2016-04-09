@@ -25,8 +25,10 @@ import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
+
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -37,7 +39,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
  */
 @WarningDefinition(category = "BadPractice", name = "FloatComparison", maxScore = 40)
 public class FloatingPointComparison {
-    @AstExpressionVisitor
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression node, MethodContext ctx, MethodDefinition md) {
         if (node.getCode() == AstCode.CmpEq || node.getCode() == AstCode.CmpNe) {
             List<Expression> args = node.getArguments();

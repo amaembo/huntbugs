@@ -21,7 +21,8 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -32,7 +33,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
  */
 @WarningDefinition(category="Correctness", name="FloatCompareToNaN", maxScore = 90)
 public class FloatingPointNaN {
-    @AstExpressionVisitor
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression node, MethodContext ctx) {
         if(node.getCode().isComparison()) {
             List<Expression> args = node.getArguments();

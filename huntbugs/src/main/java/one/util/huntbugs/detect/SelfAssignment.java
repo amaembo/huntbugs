@@ -22,7 +22,8 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 
@@ -33,7 +34,7 @@ import one.util.huntbugs.util.Nodes;
 @WarningDefinition(category="Correctness", name="SelfAssignmentField", maxScore=80)
 @WarningDefinition(category="Correctness", name="SelfAssignmentArrayElement", maxScore=80)
 public class SelfAssignment {
-    @AstExpressionVisitor
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
         if(expr.getCode() == AstCode.PutField) {
             FieldDefinition frPut = ((FieldReference) expr.getOperand()).resolve();

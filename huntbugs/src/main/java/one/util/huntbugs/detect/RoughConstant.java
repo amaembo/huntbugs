@@ -26,7 +26,8 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
@@ -98,7 +99,7 @@ public class RoughConstant {
         new BadConstant(Math.E, 1, "Math.E", 17)
     };
 
-    @AstExpressionVisitor
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext ctx, NodeChain parents) {
         // Not use Nodes.getConstant here as direct usage should only be reported
         if(expr.getCode() != AstCode.LdC)

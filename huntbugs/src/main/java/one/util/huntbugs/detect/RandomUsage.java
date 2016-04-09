@@ -22,7 +22,8 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
@@ -35,8 +36,7 @@ import one.util.huntbugs.util.Types;
 @WarningDefinition(category="Correctness", name="RandomDoubleToInt", maxScore=80)
 @WarningDefinition(category="Correctness", name="RandomUsedOnlyOnce", maxScore=80)
 public class RandomUsage {
-
-    @AstExpressionVisitor
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression node, MethodContext ctx) {
         if(node.getCode() == AstCode.D2I) {
             if(isRandomDouble(Nodes.getChild(node, 0))) {

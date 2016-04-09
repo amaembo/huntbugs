@@ -24,8 +24,10 @@ import com.strobel.assembler.metadata.JvmType;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
+
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
@@ -37,7 +39,7 @@ import one.util.huntbugs.util.Nodes;
 @WarningDefinition(category = "Multithreading", name = "VolatileIncrement", maxScore = 85)
 @WarningDefinition(category = "Multithreading", name = "VolatileMath", maxScore = 85)
 public class VolatileIncrement {
-    @AstExpressionVisitor
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visitNode(Expression node, MethodContext ctx, NodeChain parents, MethodDefinition md) {
         if (node.getCode() == AstCode.PreIncrement || node.getCode() == AstCode.PostIncrement) {
             Expression arg = node.getArguments().get(0);

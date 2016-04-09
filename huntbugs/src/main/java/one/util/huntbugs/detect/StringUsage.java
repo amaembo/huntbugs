@@ -18,8 +18,10 @@ package one.util.huntbugs.detect;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
+
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 
 /**
@@ -30,7 +32,7 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 @WarningDefinition(category="Performance", name="StringConstructorEmpty", maxScore=50)
 @WarningDefinition(category="RedundantCode", name="StringToString", maxScore=40)
 public class StringUsage {
-    @AstExpressionVisitor
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression node, MethodContext mc) {
         if(node.getCode() == AstCode.InitObject) {
             MethodReference mr = (MethodReference) node.getOperand();

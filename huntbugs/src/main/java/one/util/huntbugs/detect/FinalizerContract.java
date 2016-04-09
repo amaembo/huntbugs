@@ -24,8 +24,8 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstBodyVisitor;
-import one.util.huntbugs.registry.anno.AstNodeVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 
@@ -41,7 +41,7 @@ import one.util.huntbugs.util.Nodes;
 @WarningDefinition(category="BadPractice", name="FinalizeOnlyNullsFields", maxScore = 65)
 @WarningDefinition(category="MaliciousCode", name="FinalizePublic", maxScore = 60)
 public class FinalizerContract {
-    @AstBodyVisitor
+    @AstVisitor(nodes=AstNodes.ROOT)
     public void visitFinalizer(Block body, MethodContext mc, MethodDefinition md) {
         if(!isFinalizer(md))
             return;
@@ -75,7 +75,7 @@ public class FinalizerContract {
         }
     }
     
-    @AstNodeVisitor
+    @AstVisitor
     public void visit(Node node, MethodContext mc, MethodDefinition md) {
         if(Nodes.isOp(node, AstCode.InvokeVirtual) && isFinalizer((MethodReference) ((Expression)node).getOperand())) {
             mc.report("FinalizeInvocation", isFinalizer(md) ? 10 : 0, node);

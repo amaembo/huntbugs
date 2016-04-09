@@ -25,7 +25,7 @@ import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstNodeVisitor;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
@@ -46,7 +46,7 @@ public class ReturnNull {
         TYPE_TO_WARNING.put("java/lang/Boolean", "BooleanReturnNull");
     }
     
-    @AstNodeVisitor
+    @AstVisitor
     public boolean visit(Node node, NodeChain nc, MethodContext mc, MethodDefinition md) {
         if(nc == null) {
             return md.getReturnType().isArray() || TYPE_TO_WARNING.containsKey(md.getReturnType().getInternalName());

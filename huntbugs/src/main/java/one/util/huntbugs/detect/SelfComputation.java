@@ -20,7 +20,8 @@ import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 
@@ -31,7 +32,7 @@ import one.util.huntbugs.util.Nodes;
 @WarningDefinition(category = "Correctness", name = "SelfComputation", maxScore = 70)
 @WarningDefinition(category = "Correctness", name = "SelfComparison", maxScore = 70)
 public class SelfComputation {
-	@AstExpressionVisitor
+	@AstVisitor(nodes=AstNodes.EXPRESSIONS)
 	public void visit(Expression expr, MethodContext mc) {
 		if (expr.getCode() == AstCode.And || expr.getCode() == AstCode.Or
 		        || expr.getCode() == AstCode.Xor

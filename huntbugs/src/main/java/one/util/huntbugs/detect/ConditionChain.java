@@ -25,7 +25,7 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstNodeVisitor;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -37,7 +37,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category="RedundantCode", name="SameConditions", maxScore=50)
 @WarningDefinition(category="RedundantCode", name="SameConditionsExcluding", maxScore=70)
 public class ConditionChain {
-    @AstNodeVisitor
+    @AstVisitor
     public void visit(Node node, MethodContext mc, MethodDefinition md) {
         if(node instanceof Condition) {
             Condition cond = (Condition)node;

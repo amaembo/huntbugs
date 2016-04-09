@@ -28,8 +28,8 @@ import com.strobel.decompiler.ast.Node;
 import com.strobel.decompiler.ast.Switch;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
-import one.util.huntbugs.registry.anno.AstNodeVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Equi;
 import one.util.huntbugs.util.Nodes;
@@ -46,7 +46,7 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
 @WarningDefinition(category = "RedundantCode", name = "SameBranchesSwitchDefault", maxScore = 70)
 @WarningDefinition(category = "RedundantCode", name = "EmptyBranch", maxScore = 25)
 public class SameBranches {
-    @AstNodeVisitor
+    @AstVisitor
     public void visit(Node node, MethodContext mc) {
         if (node instanceof Condition) {
             Condition cond = (Condition) node;
@@ -95,7 +95,7 @@ public class SameBranches {
         }
     }
 
-    @AstExpressionVisitor
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visitExpr(Expression expr, MethodContext mc) {
         if (expr.getCode() == AstCode.TernaryOp
             && Equi.equiExpressions(expr.getArguments().get(1), expr.getArguments().get(2))) {

@@ -27,7 +27,8 @@ import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.warning.WarningAnnotation;
 
@@ -37,7 +38,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
  */
 @WarningDefinition(category="Correctness", name="MaxMinMethodReferenceForComparator", maxScore=90)
 public class BadMethodReferences {
-    @AstExpressionVisitor
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
         if(expr.getCode() == AstCode.InvokeDynamic) {
             DynamicCallSite dcs = (DynamicCallSite)expr.getOperand();

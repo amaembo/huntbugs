@@ -26,7 +26,8 @@ import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.db.Hierarchy.TypeHierarchy;
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Types;
@@ -37,7 +38,7 @@ import one.util.huntbugs.util.Types;
  */
 @WarningDefinition(category="Multithreading", name="StartInConstructor", maxScore=50)
 public class StartInConstructor {
-    @AstExpressionVisitor
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public boolean visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md, TypeDefinition td, TypeHierarchy th) {
         if (!md.isConstructor() || !td.isPublic() || td.isFinal() || md.isPrivate() || md.isPackagePrivate())
             return false;

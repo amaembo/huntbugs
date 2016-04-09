@@ -24,7 +24,8 @@ import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstBodyVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 
@@ -35,7 +36,7 @@ import one.util.huntbugs.util.Nodes;
 @WarningDefinition(category="BadPractice", name="EqualsReturnsTrue", maxScore=50)
 @WarningDefinition(category="BadPractice", name="EqualsReturnsFalse", maxScore=50)
 public class EqualsContract {
-    @AstBodyVisitor
+    @AstVisitor(nodes=AstNodes.ROOT)
     public void visitMethod(Block body, MethodContext mc, MethodDefinition md, TypeDefinition td) {
         if(!md.getName().equals("equals") || !md.getErasedSignature().equals("(Ljava/lang/Object;)Z"))
             return;

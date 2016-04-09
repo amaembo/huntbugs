@@ -20,7 +20,8 @@ import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -32,7 +33,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category="Performance", name="NumberConstructor", maxScore = 45)
 @WarningDefinition(category="Performance", name="BooleanConstructor", maxScore = 55)
 public class NumberConstructor {
-    @AstExpressionVisitor
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext ctx) {
         if(expr.getCode() == AstCode.InitObject && expr.getArguments().size() == 1) {
             MethodReference ctor = (MethodReference) expr.getOperand();

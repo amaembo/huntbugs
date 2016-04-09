@@ -20,7 +20,8 @@ import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
@@ -28,7 +29,7 @@ import one.util.huntbugs.util.Nodes;
 @WarningDefinition(category = "CodeStyle", name = "NonShortCircuit", maxScore = 50)
 @WarningDefinition(category = "Correctness", name = "NonShortCircuitDangerous", maxScore = 80)
 public class NonShortCircuit {
-    @AstExpressionVisitor
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visitNode(Expression node, NodeChain nc, MethodContext ctx) {
         if(node.getCode() == AstCode.And || node.getCode() == AstCode.Or) {
             if (Nodes.isOp(nc.getNode(), AstCode.Store) || Nodes.isOp(nc.getNode(), AstCode.StoreElement)

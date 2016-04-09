@@ -15,7 +15,6 @@
  */
 package one.util.huntbugs.registry;
 
-import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -35,9 +34,8 @@ import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
-import one.util.huntbugs.registry.anno.AstBodyVisitor;
-import one.util.huntbugs.registry.anno.AstExpressionVisitor;
-import one.util.huntbugs.registry.anno.AstNodeVisitor;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.WarningType;
 
@@ -80,14 +78,14 @@ public class Detector {
     }
 
     static enum VisitorType {
-        AST_NODE_VISITOR(AstNodeVisitor.class, MethodType.methodType(boolean.class, Object.class, Node.class,
+        AST_NODE_VISITOR(AstNodes.ALL, MethodType.methodType(boolean.class, Object.class, Node.class,
             NodeChain.class, MethodContext.class, MethodDefinition.class, TypeDefinition.class), null),
-        AST_EXPRESSION_VISITOR(AstExpressionVisitor.class, MethodType.methodType(boolean.class, Object.class,
+        AST_EXPRESSION_VISITOR(AstNodes.EXPRESSIONS, MethodType.methodType(boolean.class, Object.class,
             Expression.class, NodeChain.class, MethodContext.class, MethodDefinition.class, TypeDefinition.class), "runExpression"),
-        AST_BODY_VISITOR(AstBodyVisitor.class, MethodType.methodType(void.class, Object.class, Block.class,
+        AST_BODY_VISITOR(AstNodes.ROOT, MethodType.methodType(void.class, Object.class, Block.class,
             MethodContext.class, MethodDefinition.class, TypeDefinition.class), "runBody");
 
-        Class<? extends Annotation> anno;
+        AstNodes nodeTypes;
         MethodType wantedType;
         private MethodHandle adapter;
 
@@ -105,8 +103,8 @@ public class Detector {
             return true;
         }
         
-        private VisitorType(Class<? extends Annotation> anno, MethodType wantedType, String adapter) {
-            this.anno = anno;
+        private VisitorType(AstNodes nodeTypes, MethodType wantedType, String adapter) {
+            this.nodeTypes = nodeTypes;
             this.wantedType = wantedType;
             if(adapter != null) {
                 try {
@@ -129,9 +127,12 @@ public class Detector {
         this.wts = Objects.requireNonNull(wts);
         this.clazz = Objects.requireNonNull(clazz);
         for (Method m : clazz.getMethods()) {
-            for (VisitorType type : VisitorType.values()) {
-                if (m.getAnnotation(type.anno) != null) {
-                    astVisitors.add(new VisitorInfo(type, adapt(MethodHandles.publicLookup().unreflect(m), type.wantedType, databases)));
+            AstVisitor annotation = m.getAnnotation(AstVisitor.class);
+            if (annotation != null) { 
+                for (VisitorType type : VisitorType.values()) {
+                    if (annotation.nodes() == type.nodeTypes) {
+                        astVisitors.add(new VisitorInfo(type, adapt(MethodHandles.publicLookup().unreflect(m), type.wantedType, databases)));
+                    }
                 }
             }
         }

@@ -21,7 +21,7 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AstNodeVisitor;
+import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -50,7 +50,7 @@ public class InvalidMinMax {
 		return NONE;
 	}
 
-	@AstNodeVisitor
+	@AstVisitor
 	public void visit(Node node, MethodContext mc) {
 		int outer = detectMethod(node);
 		if (outer == NONE)
