@@ -111,8 +111,10 @@ public class HuntBugs {
             list = true;
         }
         if(repo == null) {
-            if(list)
+            if(list) {
+                ctx.reportStats(System.out);
                 return 0;
+            }
             System.err.println("No repositories specified");
             return -2;
         }
