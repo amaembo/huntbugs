@@ -68,9 +68,15 @@ public class DatabaseRegistry {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private <T> DatabaseInfo<T> getDatabaseInfo(Class<T> clazz) {
-        return (DatabaseInfo<T>) instances.computeIfAbsent(clazz, this::resolveDatabase);
+        // Cannot use computeIfAbsent here as recursive update is unsafe
+        @SuppressWarnings("unchecked")
+        DatabaseInfo<T> di = (DatabaseInfo<T>) instances.get(clazz);
+        if(di == null) {
+            di = resolveDatabase(clazz);
+            instances.put(clazz, di);
+        }
+        return di;
     }
 
     private <T> DatabaseInfo<T> resolveDatabase(Class<T> clazz) {

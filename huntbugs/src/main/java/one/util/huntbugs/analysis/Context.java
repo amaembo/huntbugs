@@ -85,7 +85,6 @@ public class Context {
             return;
         List<String> classes = new ArrayList<>();
         repository.visit(name, new RepositoryVisitor() {
-
             @Override
             public boolean visitPackage(String packageName) {
                 return true;
