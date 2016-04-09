@@ -26,7 +26,7 @@ import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
 
 /**
- * Method in detector class which called for AST nodes.
+ * Method in detector class which called for every method in the class.
  * 
  * <p>
  * Allowed parameter types (no repeats): {@link MethodContext},
@@ -34,14 +34,11 @@ import com.strobel.assembler.metadata.TypeDefinition;
  * (see {@link TypeDatabase}, {@link TypeDatabaseItem})
  * 
  * <p>
- * For additional allowed types and allowed return values see the {@link AstNodes} description.
+ * May return boolean or void. If returns false, any other visitors (e.g.
+ * {@link AstVisitor}) defined in this detector will be skipped.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface AstVisitor {
-    AstNodes nodes() default AstNodes.ALL;
-    
-    String methodName() default "";
+public @interface MethodVisitor {
 
-    String methodSignature() default "";
 }

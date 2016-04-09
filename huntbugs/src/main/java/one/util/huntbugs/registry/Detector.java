@@ -36,6 +36,7 @@ import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
+import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.WarningType;
 
@@ -44,15 +45,18 @@ import one.util.huntbugs.warning.WarningType;
  *
  */
 public class Detector {
+    static final MethodType METHOD_VISITOR_TYPE = MethodType.methodType(boolean.class, Object.class,
+        MethodContext.class, MethodDefinition.class, TypeDefinition.class);
     private static final MethodHandle ALWAYS_TRUE = MethodHandles.constant(boolean.class, true);
-    private static final MethodType BASE_TYPE = MethodType.methodType(boolean.class, Object.class, Node.class,
+    private static final MethodType NODE_VISITOR_TYPE = MethodType.methodType(boolean.class, Object.class, Node.class,
         NodeChain.class, MethodContext.class, MethodDefinition.class, TypeDefinition.class);
 
     private final Map<String, WarningType> wts;
     final Map<Class<?>, Function<TypeReference, ?>> dbFetchers = new HashMap<>();
     private final Class<?> clazz;
     final List<VisitorInfo> astVisitors = new ArrayList<>();
-    
+    final List<MethodHandle> methodVisitors = new ArrayList<>();
+
     class VisitorInfo {
         final VisitorType type;
         final MethodHandle mh;
@@ -65,33 +69,29 @@ public class Detector {
         }
 
         public MethodHandle bind(TypeDefinition td) {
-            int count = type.wantedType.parameterCount();
             MethodHandle mh = this.mh;
-            int curCount = mh.type().parameterCount();
-            if(curCount > count) {
-                Object[] params = new Object[curCount-count];
-                for(int i=count; i<curCount; i++) {
-                    params[i-count] = getDatabase(mh.type().parameterType(i), td);
-                }
-                mh = MethodHandles.insertArguments(mh, count, params);
-            }
+            mh = bindDatabases(type.wantedType.parameterCount(), td, mh);
             return type.adapt(mh);
         }
 
         public boolean isApplicable(MethodDefinition md) {
-            if(!anno.methodName().isEmpty() && !anno.methodName().equals(md.getName()))
+            if (!anno.methodName().isEmpty() && !anno.methodName().equals(md.getName()))
                 return false;
-            if(!anno.methodSignature().isEmpty() && !anno.methodSignature().equals(md.getSignature()))
+            if (!anno.methodSignature().isEmpty() && !anno.methodSignature().equals(md.getSignature()))
                 return false;
             return true;
         }
     }
 
     static enum VisitorType {
-        AST_NODE_VISITOR(AstNodes.ALL, MethodType.methodType(boolean.class, Object.class, Node.class,
-            NodeChain.class, MethodContext.class, MethodDefinition.class, TypeDefinition.class), null),
+        // All
+        AST_NODE_VISITOR(AstNodes.ALL, MethodType.methodType(boolean.class, Object.class, Node.class, NodeChain.class,
+            MethodContext.class, MethodDefinition.class, TypeDefinition.class), null),
+        // Expressions
         AST_EXPRESSION_VISITOR(AstNodes.EXPRESSIONS, MethodType.methodType(boolean.class, Object.class,
-            Expression.class, NodeChain.class, MethodContext.class, MethodDefinition.class, TypeDefinition.class), "runExpression"),
+            Expression.class, NodeChain.class, MethodContext.class, MethodDefinition.class, TypeDefinition.class),
+                "runExpression"),
+        // Root
         AST_BODY_VISITOR(AstNodes.ROOT, MethodType.methodType(void.class, Object.class, Block.class,
             MethodContext.class, MethodDefinition.class, TypeDefinition.class), "runBody");
 
@@ -99,27 +99,29 @@ public class Detector {
         MethodType wantedType;
         private MethodHandle adapter;
 
-        static boolean runBody(MethodHandle mh, Object det, Node n, NodeChain nc, MethodContext mc, MethodDefinition md, TypeDefinition td) throws Throwable {
-            if(nc == null) {
-                mh.invokeExact(det, (Block)n, mc, md, td);
+        static boolean runBody(MethodHandle mh, Object det, Node n, NodeChain nc, MethodContext mc,
+                MethodDefinition md, TypeDefinition td) throws Throwable {
+            if (nc == null) {
+                mh.invokeExact(det, (Block) n, mc, md, td);
             }
             return true;
         }
-        
-        static boolean runExpression(MethodHandle mh, Object det, Node n, NodeChain nc, MethodContext mc, MethodDefinition md, TypeDefinition td) throws Throwable {
-            if(n instanceof Expression) {
-                return (boolean) mh.invokeExact(det, (Expression)n, nc, mc, md, td);
+
+        static boolean runExpression(MethodHandle mh, Object det, Node n, NodeChain nc, MethodContext mc,
+                MethodDefinition md, TypeDefinition td) throws Throwable {
+            if (n instanceof Expression) {
+                return (boolean) mh.invokeExact(det, (Expression) n, nc, mc, md, td);
             }
             return true;
         }
-        
+
         private VisitorType(AstNodes nodeTypes, MethodType wantedType, String adapter) {
             this.nodeTypes = nodeTypes;
             this.wantedType = wantedType;
-            if(adapter != null) {
+            if (adapter != null) {
                 try {
                     this.adapter = MethodHandles.lookup().findStatic(getClass(), adapter,
-                        BASE_TYPE.insertParameterTypes(0, MethodHandle.class));
+                        NODE_VISITOR_TYPE.insertParameterTypes(0, MethodHandle.class));
                 } catch (NoSuchMethodException | IllegalAccessException e) {
                     throw new InternalError(e);
                 }
@@ -127,18 +129,19 @@ public class Detector {
         }
 
         MethodHandle adapt(MethodHandle mh) {
-            if(adapter == null)
+            if (adapter == null)
                 return mh;
             return adapter.bindTo(mh);
         }
     }
 
-    public Detector(Map<String, WarningType> wts, Class<?> clazz, DatabaseRegistry databases) throws IllegalAccessException {
+    public Detector(Map<String, WarningType> wts, Class<?> clazz, DatabaseRegistry databases)
+            throws IllegalAccessException {
         this.wts = Objects.requireNonNull(wts);
         this.clazz = Objects.requireNonNull(clazz);
         for (Method m : clazz.getMethods()) {
             AstVisitor annotation = m.getAnnotation(AstVisitor.class);
-            if (annotation != null) { 
+            if (annotation != null) {
                 for (VisitorType type : VisitorType.values()) {
                     if (annotation.nodes() == type.nodeTypes) {
                         astVisitors.add(new VisitorInfo(annotation, type, adapt(MethodHandles.publicLookup().unreflect(
@@ -146,13 +149,28 @@ public class Detector {
                     }
                 }
             }
+            if (m.getAnnotation(MethodVisitor.class) != null) {
+                methodVisitors.add(adapt(MethodHandles.publicLookup().unreflect(m), METHOD_VISITOR_TYPE, databases));
+            }
         }
     }
-    
-    <T> T getDatabase(Class<T> clazz, TypeReference tr) {
+
+    MethodHandle bindDatabases(int count, TypeDefinition td, MethodHandle mh) {
+        int curCount = mh.type().parameterCount();
+        if (curCount > count) {
+            Object[] params = new Object[curCount - count];
+            for (int i = count; i < curCount; i++) {
+                params[i - count] = getDatabase(mh.type().parameterType(i), td);
+            }
+            mh = MethodHandles.insertArguments(mh, count, params);
+        }
+        return mh;
+    }
+
+    private <T> T getDatabase(Class<T> clazz, TypeReference tr) {
         Function<TypeReference, ?> fn = dbFetchers.get(clazz);
-        if(fn == null)
-            throw new IllegalArgumentException("Requested unknown database: "+clazz);
+        if (fn == null)
+            throw new IllegalArgumentException("Requested unknown database: " + clazz);
         return clazz.cast(fn.apply(tr));
     }
 
@@ -180,7 +198,7 @@ public class Detector {
                 wantedTypes.add(types[i]);
             }
         }
-        if(wantedType.parameterCount() < wantedTypes.size())
+        if (wantedType.parameterCount() < wantedTypes.size())
             wantedType = MethodType.methodType(wantedType.returnType(), wantedTypes);
         int[] map = new int[wantedTypes.size()];
         Arrays.fill(map, -1);
@@ -189,7 +207,7 @@ public class Detector {
         for (int i = 1; i < types.length; i++) {
             int pos = wantedTypes.indexOf(types[i]);
             if (pos < 0) {
-                throw new IllegalStateException(mh+": Duplicate parameter type "+types[i]);
+                throw new IllegalStateException(mh + ": Duplicate parameter type " + types[i]);
             }
             wantedTypes.set(pos, null);
             map[i] = pos;

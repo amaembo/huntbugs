@@ -21,44 +21,45 @@ import java.util.Map;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
-import com.strobel.decompiler.ast.Node;
-
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
+import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
+import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
-import one.util.huntbugs.util.Nodes;
 
 /**
  * @author lan
  *
  */
-@WarningDefinition(category="BadPractice", name="OptionalReturnNull", maxScore=50)
-@WarningDefinition(category="BadPractice", name="BooleanReturnNull", maxScore=50)
-@WarningDefinition(category="BadPractice", name="ArrayReturnNull", maxScore=40)
+@WarningDefinition(category = "BadPractice", name = "OptionalReturnNull", maxScore = 50)
+@WarningDefinition(category = "BadPractice", name = "BooleanReturnNull", maxScore = 50)
+@WarningDefinition(category = "BadPractice", name = "ArrayReturnNull", maxScore = 40)
 public class ReturnNull {
     private static final Map<String, String> TYPE_TO_WARNING = new HashMap<>();
-    
+
     static {
         TYPE_TO_WARNING.put("java/util/Optional", "OptionalReturnNull");
         TYPE_TO_WARNING.put("com/google/common/base/Optional", "OptionalReturnNull");
         TYPE_TO_WARNING.put("java/lang/Boolean", "BooleanReturnNull");
     }
-    
-    @AstVisitor
-    public boolean visit(Node node, NodeChain nc, MethodContext mc, MethodDefinition md) {
-        if(nc == null) {
-            return md.getReturnType().isArray() || TYPE_TO_WARNING.containsKey(md.getReturnType().getInternalName());
-        }
+
+    @MethodVisitor
+    public boolean checkMethod(MethodDefinition md) {
+        return md.getReturnType().isArray() || TYPE_TO_WARNING.containsKey(md.getReturnType().getInternalName());
+    }
+
+    @AstVisitor(nodes = AstNodes.EXPRESSIONS)
+    public boolean visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md) {
         // TODO: support lambdas properly
-        if(nc.getLambdaMethod() != null)
+        if (nc.getLambdaMethod() != null)
             return true;
-        if(Nodes.isOp(node, AstCode.Return)) {
-            Expression expr = (Expression)node;
+        if (expr.getCode() == AstCode.Return) {
             Expression child = ValuesFlow.getSource(expr.getArguments().get(0));
-            if(child.getCode() == AstCode.AConstNull) {
-                String warningType = md.getReturnType().isArray() ? "ArrayReturnNull" : TYPE_TO_WARNING.get(md.getReturnType().getInternalName());
+            if (child.getCode() == AstCode.AConstNull) {
+                String warningType = md.getReturnType().isArray() ? "ArrayReturnNull" : TYPE_TO_WARNING.get(md
+                        .getReturnType().getInternalName());
                 mc.report(warningType, 0, expr.getArguments().get(0));
             }
         }

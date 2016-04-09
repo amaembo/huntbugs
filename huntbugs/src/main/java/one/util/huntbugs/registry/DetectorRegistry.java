@@ -163,6 +163,9 @@ public class DetectorRegistry {
         for (MethodDefinition md : type.getDeclaredMethods()) {
             MethodAsserter ma = MethodAsserter.forMethod(md);
 
+            MethodContext[] mcs = Stream.of(ccs).flatMap(cc -> cc.forMethod(md)).peek(mc -> mc.setMethodAsserter(ma))
+                    .filter(MethodContext::visitMethod).toArray(MethodContext[]::new);
+
             MethodBody body = md.getBody();
             if (body != null) {
                 if(body.getCodeSize() > ctx.getOptions().maxMethodSize) {
@@ -181,9 +184,6 @@ public class DetectorRegistry {
                     } catch (Throwable t) {
                         ctx.addError(new ErrorMessage(null, type.getFullName(), md.getFullName(), md.getSignature(), -1, t));
                     }
-    
-                    MethodContext[] mcs = Stream.of(ccs).flatMap(cc -> cc.forMethod(md)).peek(
-                        mc -> mc.setMethodAsserter(ma)).toArray(MethodContext[]::new);
     
                     visitChildren(methodAst, null, mcs, md);
     

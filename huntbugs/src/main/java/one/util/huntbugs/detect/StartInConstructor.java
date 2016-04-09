@@ -28,6 +28,7 @@ import one.util.huntbugs.db.Hierarchy.TypeHierarchy;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
+import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Types;
@@ -36,23 +37,27 @@ import one.util.huntbugs.util.Types;
  * @author lan
  *
  */
-@WarningDefinition(category="Multithreading", name="StartInConstructor", maxScore=50)
+@WarningDefinition(category = "Multithreading", name = "StartInConstructor", maxScore = 50)
 public class StartInConstructor {
-    @AstVisitor(nodes=AstNodes.EXPRESSIONS, methodName="<init>")
-    public boolean visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md, TypeDefinition td, TypeHierarchy th) {
-        if (!td.isPublic() || td.isFinal() || md.isPrivate() || md.isPackagePrivate())
-            return false;
-        if(expr.getCode() == AstCode.InvokeVirtual) {
+    @MethodVisitor
+    public boolean checkMethod(MethodDefinition md, TypeDefinition td) {
+        return td.isPublic() && !td.isFinal() && !md.isPrivate() && !md.isPackagePrivate();
+    }
+
+    @AstVisitor(nodes = AstNodes.EXPRESSIONS, methodName = "<init>")
+    public boolean visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md, TypeDefinition td,
+            TypeHierarchy th) {
+        if (expr.getCode() == AstCode.InvokeVirtual) {
             MethodReference mr = (MethodReference) expr.getOperand();
-            if(mr.getName().equals("start") && mr.getSignature().equals("()V")) {
-                if(Types.isInstance(mr.getDeclaringType(), "java/lang/Thread")) {
+            if (mr.getName().equals("start") && mr.getSignature().equals("()V")) {
+                if (Types.isInstance(mr.getDeclaringType(), "java/lang/Thread")) {
                     int priority = 0;
-                    if(!th.hasSubClasses())
+                    if (!th.hasSubClasses())
                         priority += 10;
-                    else if(!th.hasSubClassesOutOfPackage())
+                    else if (!th.hasSubClassesOutOfPackage())
                         priority += 5;
                     List<Node> body = nc.getRoot().getBody();
-                    if(body.get(body.size()-1) == expr)
+                    if (body.get(body.size() - 1) == expr)
                         priority += 10;
                     mc.report("StartInConstructor", priority, expr);
                 }

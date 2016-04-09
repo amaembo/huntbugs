@@ -145,6 +145,20 @@ public class MethodContext {
         }
         return OffsetToLineNumberConverter.NOOP_CONVERTER;
     }
+    
+    boolean visitMethod() {
+        for(MethodHandle mh : detector.methodVisitors) {
+            try {
+                if (!(boolean) detector.bindDatabases(Detector.METHOD_VISITOR_TYPE.parameterCount(), cc.type, mh)
+                        .invoke(det, this, md, cc.type)) {
+                    return false;
+                }
+            } catch (Throwable e) {
+                ctx.addError(new ErrorMessage(detector, md, -1, e));
+            }
+        }
+        return true;
+    }
 
     boolean visitNode(Node node, NodeChain parents, MethodDefinition realMethod) {
         this.realMethod = realMethod;
