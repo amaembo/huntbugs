@@ -18,6 +18,7 @@ package one.util.huntbugs.util;
 import java.util.Objects;
 
 import com.strobel.assembler.metadata.TypeReference;
+import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.CatchBlock;
 import com.strobel.decompiler.ast.Node;
 
@@ -49,12 +50,12 @@ public class NodeChain {
         return cur + " -> "+parent;
     }
     
-    public Node getRoot() {
+    public Block getRoot() {
         NodeChain nc = this;
         while(nc.getParent() != null) {
             nc = nc.getParent();
         }
-        return nc.getNode();
+        return (Block) nc.getNode();
     }
     
     public boolean isSynchronized() {

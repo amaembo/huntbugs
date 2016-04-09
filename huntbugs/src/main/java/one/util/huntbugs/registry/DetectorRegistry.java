@@ -142,6 +142,9 @@ public class DetectorRegistry {
     
     public void populateDatabases(TypeDefinition type) {
         databases.visitType(type);
+        for (TypeDefinition subType : type.getDeclaredTypes()) {
+            populateDatabases(subType);
+        }
     }
 
     public void analyzeClass(TypeDefinition type) {

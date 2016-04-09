@@ -26,6 +26,7 @@ import com.strobel.assembler.metadata.TypeReference;
 import one.util.huntbugs.registry.AbstractTypeDatabase;
 import one.util.huntbugs.registry.anno.TypeDatabase;
 import one.util.huntbugs.registry.anno.TypeDatabaseItem;
+import one.util.huntbugs.util.Types;
 
 /**
  * @author lan
@@ -88,6 +89,14 @@ public class Hierarchy extends AbstractTypeDatabase<Hierarchy.TypeHierarchy> {
         @Override
         public String toString() {
             return internalName;
+        }
+
+        public boolean hasSubClasses() {
+            return !subClasses.isEmpty();
+        }
+        
+        public boolean hasSubClassesOutOfPackage() {
+            return !subClasses.stream().allMatch(sc -> Types.samePackage(internalName, sc.getInternalName()));
         }
     }
 }

@@ -93,5 +93,11 @@ public class Types {
     public static boolean isSideEffectFreeType(TypeReference type) {
         return SIDE_EFFECT_FREE_TYPES.contains(type.getInternalName());
     }
-
+    
+    public static boolean samePackage(String internalName1, String internalName2) {
+        int pos = internalName1.lastIndexOf('/');
+        if(pos == -1)
+            return internalName2.indexOf('/') == 1;
+        return internalName2.startsWith(internalName1.substring(0, pos+1));
+    }
 }
