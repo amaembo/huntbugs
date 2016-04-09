@@ -27,15 +27,11 @@ import one.util.huntbugs.util.Types;
  * @author lan
  *
  */
-@WarningDefinition(category="CodeStyle", name="BadNameOfMethod", maxScore=40)
+@WarningDefinition(category="CodeStyle", name="BadNameOfMethod", maxScore=30)
 public class Naming {
-    int count = 0;
-    
     @MethodVisitor
     public void visitMethod(MethodDefinition md, TypeDefinition td, MethodContext mc) {
         if(badMethodName(md.getName()) && !Types.isInstance(td, "org/eclipse/osgi/util/NLS")) {
-            if(++count > 3)
-                return;
             int priority = 0;
             if(!td.isPublic())
                 priority += 20;

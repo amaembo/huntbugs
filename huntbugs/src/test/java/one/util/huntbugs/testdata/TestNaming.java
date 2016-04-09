@@ -28,30 +28,30 @@ public class TestNaming {
         System.out.println();
     }
 
-    @AssertWarning(type="BadNameOfMethod", minScore=38)
+    @AssertWarning(type="BadNameOfMethod", minScore=28)
     public void Test() {
         System.out.println();
     }
     
-    @AssertWarning(type="BadNameOfMethod", minScore=35, maxScore=38)
+    @AssertWarning(type="BadNameOfMethod", minScore=25, maxScore=28)
     protected void Test2() {
         System.out.println();
     }
     
-    @AssertWarning(type="BadNameOfMethod", minScore=32, maxScore=35)
+    @AssertWarning(type="BadNameOfMethod", minScore=22, maxScore=25)
     void Test3() {
         System.out.println();
     }
     
     public static class Class1 {
-        @AssertWarning(type="BadNameOfMethod", minScore=25, maxScore=30)
+        @AssertWarning(type="BadNameOfMethod", minScore=15, maxScore=20)
         private void Test4() {
             System.out.println();
         }
     }
     
     static class Class2 {
-        @AssertWarning(type="BadNameOfMethod", minScore=15, maxScore=20)
+        @AssertWarning(type="BadNameOfMethod", minScore=5, maxScore=10)
         private void Test5() {
             System.out.println();
         }
