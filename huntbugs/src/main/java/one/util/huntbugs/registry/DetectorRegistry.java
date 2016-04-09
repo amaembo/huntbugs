@@ -29,12 +29,14 @@ import java.util.stream.Stream;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.MethodBody;
 import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.MethodHandle;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.DecompilerContext;
 import com.strobel.decompiler.ast.AstBuilder;
 import com.strobel.decompiler.ast.AstOptimizationStep;
 import com.strobel.decompiler.ast.AstOptimizer;
 import com.strobel.decompiler.ast.Block;
+import com.strobel.decompiler.ast.Lambda;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.analysis.Context;
@@ -124,15 +126,22 @@ public class DetectorRegistry {
         });
     }
 
-    private void visitChildren(Node node, NodeChain parents, MethodContext[] mcs) {
+    private void visitChildren(Node node, NodeChain parents, MethodContext[] mcs, MethodDefinition realMethod) {
         for (MethodContext mc : mcs) {
-            mc.visitNode(node, parents);
+            mc.visitNode(node, parents, realMethod);
+        }
+        if(node instanceof Lambda) {
+            Object arg = ((Lambda)node).getCallSite().getBootstrapArguments().get(1);
+            if(arg instanceof MethodHandle) {
+                MethodDefinition lm = ((MethodHandle) arg).getMethod().resolve();
+                if(lm != null) realMethod = lm;
+            }
         }
         List<Node> children = node.getChildren();
         if (!children.isEmpty()) {
             NodeChain newChain = new NodeChain(parents, node);
             for (Node child : children)
-                visitChildren(child, newChain, mcs);
+                visitChildren(child, newChain, mcs, realMethod);
         }
     }
     
@@ -176,7 +185,7 @@ public class DetectorRegistry {
                     MethodContext[] mcs = Stream.of(ccs).flatMap(cc -> cc.forMethod(md)).peek(
                         mc -> mc.setMethodAsserter(ma)).toArray(MethodContext[]::new);
     
-                    visitChildren(methodAst, null, mcs);
+                    visitChildren(methodAst, null, mcs, md);
     
                     for (MethodContext mc : mcs) {
                         mc.finalizeMethod();

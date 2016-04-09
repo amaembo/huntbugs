@@ -103,6 +103,7 @@ public class MethodContext {
     private MethodAsserter ma;
     private WarningInfo lastWarning;
     private final List<MethodHandle> astVisitors;
+    private MethodDefinition realMethod;
 
     MethodContext(Context ctx, ClassContext classCtx, MethodDefinition md) {
         this.cc = classCtx;
@@ -123,14 +124,19 @@ public class MethodContext {
 
     // TODO: fix line numbers in lambdas
     int getLineNumber(int offset) {
-        if (ltc == null) {
-            ltc = createConverter();
-        }
-        int line = ltc.getLineForOffset(offset);
+        int line = getConverter().getLineForOffset(offset);
         return line == OffsetToLineNumberConverter.UNKNOWN_LINE_NUMBER ? -1 : line;
     }
+    
+    private OffsetToLineNumberConverter getConverter() {
+        if(realMethod != md)
+            return createConverter(realMethod);
+        if(ltc == null) 
+            ltc = createConverter(md);
+        return ltc;
+    }
 
-    private OffsetToLineNumberConverter createConverter() {
+    private static OffsetToLineNumberConverter createConverter(MethodDefinition md) {
         for (SourceAttribute sa : md.getSourceAttributes()) {
             if (sa instanceof LineNumberTableAttribute) {
                 return new LineNumberTableConverter((LineNumberTableAttribute) sa);
@@ -139,7 +145,8 @@ public class MethodContext {
         return OffsetToLineNumberConverter.NOOP_CONVERTER;
     }
 
-    void visitNode(Node node, NodeChain parents) {
+    void visitNode(Node node, NodeChain parents, MethodDefinition realMethod) {
+        this.realMethod = realMethod;
         for (Iterator<MethodHandle> it = astVisitors.iterator(); it.hasNext();) {
             try {
                 MethodHandle mh = it.next();
