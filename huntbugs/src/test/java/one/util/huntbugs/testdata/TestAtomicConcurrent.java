@@ -36,7 +36,23 @@ public class TestAtomicConcurrent {
     }
 
     @AssertWarning(type="NonAtomicOperationOnConcurrentMap")
+    public void testAtomic2(String str) {
+        Integer oldVal = chm.get(str);
+        if(oldVal == null) {
+            chm.put(str, 1);
+        } else {
+            chm.put(str, 0);
+        }
+    }
+    
+    @AssertWarning(type="NonAtomicOperationOnConcurrentMap")
     public void testAtomicUpdate(String str) {
         chm.put(str, chm.get(str) + 1);
+    }
+
+    @AssertWarning(type="NonAtomicOperationOnConcurrentMap")
+    public void testAtomicUpdate2(String str) {
+        Integer res = chm.get(str);
+        chm.put(str, res + 1);
     }
 }

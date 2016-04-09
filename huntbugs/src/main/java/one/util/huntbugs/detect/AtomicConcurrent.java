@@ -49,12 +49,19 @@ public class AtomicConcurrent {
                         if (Nodes.findExpression(cond, child -> isGetOrContains(self, key, child)) != null) {
                             mc.report("NonAtomicOperationOnConcurrentMap", 0, self);
                             return;
+                        } else if (Nodes.findExpressionWithSources(cond, child -> isGetOrContains(self, key, child)) != null) {
+                            mc.report("NonAtomicOperationOnConcurrentMap", 10, self);
+                            return;
                         }
                     }
                     nc = nc.getParent();
                 }
-                if(Nodes.findExpression(expr.getArguments().get(2), child -> isGetOrContains(self, key, child)) != null) {
+                if (Nodes.findExpression(expr.getArguments().get(2), child -> isGetOrContains(self, key, child)) != null) {
                     mc.report("NonAtomicOperationOnConcurrentMap", 0, self);
+                    return;
+                } else if (Nodes.findExpressionWithSources(expr.getArguments().get(2), child -> isGetOrContains(self,
+                    key, child)) != null) {
+                    mc.report("NonAtomicOperationOnConcurrentMap", 10, self);
                     return;
                 }
             }

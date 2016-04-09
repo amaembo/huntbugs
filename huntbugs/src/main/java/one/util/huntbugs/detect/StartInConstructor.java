@@ -52,10 +52,12 @@ public class StartInConstructor {
             if (mr.getName().equals("start") && mr.getSignature().equals("()V")) {
                 if (Types.isInstance(mr.getDeclaringType(), "java/lang/Thread")) {
                     int priority = 0;
-                    if (!th.hasSubClasses())
-                        priority += 10;
-                    else if (!th.hasSubClassesOutOfPackage())
-                        priority += 5;
+                    if (th != null) {
+                        if (!th.hasSubClasses())
+                            priority += 10;
+                        else if (!th.hasSubClassesOutOfPackage())
+                            priority += 5;
+                    }
                     List<Node> body = nc.getRoot().getBody();
                     if (body.get(body.size() - 1) == expr)
                         priority += 10;
