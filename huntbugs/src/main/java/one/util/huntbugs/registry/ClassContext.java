@@ -17,8 +17,6 @@ package one.util.huntbugs.registry;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
-
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.warning.WarningAnnotation;
 
@@ -66,9 +64,7 @@ public class ClassContext {
         return null;
     }
 
-    public Stream<MethodContext> forMethod(MethodDefinition md) {
-        if(detector.astVisitors.isEmpty())
-            return null;
-        return Stream.of(new MethodContext(ctx, this, md));
+    public MethodContext forMethod(MethodDefinition md) {
+        return new MethodContext(ctx, this, md);
     }
 }

@@ -126,8 +126,8 @@ public class DetectorRegistry {
         });
     }
 
-    private void visitChildren(Node node, NodeChain parents, MethodContext[] mcs, MethodDefinition realMethod) {
-        for (MethodContext mc : mcs) {
+    private void visitChildren(Node node, NodeChain parents, List<MethodContext> list, MethodDefinition realMethod) {
+        for (MethodContext mc : list) {
             mc.visitNode(node, parents, realMethod);
         }
         if(node instanceof Lambda) {
@@ -141,7 +141,7 @@ public class DetectorRegistry {
         if (!children.isEmpty()) {
             NodeChain newChain = new NodeChain(parents, node);
             for (Node child : children)
-                visitChildren(child, newChain, mcs, realMethod);
+                visitChildren(child, newChain, list, realMethod);
         }
     }
     
@@ -163,8 +163,8 @@ public class DetectorRegistry {
         for (MethodDefinition md : type.getDeclaredMethods()) {
             MethodAsserter ma = MethodAsserter.forMethod(md);
 
-            MethodContext[] mcs = Stream.of(ccs).flatMap(cc -> cc.forMethod(md)).peek(mc -> mc.setMethodAsserter(ma))
-                    .filter(MethodContext::visitMethod).toArray(MethodContext[]::new);
+            Map<Boolean, List<MethodContext>> mcs = Stream.of(ccs).map(cc -> cc.forMethod(md)).peek(mc -> mc.setMethodAsserter(ma))
+                    .collect(Collectors.partitioningBy(MethodContext::visitMethod));
 
             MethodBody body = md.getBody();
             if (body != null) {
@@ -185,12 +185,14 @@ public class DetectorRegistry {
                         ctx.addError(new ErrorMessage(null, type.getFullName(), md.getFullName(), md.getSignature(), -1, t));
                     }
     
-                    visitChildren(methodAst, null, mcs, md);
-    
-                    for (MethodContext mc : mcs) {
-                        mc.finalizeMethod();
-                    }
+                    visitChildren(methodAst, null, mcs.get(true), md);
                 }
+            }
+            for (MethodContext mc : mcs.get(true)) {
+                mc.finalizeMethod();
+            }
+            for (MethodContext mc : mcs.get(false)) {
+                mc.finalizeMethod();
             }
             ma.checkFinally(new MethodContext(ctx, null, md));
         }

@@ -107,7 +107,7 @@ public class MethodContext {
 
     MethodContext(Context ctx, ClassContext classCtx, MethodDefinition md) {
         this.cc = classCtx;
-        this.md = md;
+        this.md = this.realMethod = md;
         this.ctx = ctx;
         this.detector = classCtx == null ? null : classCtx.detector;
         this.det = classCtx == null ? null : classCtx.det;
@@ -157,7 +157,7 @@ public class MethodContext {
                 ctx.addError(new ErrorMessage(detector, md, -1, e));
             }
         }
-        return true;
+        return !astVisitors.isEmpty();
     }
 
     boolean visitNode(Node node, NodeChain parents, MethodDefinition realMethod) {
@@ -188,6 +188,10 @@ public class MethodContext {
             annot = Collections.singletonList(WarningAnnotation.forMethod(md));
         }
         return annot;
+    }
+    
+    public void report(String warning, int priority, WarningAnnotation<?>... annotations) {
+        report(warning, priority, null, annotations);
     }
 
     public void report(String warning, int priority, Node node, WarningAnnotation<?>... annotations) {
@@ -236,6 +240,9 @@ public class MethodContext {
     }
 
     public Location getLocation(Node node) {
+        if(node == null) {
+            return new Location(0, getLineNumber(0));
+        }
         int offset = Expression.MYSTERY_OFFSET;
         if (node instanceof Expression) {
             Expression expr = (Expression) node;
