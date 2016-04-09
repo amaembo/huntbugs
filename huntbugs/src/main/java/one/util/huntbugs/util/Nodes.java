@@ -272,6 +272,17 @@ public class Nodes {
 	    return null;
 	}
 
+	public static Expression findExpression(Expression node, Predicate<Expression> predicate) {
+	    if(predicate.test(node))
+	        return node;
+	    for(Expression child : node.getArguments()) {
+	        Expression result = findExpression(child, predicate);
+	        if(result != null)
+	            return result;
+	    }
+	    return null;
+	}
+	
     public static boolean isEmptyOrBreak(Block block) {
         List<Node> body = block.getBody();
         if (body.isEmpty())

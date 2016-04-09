@@ -67,6 +67,7 @@ public interface Repository {
         return new Repository() {
             @Override
             public void visit(String rootPackage, RepositoryVisitor visitor) {
+                // nothing to do
             }
             
             @Override

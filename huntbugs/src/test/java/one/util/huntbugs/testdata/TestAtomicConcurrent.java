@@ -15,28 +15,28 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import one.util.huntbugs.registry.anno.AssertWarning;
 
 /**
  * @author lan
  *
  */
-public class TestUnnecessaryInstanceOf {
-    @AssertWarning(type="UnnecessaryInstanceOfInferred")
-    void testInferred(int x) {
-        Object a = 1.0;
-        if(x > 2) a = -2;
-        if(a instanceof Number) {
-            System.out.println(a);
+public class TestAtomicConcurrent {
+    ConcurrentHashMap<String, Integer> chm = new ConcurrentHashMap<>();
+    
+    @AssertWarning(type="NonAtomicOperationOnConcurrentMap")
+    public void testAtomic(String str) {
+        if(!chm.containsKey(str)) {
+            chm.put(str, 1);
+        } else {
+            chm.put(str, 0);
         }
     }
 
-    @SuppressWarnings("cast")
-    @AssertWarning(type="UnnecessaryInstanceOf")
-    void testSimple() {
-		String a = "test";
-		if (a instanceof CharSequence) {
-			System.out.println(a);
-		}
+    @AssertWarning(type="NonAtomicOperationOnConcurrentMap")
+    public void testAtomicUpdate(String str) {
+        chm.put(str, chm.get(str) + 1);
     }
 }

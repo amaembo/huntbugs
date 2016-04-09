@@ -36,7 +36,7 @@ public abstract class AbstractTypeDatabase<E> {
     }
     
     protected void visitType(TypeDefinition td) {
-        
+        // Default implementation is empty, should be subclasses
     }
     
     protected E getOrCreate(TypeReference ref) {

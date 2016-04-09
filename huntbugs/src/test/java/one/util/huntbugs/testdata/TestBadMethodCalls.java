@@ -31,6 +31,7 @@ public class TestBadMethodCalls {
         System.exit(0);
     }
 
+    @SuppressWarnings("deprecation")
     @AssertWarning(type="SystemRunFinalizersOnExit")
     public void runFinalizers() {
         System.runFinalizersOnExit(true);
@@ -87,11 +88,13 @@ public class TestBadMethodCalls {
         System.exit(0);
 	}
 
+    @SuppressWarnings("deprecation")
     @AssertWarning(type="ThreadStopThrowable")
     public void threadStopThrowable() {
         Thread.currentThread().stop(new Exception());
     }
     
+    @SuppressWarnings("deprecation")
     @AssertNoWarning(type="ThreadStopThrowable")
     public void threadStop() {
         Thread.currentThread().stop();
