@@ -18,13 +18,16 @@ package one.util.huntbugs.detect;
 import java.math.BigInteger;
 
 import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation;
 
@@ -33,9 +36,11 @@ import one.util.huntbugs.warning.WarningAnnotation;
  *
  */
 @WarningDefinition(category = "Correctness", name = "IntegerMultiplicationPromotedToLong", maxScore = 65)
+@WarningDefinition(category = "Correctness", name = "IntegerDivisionPromotedToFloat", maxScore = 65)
+@WarningDefinition(category = "Correctness", name = "IntegerPromotionInCeilOrRound", maxScore = 65)
 public class NumericPromotion {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
-    public void visit(Expression expr, MethodContext mc, MethodDefinition md) {
+    public void visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md) {
         if (expr.getCode() == AstCode.I2L) {
             Expression arg = expr.getArguments().get(0);
             if (arg.getCode() == AstCode.Mul) {
@@ -62,6 +67,26 @@ public class NumericPromotion {
                 } catch (ArithmeticException e) {
                     mc.report("IntegerMultiplicationPromotedToLong", priority, expr, WarningAnnotation.forNumber(res));
                 }
+            }
+        }
+        if (expr.getCode() == AstCode.I2F || expr.getCode() == AstCode.I2D || expr.getCode() == AstCode.L2F || expr.getCode() == AstCode.L2D) {
+            if(Nodes.isOp(nc.getNode(), AstCode.InvokeStatic)) {
+                MethodReference mr = (MethodReference) ((Expression)nc.getNode()).getOperand();
+                if(mr.getDeclaringType().getInternalName().equals("java/lang/Math") && (mr.getName().equals("ceil") || mr.getName().equals("round"))) {
+                    mc.report("IntegerPromotionInCeilOrRound", 0, nc.getNode());
+                    return;
+                }
+            }
+            Expression arg = ValuesFlow.getSource(expr.getArguments().get(0));
+            if(arg.getCode() == AstCode.Div) {
+                Object constant = Nodes.getConstant(arg.getArguments().get(1));
+                int priority = 0;
+                if(constant instanceof Number) {
+                    long val = Math.abs(((Number)constant).longValue());
+                    if(val >= 2 && val <= 4)
+                        priority -= 10;
+                }
+                mc.report("IntegerDivisionPromotedToFloat", priority, expr);
             }
         }
     }

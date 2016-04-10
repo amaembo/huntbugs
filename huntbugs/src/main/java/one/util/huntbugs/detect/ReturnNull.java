@@ -19,8 +19,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
+
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
@@ -51,7 +53,7 @@ public class ReturnNull {
     }
 
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
-    public boolean visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md) {
+    public boolean visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md, TypeDefinition td) {
         // TODO: support lambdas properly
         if (nc.getLambdaMethod() != null)
             return true;
@@ -60,7 +62,12 @@ public class ReturnNull {
             if (child.getCode() == AstCode.AConstNull) {
                 String warningType = md.getReturnType().isArray() ? "ArrayReturnNull" : TYPE_TO_WARNING.get(md
                         .getReturnType().getInternalName());
-                mc.report(warningType, 0, expr.getArguments().get(0));
+                int priority = 0;
+                if(!td.isPublic() || md.isPrivate() || md.isPackagePrivate())
+                    priority = 20;
+                else if(md.isProtected())
+                    priority = 10;
+                mc.report(warningType, priority, expr.getArguments().get(0));
             }
         }
         return true;

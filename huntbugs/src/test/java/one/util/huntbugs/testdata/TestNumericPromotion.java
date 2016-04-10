@@ -23,38 +23,53 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestNumericPromotion {
-    @AssertWarning(type="IntegerMultiplicationPromotedToLong", minScore=65)
+    @AssertWarning(type = "IntegerMultiplicationPromotedToLong", minScore = 65)
     public long testMultiplication(int num) {
         return num * 365 * 86400 * 1000;
     }
 
-    @AssertWarning(type="IntegerMultiplicationPromotedToLong", minScore=55, maxScore=60)
+    @AssertWarning(type = "IntegerMultiplicationPromotedToLong", minScore = 55, maxScore = 60)
     public long testMultiplication2(int num) {
         return num * 365 * 86400;
     }
-    
-    @AssertWarning(type="IntegerMultiplicationPromotedToLong", minScore=45, maxScore=50)
+
+    @AssertWarning(type = "IntegerMultiplicationPromotedToLong", minScore = 45, maxScore = 50)
     public long testMultiplication3(int num) {
         return num * 86400;
     }
-    
-    @AssertWarning(type="IntegerMultiplicationPromotedToLong", minScore=35, maxScore=40)
+
+    @AssertWarning(type = "IntegerMultiplicationPromotedToLong", minScore = 35, maxScore = 40)
     public long testMultiplication4(int num) {
         return num * 365;
     }
-    
-    @AssertWarning(type="IntegerMultiplicationPromotedToLong", minScore=25, maxScore=30)
+
+    @AssertWarning(type = "IntegerMultiplicationPromotedToLong", minScore = 25, maxScore = 30)
     public long testMultiplication5(int num) {
         return num * 60;
     }
-    
-    @AssertWarning(type="IntegerMultiplicationPromotedToLong", minScore=15, maxScore=20)
+
+    @AssertWarning(type = "IntegerMultiplicationPromotedToLong", minScore = 15, maxScore = 20)
     public long testMultiplication6(int num) {
         return num * 2;
     }
-    
-    @AssertNoWarning(type="IntegerMultiplicationPromotedToLong")
+
+    @AssertNoWarning(type = "IntegerMultiplicationPromotedToLong")
     public long testMultiplicationTwoNum(int num, int num2) {
         return num * num2;
+    }
+
+    @AssertWarning(type = "IntegerDivisionPromotedToFloat")
+    public double divide(int x, int y) {
+        return x / y;
+    }
+    
+    @AssertWarning(type = "IntegerDivisionPromotedToFloat")
+    public float divideFloat(int x, int y) {
+        return x / y;
+    }
+    
+    @AssertNoWarning(type = "*")
+    public float divideFloatOk(int x, int y) {
+        return (float)x / y;
     }
 }
