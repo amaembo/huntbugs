@@ -20,6 +20,7 @@ import java.util.Locale;
 
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
@@ -44,8 +45,9 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "RedundantCode", name = "UselessThread", maxScore = 60)
 @WarningDefinition(category = "Correctness", name = "BigDecimalConstructedFromDouble", maxScore = 50)
 @WarningDefinition(category = "Correctness", name = "BigDecimalConstructedFromInfiniteOrNaN", maxScore = 70)
+@WarningDefinition(category = "Correctness", name = "ArrayToString", maxScore = 60)
 public class BadMethodCalls {
-    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
+    @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression node, NodeChain nc, MethodContext ctx, MethodDefinition curMethod) {
         if (Nodes.isInvoke(node) && node.getCode() != AstCode.InvokeDynamic) {
             check(node, (MethodReference) node.getOperand(), nc, ctx, curMethod);
@@ -129,7 +131,24 @@ public class BadMethodCalls {
             ctx.report("ThreadStopThrowable", 0, node);
         } else if (typeName.equals("java/net/URL") && (name.equals("equals") || name.equals("hashCode"))) {
             ctx.report("URLBlockingMethod", 0, node);
+        } else if (isToStringCall(typeName, name, signature)) {
+            Expression lastArg = Nodes.getChild(node, node.getArguments().size() - 1);
+            TypeReference type = lastArg.getInferredType();
+            if (type != null && type.isArray()) {
+                ctx.report("ArrayToString", 0, lastArg);
+            }
         }
+    }
+
+    private boolean isToStringCall(String typeName, String name, String signature) {
+        if (name.equals("toString") && signature.equals("()Ljava/lang/String;"))
+            return true;
+        if (name.equals("append") && typeName.startsWith("java/lang/StringBu")
+            && signature.startsWith("(Ljava/lang/Object;)Ljava/lang/StringBu"))
+            return true;
+        if ((name.equals("print") || name.equals("println")) && signature.equals("(Ljava/lang/Object;)V"))
+            return true;
+        return false;
     }
 
     private static boolean isMain(MethodDefinition curMethod) {

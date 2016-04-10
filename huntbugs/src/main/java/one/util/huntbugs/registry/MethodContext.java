@@ -54,15 +54,15 @@ import com.strobel.decompiler.languages.java.OffsetToLineNumberConverter;
 public class MethodContext {
     static class WarningInfo {
         private final WarningType type;
-        private int score;
+        private int priority;
         private final List<WarningAnnotation<?>> annotations;
         private Location bestLocation;
         private final List<Location> locations = new ArrayList<>();
 
-        public WarningInfo(WarningType type, int score, Location loc, List<WarningAnnotation<?>> annotations) {
+        public WarningInfo(WarningType type, int priority, Location loc, List<WarningAnnotation<?>> annotations) {
             super();
             this.type = type;
-            this.score = score;
+            this.priority = priority;
             this.annotations = annotations;
             this.bestLocation = loc;
         }
@@ -71,8 +71,8 @@ public class MethodContext {
             if (!other.type.equals(type) || !other.annotations.equals(annotations)) {
                 return false;
             }
-            if (other.score > score) {
-                this.score = other.score;
+            if (other.priority < priority) {
+                this.priority = other.priority;
                 if (bestLocation != null)
                     this.locations.add(bestLocation);
                 bestLocation = other.bestLocation;
@@ -89,7 +89,7 @@ public class MethodContext {
             if (bestLocation != null)
                 annotations.add(WarningAnnotation.forLocation(bestLocation));
             locations.stream().map(WarningAnnotation::forAnotherInstance).forEach(annotations::add);
-            return new Warning(type, score, annotations);
+            return new Warning(type, priority, annotations);
         }
     }
 

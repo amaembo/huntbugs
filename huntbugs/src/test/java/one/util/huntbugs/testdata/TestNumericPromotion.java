@@ -64,6 +64,12 @@ public class TestNumericPromotion {
     }
     
     @AssertWarning(type = "IntegerDivisionPromotedToFloat")
+    public double divideByTwo(double x, double y) {
+        double res = (int)(x - y)/2;
+        return res;
+    }
+    
+    @AssertWarning(type = "IntegerDivisionPromotedToFloat")
     public float divideFloat(int x, int y) {
         return x / y;
     }

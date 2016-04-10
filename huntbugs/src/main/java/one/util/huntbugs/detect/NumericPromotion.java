@@ -84,7 +84,7 @@ public class NumericPromotion {
                 if(constant instanceof Number) {
                     long val = Math.abs(((Number)constant).longValue());
                     if(val >= 2 && val <= 4)
-                        priority -= 10;
+                        priority += 10;
                 }
                 mc.report("IntegerDivisionPromotedToFloat", priority, expr);
             }

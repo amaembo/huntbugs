@@ -146,4 +146,24 @@ public class TestBadMethodCalls {
     public boolean urlEquals(URL url1, URL url2) {
         return url1.equals(url2);
     }
+    
+    @AssertWarning(type="ArrayToString")
+    public String format(String prefix, int[] arr) {
+        return prefix+":"+arr;
+    }
+    
+    @AssertWarning(type="ArrayToString")
+    public String format2(String suffix, int[] arr) {
+        return arr+":"+suffix;
+    }
+    
+    @AssertWarning(type="ArrayToString")
+    public String format3(int[] arr) {
+        return arr.toString();
+    }
+    
+    @AssertNoWarning(type="ArrayToString")
+    public String format4(String arr) {
+        return arr+arr;
+    }
 }
