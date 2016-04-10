@@ -88,7 +88,7 @@ public class DatabaseRegistry {
                 + " and " + TypeDatabaseItem.class.getSimpleName() + ". Remove one of the annotations!");
         }
         if (td == null && tdi == null) {
-            throw new InternalError("Unknown database requested: " + clazz + " (not annotated as "
+            throw new IllegalStateException("Unknown database requested: " + clazz + " (not annotated as "
                 + TypeDatabase.class.getSimpleName() + " or " + TypeDatabaseItem.class.getSimpleName()+")");
         }
         if (td != null) {
