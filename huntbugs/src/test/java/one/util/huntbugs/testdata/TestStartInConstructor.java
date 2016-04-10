@@ -29,6 +29,17 @@ public class TestStartInConstructor {
         System.out.println("Started!");
     }
     
+    @AssertWarning(type="StartInConstructor", minScore=45, maxScore=55)
+    public TestStartInConstructor(String s, int x) {
+        new Thread() {
+            @Override
+            public void run() {
+                System.out.println("Thread!");
+            }
+        }.start();
+        System.out.println("Started!");
+    }
+    
     @AssertWarning(type="StartInConstructor", minScore=35, maxScore=45)
     public TestStartInConstructor(int x) {
         new Thread(() -> System.out.println()).start();
