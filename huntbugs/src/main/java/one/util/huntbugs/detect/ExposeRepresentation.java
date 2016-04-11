@@ -37,74 +37,75 @@ import one.util.huntbugs.util.Nodes;
  * @author lan
  *
  */
-@WarningDefinition(category="MaliciousCode", name="ExposeMutableFieldViaParameter", maxScore=45)
-@WarningDefinition(category="MaliciousCode", name="ExposeMutableStaticFieldViaParameter", maxScore=55)
+@WarningDefinition(category = "MaliciousCode", name = "ExposeMutableFieldViaParameter", maxScore = 45)
+@WarningDefinition(category = "MaliciousCode", name = "ExposeMutableStaticFieldViaParameter", maxScore = 55)
 public class ExposeRepresentation {
     @MethodVisitor
     public boolean checkMethod(MethodDefinition md, TypeDefinition td) {
         return td.isPublic() && (md.isPublic() || md.isProtected()) && !md.getParameters().isEmpty();
     }
-    
-    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
+
+    @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc, MethodDefinition md) {
-        if(!md.isStatic() && expr.getCode() == AstCode.PutField) {
+        if (!md.isStatic() && expr.getCode() == AstCode.PutField) {
             FieldDefinition fd = ((FieldReference) expr.getOperand()).resolve();
-            if(fd != null && (fd.isPrivate() || fd.isPackagePrivate() || fd.isProtected())) {
-                if(md.isProtected() && fd.isProtected())
-                    return;
-                if(!isMutable(fd.getFieldType()))
+            if (fd != null && (fd.isPrivate() || fd.isPackagePrivate() || fd.isProtected())) {
+                if (md.isProtected() && fd.isProtected())
                     return;
                 Expression self = Nodes.getChild(expr, 0);
-                if(!isThis(self))
+                if (!isThis(self))
                     return;
                 Expression value = Nodes.getChild(expr, 1);
-                if(!(value.getOperand() instanceof ParameterDefinition))
-                    return;
-                ParameterDefinition pd = (ParameterDefinition)value.getOperand();
-                int priority = 0;
-                if(md.isProtected() || fd.isProtected())
-                    priority+=10;
-                if(md.isVarArgs() && pd.getPosition() == md.getParameters().size()-1)
-                    priority+=10;
-                mc.report("ExposeMutableFieldViaParameter", priority, expr);
-            }                    
+                report(expr, mc, md, fd, value, "ExposeMutableFieldViaParameter");
+            }
         }
-        if(expr.getCode() == AstCode.PutStatic) {
+        if (expr.getCode() == AstCode.PutStatic) {
             FieldDefinition fd = ((FieldReference) expr.getOperand()).resolve();
-            if(fd != null && (fd.isPrivate() || fd.isPackagePrivate())) {
-                if(!isMutable(fd.getFieldType()))
-                    return;
+            if (fd != null && (fd.isPrivate() || fd.isPackagePrivate())) {
                 Expression value = Nodes.getChild(expr, 0);
-                if(!(value.getOperand() instanceof ParameterDefinition))
-                    return;
-                ParameterDefinition pd = (ParameterDefinition)value.getOperand();
-                int priority = 0;
-                if(md.isProtected())
-                    priority+=10;
-                if(md.isVarArgs() && pd.getPosition() == md.getParameters().size()-1)
-                    priority+=10;
-                mc.report("ExposeMutableStaticFieldViaParameter", priority, expr);
-            }                    
+                report(expr, mc, md, fd, value, "ExposeMutableStaticFieldViaParameter");
+            }
         }
+    }
+    
+    private ParameterDefinition getParameter(Expression value) {
+        if(value.getOperand() instanceof ParameterDefinition)
+            return (ParameterDefinition)value.getOperand();
+        if(value.getOperand() instanceof Variable)
+            return ((Variable)value.getOperand()).getOriginalParameter();
+        return null;
+    }
+
+    private void report(Expression expr, MethodContext mc, MethodDefinition md, FieldDefinition fd, Expression value,
+            String type) {
+        ParameterDefinition pd = getParameter(value);
+        if (pd == null)
+            return;
+        if (!isMutable(fd.getFieldType()))
+            return;
+        int priority = 0;
+        if (md.isProtected() || fd.isProtected())
+            priority += 10;
+        if (md.isVarArgs() && pd.getPosition() == md.getParameters().size() - 1)
+            priority += 10;
+        mc.report(type, priority, expr);
     }
 
     private boolean isThis(Expression self) {
-        if(self.getCode() == AstCode.Load && self.getOperand() instanceof Variable) {
-            VariableDefinition origVar = ((Variable)self.getOperand()).getOriginalVariable();
+        if (self.getCode() == AstCode.Load && self.getOperand() instanceof Variable) {
+            VariableDefinition origVar = ((Variable) self.getOperand()).getOriginalVariable();
             return origVar != null && origVar.getSlot() == 0;
         }
         return false;
     }
 
     private boolean isMutable(TypeReference fieldType) {
-        if(fieldType.isArray())
+        if (fieldType.isArray())
             return true;
         String typeName = fieldType.getInternalName();
-        if(typeName.equals("java/util/Hashtable") ||
-                typeName.equals("java/util/Vector") ||
-                typeName.equals("java/util/Date") || 
-                typeName.equals("java/sql/Date") || 
-                typeName.equals("java/sql/Timestamp"))
+        if (typeName.equals("java/util/Hashtable") || typeName.equals("java/util/Vector")
+            || typeName.equals("java/util/Date") || typeName.equals("java/sql/Date")
+            || typeName.equals("java/sql/Timestamp"))
             return true;
         return false;
     }
