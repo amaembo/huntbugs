@@ -41,6 +41,7 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Label;
 import com.strobel.decompiler.ast.Lambda;
 import com.strobel.decompiler.ast.Node;
+import com.strobel.decompiler.ast.Switch;
 import com.strobel.decompiler.ast.TryCatchBlock;
 import com.strobel.decompiler.ast.Variable;
 
@@ -95,6 +96,95 @@ public class ValuesFlow {
 
     public static Object getValue(Expression input) {
         return input.getUserData(VALUE_KEY);
+    }
+    
+    static class FrameSet {
+        boolean valid = true;
+        Frame passFrame, breakFrame, continueFrame;
+        
+        FrameSet(Frame start) {
+            this.passFrame = start;
+        }
+        
+        void process(Block block) {
+            boolean wasMonitor = false;
+            for (Node n : block.getBody()) {
+                if (!valid) {
+                    // Something unsupported occurred
+                    return;
+                } else if (n instanceof Expression) {
+                    Expression expr = (Expression) n;
+                    switch (expr.getCode()) {
+                    case LoopOrSwitchBreak:
+                        breakFrame = Frame.merge(breakFrame, passFrame);
+                        passFrame = null;
+                        return;
+                    case LoopContinue:
+                        continueFrame = Frame.merge(continueFrame, passFrame);
+                        passFrame = null;
+                        return;
+                    case Ret:
+                        valid = false;
+                        return;
+                    case MonitorEnter:
+                        passFrame = passFrame.process(expr);
+                        wasMonitor = true;
+                        continue;
+                    default:
+                    }
+                    passFrame = passFrame.process(expr);
+                } else if (n instanceof Condition) {
+                    Condition cond = (Condition) n;
+                    passFrame = passFrame.process(cond.getCondition());
+                    FrameSet left = new FrameSet(passFrame);
+                    left.process(cond.getTrueBlock());
+                    FrameSet right = new FrameSet(passFrame);
+                    right.process(cond.getFalseBlock());
+                    if(!left.valid || !right.valid) {
+                        valid = false;
+                        return;
+                    }
+                    passFrame = Frame.merge(left.passFrame, right.passFrame);
+                    breakFrame = Frame.merge(breakFrame, Frame.merge(left.breakFrame, right.breakFrame));
+                    continueFrame = Frame.merge(continueFrame, Frame.merge(left.continueFrame, right.continueFrame));
+                } else if (n instanceof Label) {
+                    // Skip
+                } else if (n instanceof TryCatchBlock) {
+                    TryCatchBlock tryCatch = (TryCatchBlock) n;
+                    if (wasMonitor && tryCatch.getCatchBlocks().isEmpty()) {
+                        Block finallyBlock = tryCatch.getFinallyBlock();
+                        if (finallyBlock != null && finallyBlock.getBody().size() == 1
+                            && Nodes.isOp(finallyBlock.getBody().get(0), AstCode.MonitorExit)) {
+                            process(tryCatch.getTryBlock());
+                            wasMonitor = false;
+                            continue;
+                        }
+                    }
+                    // TODO: support
+                    valid = false;
+                    return;
+                } else if (n instanceof Switch) {
+                    Switch switchBlock = (Switch)n;
+                    passFrame = passFrame.process(switchBlock.getCondition());
+                    FrameSet switchBody = new FrameSet(passFrame);
+                    for(Block caseBlock : switchBlock.getCaseBlocks()) {
+                        switchBody.passFrame = Frame.merge(passFrame, switchBody.passFrame);
+                        switchBody.process(caseBlock);
+                    }
+                    if(!switchBody.valid) {
+                        valid = false;
+                        return;
+                    }
+                    passFrame = Frame.merge(switchBody.passFrame, switchBody.breakFrame);
+                    continueFrame = Frame.merge(continueFrame, switchBody.continueFrame);
+                } else {
+                    // TODO: support loops, exceptions
+                    valid = false;
+                    return;
+                }
+                wasMonitor = false;
+            }
+        }
     }
     
     static class Frame {
@@ -468,59 +558,6 @@ public class ValuesFlow {
             }
         }
 
-        Frame process(Block method) {
-            Frame result = this;
-            boolean wasMonitor = false;
-            for (Node n : method.getBody()) {
-                if (result == null) {
-                    // Something unsupported occurred
-                    return null;
-                } else if (n instanceof Expression) {
-                    Expression expr = (Expression) n;
-                    switch (expr.getCode()) {
-                    case LoopOrSwitchBreak:
-                    case LoopContinue:
-                    case Ret:
-                        return null;
-                    case MonitorEnter:
-                        result = result.process(expr);
-                        wasMonitor = true;
-                        continue;
-                    default:
-                    }
-                    result = result.process(expr);
-                } else if (n instanceof Condition) {
-                    Condition cond = (Condition) n;
-                    result = result.process(cond.getCondition());
-                    Frame left = result.process(cond.getTrueBlock());
-                    Frame right = result.process(cond.getFalseBlock());
-                    if (left == null || right == null)
-                        return null;
-                    result = left.merge(right);
-                } else if (n instanceof Label) {
-                    // Skip
-                } else if (n instanceof TryCatchBlock) {
-                    TryCatchBlock tryCatch = (TryCatchBlock) n;
-                    if (wasMonitor && tryCatch.getCatchBlocks().isEmpty()) {
-                        Block block = tryCatch.getFinallyBlock();
-                        if (block != null && block.getBody().size() == 1
-                            && Nodes.isOp(block.getBody().get(0), AstCode.MonitorExit)) {
-                            result = result.process(tryCatch.getTryBlock());
-                            wasMonitor = false;
-                            continue;
-                        }
-                    }
-                    // TODO: support
-                    return null;
-                } else {
-                    // TODO: support switch, loops, exceptions
-                    return null;
-                }
-                wasMonitor = false;
-            }
-            return result;
-        }
-
         Frame merge(Frame other) {
             Expression[] res = null;
             for (int i = 0; i < sources.length; i++) {
@@ -541,6 +578,14 @@ public class ValuesFlow {
             }
             return res == null ? this : new Frame(res);
         }
+        
+        static Frame merge(Frame left, Frame right) {
+            if (left == null)
+                return right;
+            if (right == null)
+                return left;
+            return left.merge(right);
+        }
 
         private Expression makePhiNode(Expression left, Expression right) {
             Expression phi = new Expression(PHI_TYPE, null, 0, left, right);
@@ -558,7 +603,9 @@ public class ValuesFlow {
 
     public static void annotate(Context ctx, MethodDefinition md, Block method) {
         ctx.incStat("ValuesFlow.Total");
-        if (new Frame(md).process(method) != null) {
+        FrameSet fs = new FrameSet(new Frame(md));
+        fs.process(method);
+        if (fs.valid) {
             ctx.incStat("ValuesFlow");
         }
     }

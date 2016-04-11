@@ -33,6 +33,58 @@ public class TestBadMath {
     }
 
     @AssertWarning(type="RemOne")
+    public int testRemSwitch(int x) {
+        int mod = 1;
+        switch(x) {
+        case 1:
+            System.out.println("Hehe");
+            break;
+        case 2:
+            System.out.println("Haha");
+            break;
+        default:
+            mod = 1;
+            break;
+        }
+        return x % mod;
+    }
+    
+    @AssertWarning(type="RemOne")
+    public int testRemSwitchInside(int x) {
+        int mod = 1;
+        switch(x) {
+        case 1:
+            System.out.println("Hehe");
+            mod = 1;
+        case 2:
+            System.out.println("Haha");
+            return x % mod;
+        default:
+            mod = 2;
+            break;
+        }
+        return x % mod;
+    }
+    
+    @AssertNoWarning(type="RemOne")
+    public int testRemSwitchOk(int x) {
+        int mod = 1;
+        switch(x) {
+        case 1:
+            System.out.println("Hehe");
+            mod = 2;
+            break;
+        case 2:
+            System.out.println("Haha");
+            break;
+        default:
+            mod = 1;
+            break;
+        }
+        return x % mod;
+    }
+    
+    @AssertWarning(type="RemOne")
     public int testRemAbs(int x) {
         int mod = Math.abs(-1);
         return x % mod;
