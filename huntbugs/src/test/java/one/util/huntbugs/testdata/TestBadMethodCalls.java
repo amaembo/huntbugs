@@ -17,6 +17,7 @@ package one.util.huntbugs.testdata;
 
 import java.math.BigDecimal;
 import java.net.URL;
+import java.util.Objects;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
@@ -165,5 +166,25 @@ public class TestBadMethodCalls {
     @AssertNoWarning(type="ArrayToString")
     public String format4(String arr) {
         return arr+arr;
+    }
+    
+    @AssertWarning(type="ArrayHashCode")
+    public int hash(String str, int[] arr) {
+        return str.hashCode()*31+arr.hashCode();
+    }
+    
+    @AssertWarning(type="ArrayHashCode")
+    public int hash2(String str, int[] arr) {
+        return Objects.hashCode(str)*31+Objects.hashCode(arr);
+    }
+    
+    @AssertWarning(type="ArrayHashCode")
+    public int hash3(String str, int[] arr) {
+        return Objects.hash(str, arr);
+    }
+    
+    @AssertWarning(type="DoubleLongBitsToDoubleOnInt")
+    public double testDouble(int x) {
+        return Double.longBitsToDouble(x);
     }
 }

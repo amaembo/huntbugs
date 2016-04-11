@@ -25,6 +25,7 @@ import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -46,6 +47,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "Correctness", name = "BigDecimalConstructedFromDouble", maxScore = 50)
 @WarningDefinition(category = "Correctness", name = "BigDecimalConstructedFromInfiniteOrNaN", maxScore = 70)
 @WarningDefinition(category = "Correctness", name = "ArrayToString", maxScore = 60)
+@WarningDefinition(category = "Correctness", name = "ArrayHashCode", maxScore = 60)
+@WarningDefinition(category = "Correctness", name = "DoubleLongBitsToDoubleOnInt", maxScore = 70)
 public class BadMethodCalls {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression node, NodeChain nc, MethodContext ctx, MethodDefinition curMethod) {
@@ -59,11 +62,9 @@ public class BadMethodCalls {
     private void checkConstructor(Expression node, MethodReference mr, MethodContext ctx) {
         String typeName = mr.getDeclaringType().getInternalName();
         String signature = mr.getSignature();
-        if (typeName.equals("java/lang/Thread")
-            && !signature.contains("Runnable")) {
+        if (typeName.equals("java/lang/Thread") && !signature.contains("Runnable")) {
             ctx.report("UselessThread", 0, node);
-        } else if (typeName.equals("java/math/BigDecimal")
-            && signature.equals("(D)V")) {
+        } else if (typeName.equals("java/math/BigDecimal") && signature.equals("(D)V")) {
             Object value = Nodes.getConstant(node.getArguments().get(0));
             if (value instanceof Double) {
                 Double val = (Double) value;
@@ -136,6 +137,28 @@ public class BadMethodCalls {
             TypeReference type = lastArg.getInferredType();
             if (type != null && type.isArray()) {
                 ctx.report("ArrayToString", 0, lastArg);
+            }
+        } else if (name.equals("hashCode") && signature.equals("()I") || 
+                typeName.equals("java/util/Objects") && name.equals("hashCode") && signature.equals("(Ljava/lang/Object;)I")) {
+            Expression arg = Nodes.getChild(node, 0);
+            TypeReference type = arg.getInferredType();
+            if (type != null && type.isArray()) {
+                ctx.report("ArrayHashCode", 0, arg);
+            }
+        } else if (typeName.equals("java/util/Objects") && name.equals("hash") && signature.equals("([Ljava/lang/Object;)I")) {
+            Expression arg = node.getArguments().get(0);
+            if(arg.getCode() == AstCode.InitArray) {
+                for(Expression child : arg.getArguments()) {
+                    TypeReference type = ValuesFlow.getSource(child).getInferredType();
+                    if (type != null && type.isArray()) {
+                        ctx.report("ArrayHashCode", 0, arg);
+                    }
+                }
+            }
+        } else if(typeName.equals("java/lang/Double") && name.equals("longBitsToDouble")) {
+            Expression arg = Nodes.getChild(node, 0);
+            if(arg.getCode() == AstCode.I2L) {
+                ctx.report("DoubleLongBitsToDoubleOnInt", 0, arg);
             }
         }
     }

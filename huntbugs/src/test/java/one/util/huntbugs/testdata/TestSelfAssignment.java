@@ -149,4 +149,19 @@ public class TestSelfAssignment {
         int[] b = new int[10];
         a[0] = b[0];
     }
+
+    @SuppressWarnings("cast")
+    @AssertWarning(type="SelfAssignmentLocal")
+    @AssertNoWarning(type="SelfAssignmentLocalInsteadOfField")
+    void testLocal(int a) {
+        a = (int)a; // cast to prevent error in Eclipse
+    }
+    
+    @SuppressWarnings("cast")
+    @AssertWarning(type="SelfAssignmentLocalInsteadOfField")
+    @AssertNoWarning(type="SelfAssignmentLocal")
+    void testLocal(Object f) {
+        f = (Object)f; // cast to prevent error in Eclipse
+    }
+    
 }

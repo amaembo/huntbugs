@@ -17,25 +17,31 @@ package one.util.huntbugs.detect;
 
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
+import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
+import com.strobel.decompiler.ast.Variable;
 
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author lan
  *
  */
 @WarningDefinition(category="Correctness", name="SelfAssignmentField", maxScore=80)
+@WarningDefinition(category="Correctness", name="SelfAssignmentLocal", maxScore=80)
+@WarningDefinition(category="Correctness", name="SelfAssignmentLocalInsteadOfField", maxScore=90)
 @WarningDefinition(category="Correctness", name="SelfAssignmentArrayElement", maxScore=80)
 public class SelfAssignment {
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
-    public void visit(Expression expr, MethodContext mc) {
+    public void visit(Expression expr, MethodContext mc, MethodDefinition md, TypeDefinition td) {
         if(expr.getCode() == AstCode.PutField) {
             FieldDefinition frPut = ((FieldReference) expr.getOperand()).resolve();
             if(frPut != null) {
@@ -72,6 +78,20 @@ public class SelfAssignment {
                 if(Nodes.isEquivalent(storeArrayRef, loadArrayRef) && Nodes.isEquivalent(storeIndexRef, loadIndexRef)) {
                     mc.report("SelfAssignmentArrayElement", 0, expr);
                 }
+            }
+        } else if(expr.getCode() == AstCode.Store) {
+            Expression ref = expr.getArguments().get(0);
+            if(ref.getCode() == AstCode.Load && ref.getOperand() == expr.getOperand()) {
+                if(!md.isStatic()) {
+                    Variable v = (Variable)ref.getOperand();
+                    for(FieldDefinition fd : td.getDeclaredFields()) {
+                        if(fd.getName().equals(v.getName())) {
+                            mc.report("SelfAssignmentLocalInsteadOfField", 0, expr, WarningAnnotation.forField(fd));
+                            return;
+                        }
+                    }
+                }
+                mc.report("SelfAssignmentLocal", 0, expr);
             }
         }
     }
