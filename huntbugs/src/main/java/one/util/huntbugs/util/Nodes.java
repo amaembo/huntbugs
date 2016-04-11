@@ -314,4 +314,17 @@ public class Nodes {
         }
         return false;
     }
+
+    public static String getOperation(AstCode code) {
+        switch(code) {
+        case CmpEq: return "==";
+        case CmpNe: return "!=";
+        case CmpLe: return "<=";
+        case CmpLt: return "<";
+        case CmpGe: return ">=";
+        case CmpGt: return ">";
+        default:
+            return code.getName();
+        }
+    }
 }

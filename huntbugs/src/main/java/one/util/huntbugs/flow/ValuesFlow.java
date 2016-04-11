@@ -16,45 +16,35 @@
 package one.util.huntbugs.flow;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 
-import com.strobel.assembler.metadata.FieldDefinition;
-import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodDefinition;
-import com.strobel.assembler.metadata.MethodReference;
-import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.assembler.metadata.TypeReference;
-import com.strobel.assembler.metadata.VariableDefinition;
 import com.strobel.componentmodel.Key;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Label;
-import com.strobel.decompiler.ast.Lambda;
 import com.strobel.decompiler.ast.Node;
 import com.strobel.decompiler.ast.Switch;
 import com.strobel.decompiler.ast.TryCatchBlock;
-import com.strobel.decompiler.ast.Variable;
 
 /**
  * @author lan
  *
  */
 public class ValuesFlow {
-    private static final Key<Expression> SOURCE_KEY = Key.create("hb.valueSource");
-    private static final Key<Object> VALUE_KEY = Key.create("hb.value");
+    static final Key<Expression> SOURCE_KEY = Key.create("hb.valueSource");
+    static final Key<Object> VALUE_KEY = Key.create("hb.value");
 
-    private static final AstCode PHI_TYPE = AstCode.Wrap;
-    private static final AstCode UPDATE_TYPE = AstCode.Nop;
+    static final AstCode PHI_TYPE = AstCode.Wrap;
+    static final AstCode UPDATE_TYPE = AstCode.Nop;
 
     static <T> T reduce(Expression input, Function<Expression, T> mapper, BinaryOperator<T> reducer) {
         Expression source = getSource(input);
@@ -97,15 +87,15 @@ public class ValuesFlow {
     public static Object getValue(Expression input) {
         return input.getUserData(VALUE_KEY);
     }
-    
+
     static class FrameSet {
         boolean valid = true;
         Frame passFrame, breakFrame, continueFrame;
-        
+
         FrameSet(Frame start) {
             this.passFrame = start;
         }
-        
+
         void process(Block block) {
             boolean wasMonitor = false;
             for (Node n : block.getBody()) {
@@ -140,7 +130,7 @@ public class ValuesFlow {
                     left.process(cond.getTrueBlock());
                     FrameSet right = new FrameSet(passFrame);
                     right.process(cond.getFalseBlock());
-                    if(!left.valid || !right.valid) {
+                    if (!left.valid || !right.valid) {
                         valid = false;
                         return;
                     }
@@ -164,14 +154,14 @@ public class ValuesFlow {
                     valid = false;
                     return;
                 } else if (n instanceof Switch) {
-                    Switch switchBlock = (Switch)n;
+                    Switch switchBlock = (Switch) n;
                     passFrame = passFrame.process(switchBlock.getCondition());
                     FrameSet switchBody = new FrameSet(passFrame);
-                    for(Block caseBlock : switchBlock.getCaseBlocks()) {
+                    for (Block caseBlock : switchBlock.getCaseBlocks()) {
                         switchBody.passFrame = Frame.merge(passFrame, switchBody.passFrame);
                         switchBody.process(caseBlock);
                     }
-                    if(!switchBody.valid) {
+                    if (!switchBody.valid) {
                         valid = false;
                         return;
                     }
@@ -184,420 +174,6 @@ public class ValuesFlow {
                 }
                 wasMonitor = false;
             }
-        }
-    }
-    
-    static class Frame {
-        final Expression[] sources;
-
-        Frame(MethodDefinition md) {
-            this.sources = new Expression[md.getBody().getMaxLocals()];
-            for (ParameterDefinition pd : md.getParameters()) {
-                Expression expression = new Expression(AstCode.Load, pd, 0);
-                expression.setInferredType(pd.getParameterType());
-                expression.setExpectedType(pd.getParameterType());
-                sources[pd.getSlot()] = expression;
-            }
-        }
-
-        private Frame(Expression[] sources) {
-            this.sources = sources;
-        }
-
-        Frame replace(int pos, Expression replacement) {
-            if (sources[pos] != replacement) {
-                Expression[] res = sources.clone();
-                res[pos] = replacement;
-                return new Frame(res);
-            }
-            return this;
-        }
-
-        Frame replaceAll(UnaryOperator<Expression> op) {
-            Expression[] res = null;
-            for (int i = 0; i < sources.length; i++) {
-                if (sources[i] == null)
-                    continue;
-                Expression expr = op.apply(sources[i]);
-                if (expr != sources[i]) {
-                    if (res == null)
-                        res = sources.clone();
-                    res[i] = expr;
-                }
-            }
-            return res == null ? this : new Frame(res);
-        }
-
-        <A, B> Frame processBinaryOp(Expression expr, Class<A> leftType, Class<B> rightType, BiFunction<A, B, ?> op) {
-            if (expr.getArguments().size() != 2)
-                return this;
-            Object left = getValue(expr.getArguments().get(0));
-            if (left == null || left.getClass() != leftType)
-                return this;
-            Object right = getValue(expr.getArguments().get(1));
-            if (right == null || right.getClass() != rightType)
-                return this;
-            Object result = op.apply(leftType.cast(left), rightType.cast(right));
-            expr.putUserData(VALUE_KEY, result);
-            return this;
-        }
-
-        <A> Frame processUnaryOp(Expression expr, Class<A> type, Function<A, ?> op) {
-            if (expr.getArguments().size() != 1)
-                return this;
-            Object arg = getValue(expr.getArguments().get(0));
-            if (!type.isInstance(arg))
-                return this;
-            Object result = op.apply(type.cast(arg));
-            expr.putUserData(VALUE_KEY, result);
-            return this;
-        }
-
-        Frame processKnownMethods(Expression expr, MethodReference mr) {
-            if(mr.getDeclaringType().getInternalName().equals("java/lang/String")) {
-                if(mr.getName().equals("length"))
-                    processUnaryOp(expr, String.class, String::length);
-                else if(mr.getName().equals("toString") || mr.getName().equals("intern"))
-                    processUnaryOp(expr, String.class, Function.identity());
-                else if(mr.getName().equals("trim"))
-                    processUnaryOp(expr, String.class, String::trim);
-                else if(mr.getName().equals("substring"))
-                    processBinaryOp(expr, String.class, Integer.class, String::substring);
-            } else if(mr.getDeclaringType().getInternalName().equals("java/lang/Math")) {
-                if(mr.getName().equals("abs")) {
-                    switch (expr.getInferredType().getSimpleType()) {
-                    case Integer:
-                        return processUnaryOp(expr, Integer.class, Math::abs);
-                    case Long:
-                        return processUnaryOp(expr, Long.class, Math::abs);
-                    case Double:
-                        return processUnaryOp(expr, Double.class, Math::abs);
-                    case Float:
-                        return processUnaryOp(expr, Float.class, Math::abs);
-                    default:
-                    }
-                }
-            } else if(Nodes.isBoxing(expr) || Nodes.isUnboxing(expr)) {
-                processUnaryOp(expr, Number.class, Function.identity());
-            }
-            return this;
-        }
-
-        Frame processChildren(Expression expr) {
-            Frame result = this;
-            for (Expression child : expr.getArguments()) {
-                result = result.process(child);
-            }
-            if (expr.getOperand() instanceof Lambda) {
-                Lambda lambda = (Lambda) expr.getOperand();
-                MethodReference method = lambda.getMethod();
-                // TODO: support lambdas
-                /*
-                 * if (method != null) new
-                 * Frame(method).process(lambda.getBody());
-                 */
-            }
-            return result;
-        }
-
-        Frame process(Expression expr) {
-            if (expr.getCode() == AstCode.TernaryOp) {
-                Expression cond = expr.getArguments().get(0);
-                Expression left = expr.getArguments().get(1);
-                Expression right = expr.getArguments().get(2);
-                Frame target = process(cond);
-                Frame leftFrame = target.process(left);
-                Frame rightFrame = target.process(right);
-                return leftFrame.merge(rightFrame);
-            }
-            Frame target = processChildren(expr);
-            switch (expr.getCode()) {
-            case Store: {
-                Variable var = ((Variable) expr.getOperand());
-                Expression arg = expr.getArguments().get(0);
-                Expression source = getSource(arg);
-                expr.putUserData(SOURCE_KEY, source);
-                Object val = arg.getUserData(VALUE_KEY);
-                if(val != null)
-                    expr.putUserData(VALUE_KEY, val);
-                VariableDefinition origVar = var.getOriginalVariable();
-                if (origVar != null)
-                    return target.replace(origVar.getSlot(), source);
-                return target;
-            }
-            case LdC: {
-                expr.putUserData(VALUE_KEY, expr.getOperand());
-                return target;
-            }
-            case Add: {
-                switch (expr.getInferredType().getSimpleType()) {
-                case Integer:
-                    return target.processBinaryOp(expr, Integer.class, Integer.class, Integer::sum);
-                case Long:
-                    return target.processBinaryOp(expr, Long.class, Long.class, Long::sum);
-                case Double:
-                    return target.processBinaryOp(expr, Double.class, Double.class, Double::sum);
-                case Float:
-                    return target.processBinaryOp(expr, Float.class, Float.class, Float::sum);
-                default:
-                }
-                return target;
-            }
-            case Sub: {
-                switch (expr.getInferredType().getSimpleType()) {
-                case Integer:
-                    return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a - b);
-                case Long:
-                    return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a - b);
-                case Double:
-                    return target.processBinaryOp(expr, Double.class, Double.class, (a, b) -> a - b);
-                case Float:
-                    return target.processBinaryOp(expr, Float.class, Float.class, (a, b) -> a - b);
-                default:
-                }
-                return target;
-            }
-            case Mul: {
-                switch (expr.getInferredType().getSimpleType()) {
-                case Integer:
-                    return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a * b);
-                case Long:
-                    return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a * b);
-                case Double:
-                    return target.processBinaryOp(expr, Double.class, Double.class, (a, b) -> a * b);
-                case Float:
-                    return target.processBinaryOp(expr, Float.class, Float.class, (a, b) -> a * b);
-                default:
-                }
-                return target;
-            }
-            case Div: {
-                switch (expr.getInferredType().getSimpleType()) {
-                case Integer:
-                    return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a / b);
-                case Long:
-                    return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a / b);
-                case Double:
-                    return target.processBinaryOp(expr, Double.class, Double.class, (a, b) -> a / b);
-                case Float:
-                    return target.processBinaryOp(expr, Float.class, Float.class, (a, b) -> a / b);
-                default:
-                }
-                return target;
-            }
-            case Rem: {
-                switch (expr.getInferredType().getSimpleType()) {
-                case Integer:
-                    return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a % b);
-                case Long:
-                    return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a % b);
-                case Double:
-                    return target.processBinaryOp(expr, Double.class, Double.class, (a, b) -> a % b);
-                case Float:
-                    return target.processBinaryOp(expr, Float.class, Float.class, (a, b) -> a % b);
-                default:
-                }
-                return target;
-            }
-            case Xor: {
-                switch (expr.getInferredType().getSimpleType()) {
-                case Integer:
-                    return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a ^ b);
-                case Long:
-                    return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a ^ b);
-                default:
-                }
-                return target;
-            }
-            case Or: {
-                switch (expr.getInferredType().getSimpleType()) {
-                case Integer:
-                    return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a | b);
-                case Long:
-                    return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a | b);
-                default:
-                }
-                return target;
-            }
-            case And: {
-                switch (expr.getInferredType().getSimpleType()) {
-                case Integer:
-                    return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a & b);
-                case Long:
-                    return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a & b);
-                default:
-                }
-                return target;
-            }
-            case Shl: {
-                switch (expr.getInferredType().getSimpleType()) {
-                case Integer:
-                    return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a << b);
-                case Long:
-                    return target.processBinaryOp(expr, Long.class, Integer.class, (a, b) -> a << b);
-                default:
-                }
-                return target;
-            }
-            case Shr: {
-                switch (expr.getInferredType().getSimpleType()) {
-                case Integer:
-                    return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a >> b);
-                case Long:
-                    return target.processBinaryOp(expr, Long.class, Integer.class, (a, b) -> a >> b);
-                default:
-                }
-                return target;
-            }
-            case UShr: {
-                switch (expr.getInferredType().getSimpleType()) {
-                case Integer:
-                    return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a >>> b);
-                case Long:
-                    return target.processBinaryOp(expr, Long.class, Integer.class, (a, b) -> a >>> b);
-                default:
-                }
-                return target;
-            }
-            case I2L:
-                return target.processUnaryOp(expr, Integer.class, i -> (long)i);
-            case I2B:
-                return target.processUnaryOp(expr, Integer.class, i -> (int)(byte)(int)i);
-            case I2C:
-                return target.processUnaryOp(expr, Integer.class, i -> (int)(char)(int)i);
-            case I2S:
-                return target.processUnaryOp(expr, Integer.class, i -> (int)(short)(int)i);
-            case I2D:
-                return target.processUnaryOp(expr, Integer.class, i -> (double)i);
-            case I2F:
-                return target.processUnaryOp(expr, Integer.class, i -> (float)i);
-            case L2I:
-                return target.processUnaryOp(expr, Long.class, l -> (int)(long)l);
-            case L2D:
-                return target.processUnaryOp(expr, Long.class, l -> (double)l);
-            case L2F:
-                return target.processUnaryOp(expr, Long.class, l -> (float)l);
-            case F2L:
-                return target.processUnaryOp(expr, Float.class, l -> (long)(float)l);
-            case F2I:
-                return target.processUnaryOp(expr, Float.class, l -> (int)(float)l);
-            case F2D:
-                return target.processUnaryOp(expr, Float.class, l -> (double)l);
-            case D2F:
-                return target.processUnaryOp(expr, Double.class, l -> (float)(double)l);
-            case D2I:
-                return target.processUnaryOp(expr, Double.class, l -> (int)(double)l);
-            case D2L:
-                return target.processUnaryOp(expr, Double.class, l -> (long)(double)l);
-            case Neg: {
-                switch (expr.getInferredType().getSimpleType()) {
-                case Integer:
-                    return target.processUnaryOp(expr, Integer.class, l -> -l);
-                case Long:
-                    return target.processUnaryOp(expr, Long.class, l -> -l);
-                case Double:
-                    return target.processUnaryOp(expr, Double.class, l -> -l);
-                case Float:
-                    return target.processUnaryOp(expr, Float.class, l -> -l);
-                default:
-                }
-                return target;
-            }
-            case Load: {
-                Variable var = ((Variable) expr.getOperand());
-                VariableDefinition origVar = var.getOriginalVariable();
-                if (origVar != null) {
-                    Expression source = sources[origVar.getSlot()];
-                    if(source != null) {
-                        expr.putUserData(SOURCE_KEY, source);
-                        Object val = getValue(source);
-                        if(val != null)
-                            expr.putUserData(VALUE_KEY, val);
-                    }
-                }
-                return this;
-            }
-            case PostIncrement:
-            case PreIncrement: {
-                if (expr.getOperand() instanceof Variable) {
-                    Variable var = ((Variable) expr.getOperand());
-                    Expression child = expr.getArguments().get(0);
-                    expr.putUserData(SOURCE_KEY, target.sources[var.getOriginalVariable().getSlot()]);
-                    // TODO: pass values
-                    return target.replace(var.getOriginalVariable().getSlot(), child);
-                }
-                return target;
-            }
-            case InvokeInterface:
-            case InvokeSpecial:
-            case InvokeStatic:
-            case InvokeVirtual: {
-                MethodReference mr = (MethodReference) expr.getOperand();
-                target.processKnownMethods(expr, mr);
-                if(Nodes.isSideEffectFreeMethod(expr))
-                    return target; 
-                return target.replaceAll(src -> src.getCode() == AstCode.GetField || src.getCode() == AstCode.GetStatic
-                    || src.getCode() == AstCode.LoadElement ? makeUpdatedNode(src) : src);
-            }
-            case StoreElement: {
-                return target.replaceAll(src -> src.getCode() == AstCode.LoadElement ? makeUpdatedNode(src) : src);
-            }
-            case PutField: {
-                FieldDefinition fr = ((FieldReference) expr.getOperand()).resolve();
-                return target.replaceAll(src -> src.getCode() == AstCode.GetField
-                    && fr.equals(((FieldReference) src.getOperand()).resolve()) ? makeUpdatedNode(src) : src);
-            }
-            case PutStatic: {
-                FieldDefinition fr = ((FieldReference) expr.getOperand()).resolve();
-                return target.replaceAll(src -> src.getCode() == AstCode.GetStatic
-                    && fr.equals(((FieldReference) src.getOperand()).resolve()) ? makeUpdatedNode(src) : src);
-            }
-            default: {
-                return target;
-            }
-            }
-        }
-
-        Frame merge(Frame other) {
-            Expression[] res = null;
-            for (int i = 0; i < sources.length; i++) {
-                Expression left = sources[i];
-                Expression right = other.sources[i];
-                if (right == null || right == left)
-                    continue;
-                if (left != null && left.getCode() == AstCode.LdC && right.getCode() == AstCode.LdC
-                    && Objects.equals(left.getOperand(), right.getOperand()))
-                    continue;
-                if (res == null)
-                    res = sources.clone();
-                if (left == null) {
-                    res[i] = right;
-                    continue;
-                }
-                res[i] = makePhiNode(left, right);
-            }
-            return res == null ? this : new Frame(res);
-        }
-        
-        static Frame merge(Frame left, Frame right) {
-            if (left == null)
-                return right;
-            if (right == null)
-                return left;
-            return left.merge(right);
-        }
-
-        private Expression makePhiNode(Expression left, Expression right) {
-            Expression phi = new Expression(PHI_TYPE, null, 0, left, right);
-            Object leftValue = getValue(left);
-            Object rightValue = getValue(right);
-            if(leftValue != null && leftValue.equals(rightValue))
-                phi.putUserData(VALUE_KEY, leftValue);
-            return phi;
-        }
-
-        private static Expression makeUpdatedNode(Expression src) {
-            return new Expression(UPDATE_TYPE, null, src.getOffset(), src);
         }
     }
 
