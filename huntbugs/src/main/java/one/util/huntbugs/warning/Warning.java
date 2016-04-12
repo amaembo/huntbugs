@@ -39,6 +39,14 @@ public class Warning {
         this.priority = priority;
         this.annotations = annotations;
     }
+    
+    public String getClassName() {
+        for(WarningAnnotation<?> anno : annotations) {
+            if(anno.getRole().equals("TYPE"))
+                return anno.getValue().toString();
+        }
+        return "(Unknown)";
+    }
 
     public int getScore() {
         return saturateScore(type.getMaxScore() - priority);
