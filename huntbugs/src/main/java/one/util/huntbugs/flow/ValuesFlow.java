@@ -190,6 +190,7 @@ public class ValuesFlow {
                             FrameSet loopBody = new FrameSet(loopStart);
                             loopBody.process(ctx, loop.getBody());
                             if(!loopBody.valid) {
+                                cleanUn(loop);
                                 valid = false;
                                 return;
                             }
@@ -281,8 +282,10 @@ public class ValuesFlow {
             for(Node child : node.getChildrenAndSelfRecursive()) {
                 if(child instanceof Expression) {
                     Expression expr = (Expression)child;
-                    expr.putUserData(SOURCE_KEY, null);
-                    expr.putUserData(VALUE_KEY, null);
+                    if(expr.getUserData(SOURCE_KEY) != null)
+                        expr.putUserData(SOURCE_KEY, null);
+                    if(expr.getUserData(VALUE_KEY) != null)
+                        expr.putUserData(VALUE_KEY, null);
                 }
             }
         }
@@ -294,8 +297,6 @@ public class ValuesFlow {
         fs.process(ctx, method);
         if (fs.valid) {
             ctx.incStat("ValuesFlow");
-        } else {
-            System.err.println("Analysis failed: "+md.getDeclaringType().getInternalName()+"."+md.getName()+md.getSignature());
         }
     }
 }

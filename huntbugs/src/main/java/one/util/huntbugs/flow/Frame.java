@@ -218,7 +218,7 @@ class Frame {
                 Expression source = sources[origVar.getSlot()];
                 if (source != null) {
                     expr.putUserData(ValuesFlow.SOURCE_KEY, source);
-                    Object val = ValuesFlow.getValue(source);
+                    Object val = source.getUserData(ValuesFlow.VALUE_KEY);
                     storeValue(expr, val);
                 }
             }
@@ -230,7 +230,7 @@ class Frame {
                 int slot = var.getOriginalVariable().getSlot();
                 Expression source = sources[slot];
                 target = target.replace(slot, expr);
-                Object val = ValuesFlow.getValue(source);
+                Object val = source.getUserData(ValuesFlow.VALUE_KEY);
                 if(val instanceof Integer)
                     return target.processUnaryOp(expr, Integer.class, inc -> ((int)val)+inc);
                 if(val instanceof Long)
@@ -278,8 +278,8 @@ class Frame {
     }
 
     private void storeValue(Expression expr, Object val) {
-        Object curValue = ValuesFlow.getValue(expr);
-        if(Objects.equals(val, curValue)) return;
+        Object curValue = expr.getUserData(ValuesFlow.VALUE_KEY);
+        if(Objects.equals(val, curValue) || curValue == UNKNOWN_VALUE) return;
         if(curValue == null)
             expr.putUserData(ValuesFlow.VALUE_KEY, val);
         else
@@ -378,10 +378,18 @@ class Frame {
     private <A, B> Frame processBinaryOp(Expression expr, Class<A> leftType, Class<B> rightType, BiFunction<A, B, ?> op) {
         if (expr.getArguments().size() != 2)
             return this;
-        Object left = ValuesFlow.getValue(expr.getArguments().get(0));
+        Object left = expr.getArguments().get(0).getUserData(ValuesFlow.VALUE_KEY);
+        if (left == UNKNOWN_VALUE) {
+            storeValue(expr, left);
+            return this;
+        }
         if (left == null || left.getClass() != leftType)
             return this;
-        Object right = ValuesFlow.getValue(expr.getArguments().get(1));
+        Object right = expr.getArguments().get(1).getUserData(ValuesFlow.VALUE_KEY);
+        if (right == UNKNOWN_VALUE) {
+            storeValue(expr, right);
+            return this;
+        }
         if (right == null || right.getClass() != rightType)
             return this;
         Object result = op.apply(leftType.cast(left), rightType.cast(right));
@@ -392,7 +400,11 @@ class Frame {
     private <A> Frame processUnaryOp(Expression expr, Class<A> type, Function<A, ?> op) {
         if (expr.getArguments().size() != 1)
             return this;
-        Object arg = ValuesFlow.getValue(expr.getArguments().get(0));
+        Object arg = expr.getArguments().get(0).getUserData(ValuesFlow.VALUE_KEY);
+        if (arg == UNKNOWN_VALUE) {
+            storeValue(expr, arg);
+            return this;
+        }
         if (!type.isInstance(arg))
             return this;
         Object result = op.apply(type.cast(arg));

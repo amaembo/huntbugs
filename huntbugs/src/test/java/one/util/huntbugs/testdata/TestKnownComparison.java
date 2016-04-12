@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.util.List;
+
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -79,5 +81,23 @@ public class TestKnownComparison {
             System.out.println("Iteration!");
         }
         return b == 2 ? 1 : -1;
+    }
+    
+    @AssertNoWarning(type = "*")
+    public void testFor() {
+        for (int i = 0; i < 10; i++) {
+            if (i == 0)
+                System.out.println("First!");
+            System.out.println("Iteration!");
+        }
+    }
+    
+    @AssertNoWarning(type = "*")
+    public void testSubFor(List<String> l2) {
+        for (int i = 0, n = l2.size(); i < n; i++) {
+            if (i - 1 == 0)
+                System.out.println("First!");
+            System.out.println("Iteration!");
+        }
     }
 }
