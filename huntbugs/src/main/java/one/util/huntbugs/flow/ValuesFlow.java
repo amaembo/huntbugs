@@ -88,8 +88,6 @@ public class ValuesFlow {
     }
 
     static class FrameSet {
-        private static final int MAX_LOOP_ITERATIONS = 5;
-        
         boolean valid = true;
         Frame passFrame, breakFrame, continueFrame;
 
@@ -97,7 +95,7 @@ public class ValuesFlow {
             this.passFrame = start;
         }
 
-        void process(Block block) {
+        void process(Context ctx, Block block) {
             boolean wasMonitor = false;
             for (Node n : block.getBody()) {
                 if (!valid) {
@@ -141,9 +139,9 @@ public class ValuesFlow {
                     Condition cond = (Condition) n;
                     passFrame = passFrame.process(cond.getCondition());
                     FrameSet left = new FrameSet(passFrame);
-                    left.process(cond.getTrueBlock());
+                    left.process(ctx, cond.getTrueBlock());
                     FrameSet right = new FrameSet(passFrame);
-                    right.process(cond.getFalseBlock());
+                    right.process(ctx, cond.getFalseBlock());
                     if (!left.valid || !right.valid) {
                         valid = false;
                         return;
@@ -159,7 +157,7 @@ public class ValuesFlow {
                         Block finallyBlock = tryCatch.getFinallyBlock();
                         if (finallyBlock != null && finallyBlock.getBody().size() == 1
                             && Nodes.isOp(finallyBlock.getBody().get(0), AstCode.MonitorExit)) {
-                            process(tryCatch.getTryBlock());
+                            process(ctx, tryCatch.getTryBlock());
                             wasMonitor = false;
                             continue;
                         }
@@ -173,7 +171,7 @@ public class ValuesFlow {
                     FrameSet switchBody = new FrameSet(passFrame);
                     for (Block caseBlock : switchBlock.getCaseBlocks()) {
                         switchBody.passFrame = Frame.merge(passFrame, switchBody.passFrame);
-                        switchBody.process(caseBlock);
+                        switchBody.process(ctx, caseBlock);
                     }
                     if (!switchBody.valid) {
                         valid = false;
@@ -183,13 +181,14 @@ public class ValuesFlow {
                     continueFrame = Frame.merge(continueFrame, switchBody.continueFrame);
                 } else if (n instanceof Loop) {
                     Loop loop = (Loop) n;
+                    ctx.incStat("DivergedLoops.Total");
                     if(loop.getCondition() == null) { // endless loop
                         Frame loopEnd = null;
                         Frame loopStart = passFrame;
                         int iter = 0;
                         while(true) {
                             FrameSet loopBody = new FrameSet(loopStart);
-                            loopBody.process(loop.getBody());
+                            loopBody.process(ctx, loop.getBody());
                             if(!loopBody.valid) {
                                 valid = false;
                                 return;
@@ -200,8 +199,9 @@ public class ValuesFlow {
                             if(Frame.isEqual(loopStart, newLoopStart))
                                 break;
                             loopStart = newLoopStart;
-                            if(++iter > MAX_LOOP_ITERATIONS) {
-                                System.err.println("Loop diverged!");
+                            if(++iter > ctx.getOptions().loopTraversalIterations) {
+                                ctx.incStat("DivergedLoops");
+                                cleanUn(loop);
                                 valid = false;
                                 return;
                             }
@@ -216,7 +216,7 @@ public class ValuesFlow {
                             int iter = 0;
                             while(true) {
                                 FrameSet loopBody = new FrameSet(loopEnd);
-                                loopBody.process(loop.getBody());
+                                loopBody.process(ctx, loop.getBody());
                                 if(!loopBody.valid) {
                                     valid = false;
                                     return;
@@ -228,8 +228,9 @@ public class ValuesFlow {
                                 if(Frame.isEqual(loopEnd, newLoopEnd))
                                     break;
                                 loopEnd = newLoopEnd;
-                                if(++iter > MAX_LOOP_ITERATIONS) {
-                                    System.err.println("Loop diverged!");
+                                if(++iter > ctx.getOptions().loopTraversalIterations) {
+                                    ctx.incStat("DivergedLoops");
+                                    cleanUn(loop);
                                     valid = false;
                                     return;
                                 }
@@ -243,7 +244,7 @@ public class ValuesFlow {
                             int iter = 0;
                             while(true) {
                                 FrameSet loopBody = new FrameSet(loopStart);
-                                loopBody.process(loop.getBody());
+                                loopBody.process(ctx, loop.getBody());
                                 if(!loopBody.valid) {
                                     valid = false;
                                     return;
@@ -256,8 +257,9 @@ public class ValuesFlow {
                                 if(Frame.isEqual(loopEnd, newLoopEnd))
                                     break;
                                 loopEnd = newLoopEnd;
-                                if(++iter > MAX_LOOP_ITERATIONS) {
-                                    System.err.println("Loop diverged!");
+                                if(++iter > ctx.getOptions().loopTraversalIterations) {
+                                    ctx.incStat("DivergedLoops");
+                                    cleanUn(loop);
                                     valid = false;
                                     return;
                                 }
@@ -274,14 +276,26 @@ public class ValuesFlow {
                 wasMonitor = false;
             }
         }
+
+        private void cleanUn(Node node) {
+            for(Node child : node.getChildrenAndSelfRecursive()) {
+                if(child instanceof Expression) {
+                    Expression expr = (Expression)child;
+                    expr.putUserData(SOURCE_KEY, null);
+                    expr.putUserData(VALUE_KEY, null);
+                }
+            }
+        }
     }
 
     public static void annotate(Context ctx, MethodDefinition md, Block method) {
         ctx.incStat("ValuesFlow.Total");
         FrameSet fs = new FrameSet(new Frame(md));
-        fs.process(method);
+        fs.process(ctx, method);
         if (fs.valid) {
             ctx.incStat("ValuesFlow");
+        } else {
+            System.err.println("Analysis failed: "+md.getDeclaringType().getInternalName()+"."+md.getName()+md.getSignature());
         }
     }
 }

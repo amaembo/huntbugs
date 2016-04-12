@@ -27,6 +27,7 @@ public class AnalysisOptions {
     public boolean addBootClassPath = true;
     public int maxMethodSize = 8000;
     public int minScore = 1;
+    public int loopTraversalIterations = 5;
 
     public void set(String name, String valueString) {
         Objects.requireNonNull(valueString);

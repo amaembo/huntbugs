@@ -147,7 +147,8 @@ public class Context {
 
     public void reportWarnings(PrintStream app) {
         List<Warning> warns = new ArrayList<>(warnings);
-        warns.sort(Comparator.comparingInt(Warning::getScore).reversed().thenComparing(w -> w.getType().getName()));
+        warns.sort(Comparator.comparingInt(Warning::getScore).reversed().thenComparing(w -> w.getType().getName())
+            .thenComparing(Warning::getClassName));
         warns.forEach(w -> app.append(w.toString()).append("\n"));
     }
 
