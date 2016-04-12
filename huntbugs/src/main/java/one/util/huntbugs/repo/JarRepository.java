@@ -44,6 +44,8 @@ public class JarRepository implements Repository {
         String skipPrefix = null;
         while(entries.hasMoreElements()) {
             JarEntry entry = entries.nextElement();
+            if(!rootPackage.isEmpty() && !entry.getName().startsWith(rootPackage+"/") && !entry.getName().equals(rootPackage))
+                continue;
             if(skipPrefix != null) {
                 if(entry.getName().startsWith(skipPrefix))
                     continue;
