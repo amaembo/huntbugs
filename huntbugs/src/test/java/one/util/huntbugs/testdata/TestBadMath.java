@@ -85,6 +85,52 @@ public class TestBadMath {
     }
     
     @AssertWarning(type="RemOne")
+    public int testRemLoop() {
+        int mod = 1;
+        for(int i=0; i<10; i++) {
+            if(i % mod > 0) {
+                System.out.println("Hehe");
+            }
+        }
+        return 0;
+    }
+    
+    @AssertNoWarning(type="RemOne")
+    public int testRemLoopOk() {
+        int mod = 1;
+        for (int i = 1; i < 10; i++) {
+            if (mod % i > 0) {
+                System.out.println("Hehe");
+            }
+        }
+        return 0;
+    }
+    
+    @AssertWarning(type="RemOne")
+    public int testRemDoWhile() {
+        int mod = 1;
+        int i = 0;
+        do {
+            if(i % mod > 0) {
+                System.out.println("Hehe");
+            }
+        } while(++i < 10);
+        return 0;
+    }
+    
+    @AssertNoWarning(type="RemOne")
+    public int testRemDoWhileOk() {
+        int mod = 1;
+        int i = 1;
+        do {
+            if(mod % i > 0) {
+                System.out.println("Hehe");
+            }
+        } while(++i < 10);
+        return 0;
+    }
+    
+    @AssertWarning(type="RemOne")
     public int testRemAbs(int x) {
         int mod = Math.abs(-1);
         return x % mod;

@@ -41,6 +41,16 @@ public class TestKnownComparison {
         }
     }
 
+    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnown")
+    public void testInc() {
+        int a = 2;
+        int b = 3;
+        b++;
+        if (a < b) {
+            System.out.println("Why not?");
+        }
+    }
+    
     @AssertNoWarning(type = "ResultOfComparisonIsStaticallyKnown")
     public void testIncrement(boolean f) {
         int a = 2;
@@ -56,5 +66,18 @@ public class TestKnownComparison {
     public int testTernary() {
         int a = 2;
         return a == 2 ? 1 : -1;
+    }
+    
+    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    public int testLoopBreak() {
+        int a = 2;
+        int b = 1;
+        while(true) {
+            b = 2;
+            if(++a > 4)
+                break;
+            System.out.println("Iteration!");
+        }
+        return b == 2 ? 1 : -1;
     }
 }

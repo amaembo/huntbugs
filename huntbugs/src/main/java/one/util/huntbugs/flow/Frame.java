@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.flow;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -36,6 +38,9 @@ import com.strobel.decompiler.ast.Variable;
 
 class Frame {
     final Expression[] sources;
+    static final AstCode PHI_TYPE = AstCode.Wrap;
+    static final AstCode UPDATE_TYPE = AstCode.Nop;
+    static final Object UNKNOWN_VALUE = new Object();
 
     Frame(MethodDefinition md) {
         this.sources = new Expression[md.getBody().getMaxLocals()];
@@ -82,15 +87,14 @@ class Frame {
             Expression source = ValuesFlow.getSource(arg);
             expr.putUserData(ValuesFlow.SOURCE_KEY, source);
             Object val = arg.getUserData(ValuesFlow.VALUE_KEY);
-            if (val != null)
-                expr.putUserData(ValuesFlow.VALUE_KEY, val);
+            storeValue(expr, val);
             VariableDefinition origVar = var.getOriginalVariable();
             if (origVar != null)
                 return target.replace(origVar.getSlot(), source);
             return target;
         }
         case LdC: {
-            expr.putUserData(ValuesFlow.VALUE_KEY, expr.getOperand());
+            storeValue(expr, expr.getOperand());
             return target;
         }
         case CmpEq:
@@ -215,17 +219,29 @@ class Frame {
                 if (source != null) {
                     expr.putUserData(ValuesFlow.SOURCE_KEY, source);
                     Object val = ValuesFlow.getValue(source);
-                    if (val != null)
-                        expr.putUserData(ValuesFlow.VALUE_KEY, val);
+                    storeValue(expr, val);
                 }
             }
             return this;
         }
         case Inc:
-        case PostIncrement:
-        case PreIncrement: {
             if (expr.getOperand() instanceof Variable) {
                 Variable var = ((Variable) expr.getOperand());
+                int slot = var.getOriginalVariable().getSlot();
+                Expression source = sources[slot];
+                target = target.replace(slot, expr);
+                Object val = ValuesFlow.getValue(source);
+                if(val instanceof Integer)
+                    return target.processUnaryOp(expr, Integer.class, inc -> ((int)val)+inc);
+                if(val instanceof Long)
+                    return target.processUnaryOp(expr, Long.class, inc -> ((long)val)+inc);
+            }
+            return target;
+        case PostIncrement:
+        case PreIncrement: {
+            Expression arg = expr.getArguments().get(0);
+            if (arg.getOperand() instanceof Variable) {
+                Variable var = ((Variable) arg.getOperand());
                 // TODO: pass values
                 return target.replace(var.getOriginalVariable().getSlot(), expr);
             }
@@ -261,6 +277,15 @@ class Frame {
         }
     }
 
+    private void storeValue(Expression expr, Object val) {
+        Object curValue = ValuesFlow.getValue(expr);
+        if(Objects.equals(val, curValue)) return;
+        if(curValue == null)
+            expr.putUserData(ValuesFlow.VALUE_KEY, val);
+        else
+            expr.putUserData(ValuesFlow.VALUE_KEY, UNKNOWN_VALUE);
+    }
+
     Frame merge(Frame other) {
         Expression[] res = null;
         for (int i = 0; i < sources.length; i++) {
@@ -271,15 +296,47 @@ class Frame {
             if (left != null && left.getCode() == AstCode.LdC && right.getCode() == AstCode.LdC
                 && Objects.equals(left.getOperand(), right.getOperand()))
                 continue;
+            Expression phi = makePhiNode(left, right);
+            if(phi == left)
+                continue;
             if (res == null)
                 res = sources.clone();
-            if (left == null) {
-                res[i] = right;
-                continue;
-            }
-            res[i] = makePhiNode(left, right);
+            res[i] = phi;
         }
         return res == null ? this : new Frame(res);
+    }
+    
+    private static boolean isEqual(Expression left, Expression right) {
+        if(left == right)
+            return true;
+        if (left == null || right == null)
+            return false;
+        if (left.getCode() == PHI_TYPE && right.getCode() == PHI_TYPE) {
+            List<Expression> leftArgs = left.getArguments();
+            List<Expression> rightArgs = right.getArguments();
+            if(leftArgs.size() != rightArgs.size())
+                return false;
+            for(Expression arg : rightArgs) {
+                if(!leftArgs.contains(arg))
+                    return false;
+            }
+            return true;
+        }
+        return false;
+    }
+    
+    static boolean isEqual(Frame left, Frame right) {
+        if (left == right)
+            return true;
+        if (left == null || right == null)
+            return false;
+        Expression[] l = left.sources;
+        Expression[] r = right.sources;
+        for(int i=0; i<l.length; i++) {
+            if(!isEqual(l[i], r[i]))
+                return false;
+        }
+        return true;
     }
 
     static Frame merge(Frame left, Frame right) {
@@ -328,7 +385,7 @@ class Frame {
         if (right == null || right.getClass() != rightType)
             return this;
         Object result = op.apply(leftType.cast(left), rightType.cast(right));
-        expr.putUserData(ValuesFlow.VALUE_KEY, result);
+        storeValue(expr, result);
         return this;
     }
 
@@ -339,7 +396,7 @@ class Frame {
         if (!type.isInstance(arg))
             return this;
         Object result = op.apply(type.cast(arg));
-        expr.putUserData(ValuesFlow.VALUE_KEY, result);
+        storeValue(expr, result);
         return this;
     }
 
@@ -580,15 +637,42 @@ class Frame {
     }
 
     private Expression makePhiNode(Expression left, Expression right) {
-        Expression phi = new Expression(ValuesFlow.PHI_TYPE, null, 0, left, right);
+        if(left == null)
+            return right;
+        if(right == null)
+            return left;
+        List<Expression> children = new ArrayList<>();
+        if(left.getCode() == PHI_TYPE) {
+            children.addAll(left.getArguments());
+        } else {
+            children.add(left);
+        }
+        int baseSize = children.size();
+        if(right.getCode() == PHI_TYPE) {
+            for(Expression arg : right.getArguments()) {
+                if(!children.contains(arg))
+                    children.add(arg);
+            }
+        } else {
+            if(!children.contains(right))
+                children.add(right);
+        }
+        if(children.size() == baseSize) {
+            return left;
+        }
+        Expression phi = new Expression(PHI_TYPE, null, 0, children);
         Object leftValue = ValuesFlow.getValue(left);
         Object rightValue = ValuesFlow.getValue(right);
-        if (leftValue != null && leftValue.equals(rightValue))
-            phi.putUserData(ValuesFlow.VALUE_KEY, leftValue);
+        if(leftValue != null || rightValue != null) {
+            if(Objects.equals(leftValue, rightValue))
+                storeValue(phi, leftValue);
+            else
+                storeValue(phi, UNKNOWN_VALUE);
+        }
         return phi;
     }
 
     private static Expression makeUpdatedNode(Expression src) {
-        return new Expression(ValuesFlow.UPDATE_TYPE, null, src.getOffset(), src);
+        return new Expression(UPDATE_TYPE, null, src.getOffset(), src);
     }
 }

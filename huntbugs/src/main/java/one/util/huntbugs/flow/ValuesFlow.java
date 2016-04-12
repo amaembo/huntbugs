@@ -31,6 +31,7 @@ import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Label;
+import com.strobel.decompiler.ast.Loop;
 import com.strobel.decompiler.ast.Node;
 import com.strobel.decompiler.ast.Switch;
 import com.strobel.decompiler.ast.TryCatchBlock;
@@ -43,12 +44,9 @@ public class ValuesFlow {
     static final Key<Expression> SOURCE_KEY = Key.create("hb.valueSource");
     static final Key<Object> VALUE_KEY = Key.create("hb.value");
 
-    static final AstCode PHI_TYPE = AstCode.Wrap;
-    static final AstCode UPDATE_TYPE = AstCode.Nop;
-
     static <T> T reduce(Expression input, Function<Expression, T> mapper, BinaryOperator<T> reducer) {
         Expression source = getSource(input);
-        if (source.getCode() != PHI_TYPE)
+        if (source.getCode() != Frame.PHI_TYPE)
             return mapper.apply(source);
         boolean first = true;
         T result = null;
@@ -85,10 +83,13 @@ public class ValuesFlow {
     }
 
     public static Object getValue(Expression input) {
-        return input.getUserData(VALUE_KEY);
+        Object value = input.getUserData(VALUE_KEY);
+        return value == Frame.UNKNOWN_VALUE ? null : value;
     }
 
     static class FrameSet {
+        private static final int MAX_LOOP_ITERATIONS = 5;
+        
         boolean valid = true;
         Frame passFrame, breakFrame, continueFrame;
 
@@ -106,11 +107,24 @@ public class ValuesFlow {
                     Expression expr = (Expression) n;
                     switch (expr.getCode()) {
                     case LoopOrSwitchBreak:
+                        if(expr.getOperand() instanceof Label) {
+                            valid = false;
+                            return;
+                        }
                         breakFrame = Frame.merge(breakFrame, passFrame);
                         passFrame = null;
                         return;
                     case LoopContinue:
+                        if(expr.getOperand() instanceof Label) {
+                            valid = false;
+                            return;
+                        }
                         continueFrame = Frame.merge(continueFrame, passFrame);
+                        passFrame = null;
+                        return;
+                    case Return:
+                    case AThrow:
+                        passFrame.processChildren(expr);
                         passFrame = null;
                         return;
                     case Ret:
@@ -138,7 +152,7 @@ public class ValuesFlow {
                     breakFrame = Frame.merge(breakFrame, Frame.merge(left.breakFrame, right.breakFrame));
                     continueFrame = Frame.merge(continueFrame, Frame.merge(left.continueFrame, right.continueFrame));
                 } else if (n instanceof Label) {
-                    // Skip
+                    // TODO: support labels
                 } else if (n instanceof TryCatchBlock) {
                     TryCatchBlock tryCatch = (TryCatchBlock) n;
                     if (wasMonitor && tryCatch.getCatchBlocks().isEmpty()) {
@@ -150,7 +164,7 @@ public class ValuesFlow {
                             continue;
                         }
                     }
-                    // TODO: support
+                    // TODO: support normal catch/finally
                     valid = false;
                     return;
                 } else if (n instanceof Switch) {
@@ -167,8 +181,93 @@ public class ValuesFlow {
                     }
                     passFrame = Frame.merge(switchBody.passFrame, switchBody.breakFrame);
                     continueFrame = Frame.merge(continueFrame, switchBody.continueFrame);
+                } else if (n instanceof Loop) {
+                    Loop loop = (Loop) n;
+                    if(loop.getCondition() == null) { // endless loop
+                        Frame loopEnd = null;
+                        Frame loopStart = passFrame;
+                        int iter = 0;
+                        while(true) {
+                            FrameSet loopBody = new FrameSet(loopStart);
+                            loopBody.process(loop.getBody());
+                            if(!loopBody.valid) {
+                                valid = false;
+                                return;
+                            }
+                            loopEnd = Frame.merge(loopBody.breakFrame, loopEnd);
+                            Frame newLoopStart = Frame.merge(loopBody.passFrame, loopBody.continueFrame);
+                            newLoopStart = Frame.merge(loopStart, newLoopStart);
+                            if(Frame.isEqual(loopStart, newLoopStart))
+                                break;
+                            loopStart = newLoopStart;
+                            if(++iter > MAX_LOOP_ITERATIONS) {
+                                System.err.println("Loop diverged!");
+                                valid = false;
+                                return;
+                            }
+                        }
+                        passFrame = loopEnd;
+                        if(loopEnd == null)
+                            return;
+                    } else {
+                        switch(loop.getLoopType()) {
+                        case PreCondition: {
+                            Frame loopEnd = passFrame.process(loop.getCondition());
+                            int iter = 0;
+                            while(true) {
+                                FrameSet loopBody = new FrameSet(loopEnd);
+                                loopBody.process(loop.getBody());
+                                if(!loopBody.valid) {
+                                    valid = false;
+                                    return;
+                                }
+                                Frame newLoopStart = Frame.merge(loopBody.passFrame, loopBody.continueFrame);
+                                Frame newLoopEnd = newLoopStart == null ? null : newLoopStart.process(loop.getCondition());
+                                newLoopEnd = Frame.merge(loopBody.breakFrame, newLoopEnd);
+                                newLoopEnd = Frame.merge(loopEnd, newLoopEnd);
+                                if(Frame.isEqual(loopEnd, newLoopEnd))
+                                    break;
+                                loopEnd = newLoopEnd;
+                                if(++iter > MAX_LOOP_ITERATIONS) {
+                                    System.err.println("Loop diverged!");
+                                    valid = false;
+                                    return;
+                                }
+                            }
+                            passFrame = loopEnd;
+                            break;
+                        }
+                        case PostCondition: {
+                            Frame loopEnd = null;
+                            Frame loopStart = passFrame;
+                            int iter = 0;
+                            while(true) {
+                                FrameSet loopBody = new FrameSet(loopStart);
+                                loopBody.process(loop.getBody());
+                                if(!loopBody.valid) {
+                                    valid = false;
+                                    return;
+                                }
+                                Frame beforeCondition = Frame.merge(loopBody.passFrame, loopBody.continueFrame);
+                                Frame newLoopEnd = beforeCondition == null ? null : beforeCondition.process(loop.getCondition());
+                                newLoopEnd = Frame.merge(loopEnd, newLoopEnd);
+                                loopStart = newLoopEnd;
+                                newLoopEnd = Frame.merge(loopBody.breakFrame, newLoopEnd);
+                                if(Frame.isEqual(loopEnd, newLoopEnd))
+                                    break;
+                                loopEnd = newLoopEnd;
+                                if(++iter > MAX_LOOP_ITERATIONS) {
+                                    System.err.println("Loop diverged!");
+                                    valid = false;
+                                    return;
+                                }
+                            }
+                            passFrame = loopEnd;
+                            break;
+                        }
+                        }
+                    }
                 } else {
-                    // TODO: support loops, exceptions
                     valid = false;
                     return;
                 }
