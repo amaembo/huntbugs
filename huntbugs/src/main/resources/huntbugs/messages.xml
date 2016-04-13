@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<p:Messages xmlns:p="http://www.example.org/messages"
+<p:Messages xmlns:p="https://raw.githubusercontent.com/amaembo/huntbugs/master/huntbugs/src/main/resources/huntbugs"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://www.example.org/messages messages.xsd ">
+ xsi:schemaLocation="https://raw.githubusercontent.com/amaembo/huntbugs/master/huntbugs/src/main/resources/huntbugs messages.xsd">
  <!-- Some of these descriptions are taken from FindBugs project: http://findbugs.sourceforge.net/ -->
  <WarningList>
   <Warning Type="RoughConstantValue">
@@ -12,14 +12,14 @@
   <Warning Type="AbsoluteValueOfHashCode">
    <Title>Bad attempt to compute absolute value of signed 32-bit hashcode</Title>
    <Description>Bad attempt to compute absolute value of signed 32-bit hashcode</Description>
-   <LongDescription><![CDATA[This code generates a hashcode and then computes the absolute value of that hashcode. 
+   <LongDescription><![CDATA[This code generates a hashcode and then computes the absolute value of that hashcode.<br> 
     If the hashcode is <code>Integer.MIN_VALUE</code>, then the result will be negative as well (since <code>Math.abs(Integer.MIN_VALUE) == Integer.MIN_VALUE</code>). 
     One out of 2<sup>32</sup> strings have a hashCode of <code>Integer.MIN_VALUE</code>, including "polygenelubricants", "GydZG_" and "DESIGNING WORKHOUSES".]]></LongDescription>
   </Warning>
   <Warning Type="AbsoluteValueOfRandomInt">
    <Title>Bad attempt to compute absolute value of signed random integer</Title>
    <Description>Bad attempt to compute absolute value of signed random integer</Description>
-   <LongDescription><![CDATA[This code generates a random signed integer and then computes the absolute value of that random integer. 
+   <LongDescription><![CDATA[This code generates a random signed integer and then computes the absolute value of that random integer.<br> 
    If the number returned by the random number generator is <code>Integer.MIN_VALUE</code>, then the result will be negative as well (since <code>Math.abs(Integer.MIN_VALUE) == Integer.MIN_VALUE</code>). 
    (Same problem arised for long values as well).]]></LongDescription>
   </Warning>

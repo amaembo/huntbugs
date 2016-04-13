@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema elementFormDefault="unqualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.example.org/messages" targetNamespace="http://www.example.org/messages">
+<xsd:schema elementFormDefault="unqualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="https://raw.githubusercontent.com/amaembo/huntbugs/master/huntbugs/src/main/resources/huntbugs" targetNamespace="https://raw.githubusercontent.com/amaembo/huntbugs/master/huntbugs/src/main/resources/huntbugs">
 
     <xsd:annotation>
      <xsd:documentation>HuntBugs warning descriptions</xsd:documentation></xsd:annotation>

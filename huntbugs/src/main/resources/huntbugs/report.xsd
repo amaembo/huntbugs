@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="unqualified"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns="https://raw.githubusercontent.com/amaembo/huntbugs/master/huntbugs/src/main/resources/huntbugs"
+ targetNamespace="https://raw.githubusercontent.com/amaembo/huntbugs/master/huntbugs/src/main/resources/huntbugs">
+
+ <xsd:annotation>
+  <xsd:documentation>HuntBugs warning descriptions</xsd:documentation>
+ </xsd:annotation>
+
+
+ <xsd:complexType name="WarningList">
+  <xsd:sequence>
+   <xsd:element name="Warning" type="Warning" maxOccurs="unbounded"
+    minOccurs="0"></xsd:element>
+  </xsd:sequence>
+ </xsd:complexType>
+
+ <xsd:complexType name="Warning">
+  <xsd:sequence>
+   <xsd:element name="Title" minOccurs="0" maxOccurs="1"
+    type="xsd:string">
+   </xsd:element>
+   <xsd:element name="Description" minOccurs="0" maxOccurs="1"
+    type="xsd:string">
+   </xsd:element>
+   <xsd:element name="LongDescription" type="xsd:string"
+    minOccurs="0" maxOccurs="1">
+   </xsd:element>
+   <xsd:element name="Class" type="Class" minOccurs="1"
+    maxOccurs="1">
+   </xsd:element>
+   <xsd:element name="Method" type="Method" minOccurs="0"
+    maxOccurs="1">
+   </xsd:element>
+   <xsd:element name="Location" type="SourceFileElement"
+    minOccurs="0" maxOccurs="1">
+   </xsd:element>
+   <xsd:element name="AnotherLocation" type="SourceFileElement"
+    minOccurs="0" maxOccurs="unbounded"></xsd:element>
+  </xsd:sequence>
+  <xsd:attribute name="Type" type="xsd:string" use="required"></xsd:attribute>
+ </xsd:complexType>
+
+ <xsd:element name="HuntBugs" type="Root"></xsd:element>
+
+ <xsd:complexType name="Root">
+  <xsd:sequence>
+   <xsd:element name="WarningList" type="WarningList"></xsd:element>
+  </xsd:sequence>
+ </xsd:complexType>
+
+
+    <xsd:complexType name="Class">
+     <xsd:complexContent>
+      <xsd:extension base="SourceFileElement">
+       <xsd:attribute name="Name" type="xsd:string" use="required"></xsd:attribute>
+
+
+      </xsd:extension>
+     </xsd:complexContent>
+    </xsd:complexType>
+    
+    <xsd:complexType name="SourceFileElement">
+     <xsd:attribute name="SourceFile" type="xsd:string"
+      use="optional">
+     </xsd:attribute>
+     <xsd:attribute name="Line" type="LineType" use="optional"/>
+     <xsd:attribute name="EndLine" type="LineType" use="optional"></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:simpleType name="LineType">
+     <xsd:restriction base="xsd:int">
+      <xsd:minInclusive value="0"></xsd:minInclusive>
+     </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:complexType name="Method">
+     <xsd:complexContent>
+      <xsd:extension base="SourceFileElement">
+       <xsd:attribute name="Name" type="xsd:string" use="required"></xsd:attribute>
+       <xsd:attribute name="Signature" type="xsd:string" use="required"></xsd:attribute>
+      </xsd:extension>
+     </xsd:complexContent>
+    </xsd:complexType>
+
+
+    <xsd:complexType name="Annotation">
+     <xsd:simpleContent>
+      <xsd:extension base="xsd:string">
+       <xsd:attribute name="Name" type="xsd:string"></xsd:attribute>
+      </xsd:extension>
+     </xsd:simpleContent>
+    </xsd:complexType>
+</xsd:schema>
