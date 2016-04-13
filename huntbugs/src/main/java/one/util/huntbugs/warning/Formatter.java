@@ -20,7 +20,49 @@ package one.util.huntbugs.warning;
  *
  */
 public class Formatter {
+    private final Messages msgs;
+    
     public Formatter() {
-        
+        this(Messages.load());
+    }
+
+    public Formatter(Messages msgs) {
+        this.msgs = msgs;
+    }
+    
+    public String getTitle(Warning warning) {
+        return msgs.getMessagesForType(warning.getType()).getTitle();
+    }
+    
+    public String getDescription(Warning warning) {
+        return format(msgs.getMessagesForType(warning.getType()).getDescription(), warning);
+    }
+
+    public String getLongDescription(Warning warning) {
+        return format(msgs.getMessagesForType(warning.getType()).getLongDescription(), warning);
+    }
+    
+    private String format(String description, Warning warning) {
+        String[] fields = description.split("\\$", -1);
+        if(fields.length == 1)
+            return description;
+        StringBuilder result = new StringBuilder(fields[0]);
+        for(int i=1; i<fields.length; i++) {
+            if(i % 2 == 0) {
+                result.append(fields[i]);
+            } else {
+                WarningAnnotation<?> anno = warning.getAnnotation(fields[i]);
+                if(anno == null) {
+                    result.append('(').append(fields[i]).append(')');
+                } else {
+                    result.append(formatValue(anno.getValue()));
+                }
+            }
+        }
+        return result.toString();
+    }
+
+    private String formatValue(Object value) {
+        return String.valueOf(value);
     }
 }

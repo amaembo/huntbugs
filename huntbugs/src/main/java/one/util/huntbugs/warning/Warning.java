@@ -41,11 +41,16 @@ public class Warning {
     }
     
     public String getClassName() {
+        WarningAnnotation<?> anno = getAnnotation("TYPE");
+        return anno == null ? "(Unknown)" : anno.getValue().toString();
+    }
+    
+    public WarningAnnotation<?> getAnnotation(String name) {
         for(WarningAnnotation<?> anno : annotations) {
-            if(anno.getRole().equals("TYPE"))
-                return anno.getValue().toString();
+            if(anno.getRole().equals(name))
+                return anno;
         }
-        return "(Unknown)";
+        return null;
     }
 
     public int getScore() {

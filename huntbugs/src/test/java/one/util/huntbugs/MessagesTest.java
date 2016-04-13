@@ -16,7 +16,14 @@
 package one.util.huntbugs;
 
 import static org.junit.Assert.*;
+
+import java.util.Arrays;
+
+import one.util.huntbugs.warning.Formatter;
 import one.util.huntbugs.warning.Messages;
+import one.util.huntbugs.warning.Warning;
+import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.WarningType;
 import one.util.huntbugs.warning.Messages.Message;
 
 import org.junit.Test;
@@ -32,5 +39,14 @@ public class MessagesTest {
         Message msg = m.getMessagesForType("RoughConstantValue");
         assertEquals("Rough value of known constant is used", msg.getTitle());
         assertEquals("Constant $NUMBER$ should be replaced with $REPLACEMENT$", msg.getDescription());
+    }
+
+    @Test
+    public void testFormatter() {
+        Formatter f = new Formatter();
+        WarningType type = new WarningType("BadPractice", "RoughConstantValue", 60);
+        Warning w = new Warning(type, 0, Arrays.asList(WarningAnnotation.forNumber(3.1415), new WarningAnnotation<>("REPLACEMENT", "Math.PI")));
+        assertEquals("Rough value of known constant is used", f.getTitle(w));
+        assertEquals("Constant 3.1415 should be replaced with Math.PI", f.getDescription(w));
     }
 }

@@ -64,6 +64,10 @@ public class Messages {
         this.map = map;
     }
     
+    public Message getMessagesForType(WarningType warningType) {
+        return getMessagesForType(warningType.getName());
+    }
+    
     public Message getMessagesForType(String warningType) {
         Message message = map.get(warningType);
         if(message == null) {
@@ -112,6 +116,9 @@ public class Messages {
                     String title = getText(warning, "Title");
                     String description = getText(warning, "Description");
                     String longDescription = getText(warning, "LongDescription");
+                    if(map.containsKey(type)) {
+                        throw new IllegalStateException("Warning type "+type+" is declared twice");
+                    }
                     map.put(type, new Message(title, description, longDescription));
                 }
                 node = node.getNextSibling();
