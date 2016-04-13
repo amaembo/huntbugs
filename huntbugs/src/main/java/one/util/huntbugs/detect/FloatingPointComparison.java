@@ -70,6 +70,8 @@ public class FloatingPointComparison {
                 return 50;
             if (v == 1.0 || v == 2.0 || v == -1.0 || v == -2.0 || v == Double.MIN_VALUE || v == Double.MAX_VALUE
                 || v == -Double.MAX_VALUE || v == -Double.MIN_VALUE)
+                return 40;
+            if (v == 3.0 || v == 4.0 || v == -3.0 || v == -4.0)
                 return 30;
             int prec = new BigDecimal(v).precision();
             if (prec < 3)

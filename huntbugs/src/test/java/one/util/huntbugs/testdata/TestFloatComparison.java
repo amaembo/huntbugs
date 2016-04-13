@@ -49,13 +49,13 @@ public class TestFloatComparison {
     
     @AssertWarning(type="FloatComparison", minScore = 5, maxScore = 15)
     void testDouble2(double a) {
-        if(a == 1.0)
+        if(a == 3.0)
             System.out.println("Equals");
     }
     
     @AssertWarning(type="FloatComparison", minScore = 15, maxScore = 25)
     void testDouble3(double a) {
-        if(a == 3.0)
+        if(a == 5.0)
             System.out.println("Equals");
         if(a == 1000)
             System.out.println("Equals");
