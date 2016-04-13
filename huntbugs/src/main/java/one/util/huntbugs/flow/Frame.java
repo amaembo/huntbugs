@@ -231,9 +231,11 @@ class Frame {
                 Expression source = sources[slot];
                 target = target.replace(slot, expr);
                 Object val = source.getUserData(ValuesFlow.VALUE_KEY);
-                if(val instanceof Integer)
+                if(val == UNKNOWN_VALUE)
+                    expr.putUserData(ValuesFlow.VALUE_KEY, UNKNOWN_VALUE);
+                else if(val instanceof Integer)
                     return target.processUnaryOp(expr, Integer.class, inc -> ((int)val)+inc);
-                if(val instanceof Long)
+                else if(val instanceof Long)
                     return target.processUnaryOp(expr, Long.class, inc -> ((long)val)+inc);
             }
             return target;

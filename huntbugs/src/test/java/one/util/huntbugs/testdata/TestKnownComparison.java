@@ -100,4 +100,15 @@ public class TestKnownComparison {
             System.out.println("Iteration!");
         }
     }
+    
+    @AssertNoWarning(type = "*")
+    public void testIncInLoop() {
+        int x = 10;
+        for (int i = 0; i < 10; i++) {
+            x -= 4;
+            if (x > 0)
+                System.out.println("X!");
+            System.out.println("Iteration!");
+        }
+    }
 }
