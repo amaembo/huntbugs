@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import com.strobel.assembler.metadata.ClasspathTypeLoader;
 import com.strobel.assembler.metadata.CompositeTypeLoader;
@@ -152,6 +153,10 @@ public class Context {
             return;
         incStat("Warnings");
         warnings.add(warning);
+    }
+    
+    public Stream<Warning> warnings() {
+        return warnings.stream();
     }
 
     public void reportWarnings(PrintStream app) {

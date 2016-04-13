@@ -26,8 +26,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarFile;
 
+
 import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
+import one.util.huntbugs.output.XmlReportWriter;
 import one.util.huntbugs.repo.CompositeRepository;
 import one.util.huntbugs.repo.DirRepository;
 import one.util.huntbugs.repo.JarRepository;
@@ -140,6 +142,7 @@ public class HuntBugs {
                 ctx.reportErrors(new PrintStream("huntbugs.errors.txt"));
                 ctx.reportWarnings(new PrintStream("huntbugs.warnings.txt"));
                 ctx.reportStats(new PrintStream("huntbugs.stats.txt"));
+                new XmlReportWriter(Paths.get("huntbugs.warnings.xml")).write(ctx);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

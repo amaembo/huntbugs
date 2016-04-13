@@ -17,6 +17,7 @@ package one.util.huntbugs.warning;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author lan
@@ -51,6 +52,10 @@ public class Warning {
                 return anno;
         }
         return null;
+    }
+    
+    public Stream<WarningAnnotation<?>> annotations() {
+        return annotations.stream();
     }
 
     public int getScore() {

@@ -24,22 +24,25 @@
    <xsd:element name="Description" minOccurs="0" maxOccurs="1"
     type="xsd:string">
    </xsd:element>
-   <xsd:element name="LongDescription" type="xsd:string"
-    minOccurs="0" maxOccurs="1">
-   </xsd:element>
-   <xsd:element name="Class" type="Class" minOccurs="1"
+   <xsd:element name="LongDescription" type="xsd:string" minOccurs="0"
     maxOccurs="1">
+   </xsd:element>
+   <xsd:element name="Class" type="Class" minOccurs="1" maxOccurs="1">
    </xsd:element>
    <xsd:element name="Method" type="Method" minOccurs="0"
     maxOccurs="1">
    </xsd:element>
-   <xsd:element name="Location" type="SourceFileElement"
-    minOccurs="0" maxOccurs="1">
+   <xsd:element name="Location" type="SourceFileElement" minOccurs="0"
+    maxOccurs="1">
    </xsd:element>
    <xsd:element name="AnotherLocation" type="SourceFileElement"
-    minOccurs="0" maxOccurs="unbounded"></xsd:element>
+    minOccurs="0" maxOccurs="unbounded">
+   </xsd:element>
+   <xsd:element name="Annotation" type="Annotation" minOccurs="0" maxOccurs="unbounded"></xsd:element>
   </xsd:sequence>
   <xsd:attribute name="Type" type="xsd:string" use="required"></xsd:attribute>
+  <xsd:attribute name="Category" type="xsd:string" use="required"></xsd:attribute>
+  <xsd:attribute name="Score" type="Score" use="required"></xsd:attribute>
  </xsd:complexType>
 
  <xsd:element name="HuntBugs" type="Root"></xsd:element>
@@ -92,4 +95,11 @@
       </xsd:extension>
      </xsd:simpleContent>
     </xsd:complexType>
+
+    <xsd:simpleType name="Score">
+     <xsd:restriction base="xsd:int">
+      <xsd:minInclusive value="0"></xsd:minInclusive>
+      <xsd:maxInclusive value="100"></xsd:maxInclusive>
+     </xsd:restriction>
+    </xsd:simpleType>
 </xsd:schema>

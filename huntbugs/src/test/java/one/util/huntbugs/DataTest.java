@@ -16,9 +16,11 @@
 package one.util.huntbugs;
 
 import java.io.PrintStream;
+import java.nio.file.Paths;
 
 import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
+import one.util.huntbugs.output.XmlReportWriter;
 import one.util.huntbugs.repo.Repository;
 
 import org.junit.Assert;
@@ -36,6 +38,7 @@ public class DataTest {
         ctx.reportStats(System.out);
         ctx.reportErrors(System.err);
         ctx.reportWarnings(new PrintStream("target/testWarnings.out"));
+        new XmlReportWriter(Paths.get("target/testWarnings.xml")).write(ctx);
         System.out.println("Analyzed "+ctx.getClassesCount()+" classes");
         if(ctx.getErrorCount() > 0)
             Assert.fail("Analysis finished with "+ctx.getErrorCount()+" errors");

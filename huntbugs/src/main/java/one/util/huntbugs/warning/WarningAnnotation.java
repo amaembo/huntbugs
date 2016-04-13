@@ -18,6 +18,7 @@ package one.util.huntbugs.warning;
 import java.util.Objects;
 
 import com.strobel.assembler.metadata.FieldReference;
+import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.Variable;
@@ -29,7 +30,7 @@ import com.strobel.decompiler.ast.Variable;
 public class WarningAnnotation<T> {
     private final String role;
     private final T value;
-    
+
     public WarningAnnotation(String role, T value) {
         super();
         this.role = role;
@@ -43,7 +44,7 @@ public class WarningAnnotation<T> {
     public T getValue() {
         return value;
     }
-    
+
     @Override
     public int hashCode() {
         return role.hashCode() * 31 + ((value == null) ? 0 : value.hashCode());
@@ -59,6 +60,38 @@ public class WarningAnnotation<T> {
         return Objects.equals(role, other.role) && Objects.equals(value, other.value);
     }
 
+    public static class MemberInfo {
+        final String typeName;
+        final String name;
+        final String signature;
+
+        public MemberInfo(MemberReference mr) {
+            super();
+            this.typeName = mr.getDeclaringType().getInternalName();
+            this.name = mr.getName();
+            this.signature = mr.getSignature();
+        }
+
+        public String getTypeName() {
+            return typeName;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getSignature() {
+            return signature;
+        }
+
+        @Override
+        public String toString() {
+            if(signature.startsWith("("))
+                return typeName+"."+name+signature;
+            return typeName+"."+name+":"+signature;
+        }
+    }
+
     public static class Location {
         final int offset;
         final int sourceLine;
@@ -67,60 +100,68 @@ public class WarningAnnotation<T> {
             this.offset = offset;
             this.sourceLine = sourceLine;
         }
-        
+
+        public int getOffset() {
+            return offset;
+        }
+
+        public int getSourceLine() {
+            return sourceLine;
+        }
+
         @Override
         public String toString() {
-            if(sourceLine != -1)
-                return "byteCode: "+offset+"; line: "+sourceLine;
-            return "byteCode: "+offset;
+            if (sourceLine != -1)
+                return "byteCode: " + offset + "; line: " + sourceLine;
+            return "byteCode: " + offset;
         }
     }
-    
+
     @Override
     public String toString() {
-        return getRole()+": "+getValue();
+        return getRole() + ": " + getValue();
     }
-    
+
     public static WarningAnnotation<String> forType(TypeReference type) {
         return new WarningAnnotation<>("TYPE", type.getFullName());
     }
 
-    public static WarningAnnotation<String> forMethod(MethodReference method) {
-        return new WarningAnnotation<>("METHOD", method.getFullName());
+    public static WarningAnnotation<MemberInfo> forMethod(MethodReference method) {
+        return new WarningAnnotation<>("METHOD", new MemberInfo(method));
     }
-    
-    public static WarningAnnotation<?> forReturnValue(MethodReference method) {
-        return new WarningAnnotation<>("RETURN_VALUE_OF", method.getFullName());
-	}
 
-    public static WarningAnnotation<String> forField(FieldReference field) {
-        return new WarningAnnotation<>("FIELD", field.getFullName());
+    public static WarningAnnotation<MemberInfo> forReturnValue(MethodReference method) {
+        return new WarningAnnotation<>("RETURN_VALUE_OF", new MemberInfo(method));
     }
-    
+
+    public static WarningAnnotation<MemberInfo> forField(FieldReference field) {
+        return new WarningAnnotation<>("FIELD", new MemberInfo(field));
+    }
+
     public static WarningAnnotation<String> forVariable(Variable var) {
         return new WarningAnnotation<>("VARIABLE", var.getName());
     }
-    
+
     public static WarningAnnotation<Number> forNumber(Number number) {
         return new WarningAnnotation<>("NUMBER", number);
     }
-    
+
     public static WarningAnnotation<Location> forLocation(int offset, int line) {
         return forLocation(new Location(offset, line));
     }
-    
+
     public static WarningAnnotation<Location> forLocation(Location loc) {
         return new WarningAnnotation<>("LOCATION", loc);
     }
-    
+
     public static WarningAnnotation<Location> forAnotherInstance(Location loc) {
         return new WarningAnnotation<>("ANOTHER_INSTANCE", loc);
     }
-    
+
     public static WarningAnnotation<String> forSourceFile(String file) {
         return new WarningAnnotation<>("FILE", file);
     }
-    
+
     public static WarningAnnotation<String> forString(String str) {
         return new WarningAnnotation<>("STRING", str);
     }
