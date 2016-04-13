@@ -133,8 +133,12 @@ public class WarningAnnotation<T> {
         return getRole() + ": " + getValue();
     }
 
-    public static WarningAnnotation<String> forType(TypeReference type) {
-        return new WarningAnnotation<>("TYPE", type.getFullName());
+    public static WarningAnnotation<?> forType(TypeReference type) {
+        return forType("TYPE", type);
+    }
+
+    public static WarningAnnotation<?> forType(String role, TypeReference type) {
+        return new WarningAnnotation<>(role, type.getFullName());
     }
 
     public static WarningAnnotation<MemberInfo> forMethod(MethodReference method) {

@@ -48,7 +48,7 @@ import org.w3c.dom.Element;
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.warning.Formatter;
 import one.util.huntbugs.warning.Warning;
-import one.util.huntbugs.warning.WarningAnnotation;import one.util.huntbugs.warning.WarningAnnotation.Location;
+import one.util.huntbugs.warning.WarningAnnotation.Location;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 
@@ -124,10 +124,10 @@ public class XmlReportWriter {
         w.annotations().forEach(anno -> {
             switch(anno.getRole()) {
             case "TYPE":
-                classElement.setAttribute("Name", formatValue(anno));
+                classElement.setAttribute("Name", formatter.formatValue(anno.getValue()));
                 break;
             case "FILE":
-                classElement.setAttribute("SourceFile", formatValue(anno));
+                classElement.setAttribute("SourceFile", formatter.formatValue(anno.getValue()));
                 break;
             case "LOCATION": {
                 location.setAttribute("Offset", String.valueOf(((Location)anno.getValue()).getOffset()));
@@ -160,7 +160,7 @@ public class XmlReportWriter {
             default:
                 Element attribute = doc.createElement("Annotation");
                 attribute.setAttribute("Name", anno.getRole());
-                attribute.appendChild(doc.createTextNode(formatValue(anno)));
+                attribute.appendChild(doc.createTextNode(formatter.formatValue(anno.getValue())));
                 attributes.add(attribute);
             }
         });
@@ -180,9 +180,5 @@ public class XmlReportWriter {
         });
         attributes.forEach(element::appendChild);
         return element;
-    }
-
-    private String formatValue(WarningAnnotation<?> anno) {
-        return anno.getValue().toString();
     }
 }

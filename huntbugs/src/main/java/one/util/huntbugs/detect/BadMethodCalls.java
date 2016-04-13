@@ -79,9 +79,10 @@ public class BadMethodCalls {
                     if (!ok) {
                         boolean scary = dblString.length() <= 8 && bigDecimalString.length() > 12
                             && dblString.toUpperCase().indexOf('E') == -1;
-                        ctx.report("BigDecimalConstructedFromDouble", scary ? 0 : -15, node, new WarningAnnotation<>(
-                                "REPLACEMENT", "BigDecimal.valueOf(double)"), new WarningAnnotation<>("DOUBLE_NUMBER",
-                                dblString), new WarningAnnotation<>("BIGDECIMAL_NUMBER", bigDecimalString));
+                        ctx.report("BigDecimalConstructedFromDouble", scary ? 0 : -15, node, WarningAnnotation
+                                .forMember("REPLACEMENT", "java/math/BigDecimal", "valueOf",
+                                    "(D)Ljava/math/BigDecimal;"), new WarningAnnotation<>("DOUBLE_NUMBER", dblString),
+                            new WarningAnnotation<>("BIGDECIMAL_NUMBER", bigDecimalString));
                     }
                 }
             }

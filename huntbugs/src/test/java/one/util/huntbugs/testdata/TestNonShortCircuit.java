@@ -88,6 +88,14 @@ public class TestNonShortCircuit {
     
     @AssertWarning(type="NonShortCircuitDangerous", minScore=75) 
     @AssertNoWarning(type="NonShortCircuit") 
+    public int testNullOr(String s) {
+        if(s == null | s.length() > 2)
+            return 1;
+        return 2;
+    }
+    
+    @AssertWarning(type="NonShortCircuitDangerous", minScore=75) 
+    @AssertNoWarning(type="NonShortCircuit") 
     public int testInstanceOf(Object s) {
         if(s instanceof String & ((String)s).length() > 2)
             return 1;

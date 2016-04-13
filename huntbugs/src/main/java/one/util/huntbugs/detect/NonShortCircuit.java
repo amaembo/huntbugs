@@ -25,6 +25,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.WarningAnnotation;
 
 @WarningDefinition(category = "CodeStyle", name = "NonShortCircuit", maxScore = 50)
 @WarningDefinition(category = "Correctness", name = "NonShortCircuitDangerous", maxScore = 80)
@@ -38,15 +39,17 @@ public class NonShortCircuit {
                 return;
             Expression left = node.getArguments().get(0);
             Expression right = node.getArguments().get(1);
+            String operation = Nodes.getOperation(node.getCode());
+            WarningAnnotation<String> op = new WarningAnnotation<>("OPERATION", operation);
+            WarningAnnotation<String> repl = new WarningAnnotation<>("REPLACEMENT", operation+operation);
             if(left.getInferredType().getSimpleType() == JvmType.Boolean &&
                     right.getInferredType().getSimpleType() == JvmType.Boolean) {
                 if(left.getCode() == AstCode.InstanceOf || Nodes.isNullCheck(left))
-                    ctx.report("NonShortCircuitDangerous", 0, node);
-                else if (left.getChildrenAndSelfRecursive().stream().anyMatch(
-                    n -> Nodes.isInvoke(n) && !Nodes.isSideEffectFreeMethod(n)))
-                    ctx.report("NonShortCircuitDangerous", 10, node);
+                    ctx.report("NonShortCircuitDangerous", 0, node, op, repl);
+                else if (Nodes.find(left, n -> Nodes.isInvoke(n) && !Nodes.isSideEffectFreeMethod(n)) != null)
+                    ctx.report("NonShortCircuitDangerous", 10, node, op, repl);
                 else
-                    ctx.report("NonShortCircuit", 0, node);
+                    ctx.report("NonShortCircuit", 0, node, op, repl);
             }
         }
     }

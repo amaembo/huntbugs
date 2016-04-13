@@ -323,6 +323,10 @@ public class Nodes {
         case CmpLt: return "<";
         case CmpGe: return ">=";
         case CmpGt: return ">";
+        case And: return "&";
+        case Or: return "|";
+        case LogicalAnd: return "&&";
+        case LogicalOr: return "||";
         default:
             return code.getName();
         }

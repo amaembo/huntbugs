@@ -64,7 +64,7 @@ public class Formatter {
         return result.toString();
     }
 
-    private String formatValue(Object value) {
+    public String formatValue(Object value) {
         if(value instanceof MemberInfo) {
             MemberInfo mi = (MemberInfo)value;
             String type = mi.typeName;
@@ -72,6 +72,42 @@ public class Formatter {
             if(pos > -1)
                 type = type.substring(pos+1).replace('$', '.');
             return type+"."+mi.name+(mi.signature.startsWith("(")?"()":"");
+        }
+        if(value instanceof Double) {
+            double val = (Double)value;
+            if(Double.isNaN(val))
+                return "Double.NaN";
+            if(val == Double.POSITIVE_INFINITY) 
+                return "Double.POSITIVE_INFINITY";
+            if(val == Double.NEGATIVE_INFINITY)
+                return "Double.NEGATIVE_INFINITY";
+            if(val == Double.MIN_VALUE)
+                return "Double.MIN_VALUE";
+            if(val == Double.MAX_VALUE)
+                return "Double.MAX_VALUE";
+            if(val == -Double.MIN_VALUE)
+                return "-Double.MIN_VALUE";
+            if(val == -Double.MAX_VALUE)
+                return "-Double.MAX_VALUE";
+            return Double.toString(val);
+        }
+        if(value instanceof Float) {
+            float val = (Float)value;
+            if(Float.isNaN(val))
+                return "Float.NaN";
+            if(val == Float.POSITIVE_INFINITY) 
+                return "Float.POSITIVE_INFINITY";
+            if(val == Float.NEGATIVE_INFINITY)
+                return "Float.NEGATIVE_INFINITY";
+            if(val == Float.MIN_VALUE)
+                return "Float.MIN_VALUE";
+            if(val == Float.MAX_VALUE)
+                return "Float.MAX_VALUE";
+            if(val == -Float.MIN_VALUE)
+                return "-Float.MIN_VALUE";
+            if(val == -Float.MAX_VALUE)
+                return "-Float.MAX_VALUE";
+            return Float.toString(val);
         }
         return String.valueOf(value);
     }

@@ -27,6 +27,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
+import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author lan
@@ -39,8 +40,9 @@ public class RandomUsage {
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression node, MethodContext ctx) {
         if(node.getCode() == AstCode.D2I) {
-            if(isRandomDouble(Nodes.getChild(node, 0))) {
-                ctx.report("RandomDoubleToInt", 0, node);
+            Expression child = Nodes.getChild(node, 0);
+            if(isRandomDouble(child)) {
+                ctx.report("RandomDoubleToInt", 0, child);
             }
             Expression mul = node.getArguments().get(0);
             if(mul.getCode() == AstCode.Mul) {
@@ -56,7 +58,7 @@ public class RandomUsage {
             MethodReference mr = (MethodReference) node.getArguments().get(0).getOperand();
             TypeReference type = mr.getDeclaringType();
             if(Types.isRandomClass(type) && !type.getInternalName().equals("java/security/SecureRandom")) {
-                ctx.report("RandomUsedOnlyOnce", 0, node);
+                ctx.report("RandomUsedOnlyOnce", 0, node, WarningAnnotation.forType("RANDOM_TYPE", type));
             }
         }
     }
