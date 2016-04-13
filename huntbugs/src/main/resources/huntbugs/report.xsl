@@ -9,8 +9,6 @@
     doctype-system="http://www.w3.org/TR/html4/loose.dtd"
     encoding="UTF-8"/>
  
-  <xsl:param name="css" select="'report.css'"/>
-
   <xsl:template match="/">
     <html>
       <!-- HTML header -->
@@ -26,7 +24,40 @@
       <title>
         HuntBugs Report
       </title>
-      <link rel="stylesheet" type="text/css" href="{$css}"/>
+      <style>
+      body {
+        font-family: verdana, helvetica, sans-serif;
+      }
+      
+      code {
+        font-size: 140%;
+      }
+      
+      table.Warnings {
+        border-collapse: collapse;
+      }
+      
+      table.Warnings, table.Warnings > tbody > tr > td {
+        border: 1px solid blue;
+        padding: 3pt;
+      }
+      
+      .Title {
+        font-weight: bold;
+      }
+      
+      td.Description {
+        background-color: yellow;
+        height: 10pt;
+      }
+      
+      table.Properties th {
+        text-align: right;
+        font-weight: normal;
+        font-size: 80%;
+        color: #444;
+      }
+      </style>
     </head>
   </xsl:template>
 

@@ -67,6 +67,34 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>xml-maven-plugin</artifactId>
+        <version>1.0.1</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>transform</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <transformationSets>
+            <transformationSet>
+              <dir>target</dir>
+              <includes><include>*.xml</include></includes>
+              <stylesheet>src/main/resources/huntbugs/report.xsl</stylesheet>
+              <fileMappers>
+                <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                  <targetExtension>.html</targetExtension>
+                </fileMapper>
+              </fileMappers>
+              <outputDir>target</outputDir>
+            </transformationSet>
+          </transformationSets>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 </project>
