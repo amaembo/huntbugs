@@ -66,11 +66,12 @@ public class Formatter {
 
     private String formatValue(Object value) {
         if(value instanceof MemberInfo) {
-            String type = ((MemberInfo)value).typeName;
+            MemberInfo mi = (MemberInfo)value;
+            String type = mi.typeName;
             int pos = type.lastIndexOf('/');
             if(pos > -1)
                 type = type.substring(pos+1).replace('$', '.');
-            return type+"."+((MemberInfo)value).name;
+            return type+"."+mi.name+(mi.signature.startsWith("(")?"()":"");
         }
         return String.valueOf(value);
     }

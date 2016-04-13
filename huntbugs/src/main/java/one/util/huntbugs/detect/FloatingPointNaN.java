@@ -15,11 +15,7 @@
  */
 package one.util.huntbugs.detect;
 
-import java.util.List;
-
 import com.strobel.decompiler.ast.Expression;
-import com.strobel.decompiler.ast.Node;
-
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -36,20 +32,16 @@ public class FloatingPointNaN {
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression node, MethodContext ctx) {
         if(node.getCode().isComparison()) {
-            List<Expression> args = node.getArguments();
-            Node leftNode = args.get(0);
-            Node rightNode = args.get(1);
-			Object left = Nodes.getConstant(leftNode);
-			Object right = Nodes.getConstant(rightNode);
-            if(left instanceof Float && Float.isNaN((float) left)) {
-                ctx.report("FloatCompareToNaN", 0, rightNode, new WarningAnnotation<>("REPLACEMENT", "Float.isNaN()"));
-            } else if(right instanceof Float && Float.isNaN((float) right)) {
-                ctx.report("FloatCompareToNaN", 0, leftNode, new WarningAnnotation<>("REPLACEMENT", "Float.isNaN()"));
-            } else if(left instanceof Double && Double.isNaN((double) left)) {
-                ctx.report("FloatCompareToNaN", 0, rightNode, new WarningAnnotation<>("REPLACEMENT", "Double.isNaN()"));
-            } else if(right instanceof Double && Double.isNaN((double) right)) {
-                ctx.report("FloatCompareToNaN", 0, leftNode, new WarningAnnotation<>("REPLACEMENT", "Double.isNaN()"));
-            }
+            Nodes.ifBinaryWithConst(node, (arg, constant) -> {
+                if(constant instanceof Float && Float.isNaN((float) constant)) {
+                    ctx.report("FloatCompareToNaN", 0, arg, 
+                        WarningAnnotation.forMember("REPLACEMENT", "java/lang/Float", "isNaN", "(F)Z"),
+                        new WarningAnnotation<>("USED_TYPE", "float"));
+                } else if(constant instanceof Double && Double.isNaN((double) constant)) {
+                    ctx.report("FloatCompareToNaN", 0, arg, WarningAnnotation.forMember("REPLACEMENT", "java/lang/Double", "isNaN", "(D)Z"),
+                        new WarningAnnotation<>("USED_TYPE", "double"));
+                }
+            });
         }
     }
 }

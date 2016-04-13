@@ -60,7 +60,7 @@ public class BadMethodReferences {
         if(functionalInterface.getInternalName().equals("java/util/Comparator") && handle.getHandleType() == MethodHandleType.InvokeStatic) {
             MethodReference mr = handle.getMethod();
             if((mr.getName().equals("min") || mr.getName().equals("max")) && mr.getDeclaringType().getPackageName().equals("java.lang")) {
-                mc.report("MaxMinMethodReferenceForComparator", 0, expr, new WarningAnnotation<>("METHOD_REFERENCE", mr));
+                mc.report("MaxMinMethodReferenceForComparator", 0, expr, WarningAnnotation.forMember("METHOD_REFERENCE", mr));
             }
         }
     }

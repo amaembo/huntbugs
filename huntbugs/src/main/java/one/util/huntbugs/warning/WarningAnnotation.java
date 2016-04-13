@@ -65,6 +65,13 @@ public class WarningAnnotation<T> {
         final String name;
         final String signature;
 
+        public MemberInfo(String typeName, String name, String signature) {
+            super();
+            this.typeName = typeName;
+            this.name = name;
+            this.signature = signature;
+        }
+
         public MemberInfo(MemberReference mr) {
             super();
             this.typeName = mr.getDeclaringType().getInternalName();
@@ -83,10 +90,14 @@ public class WarningAnnotation<T> {
         public String getSignature() {
             return signature;
         }
+        
+        public boolean isMethod() {
+            return signature.startsWith("(");
+        }
 
         @Override
         public String toString() {
-            if(signature.startsWith("("))
+            if(isMethod())
                 return typeName+"."+name+signature;
             return typeName+"."+name+":"+signature;
         }
@@ -145,7 +156,15 @@ public class WarningAnnotation<T> {
     public static WarningAnnotation<Number> forNumber(Number number) {
         return new WarningAnnotation<>("NUMBER", number);
     }
+    
+    public static WarningAnnotation<MemberInfo> forMember(String role, String internalTypeName, String name, String signature) {
+        return new WarningAnnotation<>(role, new MemberInfo(internalTypeName, name, signature));
+    }
 
+    public static WarningAnnotation<MemberInfo> forMember(String role, MemberReference mr) {
+        return new WarningAnnotation<>(role, new MemberInfo(mr));
+    }
+    
     public static WarningAnnotation<Location> forLocation(int offset, int line) {
         return forLocation(new Location(offset, line));
     }

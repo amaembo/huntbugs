@@ -35,5 +35,43 @@
     This will generate a fairly useless result such as <code>[C@16f0472</code>. 
     Consider using <code>java.util.Arrays.toString</code> to convert the array into a readable String that gives the contents of the array.]]></LongDescription>
    </Warning>
+  <Warning Type="FloatCompareToNaN">
+   <Title>Useless attempt to compare floating point number to NaN</Title>
+   <Description>Useless attempt to compare a $USED_TYPE$ number to NaN</Description>
+   <LongDescription><![CDATA[The code compares a number of <code>$USED_TYPE$</code> type to <code>NaN</code>.
+    This comparison is useless as it always returns false. To check whether the number is NaN or not use <code>$REPLACEMENT$</code>.]]></LongDescription>
+   </Warning>
+  <Warning Type="MaxMinMethodReferenceForComparator">
+   <Title>Invalid method reference is used as comparator</Title>
+   <Description>A reference to $METHOD_REFERENCE$ is erroneously used as a comparator</Description>
+   <LongDescription><![CDATA[The code uses a reference to <code>$METHOD_REFERENCE$</code> method for <code>Comparator</code> interface.
+   While this code compiles, $METHOD_REFERENCE$ does not actually fulfill a comparator contract, thus you might have incorrect result
+   or exception in runtime. Probably you wanted to use <code>Comparator.naturalOrder()</code> or <code>Comparator.reverseOrder()</code> instead.]]></LongDescription>
+   </Warning>
+  <Warning Type="SelfAssignmentLocalInsteadOfField">
+   <Title>This method contains a self assignment of a local variable, and there is a field with an identical name.</Title>
+   <Description>This method contains a self assignment of a variable $VARIABLE$ while there is a field with an identical name.</Description>
+   <LongDescription><![CDATA[This code assigns a local variable to itself like <code>$VARIABLE$ = $VARIABLE$</code> while there's a 
+   field with the same name in the class. Probably <code>this.$VARIABLE$ = $VARIABLE$</code> was meant instead.]]></LongDescription>
+   </Warning>
+  <Warning Type="VolatileIncrement">
+   <Title>An increment to a volatile field isn't atomic.</Title>
+   <Description>Non-atomic increment to a volatile field $FIELD$.</Description>
+   <LongDescription><![CDATA[This code increments a volatile field <code>$FIELD$</code>. Such operation is not atomic, so increments could be lost under contention.
+    Consider using <code>AtomicInteger</code> or <code>AtomicLong</code> instead.]]></LongDescription>
+   </Warning>
+  <Warning Type="VolatileMath">
+   <Title>Non-atomic math operation is performed on volatile field.</Title>
+   <Description>Non-atomic operation is performed on volatile field $FIELD$.</Description>
+   <LongDescription><![CDATA[This code updates a volatile field <code>$FIELD$</code>. Such operation is not atomic, so updates could be lost under contention.
+    Consider using <code>AtomicInteger</code> or <code>AtomicLong</code> instead.]]></LongDescription>
+   </Warning>
+  <Warning Type="InvalidMinMax">
+   <Title>Incorrect combination of max and min.</Title>
+   <Description>Incorrect code: $OUTER_FUNC$($OUTER_NUMBER$, $INNER_FUNC$($INNER_NUMBER$, value)).</Description>
+   <LongDescription><![CDATA[This code attempts to limit the value using incorrect sequence of max and min operations: <code>$OUTER_FUNC$($OUTER_NUMBER$, $INNER_FUNC$($INNER_NUMBER$, value))</code>.
+    Such code will always produce the same result <code>$OUTER_NUMBER$</code> (or <code>NaN</code> if a value is NaN). It seems that <code>$INNER_FUNC$($OUTER_NUMBER$, $OUTER_FUNC$($INNER_NUMBER$, value))</code>
+    was assumed instead.]]></LongDescription>
+   </Warning>
  </WarningList>
 </p:Messages>
