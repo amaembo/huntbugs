@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<p:Messages xmlns:p="http://www.example.org/messages" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.example.org/messages messages.xsd ">
+  <WarningList>
+   <Warning Type="RoughConstantValue">
+    <Title>Rough value of known constant is used</Title>
+    <Description>Constant $NUMBER$ should be replaced with $REPLACEMENT$</Description>
+    <LongDescription>Analysis found that constant value $NUMBER$ is used which is close to the $REPLACEMENT$. If $REPLACEMENT$ was actually meant, it's better to use it instead for better precision and code clarity.</LongDescription>
+   </Warning></WarningList>
+</p:Messages>

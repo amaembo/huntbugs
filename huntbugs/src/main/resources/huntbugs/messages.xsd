@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema elementFormDefault="unqualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.example.org/messages" targetNamespace="http://www.example.org/messages">
+
+    <xsd:annotation>
+     <xsd:documentation>HuntBugs warning descriptions</xsd:documentation></xsd:annotation>
+
+    
+    <xsd:complexType name="WarningList">
+     <xsd:sequence>
+      <xsd:element name="Warning" type="Warning" maxOccurs="unbounded" minOccurs="0"></xsd:element>
+     </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="Warning">
+     <xsd:sequence>
+      <xsd:element name="Title" minOccurs="1" maxOccurs="1">
+       <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+         <xsd:maxLength value="128"></xsd:maxLength>
+         <xsd:minLength value="10"></xsd:minLength>
+        </xsd:restriction>
+       </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="Description" minOccurs="1" maxOccurs="1">
+       <xsd:simpleType>
+        <xsd:restriction base="xsd:string">
+         <xsd:minLength value="10"></xsd:minLength>
+         <xsd:maxLength value="256"></xsd:maxLength>
+        </xsd:restriction>
+       </xsd:simpleType>
+      </xsd:element>
+      <xsd:element name="LongDescription" type="xsd:string"
+       minOccurs="0" maxOccurs="1">
+      </xsd:element>
+     </xsd:sequence>
+     <xsd:attribute name="Type" type="xsd:string" use="required"></xsd:attribute>
+    </xsd:complexType>
+    
+    <xsd:element name="Messages" type="Root"></xsd:element>
+    
+    <xsd:complexType name="Root">
+     <xsd:sequence>
+      <xsd:element name="WarningList" type="WarningList"></xsd:element>
+     </xsd:sequence>
+    </xsd:complexType>
+</xsd:schema>
