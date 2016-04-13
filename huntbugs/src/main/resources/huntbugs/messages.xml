@@ -1,9 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<p:Messages xmlns:p="http://www.example.org/messages" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.example.org/messages messages.xsd ">
-  <WarningList>
-   <Warning Type="RoughConstantValue">
-    <Title>Rough value of known constant is used</Title>
-    <Description>Constant $NUMBER$ should be replaced with $REPLACEMENT$</Description>
-    <LongDescription>Analysis found that constant value $NUMBER$ is used which is close to the $REPLACEMENT$. If $REPLACEMENT$ was actually meant, it's better to use it instead for better precision and code clarity.</LongDescription>
-   </Warning></WarningList>
+<p:Messages xmlns:p="http://www.example.org/messages"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.example.org/messages messages.xsd ">
+ <!-- Some of these descriptions are taken from FindBugs project: http://findbugs.sourceforge.net/ -->
+ <WarningList>
+  <Warning Type="RoughConstantValue">
+   <Title>Rough value of known constant is used</Title>
+   <Description>Constant $NUMBER$ should be replaced with $REPLACEMENT$</Description>
+   <LongDescription>Analysis found that constant value $NUMBER$ is used which is close to the $REPLACEMENT$. If $REPLACEMENT$ was actually meant, it's better to use it instead for better precision and code clarity.</LongDescription>
+  </Warning>
+  <Warning Type="AbsoluteValueOfHashCode">
+   <Title>Bad attempt to compute absolute value of signed 32-bit hashcode</Title>
+   <Description>Bad attempt to compute absolute value of signed 32-bit hashcode</Description>
+   <LongDescription><![CDATA[This code generates a hashcode and then computes the absolute value of that hashcode. 
+    If the hashcode is <code>Integer.MIN_VALUE</code>, then the result will be negative as well (since <code>Math.abs(Integer.MIN_VALUE) == Integer.MIN_VALUE</code>). 
+    One out of 2<sup>32</sup> strings have a hashCode of <code>Integer.MIN_VALUE</code>, including "polygenelubricants", "GydZG_" and "DESIGNING WORKHOUSES".]]></LongDescription>
+  </Warning>
+  <Warning Type="AbsoluteValueOfRandomInt">
+   <Title>Bad attempt to compute absolute value of signed random integer</Title>
+   <Description>Bad attempt to compute absolute value of signed random integer</Description>
+   <LongDescription><![CDATA[This code generates a random signed integer and then computes the absolute value of that random integer. 
+   If the number returned by the random number generator is <code>Integer.MIN_VALUE</code>, then the result will be negative as well (since <code>Math.abs(Integer.MIN_VALUE) == Integer.MIN_VALUE</code>). 
+   (Same problem arised for long values as well).]]></LongDescription>
+  </Warning>
+ </WarningList>
 </p:Messages>

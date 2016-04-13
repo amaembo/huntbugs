@@ -41,6 +41,7 @@ public class HuntBugs {
     private boolean listDetectors = false;
     private boolean listVariables = false;
     private boolean listDatabases = false;
+    private boolean listMessages = false;
     private final AnalysisOptions options = new AnalysisOptions();
     private Repository repo;
     
@@ -53,6 +54,8 @@ public class HuntBugs {
                 listVariables = true;
             } else if(arg.equals("-ldb")) {
                 listDatabases = true;
+            } else if(arg.equals("-lm")) {
+                listMessages = true;
             } else if(arg.startsWith("-D")) {
                 int pos = arg.indexOf('=');
                 if(pos == 0) {
@@ -84,6 +87,7 @@ public class HuntBugs {
             System.out.println("    -lw          -- list all warning types");
             System.out.println("    -lv          -- list all variables");
             System.out.println("    -ldb         -- list all databases");
+            System.out.println("    -lm          -- list warning titles");
             System.out.println("    -Dname=value -- set given variable");
             return -1;
         }
@@ -108,6 +112,11 @@ public class HuntBugs {
         if(listDatabases) {
             System.out.println("List of databases:");
             ctx.reportDatabases(System.out);
+            list = true;
+        }
+        if(listMessages) {
+            System.out.println("List of warning titles:");
+            ctx.reportTitles(System.out);
             list = true;
         }
         if(repo == null) {

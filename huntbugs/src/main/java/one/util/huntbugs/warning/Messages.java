@@ -36,6 +36,8 @@ import org.xml.sax.SAXException;
  *
  */
 public class Messages {
+    private static final String MESSAGES_XML = "huntbugs/messages.xml";
+    
     private final Map<String, Message> map;
     
     public static class Message {
@@ -94,7 +96,7 @@ public class Messages {
     
     public static Messages load() {
         Document dom;
-        try(InputStream is = Messages.class.getClassLoader().getResourceAsStream("huntbugs/messages.xml")) {
+        try(InputStream is = Messages.class.getClassLoader().getResourceAsStream(MESSAGES_XML)) {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
             dom = builder.parse(is);

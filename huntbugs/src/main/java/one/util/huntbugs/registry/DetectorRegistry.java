@@ -47,6 +47,7 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.repo.Repository;
 import one.util.huntbugs.repo.RepositoryVisitor;
 import one.util.huntbugs.util.NodeChain;
+import one.util.huntbugs.warning.Messages.Message;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningType;
@@ -240,5 +241,21 @@ public class DetectorRegistry {
         });
         printTree(out, result, arrow);
         out.println("Total databases: "+databases.instances.size());
+    }
+    
+    public void reportTitles(PrintStream out) {
+        List<String> rows = new ArrayList<>();
+        for(WarningType wt : typeToDetector.keySet()) {
+            Message msg = ctx.getMessages().getMessagesForType(wt);
+            ctx.incStat("Messages.Total");
+            if(msg.getTitle().equals(wt.getName())) {
+                rows.add(wt.getName()+": ?");
+            } else {
+                ctx.incStat("Messages");
+                rows.add(wt.getName()+": "+msg.getTitle());
+            }
+        }
+        rows.sort(null);
+        rows.forEach(out::println);
     }
 }

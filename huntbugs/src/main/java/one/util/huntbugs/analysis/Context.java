@@ -35,6 +35,7 @@ import com.strobel.assembler.metadata.TypeDefinition;
 import one.util.huntbugs.registry.DetectorRegistry;
 import one.util.huntbugs.repo.Repository;
 import one.util.huntbugs.repo.RepositoryVisitor;
+import one.util.huntbugs.warning.Messages;
 import one.util.huntbugs.warning.Warning;
 
 /**
@@ -52,6 +53,7 @@ public class Context {
     private final AnalysisOptions options;
     private final List<AnalysisListener> listeners = new CopyOnWriteArrayList<>();
     private final Map<String, Long> stat = new ConcurrentHashMap<>();
+    private Messages msgs;
 
     public Context(Repository repository, AnalysisOptions options) {
         this.options = options;
@@ -62,6 +64,13 @@ public class Context {
             loader = new CompositeTypeLoader(new ClasspathTypeLoader(System.getProperty("sun.boot.class.path")), loader);
         }
         ms = new MetadataSystem(loader);
+    }
+    
+    public Messages getMessages() {
+        if(msgs == null) {
+            msgs = Messages.load();
+        }
+        return msgs;
     }
 
     public AnalysisOptions getOptions() {
@@ -182,6 +191,10 @@ public class Context {
         registry.reportDatabases(out);
     }
     
+    public void reportTitles(PrintStream out) {
+        registry.reportTitles(out);
+    }
+
     public int getClassesCount() {
         return classesCount.get();
     }
