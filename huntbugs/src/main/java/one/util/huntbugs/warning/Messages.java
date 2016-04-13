@@ -73,7 +73,7 @@ public class Messages {
     public Message getMessagesForType(String warningType) {
         Message message = map.get(warningType);
         if(message == null) {
-            return new Message(warningType, warningType, warningType);
+            return new Message(warningType, warningType+" in $METHOD$", warningType);
         }
         return message;
     }

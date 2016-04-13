@@ -89,12 +89,14 @@ public class XmlReportWriter {
         } catch (ParserConfigurationException e) {
             throw new RuntimeException(e);
         }
+        Element root = doc.createElement("HuntBugs");
         Element list = doc.createElement("WarningList");
         Formatter formatter = new Formatter(ctx.getMessages());
         ctx.warnings().sorted(Comparator.comparing(Warning::getScore).reversed()
             .thenComparing(w -> w.getType().getName()).thenComparing(Warning::getClassName)).map(
             w -> writeWarning(doc, w, formatter)).forEach(list::appendChild);
-        doc.appendChild(list);
+        root.appendChild(list);
+        doc.appendChild(root);
         return doc;
     }
     

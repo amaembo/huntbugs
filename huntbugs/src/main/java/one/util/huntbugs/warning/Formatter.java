@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.warning;
 
+import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
+
 /**
  * @author lan
  *
@@ -63,6 +65,13 @@ public class Formatter {
     }
 
     private String formatValue(Object value) {
+        if(value instanceof MemberInfo) {
+            String type = ((MemberInfo)value).typeName;
+            int pos = type.lastIndexOf('/');
+            if(pos > -1)
+                type = type.substring(pos+1).replace('$', '.');
+            return type+"."+((MemberInfo)value).name;
+        }
         return String.valueOf(value);
     }
 }
