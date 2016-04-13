@@ -25,16 +25,25 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  */
 public class TestKnownComparison {
     @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
-    public void test() {
+    public void testAnd(int x) {
         int a = 2;
         int b = 3;
-        if (a > b) {
+        if (a > b && x > 2) {
             System.out.println("Never ever!");
         }
     }
 
+    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testAnd2(int x) {
+        int a = 2;
+        int b = 3;
+        if (x > 2 && a > b) {
+            System.out.println("Never ever!");
+        }
+    }
+    
     @AssertWarning(type = "ResultOfComparisonIsStaticallyKnown")
-    public void test2() {
+    public void test() {
         int a = 2;
         int b = 3;
         if (a < b) {
@@ -42,6 +51,15 @@ public class TestKnownComparison {
         }
     }
 
+    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnown")
+    public void testOr(int x) {
+        int a = 2;
+        int b = 3;
+        if (x > 3 || a < b) {
+            System.out.println("Why not?");
+        }
+    }
+    
     @AssertWarning(type = "ResultOfComparisonIsStaticallyKnown")
     public void testInc() {
         int a = 2;
