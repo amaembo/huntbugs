@@ -46,7 +46,7 @@ public class VolatileIncrement {
             if (arg.getCode() == AstCode.GetField || arg.getCode() == AstCode.GetStatic) {
                 FieldDefinition field = ((FieldReference) arg.getOperand()).resolve();
                 if (field != null && Flags.testAny(field.getFlags(), Flags.VOLATILE))
-                    ctx.report("VolatileIncrement", computePriority(field, md, parents), node);
+                    ctx.report("VolatileIncrement", computePriority(field, md, parents), arg);
             }
         }
         if (node.getCode() == AstCode.PutField || node.getCode() == AstCode.PutStatic) {

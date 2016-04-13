@@ -49,37 +49,37 @@
    or exception at runtime. Probably you wanted to use <code>Comparator.naturalOrder()</code> or <code>Comparator.reverseOrder()</code> instead.]]></LongDescription>
    </Warning>
   <Warning Type="SelfAssignmentLocalInsteadOfField">
-   <Title>Local variable is assigned to itself, and there is a field with an identical name.</Title>
+   <Title>Local variable is assigned to itself, and there is a field with an identical name</Title>
    <Description>Local variable $VARIABLE$ is assigned to itself while there is a field with an identical name.</Description>
    <LongDescription><![CDATA[This code assigns a local variable to itself like <code>$VARIABLE$ = $VARIABLE$</code> while there's a 
    field with the same name in the class. Probably <code>this.$VARIABLE$ = $VARIABLE$</code> was meant instead.]]></LongDescription>
    </Warning>
   <Warning Type="SelfAssignmentLocal">
-   <Title>Local variable is assigned to itself.</Title>
+   <Title>Local variable is assigned to itself</Title>
    <Description>Local variable $VARIABLE$ is assigned to itself in $METHOD$.</Description>
    <LongDescription><![CDATA[This code assigns a local variable to itself like <code>$VARIABLE$ = $VARIABLE$</code>. Probably something else was meant.]]></LongDescription>
    </Warning>
   <Warning Type="VolatileIncrement">
-   <Title>An increment to a volatile field isn't atomic.</Title>
+   <Title>An increment to a volatile field isn't atomic</Title>
    <Description>Non-atomic increment to a volatile field $FIELD$.</Description>
    <LongDescription><![CDATA[This code increments a volatile field <code>$FIELD$</code>. Such operation is not atomic, so increments could be lost under contention.
     Consider using <code>AtomicInteger</code> or <code>AtomicLong</code> instead.]]></LongDescription>
    </Warning>
   <Warning Type="VolatileMath">
-   <Title>Non-atomic math operation is performed on volatile field.</Title>
+   <Title>Non-atomic math operation is performed on volatile field</Title>
    <Description>Non-atomic operation is performed on volatile field $FIELD$.</Description>
    <LongDescription><![CDATA[This code updates a volatile field <code>$FIELD$</code>. Such operation is not atomic, so updates could be lost under contention.
     Consider using <code>AtomicInteger</code> or <code>AtomicLong</code> instead.]]></LongDescription>
    </Warning>
   <Warning Type="InvalidMinMax">
-   <Title>Incorrect combination of max and min.</Title>
+   <Title>Incorrect combination of max and min</Title>
    <Description>Incorrect code: $OUTER_FUNC$($OUTER_NUMBER$, $INNER_FUNC$($INNER_NUMBER$, value)).</Description>
    <LongDescription><![CDATA[This code attempts to limit the value using incorrect sequence of max and min operations: <code>$OUTER_FUNC$($OUTER_NUMBER$, $INNER_FUNC$($INNER_NUMBER$, value))</code>.
     Such code will always produce the same result <code>$OUTER_NUMBER$</code> (or <code>NaN</code> if a value is NaN). It seems that <code>$INNER_FUNC$($OUTER_NUMBER$, $OUTER_FUNC$($INNER_NUMBER$, value))</code>
     was assumed instead.]]></LongDescription>
    </Warning>
   <Warning Type="NonShortCircuitDangerous">
-   <Title>Potentially dangerous use of non-short-circuit logic.</Title>
+   <Title>Potentially dangerous use of non-short-circuit logic</Title>
    <Description>Potentially dangerous use of non-short-circuit operation $OPERATION$ in $METHOD$.</Description>
    <LongDescription><![CDATA[This code uses non-short-circuit operation <code>$OPERATION$</code> rather than short-circuit equivalent <code>$REPLACEMENT$</code>. 
    In addition, it seem possible that, depending on the value of the left hand side, you might not want to evaluate the right hand side (because it would have side effects), could cause an exception or could be expensive.<br>
@@ -87,53 +87,53 @@
    ]]></LongDescription>
    </Warning>
   <Warning Type="NonShortCircuit">
-   <Title>Questionable use of non-short-circuit logic.</Title>
+   <Title>Questionable use of non-short-circuit logic</Title>
    <Description>Questionable use of non-short-circuit operation $OPERATION$ in $METHOD$.</Description>
    <LongDescription><![CDATA[This code uses non-short-circuit operation <code>$OPERATION$</code> rather than short-circuit equivalent <code>$REPLACEMENT$</code>.<br>
    Non-short-circuit logic causes both sides of the expression to be evaluated even when the result can be inferred from knowing the left-hand side. This can be less efficient and can result in errors if the left-hand side guards cases when evaluating the right-hand side can generate an error. 
    ]]></LongDescription>
    </Warning>
   <Warning Type="RandomDoubleToInt">
-   <Title>Random value from 0 to 1 is coerced to the integer 0.</Title>
+   <Title>Random value from 0 to 1 is coerced to the integer 0</Title>
    <Description>Random value obtained via $RETURN_VALUE_OF$ is coerced to the integer 0 in $METHOD$.</Description>
    <LongDescription><![CDATA[A double random value is generated via <code>$RETURN_VALUE_OF$</code> and converted into integer. This method generate values from 0 to 1 (excluding), so the result of this conversion is always zero. You probably want to multiply the random value by something else before coercing it to an integer, or use the <code>nextInt(n)</code> method. 
    ]]></LongDescription>
    </Warning>
   <Warning Type="RandomUsedOnlyOnce">
-   <Title>Random object created and used only once.</Title>
+   <Title>Random object created and used only once</Title>
    <Description>A $RANDOM_TYPE$ object created and used only once in $METHOD$.</Description>
    <LongDescription><![CDATA[This code creates a <code>$RANDOM_TYPE$</code> object, uses it to generate one random number, and then discards it. This produces mediocre quality random numbers and is inefficient. If possible, rewrite the code so that the <code>$RANDOM_TYPE$</code> object is created once and saved, 
    and each time a new random number is required invoke a method on the existing <code>$RANDOM_TYPE$</code> object to obtain it.]]></LongDescription>
    </Warning>
   <Warning Type="SelfAssignmentArrayElement">
-   <Title>Array element is assigned to itself.</Title>
+   <Title>Array element is assigned to itself</Title>
    <Description>Array element is assigned to itself in $METHOD$.</Description>
    <LongDescription><![CDATA[This code assigns an array element to itself, directly or via an intermediate variable. Probably something else was meant.]]></LongDescription>
    </Warning>
   <Warning Type="SelfAssignmentField">
-   <Title>Field is assigned to itself.</Title>
+   <Title>Field is assigned to itself</Title>
    <Description>A field $FIELD$ is assigned to itself in $METHOD$.</Description>
    <LongDescription><![CDATA[This code assigns a field <code>$FIELD$</code> to itself, directly or via an intermediate variable. Probably something else was meant.]]></LongDescription>
    </Warning>
   <Warning Type="BigDecimalConstructedFromInfiniteOrNaN">
-   <Title>BigDecimal constructed from Infinity or NaN.</Title>
+   <Title>BigDecimal constructed from Infinity or NaN</Title>
    <Description>A BigDecimal object is constructed from $NUMBER$ in $METHOD$.</Description>
    <LongDescription><![CDATA[This code constructs a <code>BigDecimal</code> from <code>$NUMBER$</code>. This is not supported: a <code>NumberFormatException</code> will be thrown at runtime.]]></LongDescription>
    </Warning>
   <Warning Type="BigDecimalConstructedFromDouble">
-   <Title>BigDecimal is constructed from double.</Title>
+   <Title>BigDecimal is constructed from double</Title>
    <Description>A BigDecimal object is constructed from $DOUBLE_NUMBER$ in $METHOD$.</Description>
    <LongDescription><![CDATA[This code uses <code>new BigDecimal($DOUBLE_NUMBER$)</code>. This method will create a <code>BigDecimal</code> object which corresponds to the exact decimal representation of
    given double-precision number, which is <code>$BIGDECIMAL_NUMBER$</code>. You probably wanted to use <code>BigDecimal.valueOf($DOUBLE_NUMBER$)</code> which would produce actually $DOUBLE_NUMBER$.]]></LongDescription>
    </Warning>
   <Warning Type="CompareBitAndIncompatible">
-   <Title>Incompatible bit mask for bitwise and.</Title>
+   <Title>Incompatible bit mask for bitwise and</Title>
    <Description>A (x &amp; $AND_OPERAND$) is compared to $COMPARED_TO$ which is always false.</Description>
    <LongDescription><![CDATA[This code compares <code>(x &amp; $AND_OPERAND$)</code> with <code>$COMPARED_TO$</code>. Regardless of <code>x</code> value the result of expression is never equal to <code>$COMPARED_TO$</code>
    due to incompatible bit mask.]]></LongDescription>
    </Warning>
   <Warning Type="CompareBitOrIncompatible">
-   <Title>Incompatible bit mask for bitwise or.</Title>
+   <Title>Incompatible bit mask for bitwise or</Title>
    <Description>A (x | $OR_OPERAND$) is compared to $COMPARED_TO$ which is always false.</Description>
    <LongDescription><![CDATA[This code compares <code>(x | $OR_OPERAND$)</code> with <code>$COMPARED_TO$</code>. Regardless of <code>x</code> value the result of expression is never equal to <code>$COMPARED_TO$</code>
    due to incompatible bit mask.]]></LongDescription>
