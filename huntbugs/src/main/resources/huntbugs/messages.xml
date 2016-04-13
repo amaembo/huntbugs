@@ -232,6 +232,11 @@
       <Description>The finalize() method only nulls fields in $TYPE$.</Description>
       <LongDescription><![CDATA[This finalizer does nothing except null out fields. This is completely pointless, and requires that the object be garbage collected, finalized, and then garbage collected again. You should just remove the finalize method.]]></LongDescription>
     </Warning>
+    <Warning Type="FinalizePublic">
+      <Title>The finalize() method is public</Title>
+      <Description>The finalize() method is public in $TYPE$.</Description>
+      <LongDescription><![CDATA[A $METHOD$ method should have protected access, not public.]]></LongDescription>
+    </Warning>
     <Warning Type="FinalizeNullsFields">
       <Title>The finalize() method nulls fields</Title>
       <Description>The finalize() method nulls out fields in $TYPE$.</Description>
@@ -271,6 +276,18 @@
       <Description>Naked $CALLED_METHOD$ call in $METHOD$.</Description>
       <LongDescription><![CDATA[ A call to $CALLED_METHOD$ was made without any (apparent) accompanying modification to mutable object state.  In general, calling a notify method on a monitor is done because some condition another thread is waiting for has become true.  However, for the condition to be meaningful, it must involve a heap object that is visible to both threads.<br>
        This bug does not necessarily indicate an error, since the change to mutable object state may have taken place in a method which then called the method containing the notification.]]></LongDescription>
+    </Warning>
+    <Warning Type="FinalizeInvocation">
+      <Title>Explicit invocation of finalizer</Title>
+      <Description>Explicit invocation of finalize() in $METHOD$.</Description>
+      <LongDescription><![CDATA[This method contains an explicit invocation of the <code>finalize()</code> method on an object. Because finalizer methods are supposed to be executed once, and only by the VM, this is a bad idea.<br>
+        If a connected set of objects beings finalizable, then the VM will invoke the finalize method on all the finalizable object, 
+        possibly at the same time in different threads. Thus, it is a particularly bad idea, in the finalize method for a class <code>X</code>, invoke finalize on objects referenced by <code>X</code>, because they may already be getting finalized in a separate thread.]]></LongDescription>
+    </Warning>
+    <Warning Type="SystemRunFinalizersOnExit">
+      <Title>Method invokes runFinalizersOnExit()</Title>
+      <Description>Invocation of $CALLED_METHOD$ in $METHOD$.</Description>
+      <LongDescription><![CDATA[Never call $CALLED_METHOD$ for any reason. This method is deprecated and inherently unsafe.]]></LongDescription>
     </Warning>
   </WarningList>
 </p:Messages>

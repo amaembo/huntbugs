@@ -225,6 +225,8 @@ public class MethodContext {
                 MethodReference mr = (MethodReference) operand;
                 if (!mr.getReturnType().isVoid())
                     anno.add(WarningAnnotation.forReturnValue(mr));
+                else
+                    anno.add(WarningAnnotation.forMember("CALLED_METHOD", mr));
             }
         }
         anno.addAll(Arrays.asList(annotations));
