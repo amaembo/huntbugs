@@ -28,6 +28,7 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.componentmodel.Key;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
+import com.strobel.decompiler.ast.CaseBlock;
 import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Label;
@@ -134,6 +135,9 @@ public class ValuesFlow {
                         continue;
                     default:
                     }
+                    if(passFrame == null) {
+                        throw new IllegalStateException(expr.toString());
+                    }
                     passFrame = passFrame.process(expr);
                 } else if (n instanceof Condition) {
                     Condition cond = (Condition) n;
@@ -169,15 +173,20 @@ public class ValuesFlow {
                     Switch switchBlock = (Switch) n;
                     passFrame = passFrame.process(switchBlock.getCondition());
                     FrameSet switchBody = new FrameSet(passFrame);
-                    for (Block caseBlock : switchBlock.getCaseBlocks()) {
+                    boolean hasDefault = false;
+                    for (CaseBlock caseBlock : switchBlock.getCaseBlocks()) {
                         switchBody.passFrame = Frame.merge(passFrame, switchBody.passFrame);
                         switchBody.process(ctx, caseBlock);
+                        hasDefault |= caseBlock.isDefault();
                     }
                     if (!switchBody.valid) {
                         valid = false;
                         return;
                     }
-                    passFrame = Frame.merge(switchBody.passFrame, switchBody.breakFrame);
+                    if(hasDefault)
+                        passFrame = Frame.merge(switchBody.passFrame, switchBody.breakFrame);
+                    else
+                        passFrame = Frame.merge(Frame.merge(passFrame, switchBody.passFrame), switchBody.breakFrame);
                     continueFrame = Frame.merge(continueFrame, switchBody.continueFrame);
                 } else if (n instanceof Loop) {
                     Loop loop = (Loop) n;
@@ -219,6 +228,7 @@ public class ValuesFlow {
                                 FrameSet loopBody = new FrameSet(loopEnd);
                                 loopBody.process(ctx, loop.getBody());
                                 if(!loopBody.valid) {
+                                    cleanUn(loop);
                                     valid = false;
                                     return;
                                 }
@@ -247,6 +257,7 @@ public class ValuesFlow {
                                 FrameSet loopBody = new FrameSet(loopStart);
                                 loopBody.process(ctx, loop.getBody());
                                 if(!loopBody.valid) {
+                                    cleanUn(loop);
                                     valid = false;
                                     return;
                                 }

@@ -26,6 +26,7 @@ import one.util.huntbugs.util.Nodes;
 
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
+import com.strobel.assembler.metadata.JvmType;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.ParameterDefinition;
@@ -120,7 +121,7 @@ class Frame {
         case Rem:
             return processRem(expr, target);
         case Xor: {
-            switch (expr.getInferredType().getSimpleType()) {
+            switch (getType(expr)) {
             case Integer:
                 return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a ^ b);
             case Long:
@@ -130,7 +131,7 @@ class Frame {
             return target;
         }
         case Or: {
-            switch (expr.getInferredType().getSimpleType()) {
+            switch (getType(expr)) {
             case Integer:
                 return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a | b);
             case Long:
@@ -140,7 +141,7 @@ class Frame {
             return target;
         }
         case And: {
-            switch (expr.getInferredType().getSimpleType()) {
+            switch (getType(expr)) {
             case Integer:
                 return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a & b);
             case Long:
@@ -150,7 +151,7 @@ class Frame {
             return target;
         }
         case Shl: {
-            switch (expr.getInferredType().getSimpleType()) {
+            switch (getType(expr)) {
             case Integer:
                 return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a << b);
             case Long:
@@ -160,7 +161,7 @@ class Frame {
             return target;
         }
         case Shr: {
-            switch (expr.getInferredType().getSimpleType()) {
+            switch (getType(expr)) {
             case Integer:
                 return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a >> b);
             case Long:
@@ -170,7 +171,7 @@ class Frame {
             return target;
         }
         case UShr: {
-            switch (expr.getInferredType().getSimpleType()) {
+            switch (getType(expr)) {
             case Integer:
                 return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a >>> b);
             case Long:
@@ -426,7 +427,7 @@ class Frame {
                 processBinaryOp(expr, String.class, Integer.class, String::substring);
         } else if (mr.getDeclaringType().getInternalName().equals("java/lang/Math")) {
             if (mr.getName().equals("abs")) {
-                switch (expr.getInferredType().getSimpleType()) {
+                switch (getType(expr)) {
                 case Integer:
                     return processUnaryOp(expr, Integer.class, Math::abs);
                 case Long:
@@ -444,8 +445,13 @@ class Frame {
         return this;
     }
 
+    private static JvmType getType(Expression expr) {
+        TypeReference type = expr.getInferredType();
+        return type == null ? JvmType.Void : type.getSimpleType();
+    }
+
     private Frame processNeg(Expression expr, Frame target) {
-        switch (expr.getInferredType().getSimpleType()) {
+        switch (getType(expr)) {
         case Integer:
             return target.processUnaryOp(expr, Integer.class, l -> -l);
         case Long:
@@ -460,7 +466,7 @@ class Frame {
     }
 
     private Frame processRem(Expression expr, Frame target) {
-        switch (expr.getInferredType().getSimpleType()) {
+        switch (getType(expr)) {
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a % b);
         case Long:
@@ -475,7 +481,7 @@ class Frame {
     }
 
     private Frame processDiv(Expression expr, Frame target) {
-        switch (expr.getInferredType().getSimpleType()) {
+        switch (getType(expr)) {
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a / b);
         case Long:
@@ -490,7 +496,7 @@ class Frame {
     }
 
     private Frame processMul(Expression expr, Frame target) {
-        switch (expr.getInferredType().getSimpleType()) {
+        switch (getType(expr)) {
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a * b);
         case Long:
@@ -505,7 +511,7 @@ class Frame {
     }
 
     private Frame processSub(Expression expr, Frame target) {
-        switch (expr.getInferredType().getSimpleType()) {
+        switch (getType(expr)) {
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a - b);
         case Long:
@@ -518,9 +524,9 @@ class Frame {
         }
         return target;
     }
-
+    
     private Frame processAdd(Expression expr, Frame target) {
-        switch (expr.getInferredType().getSimpleType()) {
+        switch (getType(expr)) {
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, Integer::sum);
         case Long:
@@ -535,7 +541,7 @@ class Frame {
     }
 
     private Frame processCmpGe(Expression expr, Frame target) {
-        switch (expr.getArguments().get(0).getInferredType().getSimpleType()) {
+        switch (getType(expr.getArguments().get(0))) {
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() >= b
                     .intValue());
@@ -554,7 +560,7 @@ class Frame {
     }
 
     private Frame processCmpGt(Expression expr, Frame target) {
-        switch (expr.getArguments().get(0).getInferredType().getSimpleType()) {
+        switch (getType(expr.getArguments().get(0))) {
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() > b
                     .intValue());
@@ -573,7 +579,7 @@ class Frame {
     }
 
     private Frame processCmpLe(Expression expr, Frame target) {
-        switch (expr.getArguments().get(0).getInferredType().getSimpleType()) {
+        switch (getType(expr.getArguments().get(0))) {
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() <= b
                     .intValue());
@@ -591,7 +597,7 @@ class Frame {
     }
 
     private Frame processCmpLt(Expression expr, Frame target) {
-        switch (expr.getArguments().get(0).getInferredType().getSimpleType()) {
+        switch (getType(expr.getArguments().get(0))) {
         case Integer:
             return target
                     .processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() < b.intValue());
@@ -609,10 +615,7 @@ class Frame {
     }
 
     private Frame processCmpNe(Expression expr, Frame target) {
-        TypeReference type = expr.getArguments().get(0).getInferredType();
-        if(type == null)
-            return target;
-        switch (type.getSimpleType()) {
+        switch (getType(expr.getArguments().get(0))) {
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() != b
                     .intValue());
@@ -630,10 +633,7 @@ class Frame {
     }
 
     private Frame processCmpEq(Expression expr, Frame target) {
-        TypeReference type = expr.getArguments().get(0).getInferredType();
-        if(type == null)
-            return target;
-        switch (type.getSimpleType()) {
+        switch (getType(expr.getArguments().get(0))) {
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() == b
                     .intValue());

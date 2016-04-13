@@ -16,7 +16,6 @@
 package one.util.huntbugs.testdata;
 
 import java.util.List;
-
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -52,7 +51,7 @@ public class TestKnownComparison {
             System.out.println("Why not?");
         }
     }
-    
+
     @AssertNoWarning(type = "ResultOfComparisonIsStaticallyKnown")
     public void testIncrement(boolean f) {
         int a = 2;
@@ -69,20 +68,20 @@ public class TestKnownComparison {
         int a = 2;
         return a == 2 ? 1 : -1;
     }
-    
+
     @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
     public int testLoopBreak() {
         int a = 2;
         int b = 1;
-        while(true) {
+        while (true) {
             b = 2;
-            if(++a > 4)
+            if (++a > 4)
                 break;
             System.out.println("Iteration!");
         }
         return b == 2 ? 1 : -1;
     }
-    
+
     @AssertNoWarning(type = "*")
     public void testFor() {
         for (int i = 0; i < 10; i++) {
@@ -91,7 +90,7 @@ public class TestKnownComparison {
             System.out.println("Iteration!");
         }
     }
-    
+
     @AssertNoWarning(type = "*")
     public void testSubFor(List<String> l2) {
         for (int i = 0, n = l2.size(); i < n; i++) {
@@ -100,7 +99,71 @@ public class TestKnownComparison {
             System.out.println("Iteration!");
         }
     }
-    
+
+    @AssertNoWarning(type = "*")
+    public void testForContinue(boolean b) {
+        for (int i = 0; i < 10; i++) {
+            if (b && i == 0 || !b && i == 2) {
+                System.out.println("First!");
+            } else
+                continue;
+            System.out.println("Iteration!");
+        }
+    }
+
+    @AssertNoWarning(type = "*")
+    public void testNestedForForSwitch(boolean b) {
+        for (int pass = 0; pass < 2; pass++) {
+            if (pass == 1)
+                System.out.println("Second pass");
+            double start = 1;
+            for (double x = start; x < 1024; x *= 2) {
+                double q = x * 2;
+                switch (pass) {
+                case 0:
+                    System.out.println(q);
+                    if (x < 10) {
+                        System.out.println("Loop");
+                        for (int z = 0; z < 10; z++)
+                            System.out.println(z);
+                    }
+                    System.out.println("Continue");
+                    continue;
+                case 1:
+                    if (x > 128)
+                        continue;
+                    System.out.println(x + "1");
+                    break;
+                }
+            }
+        }
+    }
+
+    @AssertNoWarning(type = "*")
+    public void testNestedForFor() {
+        for (int a = 0; a < 10; a++) {
+            if (a % 2 == 0) {
+                for (int iter = 0; iter < 10; iter++) {
+                    System.out.println("test");
+                    if (iter > 3)
+                        continue;
+                    for (int b = a; b < 10; b++) {
+                        if (b % 2 == 0) {
+                            for (int c = (a == b) ? iter + 3 : 1; c < 20; c++) {
+                                if (a == b) {
+                                    System.out.println("Equal");
+                                }
+                                System.out.println("InnerInner");
+                            }
+                            System.out.println("Inner");
+                        }
+                    }
+                }
+                System.out.println("Outer");
+            }
+        }
+    }
+
     @AssertNoWarning(type = "*")
     public void testIncInLoop() {
         int x = 10;
