@@ -70,7 +70,7 @@ public class TestNumericPromotion {
     }
     
     @AssertWarning(type = "IntegerDivisionPromotedToFloat")
-    public float divideFloat(int x, int y) {
+    public float divideFloat(int x, long y) {
         return x / y;
     }
     

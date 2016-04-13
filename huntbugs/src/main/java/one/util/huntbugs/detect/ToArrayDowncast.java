@@ -16,6 +16,7 @@
 package one.util.huntbugs.detect;
 
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
@@ -25,6 +26,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
+import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author lan
@@ -41,7 +43,8 @@ public class ToArrayDowncast {
                 if(mr.getName().equals("toArray") && mr.getSignature().equals("()[Ljava/lang/Object;")) {
                     Expression target = Nodes.getChild(arg, 0);
                     if(Types.isInstance(target.getInferredType(), "java/util/Collection")) {
-                        mc.report("ImpossibleToArrayDowncast", 0, target);
+                        mc.report("ImpossibleToArrayDowncast", 0, target, WarningAnnotation.forType("TARGET_TYPE", (TypeReference) expr.getOperand())
+                            , WarningAnnotation.forType("TARGET_ELEMENT_TYPE", ((TypeReference) expr.getOperand()).getElementType()));
                     }
                 }
             }

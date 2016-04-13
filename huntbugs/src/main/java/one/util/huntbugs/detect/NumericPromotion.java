@@ -86,7 +86,9 @@ public class NumericPromotion {
                     if(val >= 2 && val <= 4)
                         priority += 10;
                 }
-                mc.report("IntegerDivisionPromotedToFloat", priority, expr);
+                mc.report("IntegerDivisionPromotedToFloat", priority, expr, new WarningAnnotation<>("SOURCE_TYPE", arg
+                        .getInferredType().getSimpleName()), new WarningAnnotation<>("TARGET_TYPE", expr
+                        .getInferredType().getSimpleName()));
             }
         }
     }
