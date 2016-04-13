@@ -159,7 +159,7 @@ public class BadMethodCalls {
         } else if(typeName.equals("java/lang/Double") && name.equals("longBitsToDouble")) {
             Expression arg = Nodes.getChild(node, 0);
             if(arg.getCode() == AstCode.I2L) {
-                ctx.report("DoubleLongBitsToDoubleOnInt", 0, arg);
+                ctx.report("DoubleLongBitsToDoubleOnInt", 0, arg, WarningAnnotation.forReturnValue(mr));
             }
         }
     }

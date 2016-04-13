@@ -325,6 +325,10 @@ public class Nodes {
         case CmpGt: return ">";
         case And: return "&";
         case Or: return "|";
+        case Xor: return "^";
+        case Sub: return "-";
+        case Div: return "/";
+        case Rem: return "%";
         case LogicalAnd: return "&&";
         case LogicalOr: return "||";
         default:

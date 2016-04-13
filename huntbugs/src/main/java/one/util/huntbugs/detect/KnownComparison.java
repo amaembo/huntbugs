@@ -49,12 +49,12 @@ public class KnownComparison {
                     if (deadCode == null) {
                         mc.report("ResultOfComparisonIsStaticallyKnown", 0, expr, new WarningAnnotation<>(
                                 "LEFT_OPERAND", left), new WarningAnnotation<>("RIGHT_OPERAND", right),
-                            new WarningAnnotation<>("OPERATION", op));
+                            new WarningAnnotation<>("OPERATION", op), new WarningAnnotation<>("RESULT", result.toString()));
                     } else {
                         mc.report("ResultOfComparisonIsStaticallyKnownDeadCode", 0, expr, new WarningAnnotation<>(
                                 "LEFT_OPERAND", left), new WarningAnnotation<>("RIGHT_OPERAND", right),
                             new WarningAnnotation<>("OPERATION", op), new WarningAnnotation<>("DEAD_CODE_LOCATION", mc
-                                    .getLocation(deadCode)));
+                                    .getLocation(deadCode)), new WarningAnnotation<>("RESULT", result.toString()));
                     }
                 }
             }

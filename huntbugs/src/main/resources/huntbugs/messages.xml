@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<p:Messages xmlns:p="https://raw.githubusercontent.com/amaembo/huntbugs/master/huntbugs/src/main/resources/huntbugs"
+<p:Messages
+ xmlns:p="https://raw.githubusercontent.com/amaembo/huntbugs/master/huntbugs/src/main/resources/huntbugs"
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xsi:schemaLocation="https://raw.githubusercontent.com/amaembo/huntbugs/master/huntbugs/src/main/resources/huntbugs messages.xsd">
  <!-- Some of these descriptions are taken from FindBugs project: http://findbugs.sourceforge.net/ -->
@@ -7,7 +8,8 @@
   <Warning Type="RoughConstantValue">
    <Title>Rough value of known constant is used</Title>
    <Description>Constant $NUMBER$ should be replaced with $REPLACEMENT$</Description>
-   <LongDescription>Analysis found that constant value $NUMBER$ is used which is close to the $REPLACEMENT$. If $REPLACEMENT$ was actually meant, it's better to use it instead for better precision and code clarity.</LongDescription>
+   <LongDescription><![CDATA[Analysis found that constant value <code>$NUMBER$</code> is used which is close to the <code>$REPLACEMENT$</code>. 
+   If <code>$REPLACEMENT$</code> was actually meant, it's better to use it instead for better precision and code clarity.]]></LongDescription>
   </Warning>
   <Warning Type="AbsoluteValueOfHashCode">
    <Title>Bad attempt to compute absolute value of signed 32-bit hashcode</Title>
@@ -26,58 +28,58 @@
   <Warning Type="ArrayHashCode">
    <Title>Invocation of hashCode() on an array</Title>
    <Description>Invocation of hashCode() on an array in $METHOD$</Description>
-   <LongDescription><![CDATA[Invokes hashCode on an array. Calling <code>hashCode</code> on an array returns the same value as <code>System.identityHashCode</code>, and ingores the contents and length of the array. If you need a <code>hashCode</code> that depends on the contents of an array <code>a</code>, use <code>java.util.Arrays.hashCode(a)</code>. ]]></LongDescription>
-   </Warning>
+   <LongDescription><![CDATA[This code invokes <code>hashCode()</code> on an array. Calling <code>hashCode()</code> on an array returns the same value as <code>System.identityHashCode</code>, and ingores the contents and length of the array. If you need a <code>hashCode</code> that depends on the contents of an array <code>a</code>, use <code>java.util.Arrays.hashCode(a)</code>. ]]></LongDescription>
+  </Warning>
   <Warning Type="ArrayToString">
    <Title>Invocation of toString() on an array</Title>
    <Description>Invocation of toString() on an array in $METHOD$</Description>
    <LongDescription><![CDATA[The code invokes <code>toString()</code> on an array or implicitly converts an array into String. 
     This will generate a fairly useless result such as <code>[C@16f0472</code>. 
     Consider using <code>java.util.Arrays.toString</code> to convert the array into a readable String that gives the contents of the array.]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="FloatCompareToNaN">
    <Title>Useless attempt to compare floating point number to NaN</Title>
    <Description>Useless attempt to compare a $USED_TYPE$ number to NaN</Description>
    <LongDescription><![CDATA[The code compares a number of <code>$USED_TYPE$</code> type to <code>NaN</code>.
     This comparison is useless as it always returns false. To check whether the number is NaN or not use <code>$REPLACEMENT$</code>.]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="MaxMinMethodReferenceForComparator">
    <Title>Invalid method reference is used as comparator</Title>
    <Description>A reference to $METHOD_REFERENCE$ is erroneously used as a comparator</Description>
    <LongDescription><![CDATA[The code uses a reference to <code>$METHOD_REFERENCE$</code> method for <code>Comparator</code> interface.
    While this code compiles, $METHOD_REFERENCE$ does not actually fulfill a comparator contract, thus you might have incorrect result
    or exception at runtime. Probably you wanted to use <code>Comparator.naturalOrder()</code> or <code>Comparator.reverseOrder()</code> instead.]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="SelfAssignmentLocalInsteadOfField">
    <Title>Local variable is assigned to itself, and there is a field with an identical name</Title>
    <Description>Local variable $VARIABLE$ is assigned to itself while there is a field with an identical name.</Description>
    <LongDescription><![CDATA[This code assigns a local variable to itself like <code>$VARIABLE$ = $VARIABLE$</code> while there's a 
    field with the same name in the class. Probably <code>this.$VARIABLE$ = $VARIABLE$</code> was meant instead.]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="SelfAssignmentLocal">
    <Title>Local variable is assigned to itself</Title>
    <Description>Local variable $VARIABLE$ is assigned to itself in $METHOD$.</Description>
    <LongDescription><![CDATA[This code assigns a local variable to itself like <code>$VARIABLE$ = $VARIABLE$</code>. Probably something else was meant.]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="VolatileIncrement">
    <Title>An increment to a volatile field isn't atomic</Title>
    <Description>Non-atomic increment to a volatile field $FIELD$.</Description>
    <LongDescription><![CDATA[This code increments a volatile field <code>$FIELD$</code>. Such operation is not atomic, so increments could be lost under contention.
     Consider using <code>AtomicInteger</code> or <code>AtomicLong</code> instead.]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="VolatileMath">
    <Title>Non-atomic math operation is performed on volatile field</Title>
    <Description>Non-atomic operation is performed on volatile field $FIELD$.</Description>
    <LongDescription><![CDATA[This code updates a volatile field <code>$FIELD$</code>. Such operation is not atomic, so updates could be lost under contention.
     Consider using <code>AtomicInteger</code> or <code>AtomicLong</code> instead.]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="InvalidMinMax">
    <Title>Incorrect combination of max and min</Title>
    <Description>Incorrect code: $OUTER_FUNC$($OUTER_NUMBER$, $INNER_FUNC$($INNER_NUMBER$, value)).</Description>
    <LongDescription><![CDATA[This code attempts to limit the value using incorrect sequence of max and min operations: <code>$OUTER_FUNC$($OUTER_NUMBER$, $INNER_FUNC$($INNER_NUMBER$, value))</code>.
     Such code will always produce the same result <code>$OUTER_NUMBER$</code> (or <code>NaN</code> if a value is NaN). It seems that <code>$INNER_FUNC$($OUTER_NUMBER$, $OUTER_FUNC$($INNER_NUMBER$, value))</code>
     was assumed instead.]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="NonShortCircuitDangerous">
    <Title>Potentially dangerous use of non-short-circuit logic</Title>
    <Description>Potentially dangerous use of non-short-circuit operation $OPERATION$ in $METHOD$.</Description>
@@ -85,58 +87,123 @@
    In addition, it seem possible that, depending on the value of the left hand side, you might not want to evaluate the right hand side (because it would have side effects), could cause an exception or could be expensive.<br>
    Non-short-circuit logic causes both sides of the expression to be evaluated even when the result can be inferred from knowing the left-hand side. This can be less efficient and can result in errors if the left-hand side guards cases when evaluating the right-hand side can generate an error. 
    ]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="NonShortCircuit">
    <Title>Questionable use of non-short-circuit logic</Title>
    <Description>Questionable use of non-short-circuit operation $OPERATION$ in $METHOD$.</Description>
    <LongDescription><![CDATA[This code uses non-short-circuit operation <code>$OPERATION$</code> rather than short-circuit equivalent <code>$REPLACEMENT$</code>.<br>
    Non-short-circuit logic causes both sides of the expression to be evaluated even when the result can be inferred from knowing the left-hand side. This can be less efficient and can result in errors if the left-hand side guards cases when evaluating the right-hand side can generate an error. 
    ]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="RandomDoubleToInt">
    <Title>Random value from 0 to 1 is coerced to the integer 0</Title>
    <Description>Random value obtained via $RETURN_VALUE_OF$ is coerced to the integer 0 in $METHOD$.</Description>
    <LongDescription><![CDATA[A double random value is generated via <code>$RETURN_VALUE_OF$</code> and converted into integer. This method generate values from 0 to 1 (excluding), so the result of this conversion is always zero. You probably want to multiply the random value by something else before coercing it to an integer, or use the <code>nextInt(n)</code> method. 
    ]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="RandomUsedOnlyOnce">
    <Title>Random object created and used only once</Title>
    <Description>A $RANDOM_TYPE$ object created and used only once in $METHOD$.</Description>
    <LongDescription><![CDATA[This code creates a <code>$RANDOM_TYPE$</code> object, uses it to generate one random number, and then discards it. This produces mediocre quality random numbers and is inefficient. If possible, rewrite the code so that the <code>$RANDOM_TYPE$</code> object is created once and saved, 
    and each time a new random number is required invoke a method on the existing <code>$RANDOM_TYPE$</code> object to obtain it.]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="SelfAssignmentArrayElement">
    <Title>Array element is assigned to itself</Title>
    <Description>Array element is assigned to itself in $METHOD$.</Description>
    <LongDescription><![CDATA[This code assigns an array element to itself, directly or via an intermediate variable. Probably something else was meant.]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="SelfAssignmentField">
    <Title>Field is assigned to itself</Title>
    <Description>A field $FIELD$ is assigned to itself in $METHOD$.</Description>
    <LongDescription><![CDATA[This code assigns a field <code>$FIELD$</code> to itself, directly or via an intermediate variable. Probably something else was meant.]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="BigDecimalConstructedFromInfiniteOrNaN">
    <Title>BigDecimal constructed from Infinity or NaN</Title>
    <Description>A BigDecimal object is constructed from $NUMBER$ in $METHOD$.</Description>
    <LongDescription><![CDATA[This code constructs a <code>BigDecimal</code> from <code>$NUMBER$</code>. This is not supported: a <code>NumberFormatException</code> will be thrown at runtime.]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="BigDecimalConstructedFromDouble">
    <Title>BigDecimal is constructed from double</Title>
    <Description>A BigDecimal object is constructed from $DOUBLE_NUMBER$ in $METHOD$.</Description>
    <LongDescription><![CDATA[This code uses <code>new BigDecimal($DOUBLE_NUMBER$)</code>. This method will create a <code>BigDecimal</code> object which corresponds to the exact decimal representation of
    given double-precision number, which is <code>$BIGDECIMAL_NUMBER$</code>. You probably wanted to use <code>BigDecimal.valueOf($DOUBLE_NUMBER$)</code> which would produce actually $DOUBLE_NUMBER$.]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="CompareBitAndIncompatible">
    <Title>Incompatible bit mask for bitwise and</Title>
    <Description>A (x &amp; $AND_OPERAND$) is compared to $COMPARED_TO$ which is always false.</Description>
    <LongDescription><![CDATA[This code compares <code>(x &amp; $AND_OPERAND$)</code> with <code>$COMPARED_TO$</code>. Regardless of <code>x</code> value the result of expression is never equal to <code>$COMPARED_TO$</code>
    due to incompatible bit mask.]]></LongDescription>
-   </Warning>
+  </Warning>
   <Warning Type="CompareBitOrIncompatible">
    <Title>Incompatible bit mask for bitwise or</Title>
    <Description>A (x | $OR_OPERAND$) is compared to $COMPARED_TO$ which is always false.</Description>
    <LongDescription><![CDATA[This code compares <code>(x | $OR_OPERAND$)</code> with <code>$COMPARED_TO$</code>. Regardless of <code>x</code> value the result of expression is never equal to <code>$COMPARED_TO$</code>
    due to incompatible bit mask.]]></LongDescription>
-   </Warning>
+  </Warning>
+  <Warning Type="DoubleLongBitsToDoubleOnInt">
+   <Title>Double.longBitsToDouble invoked on an int</Title>
+   <Description>Double.longBitsToDouble invoked on an int in $METHOD$.</Description>
+   <LongDescription><![CDATA[This code invokes <code>$RETURN_VALUE_OF$</code> method, but a 32 bit int value is passed as an argument. This almostly certainly is not intended and is unlikely to give the intended result.]]></LongDescription>
+  </Warning>
+  <Warning Type="NonAtomicOperationOnConcurrentMap">
+   <Title>Non-atomic sequence of operations on ConcurrentMap</Title>
+   <Description>$SECOND_METHOD$ is called after $FIRST_METHOD$ in non-atomical manner.</Description>
+   <LongDescription><![CDATA[This code invokes <code>$SECOND_METHOD$</code> method to update the key in concurrent map after invoking <code>$FIRST_METHOD$</code> to check the same key.
+   This sequence is not atomic, so it's possible that concurrent thread updates the same key meanwhile and several objects associated with the same key will be used concurrently.<br>
+   As a better alternative consider using <code>putIfAbsent</code> or <code>replace</code> methods.]]></LongDescription>
+  </Warning>
+  <Warning Type="RemOne">
+   <Title>Integer remainder modulo 1</Title>
+   <Description>Integer remainder modulo one in $METHOD$.</Description>
+   <LongDescription><![CDATA[The <code>(x % 1)</code> expression is computed here which always returns zero. Probably <code>(x & 1)</code> or <code>(x % 2)</code> was meant.]]></LongDescription>
+  </Warning>
+  <Warning Type="ResultOfComparisonIsStaticallyKnownDeadCode">
+   <Title>Result of comparison is statically known resulting in dead code</Title>
+   <Description>A comparison $LEFT_OPERAND$ $OPERATION$ $RIGHT_OPERAND$ is always $RESULT$ which results in dead code.</Description>
+   <LongDescription><![CDATA[This code performs a comparison <code>$LEFT_OPERAND$ $OPERATION$ $RIGHT_OPERAND$</code> which is statically known to be $RESULT$.
+        As a result some branch or the next condition in short-circuiting chain will never be executed. Probably something else was meant or 
+        this comparison along with the dead branch could be deleted.]]></LongDescription>
+  </Warning>
+  <Warning Type="ResultOfComparisonIsStaticallyKnown">
+   <Title>Result of comparison is statically known</Title>
+   <Description>A comparison $LEFT_OPERAND$ $OPERATION$ $RIGHT_OPERAND$ is always $RESULT$.</Description>
+   <LongDescription><![CDATA[This code performs a comparison <code>$LEFT_OPERAND$ $OPERATION$ $RIGHT_OPERAND$</code> which is statically known to be $RESULT$.
+        Probably something else was meant or this comparison could be deleted.]]></LongDescription>
+  </Warning>
+  <Warning Type="SameConditionsExcluding">
+   <Title>The same condition is repeatedly checked resulting in dead code</Title>
+   <Description>The same condition is repeatedly checked resulting in dead code in $METHOD$.</Description>
+   <LongDescription><![CDATA[This code checks the same condition twice. As a result some branch is never executed. Probably there's logical error or typo in the code.]]></LongDescription>
+  </Warning>
+  <Warning Type="SameConditions">
+   <Title>The same condition is repeatedly checked</Title>
+   <Description>The same condition is repeatedly checked in $METHOD$.</Description>
+   <LongDescription><![CDATA[This code checks the same condition twice. Probably there's logical error or typo in the code.]]></LongDescription>
+  </Warning>
+  <Warning Type="SelfComparison">
+   <Title>The expression is compared with itself</Title>
+   <Description>The expression is compared with itself in $METHOD$.</Description>
+   <LongDescription><![CDATA[The expression is compared with itself like <code>(x $OPERATION$ x)</code> which does not make sense. Probably there's logical error or typo in the code.]]></LongDescription>
+  </Warning>
+  <Warning Type="SelfComputation">
+   <Title>The operand is repeating in computation making it nonsensical</Title>
+   <Description>The operation like x $OPERATION$ x is performed in $METHOD$.</Description>
+   <LongDescription><![CDATA[This code performs an operation like <code>(x $OPERATION$ x)</code>. The result of this operation is 
+   always the same regardless the value of <code>x</code> (not considering the NaNs). Probably there's logical error or typo in the code.]]></LongDescription>
+  </Warning>
+  <Warning Type="UnnecessaryInstanceOfInferred">
+   <Title>The instanceof check is found to be unnecessary</Title>
+   <Description>Unnecessary instanceof $INSTANCEOF_TYPE$ is detected in $METHOD$.</Description>
+   <LongDescription><![CDATA[This code performs an <code>instanceof $INSTANCEOF_TYPE$</code> check. However it's statically known that 
+   the expression type is always <code>$INFERRED_TYPE$</code>, so this check is always true.<br> 
+   Probably something else was meant or this check could be replaced with zero check or removed at all.]]></LongDescription>
+  </Warning>
+  <Warning Type="UnnecessaryInstanceOf">
+   <Title>The instanceof check is unnecessary</Title>
+   <Description>Unnecessary instanceof $INSTANCEOF_TYPE$ is performed in $METHOD$.</Description>
+   <LongDescription><![CDATA[This code performs an <code>instanceof $INSTANCEOF_TYPE$</code> check. However this check is always true as the expression
+   type is <code>$ACTUAL_TYPE$</code>.<br>
+   Probably something else was meant or this check could be replaced with zero check or removed at all.]]></LongDescription>
+  </Warning>
  </WarningList>
 </p:Messages>

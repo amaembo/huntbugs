@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.detect;
 
+import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Condition;
@@ -26,6 +27,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author lan
@@ -43,25 +45,34 @@ public class AtomicConcurrent {
                         .equals("java/util/concurrent/ConcurrentSkipListMap"))) {
                 Expression self = expr.getArguments().get(0);
                 Expression key = expr.getArguments().get(1);
-                while (nc != null) {
+                Expression prevCall = null;
+                int priority = 0;
+                while (prevCall == null && nc != null) {
                     if (nc.getNode() instanceof Condition) {
                         Expression cond = ((Condition) nc.getNode()).getCondition();
-                        if (Nodes.findExpression(cond, child -> isGetOrContains(self, key, child)) != null) {
-                            mc.report("NonAtomicOperationOnConcurrentMap", 0, self);
-                            return;
-                        } else if (Nodes.findExpressionWithSources(cond, child -> isGetOrContains(self, key, child)) != null) {
-                            mc.report("NonAtomicOperationOnConcurrentMap", 10, self);
-                            return;
+                        prevCall = Nodes.findExpression(cond, child -> isGetOrContains(self, key, child));
+                        if (prevCall == null) {
+                            prevCall = Nodes
+                                    .findExpressionWithSources(cond, child -> isGetOrContains(self, key, child));
+                            priority = 10;
                         }
                     }
                     nc = nc.getParent();
                 }
-                if (Nodes.findExpression(expr.getArguments().get(2), child -> isGetOrContains(self, key, child)) != null) {
-                    mc.report("NonAtomicOperationOnConcurrentMap", 0, self);
-                    return;
-                } else if (Nodes.findExpressionWithSources(expr.getArguments().get(2), child -> isGetOrContains(self,
-                    key, child)) != null) {
-                    mc.report("NonAtomicOperationOnConcurrentMap", 10, self);
+                if (prevCall == null) {
+                    priority = 0;
+                    prevCall = Nodes.findExpression(expr.getArguments().get(2), child -> isGetOrContains(self, key,
+                        child));
+                    if (prevCall == null) {
+                        prevCall = Nodes.findExpressionWithSources(expr.getArguments().get(2),
+                            child -> isGetOrContains(self, key, child));
+                        priority = 10;
+                    }
+                }
+                if (prevCall != null) {
+                    mc.report("NonAtomicOperationOnConcurrentMap", priority, self, WarningAnnotation.forMember(
+                        "FIRST_METHOD", (MemberReference) prevCall.getOperand()), WarningAnnotation.forMember(
+                        "SECOND_METHOD", mr));
                     return;
                 }
             }

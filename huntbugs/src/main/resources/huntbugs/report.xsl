@@ -28,6 +28,10 @@
       body {
         font-family: verdana, helvetica, sans-serif;
       }
+
+      br {
+        margin: 1em;
+      }
       
       code {
         font-size: 140%;

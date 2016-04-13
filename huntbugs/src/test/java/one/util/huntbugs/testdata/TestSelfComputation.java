@@ -25,7 +25,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 public class TestSelfComputation {
     @AssertWarning(type = "SelfComputation")
     public int test(int a, int b) {
-        return (a - b) - (a - b);
+        return (a - b) / (a - b);
     }
 
     @AssertWarning(type = "SelfComputation")
