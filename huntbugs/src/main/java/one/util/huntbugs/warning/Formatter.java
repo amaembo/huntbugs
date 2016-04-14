@@ -25,6 +25,7 @@ import one.util.huntbugs.warning.WarningAnnotation.TypeInfo;
 public class Formatter {
     public static final String FORMAT_PLAIN = "plain";
     public static final String FORMAT_HTML = "html";
+    public static final String FORMAT_NAME = "name";
     
     private final Messages msgs;
     
@@ -77,68 +78,82 @@ public class Formatter {
 
     public String formatValue(Object value, String format) {
         if(value instanceof MemberInfo) {
-            MemberInfo mi = (MemberInfo)value;
-            String type = mi.getTypeName();
-            int pos = type.lastIndexOf('/');
-            if(pos > -1)
-                type = type.substring(pos+1).replace('$', '.');
-            String result;
-            if(mi.isMethod()) {
-                if(mi.getName().equals("<init>"))
-                    result = type+"()";
-                else
-                    result = type+"."+mi.getName()+"()";
-            } else {
-                result = type+"."+mi.getName();
-            }
-            if(format.equals(FORMAT_HTML))
-                return "<code class=\"Member\" title=\""+mi+"\">"+result+"</code>";
-            return result;
+            return formatMemberInfo((MemberInfo)value, format);
         }
         if(value instanceof TypeInfo) {
-            TypeInfo ti = (TypeInfo)value;
-            String simpleName = ti.getSimpleName();
-            String result = simpleName;
-            if(format.equals(FORMAT_HTML))
-                return "<code class=\"Member\" title=\""+ti+"\">"+result+"</code>";
-            return result;
+            return formatTypeInfo((TypeInfo)value, format);
         }
         if(value instanceof Double) {
-            double val = (Double)value;
-            if(Double.isNaN(val))
-                return "Double.NaN";
-            if(val == Double.POSITIVE_INFINITY) 
-                return "Double.POSITIVE_INFINITY";
-            if(val == Double.NEGATIVE_INFINITY)
-                return "Double.NEGATIVE_INFINITY";
-            if(val == Double.MIN_VALUE)
-                return "Double.MIN_VALUE";
-            if(val == Double.MAX_VALUE)
-                return "Double.MAX_VALUE";
-            if(val == -Double.MIN_VALUE)
-                return "-Double.MIN_VALUE";
-            if(val == -Double.MAX_VALUE)
-                return "-Double.MAX_VALUE";
-            return Double.toString(val);
+            return formatDouble((Double)value);
         }
         if(value instanceof Float) {
-            float val = (Float)value;
-            if(Float.isNaN(val))
-                return "Float.NaN";
-            if(val == Float.POSITIVE_INFINITY) 
-                return "Float.POSITIVE_INFINITY";
-            if(val == Float.NEGATIVE_INFINITY)
-                return "Float.NEGATIVE_INFINITY";
-            if(val == Float.MIN_VALUE)
-                return "Float.MIN_VALUE";
-            if(val == Float.MAX_VALUE)
-                return "Float.MAX_VALUE";
-            if(val == -Float.MIN_VALUE)
-                return "-Float.MIN_VALUE";
-            if(val == -Float.MAX_VALUE)
-                return "-Float.MAX_VALUE";
-            return Float.toString(val);
+            return formatFloat((Float)value);
         }
         return String.valueOf(value);
+    }
+
+    public String formatFloat(float val) {
+        if(Float.isNaN(val))
+            return "Float.NaN";
+        if(val == Float.POSITIVE_INFINITY) 
+            return "Float.POSITIVE_INFINITY";
+        if(val == Float.NEGATIVE_INFINITY)
+            return "Float.NEGATIVE_INFINITY";
+        if(val == Float.MIN_VALUE)
+            return "Float.MIN_VALUE";
+        if(val == Float.MAX_VALUE)
+            return "Float.MAX_VALUE";
+        if(val == -Float.MIN_VALUE)
+            return "-Float.MIN_VALUE";
+        if(val == -Float.MAX_VALUE)
+            return "-Float.MAX_VALUE";
+        return Float.toString(val);
+    }
+
+    public String formatDouble(double val) {
+        if(Double.isNaN(val))
+            return "Double.NaN";
+        if(val == Double.POSITIVE_INFINITY) 
+            return "Double.POSITIVE_INFINITY";
+        if(val == Double.NEGATIVE_INFINITY)
+            return "Double.NEGATIVE_INFINITY";
+        if(val == Double.MIN_VALUE)
+            return "Double.MIN_VALUE";
+        if(val == Double.MAX_VALUE)
+            return "Double.MAX_VALUE";
+        if(val == -Double.MIN_VALUE)
+            return "-Double.MIN_VALUE";
+        if(val == -Double.MAX_VALUE)
+            return "-Double.MAX_VALUE";
+        return Double.toString(val);
+    }
+
+    public String formatTypeInfo(TypeInfo ti, String format) {
+        String simpleName = ti.getSimpleName();
+        String result = simpleName;
+        if(format.equals(FORMAT_HTML))
+            return "<code class=\"Member\" title=\""+ti+"\">"+result+"</code>";
+        return result;
+    }
+
+    public String formatMemberInfo(MemberInfo mi, String format) {
+        if(format.equals("name"))
+            return mi.getName();
+        String type = mi.getTypeName();
+        int pos = type.lastIndexOf('/');
+        if(pos > -1)
+            type = type.substring(pos+1).replace('$', '.');
+        String result;
+        if(mi.isMethod()) {
+            if(mi.getName().equals("<init>"))
+                result = type+"()";
+            else
+                result = type+"."+mi.getName()+"()";
+        } else {
+            result = type+"."+mi.getName();
+        }
+        if(format.equals(FORMAT_HTML))
+            return "<code class=\"Member\" title=\""+mi+"\">"+result+"</code>";
+        return result;
     }
 }

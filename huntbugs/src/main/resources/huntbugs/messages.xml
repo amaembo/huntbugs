@@ -475,5 +475,12 @@
       <Description>Constructor invokes $CALLED_METHOD$ in $TYPE$.</Description>
       <LongDescription><![CDATA[The constructor starts a thread. This is likely to be wrong if the class is ever extended/subclassed, since the thread will be started before the subclass constructor is started.]]></LongDescription>
     </Warning>
+    <Warning Type="UnsafeGetResource">
+      <Title>Class.getResource() may return unexpected results in subclasses</Title>
+      <Description>$RETURN_VALUE_OF$ method may return unexpected results in subclasses.</Description>
+      <LongDescription><![CDATA[This code calls <code>this.getClass().$RETURN_VALUE_OF:name$(resource)</code>. If this class is extended in another package,
+      <code>this.getClass()</code> will return another class and this call will likely to fail.<br>
+      Consider replacing this code with <code>$TYPE:plain$.class.$RETURN_VALUE_OF:name$(resource)</code>. If this class is not supposed to be extended, declare it as <code>final</code>.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

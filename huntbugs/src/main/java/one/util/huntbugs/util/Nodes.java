@@ -24,11 +24,13 @@ import one.util.huntbugs.flow.ValuesFlow;
 
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
+import com.strobel.assembler.metadata.VariableDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 import com.strobel.decompiler.ast.TryCatchBlock;
+import com.strobel.decompiler.ast.Variable;
 
 /**
  * @author lan
@@ -334,5 +336,13 @@ public class Nodes {
         default:
             return code.getName();
         }
+    }
+
+    public static boolean isThis(Expression self) {
+        if (self.getCode() == AstCode.Load && self.getOperand() instanceof Variable) {
+            VariableDefinition origVar = ((Variable) self.getOperand()).getOriginalVariable();
+            return origVar != null && origVar.getSlot() == 0;
+        }
+        return false;
     }
 }

@@ -67,7 +67,7 @@ public class WarningAnnotation<T> {
         private final String typeName;
 
         public TypeInfo(String typeName) {
-            this.typeName = typeName;
+            this.typeName = Objects.requireNonNull(typeName);
         }
         
         public TypeInfo(TypeReference ref) {
@@ -87,6 +87,17 @@ public class WarningAnnotation<T> {
                 type = type.substring(pos+1).replace('$', '.');
             return type;
         }
+        
+        @Override
+        public int hashCode() {
+            return typeName.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return this == obj
+                || (obj != null && getClass() == obj.getClass() && typeName.equals(((TypeInfo) obj).typeName));
+        }
 
         @Override
         public String toString() {
@@ -103,14 +114,12 @@ public class WarningAnnotation<T> {
         private final String signature;
 
         public MemberInfo(String typeName, String name, String signature) {
-            super();
-            this.typeName = typeName;
-            this.name = name;
-            this.signature = signature;
+            this.typeName = Objects.requireNonNull(typeName);
+            this.name = Objects.requireNonNull(name);
+            this.signature = Objects.requireNonNull(signature);
         }
 
         public MemberInfo(MemberReference mr) {
-            super();
             this.typeName = mr.getDeclaringType().getInternalName();
             this.name = mr.getName();
             this.signature = mr.getErasedSignature();
@@ -140,6 +149,21 @@ public class WarningAnnotation<T> {
                 return typeName+"."+name+signature;
             }
             return typeName+"."+name+":"+signature;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, typeName, signature);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null || getClass() != obj.getClass())
+                return false;
+            MemberInfo other = (MemberInfo) obj;
+            return name.equals(other.name) && signature.equals(other.signature) && typeName.equals(other.typeName);
         }
     }
 

@@ -20,7 +20,6 @@ import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
-import com.strobel.assembler.metadata.VariableDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Variable;
@@ -54,7 +53,7 @@ public class ExposeRepresentation {
                 if (md.isProtected() && fd.isProtected())
                     return;
                 Expression self = Nodes.getChild(expr, 0);
-                if (!isThis(self))
+                if (!Nodes.isThis(self))
                     return;
                 Expression value = Nodes.getChild(expr, 1);
                 report(expr, mc, md, fd, value, "ExposeMutableFieldViaParameter");
@@ -90,13 +89,5 @@ public class ExposeRepresentation {
         if (md.isVarArgs() && pd.getPosition() == md.getParameters().size() - 1)
             priority += 10;
         mc.report(type, priority, expr, WarningAnnotation.forType("FIELD_TYPE", fd.getFieldType()));
-    }
-
-    private boolean isThis(Expression self) {
-        if (self.getCode() == AstCode.Load && self.getOperand() instanceof Variable) {
-            VariableDefinition origVar = ((Variable) self.getOperand()).getOriginalVariable();
-            return origVar != null && origVar.getSlot() == 0;
-        }
-        return false;
     }
 }

@@ -70,6 +70,7 @@ abbrev="SA" type="SA_LOCAL_SELF_ASSIGNMENT_INSTEAD_OF_FIELD" category="CORRECTNE
 abbrev="DMI" type="DMI_LONG_BITS_TO_DOUBLE_INVOKED_ON_INT" category="CORRECTNESS"
 abbrev="BC" type="BC_IMPOSSIBLE_DOWNCAST_OF_TOARRAY" category="CORRECTNESS" cweid="570" --> ImpossibleToArrayDowncast
 abbrev="WMI" type="WMI_WRONG_MAP_ITERATOR" category="PERFORMANCE" --> WrongMapIterator
+abbrev="UI" type="UI_INHERITANCE_UNSAFE_GETRESOURCE" category="BAD_PRACTICE" --> UnsafeGetResource
 
 ==== Not reimplemented
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
@@ -91,7 +92,6 @@ abbrev="IO" type="IO_APPENDING_TO_OBJECT_OUTPUT_STREAM" category="CORRECTNESS"
 abbrev="IL" type="IL_INFINITE_RECURSIVE_LOOP" category="CORRECTNESS" cweid="674"
 abbrev="IL" type="IL_CONTAINER_ADDED_TO_ITSELF" category="CORRECTNESS"
 abbrev="VO" type="VO_VOLATILE_REFERENCE_TO_ARRAY" category="MT_CORRECTNESS"
-abbrev="UI" type="UI_INHERITANCE_UNSAFE_GETRESOURCE" category="BAD_PRACTICE"
 abbrev="HSC" type="HSC_HUGE_SHARED_STRING_CONSTANT" category="PERFORMANCE"
 abbrev="AM" type="AM_CREATES_EMPTY_ZIP_FILE_ENTRY" category="BAD_PRACTICE"
 abbrev="AM" type="AM_CREATES_EMPTY_JAR_FILE_ENTRY" category="BAD_PRACTICE"
