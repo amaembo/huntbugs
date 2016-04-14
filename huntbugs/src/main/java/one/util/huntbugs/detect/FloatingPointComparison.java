@@ -66,10 +66,12 @@ public class FloatingPointComparison {
         Object val = Nodes.getConstant(expr);
         if (val instanceof Double || val instanceof Float) {
             double v = ((Number) val).doubleValue();
+            float f = ((Number) val).floatValue();
             if (v == 0.0 || Double.isInfinite(v) || Double.isNaN(v))
                 return 50;
             if (v == 1.0 || v == 2.0 || v == -1.0 || v == -2.0 || v == Double.MIN_VALUE || v == Double.MAX_VALUE
-                || v == -Double.MAX_VALUE || v == -Double.MIN_VALUE)
+                || v == -Double.MAX_VALUE || v == -Double.MIN_VALUE || f == Float.MAX_VALUE || f == Float.MIN_VALUE ||
+                f == -Float.MAX_VALUE || f == -Float.MIN_VALUE)
                 return 40;
             if (v == 3.0 || v == 4.0 || v == -3.0 || v == -4.0)
                 return 30;
