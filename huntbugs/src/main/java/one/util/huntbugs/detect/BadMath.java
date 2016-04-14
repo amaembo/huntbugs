@@ -56,7 +56,7 @@ public class BadMath {
             Nodes.ifBinaryWithConst(expr, (child, constant) -> {
                 if (constant instanceof Number && ((Number) constant).longValue() == 0
                     && !Nodes.isCompoundAssignment(nc.getNode())) {
-                    mc.report("UselessOrWithZero", 0, child);
+                    mc.report("UselessOrWithZero", 0, child, WarningAnnotation.forOperation(expr));
                 }
             });
         }
@@ -65,7 +65,8 @@ public class BadMath {
                 if (constant instanceof Number) {
                     long val = ((Number) constant).longValue();
                     if (val == -1 && !Nodes.isCompoundAssignment(nc.getNode()))
-                        mc.report("UselessAndWithMinusOne", 0, child);
+                        mc.report("UselessAndWithMinusOne", 0, child, new WarningAnnotation<>("NUMBER",
+                                constant instanceof Integer ? "0xFFFF_FFFF" : "0xFFFF_FFFF_FFFF_FFFF"));
                     else if (val == 0)
                         mc.report("UselessAndWithZero", 0, child);
                 }

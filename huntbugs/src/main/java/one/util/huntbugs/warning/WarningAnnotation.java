@@ -17,10 +17,13 @@ package one.util.huntbugs.warning;
 
 import java.util.Objects;
 
+import one.util.huntbugs.util.Nodes;
+
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
+import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Variable;
 
 /**
@@ -76,7 +79,7 @@ public class WarningAnnotation<T> {
             super();
             this.typeName = mr.getDeclaringType().getInternalName();
             this.name = mr.getName();
-            this.signature = mr.getSignature();
+            this.signature = mr.getErasedSignature();
         }
 
         public String getTypeName() {
@@ -187,5 +190,9 @@ public class WarningAnnotation<T> {
 
     public static WarningAnnotation<String> forString(String str) {
         return new WarningAnnotation<>("STRING", str);
+    }
+    
+    public static WarningAnnotation<String> forOperation(Expression expr) {
+        return new WarningAnnotation<>("OPERATION", Nodes.getOperation(expr.getCode()));
     }
 }

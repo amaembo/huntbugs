@@ -22,6 +22,9 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
  *
  */
 public class Formatter {
+    public static final String FORMAT_PLAIN = "plain";
+    public static final String FORMAT_HTML = "html";
+    
     private final Messages msgs;
     
     public Formatter() {
@@ -37,14 +40,14 @@ public class Formatter {
     }
     
     public String getDescription(Warning warning) {
-        return format(msgs.getMessagesForType(warning.getType()).getDescription(), warning);
+        return format(msgs.getMessagesForType(warning.getType()).getDescription(), warning, FORMAT_PLAIN);
     }
 
     public String getLongDescription(Warning warning) {
-        return format(msgs.getMessagesForType(warning.getType()).getLongDescription(), warning);
+        return format(msgs.getMessagesForType(warning.getType()).getLongDescription(), warning, FORMAT_HTML);
     }
     
-    private String format(String description, Warning warning) {
+    private String format(String description, Warning warning, String format) {
         String[] fields = description.split("\\$", -1);
         if(fields.length == 1)
             return description;
@@ -57,21 +60,24 @@ public class Formatter {
                 if(anno == null) {
                     result.append('(').append(fields[i]).append(')');
                 } else {
-                    result.append(formatValue(anno.getValue()));
+                    result.append(formatValue(anno.getValue(), format));
                 }
             }
         }
         return result.toString();
     }
 
-    public String formatValue(Object value) {
+    public String formatValue(Object value, String format) {
         if(value instanceof MemberInfo) {
             MemberInfo mi = (MemberInfo)value;
             String type = mi.typeName;
             int pos = type.lastIndexOf('/');
             if(pos > -1)
                 type = type.substring(pos+1).replace('$', '.');
-            return type+"."+mi.name+(mi.signature.startsWith("(")?"()":"");
+            String result = type+"."+mi.name+(mi.isMethod()?"()":"");
+            if(format.equals(FORMAT_HTML))
+                return "<code class=\"Member\" title=\""+mi+"\">"+result+"</code>";
+            return result;
         }
         if(value instanceof Double) {
             double val = (Double)value;

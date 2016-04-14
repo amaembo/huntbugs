@@ -124,10 +124,10 @@ public class XmlReportWriter {
         w.annotations().forEach(anno -> {
             switch(anno.getRole()) {
             case "TYPE":
-                classElement.setAttribute("Name", formatter.formatValue(anno.getValue()));
+                classElement.setAttribute("Name", formatter.formatValue(anno.getValue(), Formatter.FORMAT_PLAIN));
                 break;
             case "FILE":
-                classElement.setAttribute("SourceFile", formatter.formatValue(anno.getValue()));
+                classElement.setAttribute("SourceFile", formatter.formatValue(anno.getValue(), Formatter.FORMAT_PLAIN));
                 break;
             case "LOCATION": {
                 location.setAttribute("Offset", String.valueOf(((Location)anno.getValue()).getOffset()));
@@ -160,7 +160,7 @@ public class XmlReportWriter {
             default:
                 Element attribute = doc.createElement("Annotation");
                 attribute.setAttribute("Name", anno.getRole());
-                attribute.appendChild(doc.createTextNode(formatter.formatValue(anno.getValue())));
+                attribute.appendChild(doc.createTextNode(formatter.formatValue(anno.getValue(), Formatter.FORMAT_PLAIN)));
                 attributes.add(attribute);
             }
         });

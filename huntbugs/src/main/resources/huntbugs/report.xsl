@@ -37,6 +37,10 @@
         font-size: 140%;
       }
       
+      code.Member {
+        border-bottom: 1px gray dotted;
+      }
+      
       table.Warnings {
         border-collapse: collapse;
       }

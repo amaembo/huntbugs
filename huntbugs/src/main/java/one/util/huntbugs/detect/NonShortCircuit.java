@@ -40,7 +40,7 @@ public class NonShortCircuit {
             Expression left = node.getArguments().get(0);
             Expression right = node.getArguments().get(1);
             String operation = Nodes.getOperation(node.getCode());
-            WarningAnnotation<String> op = new WarningAnnotation<>("OPERATION", operation);
+            WarningAnnotation<String> op = WarningAnnotation.forOperation(node);
             WarningAnnotation<String> repl = new WarningAnnotation<>("REPLACEMENT", operation+operation);
             if(left.getInferredType().getSimpleType() == JvmType.Boolean &&
                     right.getInferredType().getSimpleType() == JvmType.Boolean) {

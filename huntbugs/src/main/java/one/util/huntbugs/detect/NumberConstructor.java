@@ -25,6 +25,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 /**
  * @author lan
@@ -39,13 +40,15 @@ public class NumberConstructor {
             MethodReference ctor = (MethodReference) expr.getOperand();
             if(ctor.getDeclaringType().getPackageName().equals("java.lang")) {
                 String simpleName = ctor.getDeclaringType().getSimpleName();
+                WarningAnnotation<MemberInfo> replacement = WarningAnnotation.forMember("REPLACEMENT", ctor
+                    .getDeclaringType().getInternalName(), "valueOf", ctor.getSignature().replaceFirst("V$",
+                "L" + ctor.getDeclaringType().getInternalName() + ";"));
                 if(simpleName.equals("Boolean")) {
-                    ctx.report("BooleanConstructor", 0, expr, new WarningAnnotation<>("REPLACEMENT", "Boolean.valueOf()"));
+                    ctx.report("BooleanConstructor", 0, expr, replacement);
                 }
                 else if(simpleName.equals("Integer") || simpleName.equals("Long") || simpleName.equals("Short") || simpleName.equals("Byte")
                         || simpleName.equals("Character")) {
                     Object val = Nodes.getConstant(expr.getArguments().get(0));
-                    WarningAnnotation<String> replacement = new WarningAnnotation<>("REPLACEMENT", simpleName+".valueOf()");
                     if(val instanceof Number) {
                         long value = ((Number)val).longValue();
                         int priority;
@@ -53,9 +56,9 @@ public class NumberConstructor {
                             priority = 0;
                         else
                             priority = simpleName.equals("Integer") ? 15 : 35;
-                        ctx.report("NumberConstructor", priority, expr, WarningAnnotation.forNumber((Number) val), replacement);
+                        ctx.report("NumberConstructor", priority, expr, WarningAnnotation.forNumber((Number) val), replacement, new WarningAnnotation<>("SIMPLE_TYPE", simpleName));
                     } else {
-                        ctx.report("NumberConstructor", 5, expr, replacement);
+                        ctx.report("NumberConstructor", 5, expr, replacement, new WarningAnnotation<>("SIMPLE_TYPE", simpleName));
                     }
                 }
             }

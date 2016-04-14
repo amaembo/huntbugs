@@ -44,16 +44,15 @@ public class KnownComparison {
                 Object left = Nodes.getConstant(expr.getArguments().get(0));
                 Object right = Nodes.getConstant(expr.getArguments().get(1));
                 if (left instanceof Number && right instanceof Number) {
-                    String op = Nodes.getOperation(expr.getCode());
                     Node deadCode = getDeadCode(expr, nc, (boolean) result);
                     if (deadCode == null) {
                         mc.report("ResultOfComparisonIsStaticallyKnown", 0, expr, new WarningAnnotation<>(
                                 "LEFT_OPERAND", left), new WarningAnnotation<>("RIGHT_OPERAND", right),
-                            new WarningAnnotation<>("OPERATION", op), new WarningAnnotation<>("RESULT", result.toString()));
+                            WarningAnnotation.forOperation(expr), new WarningAnnotation<>("RESULT", result.toString()));
                     } else {
                         mc.report("ResultOfComparisonIsStaticallyKnownDeadCode", 0, expr, new WarningAnnotation<>(
                                 "LEFT_OPERAND", left), new WarningAnnotation<>("RIGHT_OPERAND", right),
-                            new WarningAnnotation<>("OPERATION", op), new WarningAnnotation<>("DEAD_CODE_LOCATION", mc
+                            WarningAnnotation.forOperation(expr), new WarningAnnotation<>("DEAD_CODE_LOCATION", mc
                                     .getLocation(deadCode)), new WarningAnnotation<>("RESULT", result.toString()));
                     }
                 }
