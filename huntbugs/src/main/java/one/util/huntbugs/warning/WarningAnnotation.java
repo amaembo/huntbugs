@@ -62,11 +62,45 @@ public class WarningAnnotation<T> {
         WarningAnnotation<?> other = (WarningAnnotation<?>) obj;
         return Objects.equals(role, other.role) && Objects.equals(value, other.value);
     }
+    
+    public static class TypeInfo {
+        private final String typeName;
 
+        public TypeInfo(String typeName) {
+            this.typeName = typeName;
+        }
+        
+        public TypeInfo(TypeReference ref) {
+            this.typeName = ref.getInternalName();
+        }
+        
+        public String getTypeName() {
+            return typeName;
+        }
+
+        public String getSimpleName() {
+            String type = typeName;
+            while(type.startsWith("["))
+                type = type.substring(1)+"[]";
+            int pos = type.lastIndexOf('/');
+            if(pos > -1)
+                type = type.substring(pos+1).replace('$', '.');
+            return type;
+        }
+
+        @Override
+        public String toString() {
+            String type = typeName.replaceAll("[/$]", ".");
+            while(type.startsWith("["))
+                type = type.substring(1)+"[]";
+            return type;
+        }
+    }
+    
     public static class MemberInfo {
-        final String typeName;
-        final String name;
-        final String signature;
+        private final String typeName;
+        private final String name;
+        private final String signature;
 
         public MemberInfo(String typeName, String name, String signature) {
             super();
@@ -100,8 +134,11 @@ public class WarningAnnotation<T> {
 
         @Override
         public String toString() {
-            if(isMethod())
+            if(isMethod()) {
+                if(name.equals("<init>"))
+                    return typeName+signature;
                 return typeName+"."+name+signature;
+            }
             return typeName+"."+name+":"+signature;
         }
     }
@@ -136,12 +173,12 @@ public class WarningAnnotation<T> {
         return getRole() + ": " + getValue();
     }
 
-    public static WarningAnnotation<?> forType(TypeReference type) {
+    public static WarningAnnotation<TypeInfo> forType(TypeReference type) {
         return forType("TYPE", type);
     }
 
-    public static WarningAnnotation<?> forType(String role, TypeReference type) {
-        return new WarningAnnotation<>(role, type.getFullName());
+    public static WarningAnnotation<TypeInfo> forType(String role, TypeReference type) {
+        return new WarningAnnotation<>(role, new TypeInfo(type));
     }
 
     public static WarningAnnotation<MemberInfo> forMethod(MethodReference method) {

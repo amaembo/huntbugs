@@ -16,6 +16,7 @@
 package one.util.huntbugs.warning;
 
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
+import one.util.huntbugs.warning.WarningAnnotation.TypeInfo;
 
 /**
  * @author lan
@@ -56,11 +57,18 @@ public class Formatter {
             if(i % 2 == 0) {
                 result.append(fields[i]);
             } else {
-                WarningAnnotation<?> anno = warning.getAnnotation(fields[i]);
+                String key = fields[i];
+                String f = format;
+                int pos = key.indexOf(':');
+                if(pos > 0) {
+                    f = key.substring(pos+1);
+                    key = key.substring(0, pos);
+                }
+                WarningAnnotation<?> anno = warning.getAnnotation(key);
                 if(anno == null) {
-                    result.append('(').append(fields[i]).append(')');
+                    result.append('(').append(key).append(')');
                 } else {
-                    result.append(formatValue(anno.getValue(), format));
+                    result.append(formatValue(anno.getValue(), f));
                 }
             }
         }
@@ -70,13 +78,29 @@ public class Formatter {
     public String formatValue(Object value, String format) {
         if(value instanceof MemberInfo) {
             MemberInfo mi = (MemberInfo)value;
-            String type = mi.typeName;
+            String type = mi.getTypeName();
             int pos = type.lastIndexOf('/');
             if(pos > -1)
                 type = type.substring(pos+1).replace('$', '.');
-            String result = type+"."+mi.name+(mi.isMethod()?"()":"");
+            String result;
+            if(mi.isMethod()) {
+                if(mi.getName().equals("<init>"))
+                    result = type+"()";
+                else
+                    result = type+"."+mi.getName()+"()";
+            } else {
+                result = type+"."+mi.getName();
+            }
             if(format.equals(FORMAT_HTML))
                 return "<code class=\"Member\" title=\""+mi+"\">"+result+"</code>";
+            return result;
+        }
+        if(value instanceof TypeInfo) {
+            TypeInfo ti = (TypeInfo)value;
+            String simpleName = ti.getSimpleName();
+            String result = simpleName;
+            if(format.equals(FORMAT_HTML))
+                return "<code class=\"Member\" title=\""+ti+"\">"+result+"</code>";
             return result;
         }
         if(value instanceof Double) {

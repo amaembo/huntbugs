@@ -40,7 +40,7 @@
     <Warning Type="FloatCompareToNaN">
       <Title>Useless attempt to compare floating point number to NaN</Title>
       <Description>Useless attempt to compare a $USED_TYPE$ number to NaN</Description>
-      <LongDescription><![CDATA[The code compares a number of <code>$USED_TYPE$</code> type to <code>NaN</code>.
+      <LongDescription><![CDATA[The code compares a number of $USED_TYPE$ type to <code>NaN</code>.
     This comparison is useless as it always returns false. To check whether the number is NaN or not use $REPLACEMENT$.]]></LongDescription>
     </Warning>
     <Warning Type="MaxMinMethodReferenceForComparator">
@@ -104,8 +104,8 @@
     <Warning Type="RandomUsedOnlyOnce">
       <Title>Random object created and used only once</Title>
       <Description>A $RANDOM_TYPE$ object created and used only once in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code creates a <code>$RANDOM_TYPE$</code> object, uses it to generate one random number, and then discards it. This produces mediocre quality random numbers and is inefficient. If possible, rewrite the code so that the <code>$RANDOM_TYPE$</code> object is created once and saved, 
-   and each time a new random number is required invoke a method on the existing <code>$RANDOM_TYPE$</code> object to obtain it.]]></LongDescription>
+      <LongDescription><![CDATA[This code creates a $RANDOM_TYPE$ object, uses it to generate one random number, and then discards it. This produces mediocre quality random numbers and is inefficient. If possible, rewrite the code so that the $RANDOM_TYPE$ object is created once and saved, 
+   and each time a new random number is required invoke a method on the existing $RANDOM_TYPE$ object to obtain it.]]></LongDescription>
     </Warning>
     <Warning Type="SelfAssignmentArrayElement">
       <Title>Array element is assigned to itself</Title>
@@ -194,15 +194,15 @@
     <Warning Type="UnnecessaryInstanceOfInferred">
       <Title>The instanceof check is found to be unnecessary</Title>
       <Description>Unnecessary instanceof $INSTANCEOF_TYPE$ is detected in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code performs an <code>instanceof $INSTANCEOF_TYPE$</code> check. However it's statically known that 
-   the expression type is always <code>$INFERRED_TYPE$</code>, so this check is always true.<br> 
+      <LongDescription><![CDATA[This code performs an <code>instanceof $INSTANCEOF_TYPE:plain$</code> check. However it's statically known that 
+   the expression type is always $INFERRED_TYPE$, so this check is always true.<br> 
    Probably something else was meant or this check could be replaced with zero check or removed at all.]]></LongDescription>
     </Warning>
     <Warning Type="UnnecessaryInstanceOf">
       <Title>The instanceof check is unnecessary</Title>
       <Description>Unnecessary instanceof $INSTANCEOF_TYPE$ is performed in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code performs an <code>instanceof $INSTANCEOF_TYPE$</code> check. However this check is always true as the expression
-   type is <code>$ACTUAL_TYPE$</code>.<br>
+      <LongDescription><![CDATA[This code performs an <code>instanceof $INSTANCEOF_TYPE:plain$</code> check. However this check is always true as the expression
+   type is $ACTUAL_TYPE$.<br>
    Probably something else was meant or this check could be replaced with zero check or removed at all.]]></LongDescription>
     </Warning>
     <Warning Type="SameBranchesTernary">
@@ -229,25 +229,37 @@
     </Warning>
     <Warning Type="FinalizeOnlyNullsFields">
       <Title>The finalize() method only nulls fields</Title>
-      <Description>The finalize() method only nulls fields in $TYPE$.</Description>
+      <Description>The $METHOD$ method only nulls fields.</Description>
       <LongDescription><![CDATA[This finalizer does nothing except null out fields. This is completely pointless, and requires that the object be garbage collected, finalized, and then garbage collected again. You should just remove the finalize method.]]></LongDescription>
     </Warning>
     <Warning Type="FinalizePublic">
       <Title>The finalize() method is public</Title>
-      <Description>The finalize() method is public in $TYPE$.</Description>
+      <Description>The $METHOD$ method is public.</Description>
       <LongDescription><![CDATA[A $METHOD$ method should have protected access, not public.]]></LongDescription>
     </Warning>
     <Warning Type="FinalizeNullsFields">
       <Title>The finalize() method nulls fields</Title>
-      <Description>The finalize() method nulls out fields in $TYPE$.</Description>
+      <Description>The $METHOD$ method nulls out fields.</Description>
       <LongDescription><![CDATA[This finalizer nulls out fields. This is usually an error, as it does not aid garbage collection, and the object is going to be garbage collected anyway.]]></LongDescription>
+    </Warning>
+    <Warning Type="FinalizeNullifiesSuper">
+      <Title>Finalizer nullifies superclass finalizer</Title>
+      <Description>The $METHOD$ method nullifies superclass finalizer.</Description>
+      <LongDescription><![CDATA[This empty $METHOD$ method explicitly negates the effect of any finalizer defined by its superclass $SUPER_TYPE$.
+      Any finalizer actions defined for the superclass will not be performed. Unless this is intended, delete this method.]]></LongDescription>
+    </Warning>
+    <Warning Type="FinalizeUselessSuper">
+      <Title>Finalizer does nothing except calling the superclass finalizer</Title>
+      <Description>The $METHOD$ method does nothing except calling the superclass finalizer.</Description>
+      <LongDescription><![CDATA[The only thing $METHOD$ does is calling the superclass <code>finalize()</code> method.
+      This is redundant, so this method could be deleted.]]></LongDescription>
     </Warning>
     <Warning Type="ImpossibleToArrayDowncast">
       <Title>Impossible downcast of toArray() result</Title>
       <Description>Impossible downcast of toArray() result in $METHOD$.</Description>
-      <LongDescription><![CDATA[This method casts the result of <code>toArray()</code> method to <code>$TARGET_TYPE$</code>. This will usually fail with <code>ClassCastException</code> as
+      <LongDescription><![CDATA[This method casts the result of <code>toArray()</code> method to $TARGET_TYPE$. This will usually fail with <code>ClassCastException</code> as
       <code>toArray()</code> method returns an <code>Object[]</code> array for most of the collections.<br>
-      The correct way to do this is <code>toArray(new $TARGET_ELEMENT_TYPE$[0])</code>.]]></LongDescription>
+      The correct way to do this is <code>toArray(new $TARGET_ELEMENT_TYPE:plain$[0])</code>.]]></LongDescription>
     </Warning>
     <Warning Type="IntegerMultiplicationPromotedToLong">
       <Title>Result of integer multiplication promoted to long</Title>
@@ -258,7 +270,7 @@
     <Warning Type="IntegerDivisionPromotedToFloat">
       <Title>Result of integer division promoted to floating point type</Title>
       <Description>Result of $SOURCE_TYPE$ division is promoted to $TARGET_TYPE$ in $METHOD$.</Description>
-      <LongDescription><![CDATA[This method promotes the result of $SOURCE_TYPE$ division to $TARGET_TYPE$ like <code>$TARGET_TYPE$ result = $SOURCE_TYPE$Var / 2</code>. Probably it was intended to cast to the double type before the division like
+      <LongDescription><![CDATA[This method promotes the result of $SOURCE_TYPE$ division to $TARGET_TYPE$ like <code>$TARGET_TYPE$ result = $SOURCE_TYPE$Var / 2</code>. Probably it was intended to cast to the $TARGET_TYPE$ type before the division like
       <code>$TARGET_TYPE$ result = (($TARGET_TYPE$)$SOURCE_TYPE$Var) / 2</code>.]]></LongDescription>
     </Warning>
     <Warning Type="WaitNotInLoop">
@@ -340,9 +352,51 @@
     </Warning>
     <Warning Type="NumberConstructor">
       <Title>Inefficient number constructor</Title>
-      <Description>Inefficient $SIMPLE_TYPE$ constructor is invoked in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code creates new instances of <code>$SIMPLE_TYPE$</code> class using the constructor. It's usually preferred to use $REPLACEMENT$ method which
+      <Description>Inefficient $TARGET_TYPE$ constructor is invoked in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code creates new instances of $TARGET_TYPE$ class using the constructor. It's usually preferred to use $REPLACEMENT$ method which
       may return cached object reducing memory usage.]]></LongDescription>
+    </Warning>
+    <Warning Type="EqualsReturnsFalse">
+      <Title>The equals() method always returns false</Title>
+      <Description>The $METHOD$ method always returns false.</Description>
+      <LongDescription><![CDATA[This class defines an <code>equals()</code> method that always returns false. This means that an object is not equal to itself, and it is impossible to create useful Maps or Sets of this class. 
+        More fundamentally, it means that equals is not reflexive, one of the requirements of the equals method.<br>
+        The likely intended semantics are object identity: that an object is equal to itself. This is the behavior inherited from class Object. If you need to override an equals inherited from a different superclass, you can use use:<br>
+        <code>public boolean equals(Object o) { return this == o; }</code>
+      ]]></LongDescription>
+    </Warning>
+    <Warning Type="EqualsReturnsTrue">
+      <Title>The equals() method always returns true</Title>
+      <Description>The $METHOD$ method always returns true.</Description>
+      <LongDescription><![CDATA[This class defines an equals method that always returns true. This is imaginative, but not very smart. 
+      In addition, it means that the equals method is not symmetric.</code>
+      ]]></LongDescription>
+    </Warning>
+    <Warning Type="WrongMapIterator">
+      <Title>Inefficient use of keySet() iterator instead of entrySet() iterator</Title>
+      <Description>Inefficient use of keySet() iterator instead of entrySet() iterator in $METHOD$.</Description>
+      <LongDescription><![CDATA[This method accesses the value of a <code>Map</code> entry, using a key that was retrieved from a <code>keySet()</code> iterator. 
+      It is more efficient to use an iterator on the <code>entrySet()</code> of the map, to avoid the <code>Map.get(key)</code> lookup.<br>
+      In Java-8 you may also consider using <code>Map.forEach()</code> method.
+      ]]></LongDescription>
+    </Warning>
+    <Warning Type="ExposeMutableStaticFieldViaParameter">
+      <Title>Internal static state exposure by storing a mutable object into a static field</Title>
+      <Description>Internal static state exposure by storing an object of $FIELD_TYPE$ type into a $FIELD$.</Description>
+      <LongDescription><![CDATA[This method stores a parameter into a static field $FIELD$. However the field type is $FIELD_TYPE$
+      which allows uncontrolled modification by the caller. Consider copying an object before storing it in the field.]]></LongDescription>
+    </Warning>
+    <Warning Type="ExposeMutableFieldViaParameter">
+      <Title>Internal state exposure by storing a mutable object into a field</Title>
+      <Description>Internal state exposure by storing an object of $FIELD_TYPE$ type into a $FIELD$.</Description>
+      <LongDescription><![CDATA[This method stores a parameter into a field $FIELD$. However the field type is $FIELD_TYPE$
+      which allows uncontrolled modification by the caller. Consider copying an object before storing it in the field.]]></LongDescription>
+    </Warning>
+    <Warning Type="NewForGetClass">
+      <Title>Method allocates an object, only to get the class object</Title>
+      <Description>Method creates an object of type $OBJECT_TYPE$ just to get the class object.</Description>
+      <LongDescription><![CDATA[This method retrieves the class object like this: <code>new $OBJECT_TYPE:plain$().getClass()</code>.
+      Allocating the object is completely unnecessary here. Simply writing <code>$OBJECT_TYPE:plain$.class</code> is more performant.]]></LongDescription>
     </Warning>
   </WarningList>
 </p:Messages>

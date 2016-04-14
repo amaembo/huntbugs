@@ -36,6 +36,10 @@ public class Types {
         "java/lang/Short", "java/lang/Double", "java/lang/Byte", "java/lang/Character", "java/lang/Boolean", "java/lang/Float",
         "java/lang/Math"));
 
+    private static final Set<String> MUTABLE_TYPES = new HashSet<>(Arrays.asList("java/util/Hashtable",
+        "java/util/Vector", "java/util/Date", "java/sql/Date", "java/sql/Timestamp", "java/awt/Point",
+        "java/awt/Dimension", "java/awt/Rectangle"));
+
 	public static List<TypeReference> getBaseTypes(TypeReference input) {
 		List<TypeReference> result = new ArrayList<>();
 		while (true) {
@@ -90,6 +94,10 @@ public class Types {
         return exprType;
     }
 
+    /**
+     * @param type
+     * @return true if all methods of given type are known not to produce side-effects
+     */
     public static boolean isSideEffectFreeType(TypeReference type) {
         return SIDE_EFFECT_FREE_TYPES.contains(type.getInternalName());
     }
@@ -99,5 +107,15 @@ public class Types {
         if(pos == -1)
             return internalName2.indexOf('/') == 1;
         return internalName2.startsWith(internalName1.substring(0, pos+1));
+    }
+
+    /**
+     * @param type
+     * @return true if type is known to be mutable
+     */
+    public static boolean isMutable(TypeReference type) {
+        if (type.isArray())
+            return true;
+        return MUTABLE_TYPES.contains(type.getInternalName());
     }
 }

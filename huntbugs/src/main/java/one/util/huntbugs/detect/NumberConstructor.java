@@ -31,34 +31,35 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
  * @author lan
  *
  */
-@WarningDefinition(category="Performance", name="NumberConstructor", maxScore = 45)
-@WarningDefinition(category="Performance", name="BooleanConstructor", maxScore = 55)
+@WarningDefinition(category = "Performance", name = "NumberConstructor", maxScore = 45)
+@WarningDefinition(category = "Performance", name = "BooleanConstructor", maxScore = 55)
 public class NumberConstructor {
-    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
+    @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext ctx) {
-        if(expr.getCode() == AstCode.InitObject && expr.getArguments().size() == 1) {
+        if (expr.getCode() == AstCode.InitObject && expr.getArguments().size() == 1) {
             MethodReference ctor = (MethodReference) expr.getOperand();
-            if(ctor.getDeclaringType().getPackageName().equals("java.lang")) {
+            if (ctor.getDeclaringType().getPackageName().equals("java.lang")) {
                 String simpleName = ctor.getDeclaringType().getSimpleName();
                 WarningAnnotation<MemberInfo> replacement = WarningAnnotation.forMember("REPLACEMENT", ctor
-                    .getDeclaringType().getInternalName(), "valueOf", ctor.getSignature().replaceFirst("V$",
-                "L" + ctor.getDeclaringType().getInternalName() + ";"));
-                if(simpleName.equals("Boolean")) {
+                        .getDeclaringType().getInternalName(), "valueOf", ctor.getSignature().replaceFirst("V$",
+                    "L" + ctor.getDeclaringType().getInternalName() + ";"));
+                if (simpleName.equals("Boolean")) {
                     ctx.report("BooleanConstructor", 0, expr, replacement);
-                }
-                else if(simpleName.equals("Integer") || simpleName.equals("Long") || simpleName.equals("Short") || simpleName.equals("Byte")
-                        || simpleName.equals("Character")) {
+                } else if (simpleName.equals("Integer") || simpleName.equals("Long") || simpleName.equals("Short")
+                    || simpleName.equals("Byte") || simpleName.equals("Character")) {
                     Object val = Nodes.getConstant(expr.getArguments().get(0));
-                    if(val instanceof Number) {
-                        long value = ((Number)val).longValue();
+                    if (val instanceof Number) {
+                        long value = ((Number) val).longValue();
                         int priority;
-                        if(value >= -128 && value < 127)
+                        if (value >= -128 && value < 127)
                             priority = 0;
                         else
                             priority = simpleName.equals("Integer") ? 15 : 35;
-                        ctx.report("NumberConstructor", priority, expr, WarningAnnotation.forNumber((Number) val), replacement, new WarningAnnotation<>("SIMPLE_TYPE", simpleName));
+                        ctx.report("NumberConstructor", priority, expr, WarningAnnotation.forNumber((Number) val),
+                            replacement, WarningAnnotation.forType("TARGET_TYPE", ctor.getDeclaringType()));
                     } else {
-                        ctx.report("NumberConstructor", 5, expr, replacement, new WarningAnnotation<>("SIMPLE_TYPE", simpleName));
+                        ctx.report("NumberConstructor", 5, expr, replacement, WarningAnnotation.forType("TARGET_TYPE",
+                            ctor.getDeclaringType()));
                     }
                 }
             }

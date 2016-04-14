@@ -20,7 +20,6 @@ import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
-import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.assembler.metadata.VariableDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
@@ -32,6 +31,8 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.util.Types;
+import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author lan
@@ -81,14 +82,14 @@ public class ExposeRepresentation {
         ParameterDefinition pd = getParameter(value);
         if (pd == null)
             return;
-        if (!isMutable(fd.getFieldType()))
+        if (!Types.isMutable(fd.getFieldType()))
             return;
         int priority = 0;
         if (md.isProtected() || fd.isProtected())
             priority += 10;
         if (md.isVarArgs() && pd.getPosition() == md.getParameters().size() - 1)
             priority += 10;
-        mc.report(type, priority, expr);
+        mc.report(type, priority, expr, WarningAnnotation.forType("FIELD_TYPE", fd.getFieldType()));
     }
 
     private boolean isThis(Expression self) {
@@ -96,17 +97,6 @@ public class ExposeRepresentation {
             VariableDefinition origVar = ((Variable) self.getOperand()).getOriginalVariable();
             return origVar != null && origVar.getSlot() == 0;
         }
-        return false;
-    }
-
-    private boolean isMutable(TypeReference fieldType) {
-        if (fieldType.isArray())
-            return true;
-        String typeName = fieldType.getInternalName();
-        if (typeName.equals("java/util/Hashtable") || typeName.equals("java/util/Vector")
-            || typeName.equals("java/util/Date") || typeName.equals("java/sql/Date")
-            || typeName.equals("java/sql/Timestamp"))
-            return true;
         return false;
     }
 }

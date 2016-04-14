@@ -28,6 +28,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author lan
@@ -35,7 +36,7 @@ import one.util.huntbugs.util.Nodes;
  */
 @WarningDefinition(category="BadPractice", name="FinalizeNullifiesSuper", maxScore = 50)
 @WarningDefinition(category="BadPractice", name="FinalizeEmpty", maxScore = 35)
-@WarningDefinition(category="BadPractice", name="FinalizeUselessSuper", maxScore = 40)
+@WarningDefinition(category="RedundantCode", name="FinalizeUselessSuper", maxScore = 40)
 @WarningDefinition(category="BadPractice", name="FinalizeInvocation", maxScore = 60)
 @WarningDefinition(category="BadPractice", name="FinalizeNullsFields", maxScore = 50)
 @WarningDefinition(category="BadPractice", name="FinalizeOnlyNullsFields", maxScore = 65)
@@ -49,11 +50,13 @@ public class FinalizerContract {
         }
         if(superfinalizer != null) {
             if(body.getBody().isEmpty())
-                mc.report("FinalizeNullifiesSuper", 0, body);
+                mc.report("FinalizeNullifiesSuper", 0, body, WarningAnnotation.forType("SUPER_TYPE", superfinalizer.getDeclaringType()));
             else if(body.getBody().size() == 1) {
                 Node child = body.getBody().get(0);
                 if(Nodes.isOp(child, AstCode.InvokeSpecial) && isFinalizer((MethodReference)(((Expression)child).getOperand()))) {
-                    mc.report("FinalizeUselessSuper", 0, child);
+                    if(!md.isFinal()) {
+                        mc.report("FinalizeUselessSuper", 0, child, WarningAnnotation.forType("SUPER_TYPE", superfinalizer.getDeclaringType()));
+                    }
                 }
             }
         } else {
