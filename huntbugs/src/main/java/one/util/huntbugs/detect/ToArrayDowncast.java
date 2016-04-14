@@ -32,22 +32,25 @@ import one.util.huntbugs.warning.WarningAnnotation;
  * @author lan
  *
  */
-@WarningDefinition(category="Correctness", name="ImpossibleToArrayDowncast", maxScore=65)
+@WarningDefinition(category = "Correctness", name = "ImpossibleToArrayDowncast", maxScore = 65)
 public class ToArrayDowncast {
-    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
+    @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
-        if(expr.getCode() == AstCode.CheckCast) {
-            Expression arg = Nodes.getChild(expr, 0);
-            if(arg.getCode() == AstCode.InvokeVirtual || arg.getCode() == AstCode.InvokeInterface) {
-                MethodReference mr = (MethodReference) arg.getOperand();
-                if(mr.getName().equals("toArray") && mr.getSignature().equals("()[Ljava/lang/Object;")) {
-                    Expression target = Nodes.getChild(arg, 0);
-                    if(Types.isInstance(target.getInferredType(), "java/util/Collection")) {
-                        mc.report("ImpossibleToArrayDowncast", 0, target, WarningAnnotation.forType("TARGET_TYPE", (TypeReference) expr.getOperand())
-                            , WarningAnnotation.forType("TARGET_ELEMENT_TYPE", ((TypeReference) expr.getOperand()).getElementType()));
-                    }
-                }
-            }
-        }
+        if (expr.getCode() != AstCode.CheckCast)
+            return;
+        TypeReference targetType = (TypeReference) expr.getOperand();
+        if (!targetType.isArray() || targetType.getElementType().getInternalName().equals("java/lang/Object"))
+            return;
+        Expression arg = Nodes.getChild(expr, 0);
+        if (arg.getCode() != AstCode.InvokeVirtual && arg.getCode() != AstCode.InvokeInterface)
+            return;
+        MethodReference mr = (MethodReference) arg.getOperand();
+        if (!mr.getName().equals("toArray") || !mr.getSignature().equals("()[Ljava/lang/Object;"))
+            return;
+        Expression target = Nodes.getChild(arg, 0);
+        if (!Types.isInstance(target.getInferredType(), "java/util/Collection"))
+            return;
+        mc.report("ImpossibleToArrayDowncast", 0, target, WarningAnnotation.forType("TARGET_TYPE", targetType),
+            WarningAnnotation.forType("TARGET_ELEMENT_TYPE", targetType.getElementType()));
     }
 }

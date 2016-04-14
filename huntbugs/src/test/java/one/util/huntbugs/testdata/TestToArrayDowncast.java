@@ -40,4 +40,11 @@ public class TestToArrayDowncast {
     public String[] toArrayOk(Collection<String> l) {
         return l.toArray(new String[0]);
     }
+
+    @SuppressWarnings("unchecked")
+    // Probably some other warning should be issued here, but not this
+    @AssertNoWarning(type="ImpossibleToArrayDowncast")
+    public <T> T[] toArrayGeneric(Collection<String> l) {
+        return (T[])l.toArray();
+    }
 }
