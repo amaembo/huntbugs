@@ -497,5 +497,10 @@
       The result is then used as index which must be non-negative, so this code may fail with <code>IndexOutOfBoundsException</code>.<br>
       You may fix this code using <code>nextInt(n)</code> instead.]]></LongDescription>
     </Warning>
+    <Warning Type="StaticFieldFromInstanceMethod">
+      <Title>Write to static field from instance method</Title>
+      <Description>Instance method $METHOD$ writes to static field $FIELD$.</Description>
+      <LongDescription><![CDATA[This instance method writes to a static field $FIELD$. This is tricky to get correct if multiple instances are being manipulated, and generally bad practice.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

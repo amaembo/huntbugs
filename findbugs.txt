@@ -73,6 +73,7 @@ abbrev="WMI" type="WMI_WRONG_MAP_ITERATOR" category="PERFORMANCE" --> WrongMapIt
 abbrev="UI" type="UI_INHERITANCE_UNSAFE_GETRESOURCE" category="BAD_PRACTICE" --> UnsafeGetResource
 abbrev="RV" type="RV_REM_OF_RANDOM_INT" category="STYLE" --> RandomIntRemainder
 abbrev="RV" type="RV_REM_OF_HASHCODE" category="STYLE" --> HashCodeRemainder
+abbrev="ST" type="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD" category="STYLE" --> StaticFieldFromInstanceMethod
 
 ==== Not reimplemented
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
@@ -403,7 +404,6 @@ abbrev="DMI" type="DMI_HARDCODED_ABSOLUTE_FILENAME" category="STYLE"
 abbrev="DMI" type="DMI_BAD_MONTH" category="CORRECTNESS"
 abbrev="DMI" type="DMI_USELESS_SUBSTRING" category="STYLE"
 abbrev="DMI" type="DMI_CALLING_NEXT_FROM_HASNEXT" category="CORRECTNESS"
-abbrev="ST" type="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD" category="STYLE"
 abbrev="SWL" type="SWL_SLEEP_WITH_LOCK_HELD" category="MT_CORRECTNESS"
 abbrev="J2EE" type="J2EE_STORE_OF_NON_SERIALIZABLE_OBJECT_INTO_SESSION" category="BAD_PRACTICE" cweid="579"
 abbrev="DMI" type="DMI_NONSERIALIZABLE_OBJECT_WRITTEN" category="STYLE"
