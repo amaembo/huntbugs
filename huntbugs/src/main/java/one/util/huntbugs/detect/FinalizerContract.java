@@ -35,7 +35,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
  *
  */
 @WarningDefinition(category="BadPractice", name="FinalizeNullifiesSuper", maxScore = 50)
-@WarningDefinition(category="BadPractice", name="FinalizeEmpty", maxScore = 35)
+@WarningDefinition(category="RedundantCode", name="FinalizeEmpty", maxScore = 35)
 @WarningDefinition(category="RedundantCode", name="FinalizeUselessSuper", maxScore = 40)
 @WarningDefinition(category="BadPractice", name="FinalizeInvocation", maxScore = 60)
 @WarningDefinition(category="BadPractice", name="FinalizeNullsFields", maxScore = 50)

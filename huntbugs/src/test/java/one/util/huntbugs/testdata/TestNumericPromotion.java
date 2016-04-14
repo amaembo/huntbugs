@@ -68,6 +68,16 @@ public class TestNumericPromotion {
         double res = (int)(x - y)/2;
         return res;
     }
+
+    @AssertWarning(type = "IntegerPromotionInCeilOrRound")
+    public int divideAndRound(int x, int y) {
+        return Math.round(x / y);
+    }
+    
+    @AssertWarning(type = "IntegerPromotionInCeilOrRound")
+    public long divideAndCeil(long x, long y) {
+        return (long) Math.ceil(x / y);
+    }
     
     @AssertWarning(type = "IntegerDivisionPromotedToFloat")
     public float divideFloat(int x, long y) {

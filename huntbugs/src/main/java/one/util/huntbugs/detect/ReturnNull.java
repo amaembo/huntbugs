@@ -30,6 +30,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
+import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author lan
@@ -67,7 +68,7 @@ public class ReturnNull {
                     priority = 20;
                 else if(md.isProtected())
                     priority = 10;
-                mc.report(warningType, priority, expr.getArguments().get(0));
+                mc.report(warningType, priority, expr.getArguments().get(0), WarningAnnotation.forType("RETURN_TYPE", md.getReturnType()));
             }
         }
         return true;

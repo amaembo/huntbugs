@@ -45,8 +45,7 @@ public class StartInConstructor {
     }
 
     @AstVisitor(nodes = AstNodes.EXPRESSIONS, methodName = "<init>")
-    public boolean visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md, TypeDefinition td,
-            TypeHierarchy th) {
+    public boolean visit(Expression expr, NodeChain nc, MethodContext mc, TypeHierarchy th) {
         if (expr.getCode() == AstCode.InvokeVirtual) {
             MethodReference mr = (MethodReference) expr.getOperand();
             if (mr.getName().equals("start") && mr.getSignature().equals("()V")) {

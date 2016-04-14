@@ -73,7 +73,9 @@ public class NumericPromotion {
             if(Nodes.isOp(nc.getNode(), AstCode.InvokeStatic)) {
                 MethodReference mr = (MethodReference) ((Expression)nc.getNode()).getOperand();
                 if(mr.getDeclaringType().getInternalName().equals("java/lang/Math") && (mr.getName().equals("ceil") || mr.getName().equals("round"))) {
-                    mc.report("IntegerPromotionInCeilOrRound", 0, nc.getNode());
+                    mc.report("IntegerPromotionInCeilOrRound", 0, nc.getNode(), new WarningAnnotation<>("SOURCE_TYPE",
+                            expr.getArguments().get(0).getInferredType().getSimpleName()), new WarningAnnotation<>(
+                            "TARGET_TYPE", expr.getInferredType().getSimpleName()));
                     return;
                 }
             }
