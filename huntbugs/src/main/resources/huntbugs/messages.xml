@@ -482,5 +482,20 @@
       <code>this.getClass()</code> will return another class and this call will likely to fail.<br>
       Consider replacing this code with <code>$TYPE:plain$.class.$RETURN_VALUE_OF:name$(resource)</code>. If this class is not supposed to be extended, declare it as <code>final</code>.]]></LongDescription>
     </Warning>
+    <Warning Type="HashCodeRemainder">
+      <Title>Remainder of hashCode() is used as index</Title>
+      <Description>Remainder of $RETURN_VALUE_OF$ is used as index in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code computes a hashCode, and then computes the remainder of that value modulo another value like <code>(x.hashCode() % n)</code>. Since the hashCode can be negative, the result of the remainder operation can also be negative.
+      The result is then used as index which must be non-negative, so this code may fail with <code>IndexOutOfBoundsException</code>.<br>
+      You may fix this code using <code>Math.abs(x.hashCode() % n)</code> instead.]]></LongDescription>
+    </Warning>
+    <Warning Type="RandomIntRemainder">
+      <Title>Remainder of Random.nextInt() is used as index</Title>
+      <Description>Remainder of $RETURN_VALUE_OF$ is used as index in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code computes a random integer, and then computes the remainder of that value modulo another value like <code>($RETURN_VALUE_OF:plain$ % n)</code>. 
+      Since the $RETURN_VALUE_OF$ may return negative value, the result of the remainder operation can also be negative.
+      The result is then used as index which must be non-negative, so this code may fail with <code>IndexOutOfBoundsException</code>.<br>
+      You may fix this code using <code>nextInt(n)</code> instead.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

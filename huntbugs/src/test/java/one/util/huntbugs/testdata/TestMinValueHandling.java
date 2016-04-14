@@ -26,14 +26,14 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestMinValueHandling {
-    @AssertWarning(type="AbsoluteValueOfRandomInt", minScore=78)
+    @AssertWarning(type="AbsoluteValueOfRandomInt", minScore=50, maxScore=60)
     public int testRandom() {
         int h = ThreadLocalRandom.current().nextInt();
         int v = Math.abs(h);
         return v % 15;
     }
 
-    @AssertWarning(type="AbsoluteValueOfRandomInt", minScore=55, maxScore=65)
+    @AssertWarning(type="AbsoluteValueOfRandomInt", minScore=30, maxScore=40)
     public long testRandomLong() {
         synchronized(this) {
             long h = new SplittableRandom().nextLong();
@@ -42,21 +42,21 @@ public class TestMinValueHandling {
         }
     }
     
-    @AssertWarning(type="AbsoluteValueOfHashCode", minScore=85)
+    @AssertWarning(type="AbsoluteValueOfHashCode", minScore=55, maxScore=60)
     public int testHashCodeRem(Object obj) {
         int h = obj.hashCode();
         int v = Math.abs(h);
         return v % 15;
     }
     
-    @AssertWarning(type="AbsoluteValueOfHashCode", maxScore=60, minScore=40)
+    @AssertWarning(type="AbsoluteValueOfHashCode", minScore=15, maxScore=25)
     public int testPowerOf2Rem(Object obj) {
         int h = obj.hashCode();
         int v = Math.abs(h);
         return v % 32;
     }
     
-    @AssertWarning(type="AbsoluteValueOfHashCode", minScore=75, maxScore=85)
+    @AssertWarning(type="AbsoluteValueOfHashCode", minScore=45, maxScore=55)
     public int testHashCode(Object obj) {
         int h = obj.hashCode();
         int v = Math.abs(h);
