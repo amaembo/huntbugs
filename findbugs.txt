@@ -77,10 +77,18 @@ abbrev="ST" type="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD" category="STYLE" --> 
 abbrev="IMSE" type="IMSE_DONT_CATCH_IMSE" category="BAD_PRACTICE" --> CatchIllegalMonitorStateException
 abbrev="BIT" type="BIT_SIGNED_CHECK" category="BAD_PRACTICE" --> BitCheckGreater
 abbrev="BIT" type="BIT_SIGNED_CHECK_HIGH_BIT" category="CORRECTNESS" --> BitCheckGreaterNegative
-abbrev="Bx" type="DM_BOXED_PRIMITIVE_TOSTRING" category="PERFORMANCE" --> BoxedPrimitiveToString
-abbrev="Bx" type="BX_BOXING_IMMEDIATELY_UNBOXED" category="PERFORMANCE" --> BoxedAndImmediatelyUnboxed
+abbrev="Bx" type="DM_BOXED_PRIMITIVE_TOSTRING" category="PERFORMANCE" --> BoxedForToString
+abbrev="Bx" type="BX_BOXING_IMMEDIATELY_UNBOXED" category="PERFORMANCE" --> BoxedForUnboxing
+abbrev="Bx" type="BX_UNBOXING_IMMEDIATELY_REBOXED" category="PERFORMANCE" --> UnboxedForBoxing
+abbrev="Nm" type="NM_LCASE_HASHCODE" category="CORRECTNESS" --> BadNameOfMethodMistake
+abbrev="Nm" type="NM_LCASE_TOSTRING" category="CORRECTNESS" --> BadNameOfMethodMistake
+abbrev="Nm" type="NM_BAD_EQUAL" category="CORRECTNESS" --> BadNameOfMethodMistake
 
 ==== Not reimplemented
+abbrev="RV" type="RV_NEGATING_RESULT_OF_COMPARETO" category="BAD_PRACTICE"
+abbrev="FI" type="FI_MISSING_SUPER_CALL" category="BAD_PRACTICE"
+
+
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SERVLET_WRITER" category="SECURITY"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_JSP_WRITER" category="SECURITY"
@@ -125,7 +133,6 @@ abbrev="Dm" type="DM_CONVERT_CASE" category="I18N"
 abbrev="Bx" type="DM_BOXED_PRIMITIVE_FOR_PARSING" category="PERFORMANCE"
 abbrev="Bx" type="DM_BOXED_PRIMITIVE_FOR_COMPARE" category="PERFORMANCE"
 abbrev="Bx" type="BX_UNBOXED_AND_COERCED_FOR_TERNARY_OPERATOR" category="PERFORMANCE"
-abbrev="Bx" type="BX_UNBOXING_IMMEDIATELY_REBOXED" category="PERFORMANCE"
 abbrev="Bx" type="BX_BOXING_IMMEDIATELY_UNBOXED_TO_PERFORM_COERCION" category="PERFORMANCE" cweid="192"
 abbrev="Dm" type="DM_MONITOR_WAIT_ON_CONDITION" category="MT_CORRECTNESS"
 abbrev="NP" type="NP_ARGUMENT_MIGHT_BE_NULL" category="CORRECTNESS"
@@ -136,7 +143,6 @@ abbrev="SQL" type="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE" category="SECURITY"
 abbrev="SQL" type="SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING" category="SECURITY" cweid="89"
 abbrev="DC" type="DC_DOUBLECHECK" category="MT_CORRECTNESS" cweid="609"
 abbrev="DC" type="DC_PARTIALLY_CONSTRUCTED" category="MT_CORRECTNESS" cweid="609"
-abbrev="FI" type="FI_MISSING_SUPER_CALL" category="BAD_PRACTICE"
 abbrev="Eq" type="EQ_CHECK_FOR_OPERAND_NOT_COMPATIBLE_WITH_THIS" category="BAD_PRACTICE"
 abbrev="Eq" type="EQ_COMPARING_CLASS_NAMES" category="CORRECTNESS"
 abbrev="Eq" type="EQ_UNUSUAL" category="STYLE"
@@ -151,7 +157,6 @@ abbrev="Eq" type="EQ_SELF_NO_OBJECT" category="BAD_PRACTICE"
 abbrev="Co" type="CO_SELF_NO_OBJECT" category="BAD_PRACTICE"
 abbrev="Co" type="CO_COMPARETO_RESULTS_MIN_VALUE" category="BAD_PRACTICE"
 abbrev="Co" type="CO_COMPARETO_INCORRECT_FLOATING" category="BAD_PRACTICE"
-abbrev="RV" type="RV_NEGATING_RESULT_OF_COMPARETO" category="BAD_PRACTICE"
 abbrev="ES" type="ES_COMPARING_STRINGS_WITH_EQ" category="BAD_PRACTICE"
 abbrev="ES" type="ES_COMPARING_PARAMETER_STRING_WITH_EQ" category="BAD_PRACTICE"
 abbrev="HE" type="HE_SIGNATURE_DECLARES_HASHING_OF_UNHASHABLE_CLASS" category="CORRECTNESS"
@@ -209,9 +214,6 @@ abbrev="Nm" type="NM_WRONG_PACKAGE" category="CORRECTNESS"
 abbrev="Nm" type="NM_WRONG_PACKAGE_INTENTIONAL" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_CONFUSING" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_METHOD_CONSTRUCTOR_CONFUSION" category="CORRECTNESS"
-abbrev="Nm" type="NM_LCASE_HASHCODE" category="CORRECTNESS"
-abbrev="Nm" type="NM_LCASE_TOSTRING" category="CORRECTNESS"
-abbrev="Nm" type="NM_BAD_EQUAL" category="CORRECTNESS"
 abbrev="IA" type="IA_AMBIGUOUS_INVOCATION_OF_INHERITED_OR_OUTER_METHOD" category="STYLE"
 abbrev="Nm" type="NM_CLASS_NOT_EXCEPTION" category="BAD_PRACTICE"
 abbrev="RR" type="RR_NOT_CHECKED" category="BAD_PRACTICE"

@@ -553,5 +553,10 @@
       <LongDescription><![CDATA[Method $METHOD$ bytecode size is $BYTECODE_SIZE$ bytes which is bigger than current limit $LIMIT$ set for bytecode analysis.
       As a result the method body is not analysed.]]></LongDescription>
     </Warning>
+    <Warning Type="BadNameOfMethodMistake">
+      <Title>Probably the method was mistakenly named</Title>
+      <Description>Probably $REPLACEMENT:name$() was intended instead of $METHOD:name$().</Description>
+      <LongDescription><![CDATA[This class defines a method called <code>$METHOD:name$()</code>. This method does not override the $REPLACEMENT$, which is probably what was intended.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

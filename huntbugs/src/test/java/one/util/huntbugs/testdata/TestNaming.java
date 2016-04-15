@@ -43,10 +43,35 @@ public class TestNaming {
         System.out.println();
     }
     
+    @AssertWarning(type="BadNameOfMethodMistake", minScore=55)
+    public int hashcode() {
+        return 31;
+    }
+    
+    @AssertNoWarning(type="BadNameOfMethodMistake")
+    public int hashcode(int x) {
+        return x;
+    }
+
+    @AssertWarning(type="BadNameOfMethodMistake", minScore=55)
+    public String tostring() {
+        return "MyClass";
+    }
+    
+    @AssertWarning(type="BadNameOfMethodMistake", minScore=55)
+    public boolean equal(Object obj) {
+        return obj == this;
+    }
+    
     public static class Class1 {
         @AssertWarning(type="BadNameOfMethod", minScore=15, maxScore=20)
         private void Test4() {
             System.out.println();
+        }
+
+        @AssertNoWarning(type="BadNameOfMethodMistake")
+        private int hashcode() {
+            return 31;
         }
     }
     
@@ -54,6 +79,11 @@ public class TestNaming {
         @AssertWarning(type="BadNameOfMethod", minScore=5, maxScore=10)
         private void Test5() {
             System.out.println();
+        }
+
+        @AssertNoWarning(type="BadNameOfMethodMistake")
+        public static int hashcode() {
+            return 31;
         }
     }
 }

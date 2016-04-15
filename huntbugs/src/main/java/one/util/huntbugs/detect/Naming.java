@@ -22,33 +22,59 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Types;
+import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 /**
  * @author lan
  *
  */
-@WarningDefinition(category="CodeStyle", name="BadNameOfMethod", maxScore=30)
+@WarningDefinition(category = "CodeStyle", name = "BadNameOfMethod", maxScore = 30)
+@WarningDefinition(category = "Correctness", name = "BadNameOfMethodMistake", maxScore = 60)
 public class Naming {
     @MethodVisitor
     public void visitMethod(MethodDefinition md, TypeDefinition td, MethodContext mc) {
-        if(badMethodName(md.getName()) && !Types.isInstance(td, "org/eclipse/osgi/util/NLS")) {
+        if (badMethodName(md.getName()) && !Types.isInstance(td, "org/eclipse/osgi/util/NLS")) {
             int priority = 0;
-            if(!td.isPublic())
+            if (!td.isPublic())
                 priority += 20;
             else {
-                if(td.isFinal())
+                if (td.isFinal())
                     priority += 3;
-                if(md.isProtected())
+                if (md.isProtected())
                     priority += 3;
-                else if(md.isPackagePrivate())
+                else if (md.isPackagePrivate())
                     priority += 6;
-                else if(md.isPrivate())
+                else if (md.isPrivate())
                     priority += 10;
             }
             mc.report("BadNameOfMethod", priority);
         }
+        if (!md.isStatic() && md.isPublic()) {
+            MemberInfo mi = getMistakeFix(md);
+            if(mi != null) {
+                mc.report("BadNameOfMethodMistake", md.isDeprecated() ? 20 : 0, new WarningAnnotation<>("REPLACEMENT", mi));
+            }
+        }
     }
-    
+
+    /**
+     * @param md
+     * @return
+     */
+    private MemberInfo getMistakeFix(MethodDefinition md) {
+        if(md.getName().equals("hashcode") && md.getSignature().equals("()I")) {
+            return new MemberInfo("java/lang/Object", "hashCode", md.getSignature());
+        }
+        if(md.getName().equals("tostring") && md.getSignature().equals("()Ljava/lang/String;")) {
+            return new MemberInfo("java/lang/Object", "toString", md.getSignature());
+        }
+        if(md.getName().equals("equal") && md.getSignature().equals("(Ljava/lang/Object;)Z")) {
+            return new MemberInfo("java/lang/Object", "equals", md.getSignature());
+        }
+        return null;
+    }
+
     private boolean badMethodName(String mName) {
         return mName.length() >= 2 && Character.isLetter(mName.charAt(0)) && !Character.isLowerCase(mName.charAt(0))
             && Character.isLetter(mName.charAt(1)) && Character.isLowerCase(mName.charAt(1))
