@@ -502,5 +502,17 @@
       <Description>Instance method $METHOD$ writes to static field $FIELD$.</Description>
       <LongDescription><![CDATA[This instance method writes to a static field $FIELD$. This is tricky to get correct if multiple instances are being manipulated, and generally bad practice.]]></LongDescription>
     </Warning>
+    <Warning Type="CatchIllegalMonitorStateException">
+      <Title>Dubious catching of IllegalMonitorStateException</Title>
+      <Description>Dubious catching of IllegalMonitorStateException in $METHOD$.</Description>
+      <LongDescription><![CDATA[$EXCEPTION$ is generally only thrown in case of a design flaw in your code (calling wait or notify on an object you do not hold a lock on).
+      Normally it should not be catched.]]></LongDescription>
+    </Warning>
+    <Warning Type="CatchConcurrentModificationException">
+      <Title>Dubious catching of ConcurrentModificationException</Title>
+      <Description>Dubious catching of ConcurrentModificationException in $METHOD$.</Description>
+      <LongDescription><![CDATA[$EXCEPTION$ is generally only thrown in case of a design flaw in your code (concurrent modification of the collection which is not thread-safe).
+      Normally it should not be catched.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>
