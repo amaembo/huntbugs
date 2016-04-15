@@ -514,5 +514,38 @@
       <LongDescription><![CDATA[$EXCEPTION$ is generally only thrown in case of a design flaw in your code (concurrent modification of the collection which is not thread-safe).
       Normally it should not be catched.]]></LongDescription>
     </Warning>
+    <Warning Type="BitCheckGreater">
+      <Title>Check for sign of bitwise operation result</Title>
+      <Description>Check for sign like (x &amp; $NUMBER:hex$) &gt; 0 in $METHOD$.</Description>
+      <LongDescription><![CDATA[This condition checks the sign of the result of bitwise operation like <code>(x & $NUMBER:hex$) &gt; 0</code>.
+      It's better to use equality check: <code>(x & $NUMBER:hex$) != 0</code> as if bit mask will later change, it may have the high bit set producing the negative result.]]></LongDescription>
+    </Warning>
+    <Warning Type="BitCheckGreaterNegative">
+      <Title>Check for sign of bitwise operation result with high bit</Title>
+      <Description>Check for sign like (x &amp; $NUMBER:hex$) &gt; 0 may produce incorrect result.</Description>
+      <LongDescription><![CDATA[This condition checks the sign of the result of bitwise operation like <code>(x & $NUMBER:hex$) &gt; 0</code>.
+      However the <code>$NUMBER:hex$</code> has the high bit set, thus it's actually negative number ($NUMBER:dec$). The result of this comparison
+      could be negative as well which is likely to be unexpected here. Consider replacing with equality check: <code>(x & $NUMBER:hex$) != 0</code>.]]></LongDescription>
+    </Warning>
+    <Warning Type="BoxedForToString">
+      <Title>Unnecessary boxing to convert a value to string</Title>
+      <Description>$BOXED_TYPE$ object is created just for toString() call in $METHOD$.</Description>
+      <LongDescription><![CDATA[This method tries to convert a value to string using the pattern like <code>new $BOXED_TYPE:plain$(val).toString()</code>
+      or <code>(($BOXED_TYPE:plain$)val).toString()</code>. Creating boxed object is completely unnecessary here. 
+      Though in some cases the object could be optimized out by JIT-compiler, it's still better to use $REPLACEMENT$ method instead:
+      <code>String.valueOf(val)</code>.]]></LongDescription>
+    </Warning>
+    <Warning Type="BoxedForUnboxing">
+      <Title>Unnecessary boxing to convert a value back to primitive</Title>
+      <Description>$BOXED_TYPE$ object is created just for unboxing in $METHOD$.</Description>
+      <LongDescription><![CDATA[This method unnecessarily creates $BOXED_TYPE$ object which is used for unboxing only. This is unnecessary and may impact the performance.
+      Just use primitive type instead.]]></LongDescription>
+    </Warning>
+    <Warning Type="UnboxedForBoxing">
+      <Title>A boxed object is unboxed just for subsequent boxing</Title>
+      <Description>$BOXED_TYPE$ object is unboxed just for subsequent boxing in $METHOD$.</Description>
+      <LongDescription><![CDATA[This method unnecessarily unboxes the $BOXED_TYPE$ object which is used for subsequent boxing only.
+      This is inefficient as additional objects might be allocated which are exact copies of the original object. Consider using the boxed type all the way.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

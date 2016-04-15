@@ -238,11 +238,15 @@ public class WarningAnnotation<T> {
     }
 
     public static WarningAnnotation<Location> forLocation(Location loc) {
-        return new WarningAnnotation<>("LOCATION", loc);
+        return forLocation("LOCATION", loc);
     }
 
+    public static WarningAnnotation<Location> forLocation(String role, Location loc) {
+        return new WarningAnnotation<>(role, loc);
+    }
+    
     public static WarningAnnotation<Location> forAnotherInstance(Location loc) {
-        return new WarningAnnotation<>("ANOTHER_INSTANCE", loc);
+        return forLocation("ANOTHER_INSTANCE", loc);
     }
 
     public static WarningAnnotation<String> forSourceFile(String file) {

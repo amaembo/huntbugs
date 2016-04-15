@@ -38,6 +38,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "RedundantCode", name = "UselessOrWithZero", maxScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "UselessAndWithMinusOne", maxScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "UselessAndWithZero", maxScore = 70)
+@WarningDefinition(category = "Correctness", name = "BitCheckGreaterNegative", maxScore = 80)
+@WarningDefinition(category = "BadPractice", name = "BitCheckGreater", maxScore = 35)
 // TODO: procyon optimizes too hard to detect "UselessAndWithZero"
 public class BadMath {
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
@@ -71,6 +73,22 @@ public class BadMath {
                         mc.report("UselessAndWithZero", 0, child);
                 }
             });
+        }
+        if (expr.getCode() == AstCode.CmpGt || expr.getCode() == AstCode.CmpLt) {
+            Expression bitAnd = Nodes.getChild(expr, expr.getCode() == AstCode.CmpGt ? 0 : 1); 
+            Object zero = Nodes.getConstant(expr.getArguments().get(expr.getCode() == AstCode.CmpGt ? 1 : 0)); 
+            if(isIntegral(zero) && ((Number)zero).longValue() == 0 && bitAnd.getCode() == AstCode.And) {
+                Nodes.ifBinaryWithConst(bitAnd, (flags, mask) -> {
+                    if(isIntegral(mask)) {
+                        if(mask instanceof Integer && ((Integer)mask) < 0 ||
+                                mask instanceof Long && ((Long)mask) < 0) {
+                            mc.report("BitCheckGreaterNegative", 0, flags, WarningAnnotation.forNumber((Number) mask));
+                        } else {
+                            mc.report("BitCheckGreater", 0, flags, WarningAnnotation.forNumber((Number) mask));
+                        }
+                    }
+                });
+            }
         }
         if (expr.getCode() == AstCode.CmpEq || expr.getCode() == AstCode.CmpNe) {
             Nodes.ifBinaryWithConst(expr, (child, outerConst) -> {

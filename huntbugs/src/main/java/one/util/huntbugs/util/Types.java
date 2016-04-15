@@ -36,6 +36,9 @@ public class Types {
         "java/lang/Short", "java/lang/Double", "java/lang/Byte", "java/lang/Character", "java/lang/Boolean", "java/lang/Float",
         "java/lang/Math"));
 
+    private static final Set<String> BOXED_TYPES = new HashSet<>(Arrays.asList("java/lang/Integer", "java/lang/Long",
+        "java/lang/Short", "java/lang/Double", "java/lang/Byte", "java/lang/Character", "java/lang/Boolean", "java/lang/Float"));
+    
     private static final Set<String> MUTABLE_TYPES = new HashSet<>(Arrays.asList("java/util/Hashtable",
         "java/util/Vector", "java/util/Date", "java/sql/Date", "java/sql/Timestamp", "java/awt/Point",
         "java/awt/Dimension", "java/awt/Rectangle"));
@@ -117,5 +120,9 @@ public class Types {
         if (type.isArray())
             return true;
         return MUTABLE_TYPES.contains(type.getInternalName());
+    }
+
+    public static boolean isBoxed(TypeReference type) {
+        return BOXED_TYPES.contains(type.getInternalName());
     }
 }

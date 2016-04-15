@@ -310,4 +310,10 @@ public class ValuesFlow {
             ctx.incStat("ValuesFlow");
         }
     }
+
+    public static boolean isPhiContains(Expression src, Expression expr) {
+        if(src.getCode() != Frame.PHI_TYPE)
+            return false;
+        return src.getArguments().stream().anyMatch(x -> expr == x);
+    }
 }

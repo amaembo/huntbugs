@@ -74,6 +74,11 @@ abbrev="UI" type="UI_INHERITANCE_UNSAFE_GETRESOURCE" category="BAD_PRACTICE" -->
 abbrev="RV" type="RV_REM_OF_RANDOM_INT" category="STYLE" --> RandomIntRemainder
 abbrev="RV" type="RV_REM_OF_HASHCODE" category="STYLE" --> HashCodeRemainder
 abbrev="ST" type="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD" category="STYLE" --> StaticFieldFromInstanceMethod
+abbrev="IMSE" type="IMSE_DONT_CATCH_IMSE" category="BAD_PRACTICE" --> CatchIllegalMonitorStateException
+abbrev="BIT" type="BIT_SIGNED_CHECK" category="BAD_PRACTICE" --> BitCheckGreater
+abbrev="BIT" type="BIT_SIGNED_CHECK_HIGH_BIT" category="CORRECTNESS" --> BitCheckGreaterNegative
+abbrev="Bx" type="DM_BOXED_PRIMITIVE_TOSTRING" category="PERFORMANCE" --> BoxedPrimitiveToString
+abbrev="Bx" type="BX_BOXING_IMMEDIATELY_UNBOXED" category="PERFORMANCE" --> BoxedAndImmediatelyUnboxed
 
 ==== Not reimplemented
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
@@ -96,11 +101,8 @@ abbrev="IL" type="IL_INFINITE_RECURSIVE_LOOP" category="CORRECTNESS" cweid="674"
 abbrev="IL" type="IL_CONTAINER_ADDED_TO_ITSELF" category="CORRECTNESS"
 abbrev="VO" type="VO_VOLATILE_REFERENCE_TO_ARRAY" category="MT_CORRECTNESS"
 abbrev="HSC" type="HSC_HUGE_SHARED_STRING_CONSTANT" category="PERFORMANCE"
-abbrev="AM" type="AM_CREATES_EMPTY_ZIP_FILE_ENTRY" category="BAD_PRACTICE"
-abbrev="AM" type="AM_CREATES_EMPTY_JAR_FILE_ENTRY" category="BAD_PRACTICE"
 abbrev="DP" type="DP_DO_INSIDE_DO_PRIVILEGED" category="MALICIOUS_CODE"
 abbrev="DP" type="DP_CREATE_CLASSLOADER_INSIDE_DO_PRIVILEGED" category="MALICIOUS_CODE"
-abbrev="IMSE" type="IMSE_DONT_CATCH_IMSE" category="BAD_PRACTICE"
 abbrev="CAA" type="CAA_COVARIANT_ARRAY_ELEMENT_STORE" category="CORRECTNESS" experimental="true"
 abbrev="CN" type="CN_IMPLEMENTS_CLONE_BUT_NOT_CLONEABLE" category="BAD_PRACTICE"
 abbrev="CN" type="CN_IDIOM" category="BAD_PRACTICE"
@@ -120,12 +122,10 @@ abbrev="Dm" type="DMI_THREAD_PASSED_WHERE_RUNNABLE_EXPECTED" category="STYLE"
 abbrev="Dm" type="DMI_COLLECTION_OF_URLS" category="PERFORMANCE"
 abbrev="Dm" type="DMI_ANNOTATION_IS_NOT_VISIBLE_TO_REFLECTION" category="CORRECTNESS"
 abbrev="Dm" type="DM_CONVERT_CASE" category="I18N"
-abbrev="Bx" type="DM_BOXED_PRIMITIVE_TOSTRING" category="PERFORMANCE"
 abbrev="Bx" type="DM_BOXED_PRIMITIVE_FOR_PARSING" category="PERFORMANCE"
 abbrev="Bx" type="DM_BOXED_PRIMITIVE_FOR_COMPARE" category="PERFORMANCE"
 abbrev="Bx" type="BX_UNBOXED_AND_COERCED_FOR_TERNARY_OPERATOR" category="PERFORMANCE"
 abbrev="Bx" type="BX_UNBOXING_IMMEDIATELY_REBOXED" category="PERFORMANCE"
-abbrev="Bx" type="BX_BOXING_IMMEDIATELY_UNBOXED" category="PERFORMANCE"
 abbrev="Bx" type="BX_BOXING_IMMEDIATELY_UNBOXED_TO_PERFORM_COERCION" category="PERFORMANCE" cweid="192"
 abbrev="Dm" type="DM_MONITOR_WAIT_ON_CONDITION" category="MT_CORRECTNESS"
 abbrev="NP" type="NP_ARGUMENT_MIGHT_BE_NULL" category="CORRECTNESS"
@@ -331,8 +331,6 @@ abbrev="INT" type="INT_BAD_COMPARISON_WITH_NONNEGATIVE_VALUE" category="CORRECTN
 abbrev="INT" type="INT_VACUOUS_COMPARISON" category="STYLE"
 abbrev="BIT" type="BIT_ADD_OF_SIGNED_BYTE" category="CORRECTNESS"
 abbrev="BIT" type="BIT_IOR_OF_SIGNED_BYTE" category="CORRECTNESS"
-abbrev="BIT" type="BIT_SIGNED_CHECK" category="BAD_PRACTICE"
-abbrev="BIT" type="BIT_SIGNED_CHECK_HIGH_BIT" category="CORRECTNESS"
 abbrev="BIT" type="BIT_AND_ZZ" category="CORRECTNESS"
 abbrev="SA" type="SA_LOCAL_DOUBLE_ASSIGNMENT" category="STYLE"
 abbrev="SA" type="SA_FIELD_DOUBLE_ASSIGNMENT" category="STYLE"
@@ -460,3 +458,5 @@ abbrev="NOISE" type="NOISE_NULL_DEREFERENCE" category="NOISE"
 abbrev="NOISE" type="NOISE_METHOD_CALL" category="NOISE"
 abbrev="NOISE" type="NOISE_FIELD_REFERENCE" category="NOISE"
 abbrev="NOISE" type="NOISE_OPERATION" category="NOISE"
+abbrev="AM" type="AM_CREATES_EMPTY_ZIP_FILE_ENTRY" category="BAD_PRACTICE"
+abbrev="AM" type="AM_CREATES_EMPTY_JAR_FILE_ENTRY" category="BAD_PRACTICE"

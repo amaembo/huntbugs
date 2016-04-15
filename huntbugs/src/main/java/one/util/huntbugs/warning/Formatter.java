@@ -26,6 +26,8 @@ public class Formatter {
     public static final String FORMAT_PLAIN = "plain";
     public static final String FORMAT_HTML = "html";
     public static final String FORMAT_NAME = "name";
+    public static final String FORMAT_HEX = "hex";
+    public static final String FORMAT_DEC = "dec";
     
     private final Messages msgs;
     
@@ -89,7 +91,27 @@ public class Formatter {
         if(value instanceof Float) {
             return formatFloat((Float)value);
         }
+        if(value instanceof Integer) {
+            return formatInteger((Integer)value, format);
+        }
+        if(value instanceof Long) {
+            return formatLong((Long)value, format);
+        }
         return String.valueOf(value);
+    }
+
+    private String formatLong(long value, String format) {
+        if(format.equals(FORMAT_HEX)) {
+            return "0x"+Long.toHexString(value);
+        }
+        return Long.toString(value);
+    }
+
+    private String formatInteger(int value, String format) {
+        if(format.equals(FORMAT_HEX)) {
+            return "0x"+Integer.toHexString(value);
+        }
+        return Integer.toString(value);
     }
 
     public String formatFloat(float val) {

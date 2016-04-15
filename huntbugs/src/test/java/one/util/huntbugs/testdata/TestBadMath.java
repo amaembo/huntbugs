@@ -23,6 +23,9 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestBadMath {
+    private static final long FLAG_BAR = 0x100;
+    private static final long FLAG_FOO = 0x8000_0000_0000_0000L;
+    
     @AssertWarning(type="RemOne")
     public int testRem(int x) {
         int mod = 1;
@@ -250,6 +253,32 @@ public class TestBadMath {
     public int testUselessAnd(long input) {
         for(int i=0; i<input; i++) input--;
         return (int)(input & 0xFFFFFFFF);
+    }
+    
+    @AssertWarning(type="BitCheckGreaterNegative") 
+    public boolean isFoo(long flags) {
+        return (flags & FLAG_FOO) > 0;
+    }
+
+    @AssertWarning(type="BitCheckGreaterNegative") 
+    public boolean isFooRev(long flags) {
+        return 0 < (flags & FLAG_FOO);
+    }
+    
+    @AssertNoWarning(type="*") 
+    public boolean isFooStrangeButOk(long flags) {
+        return (flags & FLAG_FOO) < 0;
+    }
+    
+    @AssertNoWarning(type="BitCheckGreaterNegative") 
+    @AssertWarning(type="BitCheckGreater") 
+    public boolean isBar(long flags) {
+        return (flags & FLAG_BAR) > 0;
+    }
+    
+    @AssertNoWarning(type="*") 
+    public boolean isFooOk(long flags) {
+        return (flags & FLAG_FOO) != 0;
     }
     
 }
