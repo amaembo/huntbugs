@@ -38,6 +38,7 @@ import one.util.huntbugs.repo.Repository;
 import one.util.huntbugs.repo.RepositoryVisitor;
 import one.util.huntbugs.warning.Messages;
 import one.util.huntbugs.warning.Warning;
+import one.util.huntbugs.warning.WarningType;
 
 /**
  * @author lan
@@ -214,5 +215,9 @@ public class Context {
 
     public void incStat(String key) {
         stat.merge(key, 1L, Long::sum);
+    }
+    
+    public WarningType getWarningType(String typeName) {
+        return registry.getWarningType(typeName);
     }
 }

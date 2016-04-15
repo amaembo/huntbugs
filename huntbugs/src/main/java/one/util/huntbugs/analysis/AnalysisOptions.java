@@ -17,7 +17,10 @@ package one.util.huntbugs.analysis;
 
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Objects;
+
+import one.util.huntbugs.warning.rule.Rule;
 
 /**
  * @author lan
@@ -28,6 +31,7 @@ public class AnalysisOptions {
     public int maxMethodSize = 8000;
     public int minScore = 1;
     public int loopTraversalIterations = 5;
+    private Rule rule = Rule.NULL;
 
     public void set(String name, String valueString) {
         Objects.requireNonNull(valueString);
@@ -56,8 +60,18 @@ public class AnalysisOptions {
         }
     }
 
+    public Rule getRule() {
+        return rule;
+    }
+
+    public void setRule(Rule rule) {
+        this.rule = rule;
+    }
+
     public void report(PrintStream out) {
         for(Field field : getClass().getFields()) {
+            if(!Modifier.isPublic(field.getModifiers()))
+                continue;
             String type = field.getType().getSimpleName();
             try {
                 out.println(field.getName()+" ("+type+") = "+field.get(this));
