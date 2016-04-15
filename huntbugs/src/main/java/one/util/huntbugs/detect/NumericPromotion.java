@@ -88,6 +88,19 @@ public class NumericPromotion {
                     if(val >= 2 && val <= 4)
                         priority += 10;
                 }
+                Expression divident = arg.getArguments().get(0);
+                if(divident.getCode() == AstCode.Mul) {
+                    BigInteger multiplier = getMultiplicationConstant(divident);
+                    if(Nodes.isOp(nc.getNode(), AstCode.Div)) {
+                        Expression parent = (Expression) nc.getNode();
+                        if(parent.getArguments().get(0) == expr) {
+                            // Lower priority for scenarios like ((a*1000)/b)/10.0
+                            Object divisor = Nodes.getConstant(parent.getArguments().get(1));
+                            if(divisor instanceof Number && multiplier.equals(BigInteger.valueOf(((Number)divisor).longValue()*100)))
+                                priority += 100;
+                        }
+                    }
+                }
                 mc.report("IntegerDivisionPromotedToFloat", priority, expr, new WarningAnnotation<>("SOURCE_TYPE", arg
                         .getInferredType().getSimpleName()), new WarningAnnotation<>("TARGET_TYPE", expr
                         .getInferredType().getSimpleName()));

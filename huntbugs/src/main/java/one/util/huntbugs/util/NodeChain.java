@@ -22,10 +22,12 @@ import java.util.Objects;
 
 
 
+
 import one.util.huntbugs.flow.ValuesFlow;
 
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
+import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.CatchBlock;
 import com.strobel.decompiler.ast.Expression;
@@ -107,9 +109,9 @@ public class NodeChain {
     
     @SuppressWarnings("unchecked")
     public List<Expression> findUsages(Expression expr, boolean includePhi) {
-        if(cur instanceof Expression && ((Expression)cur).getArguments().stream().anyMatch(x -> expr == x)
-                && Nodes.isInvoke(cur)) {
-            return Collections.singletonList((Expression)cur);
+        if (cur instanceof Expression && ((Expression) cur).getCode() != AstCode.Store
+            && ((Expression) cur).getArguments().stream().anyMatch(x -> expr == x)) {
+            return Collections.singletonList((Expression) cur);
         }
         return (List<Expression>)(List<?>)getRoot().getChildrenAndSelfRecursive(n -> {
             if(!(n instanceof Expression))

@@ -33,6 +33,7 @@ import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.WarningAnnotation.Location;
 
 /**
  * @author lan
@@ -69,15 +70,11 @@ public class UnnecessaryBoxing {
                     Map<Boolean, List<Expression>> map = usages.stream().collect(
                         Collectors.partitioningBy(Nodes::isUnboxing));
                     if (!map.get(true).isEmpty()) {
-                        List<WarningAnnotation<?>> annotations = map.get(true).stream().map(
-                            e -> WarningAnnotation.forLocation("USED_AT", mc.getLocation(e))).collect(
-                            Collectors.toList());
+                        List<WarningAnnotation<?>> annotations = getUsedLocations(arg, mc, map.get(true));
                         mc.report("BoxedForUnboxing", 0, arg, annotations.toArray(new WarningAnnotation<?>[0]));
                     }
                     if (!map.get(false).isEmpty()) {
-                        List<WarningAnnotation<?>> annotations = map.get(false).stream().map(
-                            e -> WarningAnnotation.forLocation("USED_AT", mc.getLocation(e))).collect(
-                            Collectors.toList());
+                        List<WarningAnnotation<?>> annotations = getUsedLocations(arg, mc, map.get(false));
                         annotations.add(WarningAnnotation.forType("BOXED_TYPE", type));
                         annotations.add(WarningAnnotation.forMember("REPLACEMENT", "java/lang/String", "valueOf", "("
                             + arg.getInferredType().getInternalName() + ")Ljava/lang/String;"));
@@ -86,6 +83,14 @@ public class UnnecessaryBoxing {
                 }
             }
         }
+    }
+
+    private List<WarningAnnotation<?>> getUsedLocations(Expression arg, MethodContext mc, List<Expression> list) {
+        Location curLoc = mc.getLocation(arg);
+        List<WarningAnnotation<?>> annotations = list.stream().map(mc::getLocation).filter(
+            loc -> loc.getSourceLine() != curLoc.getSourceLine() && loc.getSourceLine() != -1).map(
+            loc -> WarningAnnotation.forLocation("USED_AT", loc)).collect(Collectors.toList());
+        return annotations;
     }
 
     private boolean isBoxedToString(Expression expr) {

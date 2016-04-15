@@ -62,6 +62,11 @@ public class TestNumericPromotion {
     public double divide(int x, int y) {
         return x / y;
     }
+
+    @AssertNoWarning(type = "IntegerDivisionPromotedToFloat")
+    public double percent(int val, int total) {
+        return val * 100 * 10 / total / 10.0;
+    }
     
     @AssertWarning(type = "IntegerDivisionPromotedToFloat")
     public double divideByTwo(double x, double y) {
