@@ -18,6 +18,7 @@ package one.util.huntbugs.flow;
 import java.util.List;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.util.Nodes;
@@ -311,9 +312,21 @@ public class ValuesFlow {
         }
     }
 
-    public static boolean isPhiContains(Expression src, Expression expr) {
-        if(src.getCode() != Frame.PHI_TYPE)
-            return false;
-        return src.getArguments().stream().anyMatch(x -> expr == x);
+    public static boolean allMatch(Expression src, Predicate<Expression> pred) {
+        if(src.getCode() == Frame.PHI_TYPE)
+            return src.getArguments().stream().allMatch(pred);
+        return pred.test(src);
+    }
+
+    public static boolean anyMatch(Expression src, Predicate<Expression> pred) {
+        if(src.getCode() == Frame.PHI_TYPE)
+            return src.getArguments().stream().anyMatch(pred);
+        return pred.test(src);
+    }
+    
+    public static Expression findFirst(Expression src, Predicate<Expression> pred) {
+        if(src.getCode() == Frame.PHI_TYPE)
+            return src.getArguments().stream().filter(pred).findFirst().orElse(null);
+        return pred.test(src) ? src : null;
     }
 }

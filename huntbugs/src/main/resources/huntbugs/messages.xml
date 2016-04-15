@@ -558,5 +558,18 @@
       <Description>Probably $REPLACEMENT:name$() was intended instead of $METHOD:name$().</Description>
       <LongDescription><![CDATA[This class defines a method called <code>$METHOD:name$()</code>. This method does not override the $REPLACEMENT$, which is probably what was intended.]]></LongDescription>
     </Warning>
+    <Warning Type="NegatingComparatorResult">
+      <Title>Dangerous comparison result negation</Title>
+      <Description>The result of $CALLED_METHOD$ is negated.</Description>
+      <LongDescription><![CDATA[This code negates a result of $CALLED_METHOD$. The comparison method contract allows to return any integer value, including <code>Integer.MIN_VALUE</code>
+      which sign will not change after negation. It's safer to use <code>b.compareTo(a)</code> instead of <code>-a.compareTo(b)</code> and
+      <code>comparator.compare(b, a)</code> instead of <code>-comparator.compare(a, b)</code>.]]></LongDescription>
+    </Warning>
+    <Warning Type="ComparingComparatorResultWithNumber">
+      <Title>Comparison result is checked against specific number</Title>
+      <Description>The result of $CALLED_METHOD$ is compared with $NUMBER$.</Description>
+      <LongDescription><![CDATA[This code compares the result of $CALLED_METHOD$ with $NUMBER$. The comparison method contract allows to return any number, so you should not check against
+      specific constants. Instead check the sign of the comparison result.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

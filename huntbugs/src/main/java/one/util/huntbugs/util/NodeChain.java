@@ -23,6 +23,8 @@ import java.util.Objects;
 
 
 
+import java.util.function.Predicate;
+
 import one.util.huntbugs.flow.ValuesFlow;
 
 import com.strobel.assembler.metadata.MethodReference;
@@ -113,12 +115,13 @@ public class NodeChain {
             && ((Expression) cur).getArguments().stream().anyMatch(x -> expr == x)) {
             return Collections.singletonList((Expression) cur);
         }
+        Predicate<Expression> has = src -> src == expr;
+        Predicate<Expression> pred = includePhi ? src -> ValuesFlow.anyMatch(src, has) : has;
         return (List<Expression>)(List<?>)getRoot().getChildrenAndSelfRecursive(n -> {
             if(!(n instanceof Expression))
                 return false;
             Expression e = (Expression)n;
-            return e.getArguments().stream().map(ValuesFlow::getSource).anyMatch(src -> src == expr
-                    || (includePhi && ValuesFlow.isPhiContains(src, expr)));
+            return e.getArguments().stream().map(ValuesFlow::getSource).anyMatch(pred);
         });
     }
 }
