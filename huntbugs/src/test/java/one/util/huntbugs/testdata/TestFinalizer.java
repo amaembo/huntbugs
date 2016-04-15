@@ -32,70 +32,91 @@ public class TestFinalizer {
             System.out.println("Finalize!!!");
         }
     }
-    
+
     static class Nullify extends SuperClass {
         @Override
-        @AssertWarning(type="FinalizeNullifiesSuper", minScore=40, maxScore = 60)
+        @AssertWarning(type = "FinalizeNullifiesSuper", minScore = 40, maxScore = 60)
         protected void finalize() throws Throwable {
         }
     }
-    
+
     static class Useless extends SuperClass {
         @Override
-        @AssertWarning(type="FinalizeUselessSuper", minScore=30, maxScore = 50)
+        @AssertWarning(type = "FinalizeUselessSuper", minScore = 30, maxScore = 50)
         protected void finalize() throws Throwable {
             super.finalize();
         }
     }
-    
+
     static class Useful extends SuperClass {
         @Override
-        @AssertNoWarning(type="FinalizeUselessSuper")
-        @AssertWarning(type="FinalizePublic")
+        @AssertNoWarning(type = "FinalizeUselessSuper")
+        @AssertWarning(type = "FinalizePublic")
+        public void finalize() throws Throwable {
+            super.finalize();
+            System.out.println("More");
+        }
+    }
+
+    static class Useful2 extends SuperClass {
+        @Override
+        @AssertNoWarning(type = "FinalizeNoSuperCall")
         public void finalize() throws Throwable {
             super.finalize();
             System.out.println("More");
         }
     }
     
-    @AssertWarning(type="FinalizeInvocation")
+    @AssertWarning(type = "FinalizeInvocation")
     public void test() {
         finalize();
     }
 
     @Override
-    @AssertWarning(type="FinalizeEmpty", minScore=20, maxScore = 40)
-    @AssertNoWarning(type="FinalizeNullifiesSuper")
+    @AssertWarning(type = "FinalizeEmpty", minScore = 20, maxScore = 40)
+    @AssertNoWarning(type = "FinalizeNullifiesSuper")
     protected void finalize() {
     }
-    
+
     static class FinalFinalizer {
         @Override
-        @AssertNoWarning(type="Finalize*")
+        @AssertNoWarning(type = "Finalize*")
         protected final void finalize() {
         }
     }
-    
+
     static class NullFields {
         InputStream is = new ByteArrayInputStream(new byte[1]);
-        
-        @AssertWarning(type="FinalizeNullsFields")
+
+        @AssertWarning(type = "FinalizeNullsFields")
         @Override
         protected void finalize() throws Throwable {
             System.out.println("Finalizer");
             is = null;
         }
     }
-    
+
     static class NullFieldsOnly {
         InputStream is = new ByteArrayInputStream(new byte[1]);
         Object obj = new Object();
-        
-        @AssertWarning(type="FinalizeOnlyNullsFields")
+
+        @AssertWarning(type = "FinalizeOnlyNullsFields")
         @Override
         protected void finalize() throws Throwable {
             is = null;
             obj = null;
+        }
+    }
+
+    static class NoSuperCall extends SuperClass {
+        @AssertWarning(type = "FinalizeNoSuperCall")
+        @Override
+        protected void finalize() throws Throwable {
+            if (Math.random() > 0.5) {
+                System.out.println("Mwahaha");
+            } else {
+                System.out.println("Hohoho");
+            }
         }
     }
 }

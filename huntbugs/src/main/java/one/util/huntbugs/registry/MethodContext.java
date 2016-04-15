@@ -272,6 +272,6 @@ public class MethodContext {
 
     @Override
     public String toString() {
-        return "Analyzing method " + md + " with detector " + detector;
+        return "Analyzing method " + md.getDeclaringType() + "." + md + " with detector " + detector;
     }
 }

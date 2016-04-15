@@ -85,11 +85,11 @@ abbrev="Nm" type="NM_LCASE_TOSTRING" category="CORRECTNESS" --> BadNameOfMethodM
 abbrev="Nm" type="NM_BAD_EQUAL" category="CORRECTNESS" --> BadNameOfMethodMistake
 abbrev="RV" type="RV_NEGATING_RESULT_OF_COMPARETO" category="BAD_PRACTICE" --> NegatingComparatorResult
 abbrev="RV" type="RV_CHECK_COMPARETO_FOR_SPECIFIC_RETURN_VALUE" category="CORRECTNESS" --> ComparingComparatorResultWithNumber
+abbrev="FI" type="FI_MISSING_SUPER_CALL" category="BAD_PRACTICE" --> FinalizeNoSuperCall
+abbrev="RV" type="RV_EXCEPTION_NOT_THROWN" category="CORRECTNESS" --> DroppedException
+
 
 ==== Not reimplemented
-abbrev="FI" type="FI_MISSING_SUPER_CALL" category="BAD_PRACTICE"
-
-
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SERVLET_WRITER" category="SECURITY"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_JSP_WRITER" category="SECURITY"
@@ -273,7 +273,6 @@ abbrev="RV" type="RV_RETURN_VALUE_IGNORED" category="CORRECTNESS"
 abbrev="RV" type="RV_RETURN_VALUE_IGNORED_INFERRED" category="STYLE"
 abbrev="RV" type="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT" category="STYLE"
 abbrev="RV" type="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE" category="BAD_PRACTICE" cweid="253"
-abbrev="RV" type="RV_EXCEPTION_NOT_THROWN" category="CORRECTNESS"
 abbrev="RV" type="RV_CHECK_FOR_POSITIVE_INDEXOF" category="STYLE"
 abbrev="RV" type="RV_DONT_JUST_NULL_CHECK_READLINE" category="STYLE"
 abbrev="NP" type="NP_ALWAYS_NULL" category="CORRECTNESS"

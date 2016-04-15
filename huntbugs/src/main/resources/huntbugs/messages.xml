@@ -260,6 +260,12 @@
       <LongDescription><![CDATA[This empty $METHOD$ method explicitly negates the effect of any finalizer defined by its superclass $SUPER_TYPE$.
       Any finalizer actions defined for the superclass will not be performed. Unless this is intended, delete this method.]]></LongDescription>
     </Warning>
+    <Warning Type="FinalizeNoSuperCall">
+      <Title>Finalizer does not call superclass finalizer</Title>
+      <Description>The $METHOD$ method does not call superclass finalizer.</Description>
+      <LongDescription><![CDATA[This $METHOD$ method does not make a call to its superclass's <code>finalize()</code> method. 
+      So, finalizer actions defined for the superclass $SUPER_TYPE$ will not be performed. Add a call to <code>super.finalize()</code>.]]></LongDescription>
+    </Warning>
     <Warning Type="FinalizeUselessSuper">
       <Title>Finalizer does nothing except calling the superclass finalizer</Title>
       <Description>The $METHOD$ method does nothing except calling the superclass finalizer.</Description>
@@ -570,6 +576,12 @@
       <Description>The result of $CALLED_METHOD$ is compared with $NUMBER$.</Description>
       <LongDescription><![CDATA[This code compares the result of $CALLED_METHOD$ with $NUMBER$. The comparison method contract allows to return any number, so you should not check against
       specific constants. Instead check the sign of the comparison result.]]></LongDescription>
+    </Warning>
+    <Warning Type="DroppedException">
+      <Title>Exception created and dropped rather than thrown</Title>
+      <Description>Exception $EXCEPTION$ is created and dropped.</Description>
+      <LongDescription><![CDATA[This code creates an exception (or error) object of type $EXCEPTION$, but doesn't do anything with it.
+      Probably the <code>throw</code> keyword is missing.]]></LongDescription>
     </Warning>
   </WarningList>
 </p:Messages>
