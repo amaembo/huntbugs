@@ -32,8 +32,8 @@ public class CategoryRule implements Rule {
 
     @Override
     public WarningType adjust(WarningType wt) {
-        if(wt.getCategory().equals(category))
-            return new WarningType(category, wt.getName(), wt.getMaxScore()+adjustment);
+        if(wt.getCategory().equalsIgnoreCase(category))
+            return new WarningType(wt.getCategory(), wt.getName(), wt.getMaxScore()+adjustment);
         return wt;
     }
 }

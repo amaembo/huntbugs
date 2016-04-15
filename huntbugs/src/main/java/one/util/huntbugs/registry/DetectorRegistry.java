@@ -48,7 +48,6 @@ import one.util.huntbugs.repo.Repository;
 import one.util.huntbugs.repo.RepositoryVisitor;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.Messages.Message;
-import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningType;
 
@@ -64,13 +63,29 @@ public class DetectorRegistry {
     private final Map<WarningType, Detector> typeToDetector = new HashMap<>();
     private final List<Detector> detectors = new ArrayList<>();
     private final Context ctx;
+    private final Detector systemDetector;
 
     private final DatabaseRegistry databases;
+    
+    public static class SystemDetector {}
 
     public DetectorRegistry(Context ctx) {
         this.ctx = ctx;
         this.databases = new DatabaseRegistry(ctx);
+        ctx.incStat("WarningTypes.Total");
+        Map<String, WarningType> systemWarnings = createWarningMap(Stream.of(METHOD_TOO_LARGE));
+        try {
+            this.systemDetector = createDetector(SystemDetector.class, systemWarnings);
+        } catch (IllegalAccessException e) {
+            throw new InternalError(e);
+        }
         init();
+    }
+
+    private Map<String, WarningType> createWarningMap(Stream<WarningType> stream) {
+        Map<String, WarningType> systemWarnings = stream.map(ctx.getOptions().getRule()::adjust)
+                .collect(Collectors.toMap(WarningType::getName, Function.identity()));
+        return systemWarnings;
     }
 
     private List<WarningDefinition> getDefinitions(Class<?> clazz) {
@@ -86,22 +101,28 @@ public class DetectorRegistry {
             return false;
         try {
             wds.forEach(wd -> ctx.incStat("WarningTypes.Total"));
-            Map<String, WarningType> wts = wds.stream().map(WarningType::new).map(ctx.getOptions().getRule()::adjust)
-                    .collect(Collectors.toMap(WarningType::getName, Function.identity()));
-            List<WarningType> activeWts = wts.values().stream().filter(
-                wt -> wt.getMaxScore() >= ctx.getOptions().minScore).collect(Collectors.toList());
-            if(activeWts.isEmpty())
+            Map<String, WarningType> wts = createWarningMap(wds.stream().map(WarningType::new));
+            Detector detector = createDetector(clazz, wts);
+            if(detector == null)
                 return false;
-            Detector detector = new Detector(wts, clazz, databases);
-            activeWts.forEach(wt -> {
-                typeToDetector.put(wt, detector);
-                ctx.incStat("WarningTypes");
-            });
             detectors.add(detector);
         } catch (Exception e) {
             ctx.addError(new ErrorMessage(clazz.getName(), null, null, null, -1, e));
         }
         return true;
+    }
+
+    private Detector createDetector(Class<?> clazz, Map<String, WarningType> wts) throws IllegalAccessException {
+        List<WarningType> activeWts = wts.values().stream().filter(
+            wt -> wt.getMaxScore() >= ctx.getOptions().minScore).collect(Collectors.toList());
+        if(activeWts.isEmpty())
+            return null;
+        Detector detector = new Detector(wts, clazz, databases);
+        activeWts.forEach(wt -> {
+            typeToDetector.put(wt, detector);
+            ctx.incStat("WarningTypes");
+        });
+        return detector;
     }
 
     void init() {
@@ -170,9 +191,14 @@ public class DetectorRegistry {
             MethodBody body = md.getBody();
             if (body != null) {
                 if(body.getCodeSize() > ctx.getOptions().maxMethodSize) {
-                    ctx.addWarning(new Warning(METHOD_TOO_LARGE, 0, Arrays.asList(WarningAnnotation.forType(type), WarningAnnotation
-                            .forMethod(md), new WarningAnnotation<>("BYTECODE_SIZE", body.getCodeSize()))));
-                } else {
+                    if(systemDetector != null) {
+                        MethodContext mc = new ClassContext(ctx, type, systemDetector).forMethod(md);
+                        mc.setMethodAsserter(ma);
+                        mc.report(METHOD_TOO_LARGE.getName(), 0, new WarningAnnotation<>("BYTECODE_SIZE", body
+                                .getCodeSize()), new WarningAnnotation<>("LIMIT", ctx.getOptions().maxMethodSize));
+                        mc.finalizeMethod();
+                    }
+                } else if (!mcs.get(true).isEmpty()) {
                     final DecompilerContext context = new DecompilerContext();
     
                     context.setCurrentMethod(md);

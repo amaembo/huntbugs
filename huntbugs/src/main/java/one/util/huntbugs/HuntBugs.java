@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarFile;
 
-
 import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.output.XmlReportWriter;
@@ -34,6 +33,10 @@ import one.util.huntbugs.repo.CompositeRepository;
 import one.util.huntbugs.repo.DirRepository;
 import one.util.huntbugs.repo.JarRepository;
 import one.util.huntbugs.repo.Repository;
+import one.util.huntbugs.warning.rule.CategoryRule;
+import one.util.huntbugs.warning.rule.CompositeRule;
+import one.util.huntbugs.warning.rule.RegexRule;
+import one.util.huntbugs.warning.rule.Rule;
 
 /**
  * @author lan
@@ -46,51 +49,89 @@ public class HuntBugs {
     private boolean listMessages = false;
     private final AnalysisOptions options = new AnalysisOptions();
     private Repository repo;
-    
+
     private void parseCommandLine(String[] args) {
         List<Repository> repos = new ArrayList<>();
-        for(String arg : args) {
-            if(arg.equals("-lw")) {
+        List<Rule> rules = new ArrayList<>();
+        for (String arg : args) {
+            if (arg.equals("-lw")) {
                 listDetectors = true;
-            } else if(arg.equals("-lv")) {
+            } else if (arg.equals("-lv")) {
                 listVariables = true;
-            } else if(arg.equals("-ldb")) {
+            } else if (arg.equals("-ldb")) {
                 listDatabases = true;
-            } else if(arg.equals("-lm")) {
+            } else if (arg.equals("-lm")) {
                 listMessages = true;
-            } else if(arg.startsWith("-D")) {
+            } else if (arg.startsWith("-D")) {
                 int pos = arg.indexOf('=');
-                if(pos == 0) {
-                    throw new IllegalArgumentException("Illegal option: "+arg+" (expected -Dname=value)");
+                if (pos < 0) {
+                    throw new IllegalArgumentException("Illegal option: " + arg + " (expected -Dname=value)");
                 }
                 String name = arg.substring(2, pos).trim();
-                String value = arg.substring(pos+1).trim();
+                String value = arg.substring(pos + 1).trim();
                 options.set(name, value);
+            } else if (arg.startsWith("-R")) {
+                int colonPos = arg.indexOf(':');
+                int equalPos = arg.lastIndexOf('=');
+                if (colonPos < 0 || equalPos < 0 || equalPos < colonPos) {
+                    throw new IllegalArgumentException("Illegal option: " + arg
+                        + " (expected -Rruletype:rule=adjustment)");
+                }
+                String ruleType = arg.substring(2, colonPos);
+                String ruleArg = arg.substring(colonPos + 1, equalPos);
+                String adjustmentString = arg.substring(equalPos + 1);
+                int adjustment;
+                if (adjustmentString.equals("disable")) {
+                    adjustment = -100;
+                } else {
+                    try {
+                        adjustment = Integer.parseInt(adjustmentString);
+                    } catch (NumberFormatException e) {
+                        throw new IllegalArgumentException("Illegal option: " + arg
+                            + ": adjustment must be either number from -100 to +100 or 'disable' word");
+                    }
+                }
+                switch (ruleType) {
+                case "category":
+                    rules.add(new CategoryRule(ruleArg, adjustment));
+                    break;
+                case "pattern":
+                    rules.add(new RegexRule(ruleArg, adjustment));
+                    break;
+                default:
+                    throw new IllegalArgumentException("Illegal option: " + arg
+                        + ": ruletype must be either 'category' or 'pattern'");
+                }
             } else {
                 Path root = Paths.get(arg);
                 try {
                     repos.add(Files.isDirectory(root) ? new DirRepository(root) : new JarRepository(new JarFile(root
                             .toFile())));
                 } catch (IOException e) {
-                    throw new IllegalArgumentException("Cannot open JAR file "+arg);
+                    throw new IllegalArgumentException("Cannot open JAR file " + arg);
                 }
             }
         }
-        if(!repos.isEmpty()) {
+        if (!repos.isEmpty()) {
             repo = new CompositeRepository(repos);
         }
+        if (rules.size() == 1)
+            options.setRule(rules.get(0));
+        else if (rules.size() > 1)
+            options.setRule(new CompositeRule(rules));
     }
-    
+
     private int run(String[] args) {
-        if(args.length == 0) {
+        if (args.length == 0) {
             System.out.println("Welcome to HuntBugs");
             System.out.println("Please specify at least one option or at least one directory/jar to analyze");
             System.out.println("Options are:");
-            System.out.println("    -lw          -- list all warning types");
-            System.out.println("    -lv          -- list all variables");
-            System.out.println("    -ldb         -- list all databases");
-            System.out.println("    -lm          -- list warning titles");
-            System.out.println("    -Dname=value -- set given variable");
+            System.out.println("    -lw                        -- list all warning types");
+            System.out.println("    -lv                        -- list all variables");
+            System.out.println("    -ldb                       -- list all databases");
+            System.out.println("    -lm                        -- list warning titles");
+            System.out.println("    -Dname=value               -- set given variable");
+            System.out.println("    -Rruletype:rule=adjustment -- adjust score for warnings");
             return -1;
         }
         try {
@@ -101,28 +142,28 @@ public class HuntBugs {
         }
         boolean list = false;
         Context ctx = new Context(repo, options);
-        if(listDetectors) {
+        if (listDetectors) {
             System.out.println("List of warning types:");
             ctx.reportWarningTypes(System.out);
             list = true;
         }
-        if(listVariables) {
+        if (listVariables) {
             System.out.println("List of variables:");
             options.report(System.out);
             list = true;
         }
-        if(listDatabases) {
+        if (listDatabases) {
             System.out.println("List of databases:");
             ctx.reportDatabases(System.out);
             list = true;
         }
-        if(listMessages) {
+        if (listMessages) {
             System.out.println("List of warning titles:");
             ctx.reportTitles(System.out);
             list = true;
         }
-        if(repo == null) {
-            if(list) {
+        if (repo == null) {
+            if (list) {
                 ctx.reportStats(System.out);
                 return 0;
             }
@@ -131,9 +172,9 @@ public class HuntBugs {
         }
         long start = System.nanoTime();
         ctx.addListener((stage, className) -> {
-            if(className == null)
+            if (className == null)
                 return true;
-            String name = className.length() > 50 ? "..."+className.substring(className.length()-47) : className;
+            String name = className.length() > 50 ? "..." + className.substring(className.length() - 47) : className;
             System.out.printf("\r%70s\r[%d/%d] %s", "", ctx.getClassesCount(), ctx.getTotalClasses(), name);
             return true;
         });
@@ -149,14 +190,14 @@ public class HuntBugs {
             long end = System.nanoTime();
             Duration dur = Duration.ofNanos(end - start);
             System.out.printf("\r%70s\r\n", "");
-            System.out.println("Analyzed "+ctx.getClassesCount()+" of "+ctx.getTotalClasses()+" classes");
+            System.out.println("Analyzed " + ctx.getClassesCount() + " of " + ctx.getTotalClasses() + " classes");
             ctx.reportStats(System.out);
-            System.out.println("Analyzis time "+dur.toMinutes()+"m"+dur.getSeconds()%60+"s");
+            System.out.println("Analyzis time " + dur.toMinutes() + "m" + dur.getSeconds() % 60 + "s");
         }));
         ctx.analyzePackage("");
         return 0;
     }
-    
+
     public static void main(String[] args) {
         System.exit(new HuntBugs().run(args));
     }

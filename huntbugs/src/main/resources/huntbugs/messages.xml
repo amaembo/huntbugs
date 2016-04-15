@@ -547,5 +547,11 @@
       <LongDescription><![CDATA[This method unnecessarily unboxes the $BOXED_TYPE$ object which is used for subsequent boxing only.
       This is inefficient as additional objects might be allocated which are exact copies of the original object. Consider using the boxed type all the way.]]></LongDescription>
     </Warning>
+    <Warning Type="MethodTooLarge">
+      <Title>Method body is too large for detailed analysis</Title>
+      <Description>$METHOD$ body is too larget for details analysis.</Description>
+      <LongDescription><![CDATA[Method $METHOD$ bytecode size is $BYTECODE_SIZE$ bytes which is bigger than current limit $LIMIT$ set for bytecode analysis.
+      As a result the method body is not analysed.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>
