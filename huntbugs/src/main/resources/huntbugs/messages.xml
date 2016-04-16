@@ -589,5 +589,11 @@
       <LongDescription><![CDATA[This code tries to change max pool size calling $CALLED_METHOD$. However this method has no effect for $ARG_TYPE$ as this thread pool
       acts as fixed-sized pool.]]></LongDescription>
     </Warning>
+    <Warning Type="AppendObjectOutputStream">
+      <Title>Attempt to append to an object output stream</Title>
+      <Description>Attempt to append to an object output stream in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code opens a file in append mode and then wraps the result in an $OOS_TYPE$. This won't allow you to append to an existing $OOS_TYPE$ stored in a file. If you want to be able to append to an object output stream, you need to keep the object output stream open.<br>
+      The only situation in which opening a file in append mode and the writing an $OOS_TYPE$ could work is if on reading the file you plan to open it in random access mode and seek to the byte offset where the append started.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

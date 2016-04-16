@@ -88,6 +88,7 @@ abbrev="RV" type="RV_CHECK_COMPARETO_FOR_SPECIFIC_RETURN_VALUE" category="CORREC
 abbrev="FI" type="FI_MISSING_SUPER_CALL" category="BAD_PRACTICE" --> FinalizeNoSuperCall
 abbrev="RV" type="RV_EXCEPTION_NOT_THROWN" category="CORRECTNESS" --> DroppedException
 abbrev="Dm" type="DMI_FUTILE_ATTEMPT_TO_CHANGE_MAXPOOL_SIZE_OF_SCHEDULED_THREAD_POOL_EXECUTOR" category="CORRECTNESS" --> ScheduledThreadPoolExecutorChangePoolSize
+abbrev="IO" type="IO_APPENDING_TO_OBJECT_OUTPUT_STREAM" category="CORRECTNESS" --> AppendObjectOutputStream
 
 
 ==== Not reimplemented
@@ -106,7 +107,6 @@ abbrev="NP" type="NP_SYNC_AND_NULL_CHECK_FIELD" category="MT_CORRECTNESS" cweid=
 abbrev="NP" type="NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" category="CORRECTNESS"
 abbrev="SW" type="SW_SWING_METHODS_INVOKED_IN_SWING_THREAD" category="BAD_PRACTICE"
 abbrev="IL" type="IL_INFINITE_LOOP" category="CORRECTNESS"
-abbrev="IO" type="IO_APPENDING_TO_OBJECT_OUTPUT_STREAM" category="CORRECTNESS"
 abbrev="IL" type="IL_INFINITE_RECURSIVE_LOOP" category="CORRECTNESS" cweid="674"
 abbrev="IL" type="IL_CONTAINER_ADDED_TO_ITSELF" category="CORRECTNESS"
 abbrev="VO" type="VO_VOLATILE_REFERENCE_TO_ARRAY" category="MT_CORRECTNESS"
