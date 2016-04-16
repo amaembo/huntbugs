@@ -148,7 +148,7 @@ public class DetectorRegistry {
         });
     }
 
-    private void visitChildren(Node node, NodeChain parents, List<MethodContext> list, MethodDefinition realMethod) {
+    private void visitChildren(Node node, NodeChain parents, List<MethodContext> list, MethodDefinition realMethod, boolean isAnnotationComplete) {
         for (MethodContext mc : list) {
             mc.visitNode(node, parents, realMethod);
         }
@@ -163,7 +163,7 @@ public class DetectorRegistry {
         if (!children.isEmpty()) {
             NodeChain newChain = new NodeChain(parents, node);
             for (Node child : children)
-                visitChildren(child, newChain, list, realMethod);
+                visitChildren(child, newChain, list, realMethod, isAnnotationComplete);
         }
     }
     
@@ -203,16 +203,16 @@ public class DetectorRegistry {
     
                     context.setCurrentMethod(md);
                     context.setCurrentType(type);
-                    final Block methodAst = new Block();
+                    Block methodAst = new Block();
+                    boolean isAnnotationComplete = false;
                     try {
                         methodAst.getBody().addAll(AstBuilder.build(body, true, context));
                         AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
-                        ValuesFlow.annotate(ctx, md, methodAst);
+                        isAnnotationComplete = ValuesFlow.annotate(ctx, md, methodAst);
                     } catch (Throwable t) {
                         ctx.addError(new ErrorMessage(null, type.getFullName(), md.getFullName(), md.getSignature(), -1, t));
                     }
-    
-                    visitChildren(methodAst, null, mcs.get(true), md);
+                    visitChildren(methodAst, null, mcs.get(true), md, isAnnotationComplete);
                 }
             }
             for (MethodContext mc : mcs.get(true)) {

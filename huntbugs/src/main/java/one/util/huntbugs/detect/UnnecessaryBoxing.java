@@ -25,11 +25,11 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
-import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -44,14 +44,14 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
 @WarningDefinition(category = "Performance", name = "UnboxedForBoxing", maxScore = 45)
 public class UnnecessaryBoxing {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
-    public void visit(Expression expr, NodeChain nc, MethodContext mc) {
+    public void visit(Expression expr, MethodContext mc) {
         if (Nodes.isUnboxing(expr)) {
             Expression arg = expr.getArguments().get(0);
-            List<Expression> usages = nc.findUsages(expr, false).stream().filter(x -> x.getCode() != AstCode.Store)
-                    .collect(Collectors.toList());
+            List<Expression> usages = ValuesFlow.findTransitiveUsages(expr, false).collect(Collectors.toList());
             if (!usages.isEmpty()) {
                 TypeReference type = ((MethodReference) expr.getOperand()).getDeclaringType();
-                List<WarningAnnotation<?>> annotations = usages.stream().filter(this::isBoxing).map(
+                List<WarningAnnotation<?>> annotations = usages.stream().filter(
+                    e -> isBoxing(e) && e.getInferredType().isEquivalentTo(arg.getInferredType())).map(
                     e -> WarningAnnotation.forLocation("BOXED_AT", mc.getLocation(e))).collect(Collectors.toList());
                 if (annotations.size() == usages.size()) {
                     annotations.add(WarningAnnotation.forType("BOXED_TYPE", type));
@@ -62,8 +62,7 @@ public class UnnecessaryBoxing {
             }
         } else if (isBoxing(expr)) {
             Expression arg = expr.getArguments().get(0);
-            List<Expression> usages = nc.findUsages(expr, false).stream().filter(x -> x.getCode() != AstCode.Store)
-                    .collect(Collectors.toList());
+            List<Expression> usages = ValuesFlow.findTransitiveUsages(expr, false).collect(Collectors.toList());
             if (!usages.isEmpty()) {
                 if (usages.stream().allMatch(ex -> Nodes.isUnboxing(ex) || isBoxedToString(ex))) {
                     TypeReference type = ((MethodReference) expr.getOperand()).getDeclaringType();

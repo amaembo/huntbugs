@@ -15,10 +15,13 @@
  */
 package one.util.huntbugs.flow;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.util.Nodes;
@@ -45,6 +48,7 @@ import com.strobel.decompiler.ast.TryCatchBlock;
 public class ValuesFlow {
     static final Key<Expression> SOURCE_KEY = Key.create("hb.valueSource");
     static final Key<Object> VALUE_KEY = Key.create("hb.value");
+    static final Key<Set<Expression>> BACK_LINKS_KEY = Key.create("hb.backlinks");
 
     static <T> T reduce(Expression input, Function<Expression, T> mapper, BinaryOperator<T> reducer) {
         Expression source = getSource(input);
@@ -63,40 +67,14 @@ public class ValuesFlow {
         return result;
     }
 
-    public static TypeReference reduceType(Expression input) {
-        return reduce(input, Types::getExpressionType, (t1, t2) -> {
-            if (t1 == null || t2 == null)
-                return null;
-            if (t1.equals(t2))
-                return t1;
-            List<TypeReference> chain1 = Types.getBaseTypes(t1);
-            List<TypeReference> chain2 = Types.getBaseTypes(t2);
-            for (int i = Math.min(chain1.size(), chain2.size()) - 1; i >= 0; i--) {
-                if (chain1.get(i).equals(chain2.get(i)))
-                    return chain1.get(i);
-            }
-            return null;
-        });
-    }
-
-    public static Expression getSource(Expression input) {
-        Expression source = input.getUserData(SOURCE_KEY);
-        return source == null ? input : source;
-    }
-
-    public static Object getValue(Expression input) {
-        Object value = input.getUserData(VALUE_KEY);
-        return value == Frame.UNKNOWN_VALUE ? null : value;
-    }
-
     static class FrameSet {
         boolean valid = true;
         Frame passFrame, breakFrame, continueFrame;
-
+    
         FrameSet(Frame start) {
             this.passFrame = start;
         }
-
+    
         void process(Context ctx, Block block) {
             boolean wasMonitor = false;
             for (Node n : block.getBody()) {
@@ -289,7 +267,7 @@ public class ValuesFlow {
                 wasMonitor = false;
             }
         }
-
+    
         private void cleanUn(Node node) {
             for(Node child : node.getChildrenAndSelfRecursive()) {
                 if(child instanceof Expression) {
@@ -303,13 +281,63 @@ public class ValuesFlow {
         }
     }
 
-    public static void annotate(Context ctx, MethodDefinition md, Block method) {
+    private static void initBackLinks(Expression expr) {
+        Set<Expression> backLink = Collections.singleton(expr);
+        for(Expression child : expr.getArguments()) {
+            child.putUserData(BACK_LINKS_KEY, backLink);
+            initBackLinks(child);
+        }
+    }
+    
+    private static void initBackLinks(Node node) {
+        if(node instanceof Expression)
+            initBackLinks((Expression)node);
+        else
+            for(Node child : node.getChildren())
+                initBackLinks(child);
+    }
+
+    public static boolean annotate(Context ctx, MethodDefinition md, Block method) {
         ctx.incStat("ValuesFlow.Total");
+        initBackLinks(method);
         FrameSet fs = new FrameSet(new Frame(md));
         fs.process(ctx, method);
         if (fs.valid) {
             ctx.incStat("ValuesFlow");
+            return true;
         }
+        return false;
+    }
+
+    public static TypeReference reduceType(Expression input) {
+        return reduce(input, Types::getExpressionType, (t1, t2) -> {
+            if (t1 == null || t2 == null)
+                return null;
+            if (t1.equals(t2))
+                return t1;
+            List<TypeReference> chain1 = Types.getBaseTypes(t1);
+            List<TypeReference> chain2 = Types.getBaseTypes(t2);
+            for (int i = Math.min(chain1.size(), chain2.size()) - 1; i >= 0; i--) {
+                if (chain1.get(i).equals(chain2.get(i)))
+                    return chain1.get(i);
+            }
+            return null;
+        });
+    }
+
+    public static Expression getSource(Expression input) {
+        Expression source = input.getUserData(SOURCE_KEY);
+        return source == null ? input : source;
+    }
+    
+    public static Set<Expression> findUsages(Expression input) {
+        Set<Expression> set = input.getUserData(BACK_LINKS_KEY);
+        return set == null ? Collections.emptySet() : Collections.unmodifiableSet(set);
+    }
+
+    public static Object getValue(Expression input) {
+        Object value = input.getUserData(VALUE_KEY);
+        return value == Frame.UNKNOWN_VALUE ? null : value;
     }
 
     public static boolean allMatch(Expression src, Predicate<Expression> pred) {
@@ -328,5 +356,21 @@ public class ValuesFlow {
         if(src.getCode() == Frame.PHI_TYPE)
             return src.getArguments().stream().filter(pred).findFirst().orElse(null);
         return pred.test(src) ? src : null;
+    }
+
+    public static boolean hasPhiSource(Expression input) {
+        Expression source = input.getUserData(SOURCE_KEY);
+        return source != null && source.getCode() == Frame.PHI_TYPE;
+    }
+
+    public static Stream<Expression> findTransitiveUsages(Expression expr, boolean includePhi) {
+        return findUsages(expr).stream().filter(includePhi ? x -> true : x -> !hasPhiSource(x))
+            .flatMap(x -> {
+                if(x.getCode() == AstCode.Store)
+                    return null;
+                if(x.getCode() == AstCode.Load)
+                    return findTransitiveUsages(x, includePhi);
+                return Stream.of(x);
+            });
     }
 }

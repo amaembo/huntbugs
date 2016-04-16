@@ -16,8 +16,10 @@
 package one.util.huntbugs.flow;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -86,7 +88,6 @@ class Frame {
             Variable var = ((Variable) expr.getOperand());
             Expression arg = expr.getArguments().get(0);
             Expression source = ValuesFlow.getSource(arg);
-            expr.putUserData(ValuesFlow.SOURCE_KEY, source);
             Object val = arg.getUserData(ValuesFlow.VALUE_KEY);
             storeValue(expr, val);
             VariableDefinition origVar = var.getOriginalVariable();
@@ -218,7 +219,7 @@ class Frame {
             if (origVar != null) {
                 Expression source = sources[origVar.getSlot()];
                 if (source != null) {
-                    expr.putUserData(ValuesFlow.SOURCE_KEY, source);
+                    link(expr, source);
                     Object val = source.getUserData(ValuesFlow.VALUE_KEY);
                     storeValue(expr, val);
                 }
@@ -230,6 +231,7 @@ class Frame {
                 Variable var = ((Variable) expr.getOperand());
                 int slot = var.getOriginalVariable().getSlot();
                 Expression source = sources[slot];
+                link(expr, source);
                 target = target.replace(slot, expr);
                 Object val = source.getUserData(ValuesFlow.VALUE_KEY);
                 if(val == UNKNOWN_VALUE)
@@ -245,8 +247,11 @@ class Frame {
             Expression arg = expr.getArguments().get(0);
             if (arg.getOperand() instanceof Variable) {
                 Variable var = ((Variable) arg.getOperand());
+                int slot = var.getOriginalVariable().getSlot();
+                Expression source = sources[slot];
+                link(expr, source);
                 // TODO: pass values
-                return target.replace(var.getOriginalVariable().getSlot(), expr);
+                return target.replace(slot, expr);
             }
             return target;
         }
@@ -278,6 +283,19 @@ class Frame {
             return target;
         }
         }
+    }
+
+    private static void link(Expression target, Expression source) {
+        target.putUserData(ValuesFlow.SOURCE_KEY, source);
+        Set<Expression> set = source.getUserData(ValuesFlow.BACK_LINKS_KEY);
+        if(set == null) {
+            set = new HashSet<>();
+            source.putUserData(ValuesFlow.BACK_LINKS_KEY, set);
+        } else if(!(set instanceof HashSet)) {
+            set = new HashSet<>(set);
+            source.putUserData(ValuesFlow.BACK_LINKS_KEY, set);
+        }
+        set.add(target);
     }
 
     private void storeValue(Expression expr, Object val) {

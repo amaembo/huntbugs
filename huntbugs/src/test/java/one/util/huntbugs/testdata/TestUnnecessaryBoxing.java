@@ -51,6 +51,12 @@ public class TestUnnecessaryBoxing {
         int a = x;
         return a;
     }
+
+    @AssertNoWarning(type = "UnboxedForBoxing")
+    public Integer unboxBox(Character x) {
+        int a = x;
+        return a;
+    }
     
     @AssertWarning(type = "UnboxedForBoxing", maxScore=30)
     public Boolean unboxBox(Boolean x) {

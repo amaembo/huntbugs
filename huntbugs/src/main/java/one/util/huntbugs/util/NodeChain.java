@@ -15,24 +15,12 @@
  */
 package one.util.huntbugs.util;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
-
-
-
-
-
-import java.util.function.Predicate;
-
-import one.util.huntbugs.flow.ValuesFlow;
 
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
-import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.CatchBlock;
-import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Lambda;
 import com.strobel.decompiler.ast.Node;
 
@@ -107,21 +95,5 @@ public class NodeChain {
             nc = nc.getParent();
         }
         return null;
-    }
-    
-    @SuppressWarnings("unchecked")
-    public List<Expression> findUsages(Expression expr, boolean includePhi) {
-        if (cur instanceof Expression && ((Expression) cur).getCode() != AstCode.Store
-            && ((Expression) cur).getArguments().stream().anyMatch(x -> expr == x)) {
-            return Collections.singletonList((Expression) cur);
-        }
-        Predicate<Expression> has = src -> src == expr;
-        Predicate<Expression> pred = includePhi ? src -> ValuesFlow.anyMatch(src, has) : has;
-        return (List<Expression>)(List<?>)getRoot().getChildrenAndSelfRecursive(n -> {
-            if(!(n instanceof Expression))
-                return false;
-            Expression e = (Expression)n;
-            return e.getArguments().stream().map(ValuesFlow::getSource).anyMatch(pred);
-        });
     }
 }
