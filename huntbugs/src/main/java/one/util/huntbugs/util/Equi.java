@@ -229,7 +229,8 @@ public class Equi {
     }
 
     private static boolean equiVariables(Variable left, Variable right) {
-        if(left.isLambdaParameter() && right.isLambdaParameter()) {
+        if(left.isLambdaParameter() && right.isLambdaParameter() && left.getOriginalParameter() != null
+                && right.getOriginalParameter() != null) {
             return left.getOriginalParameter().getPosition() == right.getOriginalParameter().getPosition();
         }
         return left.equals(right);
