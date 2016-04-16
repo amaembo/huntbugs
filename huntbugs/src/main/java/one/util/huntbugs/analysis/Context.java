@@ -48,7 +48,6 @@ public class Context {
     private final List<ErrorMessage> errors = Collections.synchronizedList(new ArrayList<>());
     private final List<Warning> warnings = Collections.synchronizedList(new ArrayList<>());
     private final DetectorRegistry registry;
-    private final MetadataSystem ms;
     private final Repository repository;
     private final AtomicInteger classesCount = new AtomicInteger();
     private int totalClasses = 0;
@@ -56,6 +55,7 @@ public class Context {
     private final List<AnalysisListener> listeners = new CopyOnWriteArrayList<>();
     private final Map<String, Long> stat = new ConcurrentHashMap<>();
     private Messages msgs;
+    private final ITypeLoader loader;
 
     public Context(Repository repository, AnalysisOptions options) {
         this.options = options;
@@ -65,7 +65,7 @@ public class Context {
         if (options.addBootClassPath) {
             loader = new CompositeTypeLoader(new ClasspathTypeLoader(System.getProperty("sun.boot.class.path")), loader);
         }
-        ms = new MetadataSystem(loader);
+        this.loader = loader;
     }
     
     public Messages getMessages() {
@@ -107,11 +107,14 @@ public class Context {
             }
         });
         totalClasses = classes.size();
+        MetadataSystem ms = new MetadataSystem(loader);
         if(registry.hasDatabases()) {
             for (String className : classes) {
                 if (!fireEvent("Preparing", className))
                     return;
-                classesCount.incrementAndGet();
+                if(classesCount.incrementAndGet() % 1000 == 0) {
+                    ms = new MetadataSystem(loader);
+                }
                 TypeDefinition type;
                 try {
                     type = ms.resolve(ms.lookupType(className));
@@ -125,13 +128,15 @@ public class Context {
         }
         classesCount.set(0);
         for (String className : classes) {
+            if(classesCount.get() % 1000 == 0)
+                ms = new MetadataSystem(loader);
             if (!fireEvent("Analyzing class", className))
                 return;
-            analyzeClass(className);
+            analyzeClass(ms, className);
         }
     }
 
-    void analyzeClass(String name) {
+    void analyzeClass(MetadataSystem ms, String name) {
         classesCount.incrementAndGet();
         TypeDefinition type;
         try {
