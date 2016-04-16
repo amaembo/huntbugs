@@ -87,6 +87,7 @@ abbrev="RV" type="RV_NEGATING_RESULT_OF_COMPARETO" category="BAD_PRACTICE" --> N
 abbrev="RV" type="RV_CHECK_COMPARETO_FOR_SPECIFIC_RETURN_VALUE" category="CORRECTNESS" --> ComparingComparatorResultWithNumber
 abbrev="FI" type="FI_MISSING_SUPER_CALL" category="BAD_PRACTICE" --> FinalizeNoSuperCall
 abbrev="RV" type="RV_EXCEPTION_NOT_THROWN" category="CORRECTNESS" --> DroppedException
+abbrev="Dm" type="DMI_FUTILE_ATTEMPT_TO_CHANGE_MAXPOOL_SIZE_OF_SCHEDULED_THREAD_POOL_EXECUTOR" category="CORRECTNESS" --> ScheduledThreadPoolExecutorChangePoolSize
 
 
 ==== Not reimplemented
@@ -122,8 +123,6 @@ abbrev="Nm" type="NM_FUTURE_KEYWORD_USED_AS_IDENTIFIER" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_FUTURE_KEYWORD_USED_AS_MEMBER_IDENTIFIER" category="BAD_PRACTICE"
 abbrev="JCIP" type="JCIP_FIELD_ISNT_FINAL_IN_IMMUTABLE_CLASS" category="BAD_PRACTICE"
 abbrev="Dm" type="DMI_VACUOUS_CALL_TO_EASYMOCK_METHOD" category="CORRECTNESS"
-abbrev="Dm" type="DMI_FUTILE_ATTEMPT_TO_CHANGE_MAXPOOL_SIZE_OF_SCHEDULED_THREAD_POOL_EXECUTOR" category="CORRECTNESS"
-abbrev="Dm" type="DMI_SCHEDULED_THREAD_POOL_EXECUTOR_WITH_ZERO_CORE_THREADS" category="CORRECTNESS"
 abbrev="Dm" type="DMI_CONSTANT_DB_PASSWORD" category="SECURITY" cweid="259"
 abbrev="Dm" type="DMI_EMPTY_DB_PASSWORD" category="SECURITY" cweid="259"
 abbrev="Dm" type="DMI_UNSUPPORTED_METHOD" category="STYLE"
@@ -461,3 +460,4 @@ abbrev="NOISE" type="NOISE_FIELD_REFERENCE" category="NOISE"
 abbrev="NOISE" type="NOISE_OPERATION" category="NOISE"
 abbrev="AM" type="AM_CREATES_EMPTY_ZIP_FILE_ENTRY" category="BAD_PRACTICE"
 abbrev="AM" type="AM_CREATES_EMPTY_JAR_FILE_ENTRY" category="BAD_PRACTICE"
+abbrev="Dm" type="DMI_SCHEDULED_THREAD_POOL_EXECUTOR_WITH_ZERO_CORE_THREADS" category="CORRECTNESS"

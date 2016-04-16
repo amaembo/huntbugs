@@ -18,6 +18,7 @@ package one.util.huntbugs.testdata;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.util.Objects;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
@@ -27,6 +28,8 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestBadMethodCalls {
+    ScheduledThreadPoolExecutor ex = new ScheduledThreadPoolExecutor(10);
+    
     @AssertWarning(type="SystemExit", maxScore = 30)
     public void systemExit() {
         System.exit(0);
@@ -186,5 +189,10 @@ public class TestBadMethodCalls {
     @AssertWarning(type="DoubleLongBitsToDoubleOnInt")
     public double testDouble(int x) {
         return Double.longBitsToDouble(x);
+    }
+
+    @AssertWarning(type="ScheduledThreadPoolExecutorChangePoolSize")
+    public void testThreadPoolExecutor(int poolSize) {
+        ex.setMaximumPoolSize(poolSize);
     }
 }

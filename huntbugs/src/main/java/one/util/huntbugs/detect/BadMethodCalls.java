@@ -49,6 +49,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "Correctness", name = "ArrayToString", maxScore = 60)
 @WarningDefinition(category = "Correctness", name = "ArrayHashCode", maxScore = 60)
 @WarningDefinition(category = "Correctness", name = "DoubleLongBitsToDoubleOnInt", maxScore = 70)
+@WarningDefinition(category = "Correctness", name = "ScheduledThreadPoolExecutorChangePoolSize", maxScore = 70)
 public class BadMethodCalls {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression node, NodeChain nc, MethodContext ctx, MethodDefinition curMethod) {
@@ -161,6 +162,10 @@ public class BadMethodCalls {
             if(arg.getCode() == AstCode.I2L) {
                 ctx.report("DoubleLongBitsToDoubleOnInt", 0, arg, WarningAnnotation.forReturnValue(mr));
             }
+        } else if(typeName.equals("java/util/concurrent/ThreadPoolExecutor") && name.equals("setMaximumPoolSize")) {
+            TypeReference type = ValuesFlow.reduceType(node.getArguments().get(0));
+            if(type.getInternalName().equals("java/util/concurrent/ScheduledThreadPoolExecutor"))
+                ctx.report("ScheduledThreadPoolExecutorChangePoolSize", 0, node, WarningAnnotation.forType("ARG_TYPE", type));
         }
     }
 
