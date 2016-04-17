@@ -107,7 +107,7 @@ public class Formatter {
     }
 
     private String formatString(String value, String format) {
-        if(format.equals("const")) {
+        if (format.equals("const")) {
             return StringUtilities.escape(value, true);
         }
         return value;
@@ -115,6 +115,26 @@ public class Formatter {
 
     private String formatLong(long value, String format) {
         if (format.equals(FORMAT_HEX)) {
+            return "0x" + Long.toHexString(value);
+        }
+        if (format.equals(FORMAT_DEC)) {
+            return Long.toString(value);
+        }
+        if (value == Long.MIN_VALUE) {
+            return "Long.MIN_VALUE";
+        }
+        if (value == Long.MAX_VALUE) {
+            return "Long.MAX_VALUE";
+        }
+        if (value == Integer.MIN_VALUE) {
+            return "Integer.MIN_VALUE";
+        }
+        if (value == Integer.MAX_VALUE) {
+            return "Integer.MAX_VALUE";
+        }
+        if (value != 0
+            && (Long.bitCount(value)+1 < Long.toString(value).length() || 66 - Long.numberOfLeadingZeros(value)
+                - Long.bitCount(value) < Long.toString(value).length())) {
             return "0x" + Long.toHexString(value);
         }
         return Long.toString(value);

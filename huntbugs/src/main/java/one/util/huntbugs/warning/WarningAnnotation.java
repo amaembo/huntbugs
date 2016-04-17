@@ -23,6 +23,7 @@ import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
+import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Variable;
 
@@ -259,5 +260,9 @@ public class WarningAnnotation<T> {
     
     public static WarningAnnotation<String> forOperation(Expression expr) {
         return new WarningAnnotation<>("OPERATION", Nodes.getOperation(expr.getCode()));
+    }
+    
+    public static WarningAnnotation<String> forOperation(AstCode code) {
+        return new WarningAnnotation<>("OPERATION", Nodes.getOperation(code));
     }
 }

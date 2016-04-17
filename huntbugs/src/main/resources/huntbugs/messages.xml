@@ -661,5 +661,11 @@
       <LongDescription><![CDATA[This code performs a bit shift like <code>(x $OPERATION$ $NUMBER$)</code> where number of bits is not in the (0..$MAX_VALUE$) range.
       In this case only lower bits will be used (e.g. <code>val &gt;&gt; 70</code> is equal to <code>val &gt;&gt; 6</code>). Probably something else was meant here.]]></LongDescription>
     </Warning>
+    <Warning Type="ComparisonWithOutOfRangeValue">
+      <Title>Numeric comparison is always true or false</Title>
+      <Description>Numeric comparison like (x $OPERATION$ $NUMBER$) is always $RESULT$.</Description>
+      <LongDescription><![CDATA[This code performs a comparison like (x $OPERATION$ $NUMBER$). However due to the value type or previous operations it's known that <code>x = $MIN_VALUE$..$MAX_VALUE$</code>,
+      thus the result of this comparison is always $RESULT$. Probably there's some logic error or typo.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

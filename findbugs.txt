@@ -98,6 +98,8 @@ abbrev="Nm" type="NM_CLASS_NOT_EXCEPTION" category="BAD_PRACTICE" --> BadNameOfC
 abbrev="RI" type="RI_REDUNDANT_INTERFACES" category="STYLE" --> RedundantInterface
 abbrev="DMI" type="DMI_CALLING_NEXT_FROM_HASNEXT" category="CORRECTNESS" --> IteratorHasNextCallsNext
 abbrev="BSHIFT" type="ICAST_BAD_SHIFT_AMOUNT" category="CORRECTNESS" --> BitShiftInvalidAmount
+abbrev="INT" type="INT_BAD_COMPARISON_WITH_INT_VALUE" category="CORRECTNESS" --> ComparisonWithOutOfRangeValue
+abbrev="UC" type="UC_USELESS_CONDITION_TYPE" category="STYLE" --> ComparisonWithOutOfRangeValue
 
 ==== Not reimplemented
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
@@ -266,7 +268,6 @@ abbrev="Wa" type="WA_AWAIT_NOT_IN_LOOP" category="MT_CORRECTNESS"
 abbrev="No" type="NO_NOTIFY_NOT_NOTIFYALL" category="MT_CORRECTNESS"
 abbrev="UC" type="UC_USELESS_VOID_METHOD" category="STYLE"
 abbrev="UC" type="UC_USELESS_CONDITION" category="STYLE"
-abbrev="UC" type="UC_USELESS_CONDITION_TYPE" category="STYLE"
 abbrev="UC" type="UC_USELESS_OBJECT" category="STYLE"
 abbrev="UC" type="UC_USELESS_OBJECT_STACK" category="STYLE"
 abbrev="RANGE" type="RANGE_ARRAY_INDEX" category="CORRECTNESS"
@@ -329,7 +330,6 @@ abbrev="EC" type="EC_UNRELATED_INTERFACES" category="CORRECTNESS"
 abbrev="EC" type="EC_UNRELATED_CLASS_AND_INTERFACE" category="CORRECTNESS"
 abbrev="MWN" type="MWN_MISMATCHED_WAIT" category="MT_CORRECTNESS"
 abbrev="MWN" type="MWN_MISMATCHED_NOTIFY" category="MT_CORRECTNESS"
-abbrev="INT" type="INT_BAD_COMPARISON_WITH_INT_VALUE" category="CORRECTNESS"
 abbrev="INT" type="INT_BAD_COMPARISON_WITH_SIGNED_BYTE" category="CORRECTNESS"
 abbrev="INT" type="INT_BAD_COMPARISON_WITH_NONNEGATIVE_VALUE" category="CORRECTNESS"
 abbrev="INT" type="INT_VACUOUS_COMPARISON" category="STYLE"

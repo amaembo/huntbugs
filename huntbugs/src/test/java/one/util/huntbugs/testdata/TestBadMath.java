@@ -200,14 +200,14 @@ public class TestBadMath {
     
     @AssertWarning(type="CompareBitAndIncompatible")
     public void testIncompatibleAnd(int x) {
-        if((x & 1) == 2) {
+        if((x & 2) == 1) {
             System.out.println();
         }
     }
     
     @AssertWarning(type="CompareBitAndIncompatible")
     public void testIncompatibleAnd2(int x) {
-        if((x & 1) == 3) {
+        if((x & 2) == 3) {
             System.out.println();
         }
     }
