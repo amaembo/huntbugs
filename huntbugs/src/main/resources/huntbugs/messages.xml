@@ -645,5 +645,10 @@
       If a comparator is used to construct an ordered collection such as a <code>TreeMap</code>, then the <code>TreeMap</code> will be serializable only if the comparator is also serializable. 
       As most comparators have little or no state, making them serializable is generally easy and good defensive programming. ]]></LongDescription>
     </Warning>
+    <Warning Type="RedundantInterface">
+      <Title>Class implements the same interface as superclass</Title>
+      <Description>Class $TYPE$ implements $INTERFACE$ which is already implemented by superclass.</Description>
+      <LongDescription><![CDATA[The $TYPE$ class declares that it implements an interface $INTERFACE$ that is also implemented by a superclass. This is redundant because once a superclass implements an interface, all subclasses by default also implement this interface.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

@@ -95,6 +95,7 @@ abbrev="RANGE" type="RANGE_STRING_INDEX" category="CORRECTNESS" --> StringIndexI
 abbrev="Se" type="SE_COMPARATOR_SHOULD_BE_SERIALIZABLE" category="BAD_PRACTICE" --> ComparatorIsNotSerializable
 abbrev="Nm" type="NM_CLASS_NAMING_CONVENTION" category="BAD_PRACTICE" --> BadNameOfClass
 abbrev="Nm" type="NM_CLASS_NOT_EXCEPTION" category="BAD_PRACTICE" --> BadNameOfClassException
+abbrev="RI" type="RI_REDUNDANT_INTERFACES" category="STYLE" --> RedundantInterface
 
 ==== Not reimplemented
 
@@ -375,7 +376,6 @@ abbrev="MF" type="MF_CLASS_MASKS_FIELD" category="CORRECTNESS"
 abbrev="ISC" type="ISC_INSTANTIATE_STATIC_CLASS" category="BAD_PRACTICE"
 abbrev="REC" type="REC_CATCH_EXCEPTION" category="STYLE" cweid="396"
 abbrev="UM" type="UM_UNNECESSARY_MATH" category="PERFORMANCE"
-abbrev="RI" type="RI_REDUNDANT_INTERFACES" category="STYLE"
 abbrev="MTIA" type="MTIA_SUSPECT_STRUTS_INSTANCE_FIELD" category="STYLE"
 abbrev="MTIA" type="MTIA_SUSPECT_SERVLET_INSTANCE_FIELD" category="STYLE"
 abbrev="PS" type="PS_PUBLIC_SEMAPHORES" category="STYLE"
