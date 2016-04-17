@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.warning;
 
+import com.strobel.core.StringUtilities;
+
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 import one.util.huntbugs.warning.WarningAnnotation.TypeInfo;
 
@@ -28,6 +30,7 @@ public class Formatter {
     public static final String FORMAT_NAME = "name";
     public static final String FORMAT_HEX = "hex";
     public static final String FORMAT_DEC = "dec";
+    public static final String FORMAT_CONST = "const";
 
     private final Messages msgs;
 
@@ -97,7 +100,17 @@ public class Formatter {
         if (value instanceof Long) {
             return formatLong((Long) value, format);
         }
+        if (value instanceof String) {
+            return formatString((String) value, format);
+        }
         return String.valueOf(value);
+    }
+
+    private String formatString(String value, String format) {
+        if(format.equals("const")) {
+            return StringUtilities.escape(value, true);
+        }
+        return value;
     }
 
     private String formatLong(long value, String format) {

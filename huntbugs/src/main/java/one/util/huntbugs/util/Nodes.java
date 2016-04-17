@@ -204,6 +204,12 @@ public class Nodes {
         if(!(operand instanceof MethodReference))
             return false;
         MethodReference mr = (MethodReference) operand;
+        if(mr.getName().equals("equals") && mr.getSignature().equals("(Ljava/lang/Object;)Z"))
+            return true;
+        if(mr.getName().equals("hashCode") && mr.getSignature().equals("()I"))
+            return true;
+        if(mr.getName().equals("toString") && mr.getSignature().equals("()Ljava/lang/String;"))
+            return true;
         return Types.isSideEffectFreeType(mr.getDeclaringType());
     }
 

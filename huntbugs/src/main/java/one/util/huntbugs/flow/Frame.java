@@ -219,6 +219,7 @@ class Frame {
             if (origVar != null) {
                 Expression source = sources[origVar.getSlot()];
                 if (source != null) {
+                    expr.putUserData(ValuesFlow.SOURCE_KEY, source);
                     link(expr, source);
                     Object val = source.getUserData(ValuesFlow.VALUE_KEY);
                     storeValue(expr, val);
@@ -269,15 +270,22 @@ class Frame {
         case StoreElement: {
             return target.replaceAll(src -> src.getCode() == AstCode.LoadElement ? makeUpdatedNode(src) : src);
         }
+        case GetStatic: {
+            FieldDefinition fd = ((FieldReference) expr.getOperand()).resolve();
+            if(fd != null && fd.isEnumConstant()) {
+                storeValue(expr, new EnumConstant(fd.getDeclaringType().getInternalName(), fd.getName()));
+            }
+            return target;
+        }
         case PutField: {
-            FieldDefinition fr = ((FieldReference) expr.getOperand()).resolve();
+            FieldReference fr = ((FieldReference) expr.getOperand());
             return target.replaceAll(src -> src.getCode() == AstCode.GetField
-                && fr.equals(((FieldReference) src.getOperand()).resolve()) ? makeUpdatedNode(src) : src);
+                && fr.isEquivalentTo((FieldReference) src.getOperand()) ? makeUpdatedNode(src) : src);
         }
         case PutStatic: {
-            FieldDefinition fr = ((FieldReference) expr.getOperand()).resolve();
+            FieldReference fr = ((FieldReference) expr.getOperand());
             return target.replaceAll(src -> src.getCode() == AstCode.GetStatic
-                && fr.equals(((FieldReference) src.getOperand()).resolve()) ? makeUpdatedNode(src) : src);
+                && fr.isEquivalentTo((FieldReference) src.getOperand()) ? makeUpdatedNode(src) : src);
         }
         default: {
             return target;
@@ -286,7 +294,6 @@ class Frame {
     }
 
     private static void link(Expression target, Expression source) {
-        target.putUserData(ValuesFlow.SOURCE_KEY, source);
         Set<Expression> set = source.getUserData(ValuesFlow.BACK_LINKS_KEY);
         if(set == null) {
             set = new HashSet<>();

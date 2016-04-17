@@ -49,6 +49,11 @@ public class TestSelfAssignment {
         TestSelfAssignment[] arr = {new TestSelfAssignment(), new TestSelfAssignment()};
         arr[0].f = arr[1].f;
     }
+
+    @AssertNoWarning(type="*")
+    void testArrayOk2(int i, int[] arr) {
+        arr[i] = arr[++i];
+    }
     
     @AssertNoWarning(type="SelfAssignmentField")
     void testArraySideEffect() {
@@ -154,14 +159,14 @@ public class TestSelfAssignment {
     @AssertWarning(type="SelfAssignmentLocal")
     @AssertNoWarning(type="SelfAssignmentLocalInsteadOfField")
     void testLocal(int a) {
-        a = (int)a; // cast to prevent error in Eclipse
+        a = a; // cast to prevent error in Eclipse
     }
     
     @SuppressWarnings("cast")
     @AssertWarning(type="SelfAssignmentLocalInsteadOfField")
     @AssertNoWarning(type="SelfAssignmentLocal")
     void testLocal(Object f) {
-        f = (Object)f; // cast to prevent error in Eclipse
+        f = f; // cast to prevent error in Eclipse
     }
     
 }
