@@ -50,6 +50,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "Correctness", name = "ArrayHashCode", maxScore = 60)
 @WarningDefinition(category = "Correctness", name = "DoubleLongBitsToDoubleOnInt", maxScore = 70)
 @WarningDefinition(category = "Correctness", name = "ScheduledThreadPoolExecutorChangePoolSize", maxScore = 70)
+@WarningDefinition(category = "Correctness", name = "DateBadMonth", maxScore = 70)
 public class BadMethodCalls {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression node, NodeChain nc, MethodContext ctx, MethodDefinition curMethod) {
@@ -166,6 +167,14 @@ public class BadMethodCalls {
             TypeReference type = ValuesFlow.reduceType(node.getArguments().get(0));
             if(type.getInternalName().equals("java/util/concurrent/ScheduledThreadPoolExecutor"))
                 ctx.report("ScheduledThreadPoolExecutorChangePoolSize", 0, node, WarningAnnotation.forType("ARG_TYPE", type));
+        } else if((typeName.equals("java/util/Date") || typeName.equals("java/sql/Date")) && signature.equals("(I)V") && name.equals("setMonth")) {
+            Object month = Nodes.getConstant(node.getArguments().get(1));
+            if(month instanceof Integer) {
+                int m = (int)month;
+                if(m < 0 || m > 11) {
+                    ctx.report("DateBadMonth", 0, node, WarningAnnotation.forNumber(m));
+                }
+            }
         }
     }
 

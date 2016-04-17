@@ -31,6 +31,13 @@ public class TestExclusiveConditions {
         }
     }
 
+    @AssertWarning(type="OrNotEqualsAlwaysTrue")
+    public void testOr(int x) {
+        if(x != 1 || x != 2) {
+            System.out.println("Always!");
+        }
+    }
+
     @AssertWarning(type="AndEqualsAlwaysFalse")
     public void testBoxing(Integer x) {
         Integer a = 1;
@@ -58,6 +65,13 @@ public class TestExclusiveConditions {
     public void testComplex(int x, int y, int z) {
         if(x == 1 && y == 2 && z == 3 && 4 == x) {
             System.out.println("Never!");
+        }
+    }
+
+    @AssertWarning(type="OrNotEqualsAlwaysTrue")
+    public void testComplexOr(int x, int y, int z) {
+        if(x != 1 || y != 2 || z != 3 || 4 != x) {
+            System.out.println("Always!");
         }
     }
 }

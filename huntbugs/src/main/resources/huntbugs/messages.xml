@@ -601,5 +601,16 @@
       <LongDescription><![CDATA[This code checks that the same expression is simultaneously equal to two different values <code>$CONST1:const$</code> and <code>$CONST2:const$</code>.
       This condition is never true. Probably it was intended to use || instead of &amp;&amp;.]]></LongDescription>
     </Warning>
+    <Warning Type="OrNotEqualsAlwaysTrue">
+      <Title>One of two conditions is always true</Title>
+      <Description>A condition like (!x.equals($CONST1:const$) || !x.equals($CONST2:const$)) is always true.</Description>
+      <LongDescription><![CDATA[This code checks that the same expression is either not equal to <code>$CONST1:const$</code> or not equal to <code>$CONST2:const$</code>.
+      This condition is always true. Probably it was intended to use &amp;&amp; instead of ||.]]></LongDescription>
+    </Warning>
+    <Warning Type="DateBadMonth">
+      <Title>Bad constant value for month</Title>
+      <Description>$CALLED_METHOD$ is called with incorrect argument $NUMBER$.</Description>
+      <LongDescription><![CDATA[A $CALLED_METHOD$ is called, but the argument $NUMBER$ is out of range: it should be from 0 (January) to 11 (December).]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

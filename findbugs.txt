@@ -89,9 +89,11 @@ abbrev="FI" type="FI_MISSING_SUPER_CALL" category="BAD_PRACTICE" --> FinalizeNoS
 abbrev="RV" type="RV_EXCEPTION_NOT_THROWN" category="CORRECTNESS" --> DroppedException
 abbrev="Dm" type="DMI_FUTILE_ATTEMPT_TO_CHANGE_MAXPOOL_SIZE_OF_SCHEDULED_THREAD_POOL_EXECUTOR" category="CORRECTNESS" --> ScheduledThreadPoolExecutorChangePoolSize
 abbrev="IO" type="IO_APPENDING_TO_OBJECT_OUTPUT_STREAM" category="CORRECTNESS" --> AppendObjectOutputStream
-
+abbrev="DMI" type="DMI_BAD_MONTH" category="CORRECTNESS" --> DateBadMonth
 
 ==== Not reimplemented
+abbrev="DMI" type="DMI_USELESS_SUBSTRING" category="STYLE"
+
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SERVLET_WRITER" category="SECURITY"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_JSP_WRITER" category="SECURITY"
@@ -399,8 +401,6 @@ abbrev="IM" type="IM_BAD_CHECK_FOR_ODD" category="STYLE"
 abbrev="IM" type="IM_AVERAGE_COMPUTATION_COULD_OVERFLOW" category="STYLE"
 abbrev="BSHIFT" type="ICAST_QUESTIONABLE_UNSIGNED_RIGHT_SHIFT" category="STYLE"
 abbrev="DMI" type="DMI_HARDCODED_ABSOLUTE_FILENAME" category="STYLE"
-abbrev="DMI" type="DMI_BAD_MONTH" category="CORRECTNESS"
-abbrev="DMI" type="DMI_USELESS_SUBSTRING" category="STYLE"
 abbrev="DMI" type="DMI_CALLING_NEXT_FROM_HASNEXT" category="CORRECTNESS"
 abbrev="SWL" type="SWL_SLEEP_WITH_LOCK_HELD" category="MT_CORRECTNESS"
 abbrev="J2EE" type="J2EE_STORE_OF_NON_SERIALIZABLE_OBJECT_INTO_SESSION" category="BAD_PRACTICE" cweid="579"

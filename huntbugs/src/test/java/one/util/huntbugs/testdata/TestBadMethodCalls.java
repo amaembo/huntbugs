@@ -17,6 +17,7 @@ package one.util.huntbugs.testdata;
 
 import java.math.BigDecimal;
 import java.net.URL;
+import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
@@ -194,5 +195,11 @@ public class TestBadMethodCalls {
     @AssertWarning(type="ScheduledThreadPoolExecutorChangePoolSize")
     public void testThreadPoolExecutor(int poolSize) {
         ex.setMaximumPoolSize(poolSize);
+    }
+
+    @SuppressWarnings("deprecation")
+    @AssertWarning(type="DateBadMonth")
+    public void testBadMonth(Date date) {
+        date.setMonth(12);
     }
 }

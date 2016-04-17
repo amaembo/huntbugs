@@ -15,70 +15,125 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.HashSet;
 import java.util.Objects;
 
-
+import java.util.Set;
 
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
-
-
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
+import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Equi;
-import one.util.huntbugs.util.Nodes;import one.util.huntbugs.warning.WarningAnnotation;
-
+import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author lan
  *
  */
-@WarningDefinition(category="Correctness", name="AndEqualsAlwaysFalse", maxScore=70)
+@WarningDefinition(category = "Correctness", name = "AndEqualsAlwaysFalse", maxScore = 70)
+@WarningDefinition(category = "Correctness", name = "OrNotEqualsAlwaysTrue", maxScore = 60)
 public class ExclusiveConditions {
-    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
+    Set<Expression> reported;
+
+    @MethodVisitor
+    public void init() {
+        reported = new HashSet<>();
+    }
+
+    @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
-        if(expr.getCode() == AstCode.LogicalAnd) {
-            if(Nodes.isSideEffectFree(expr)) {
+        if (expr.getCode() == AstCode.LogicalAnd) {
+            if (Nodes.isSideEffectFree(expr)) {
                 Expression left = expr.getArguments().get(0);
                 Expression right = expr.getArguments().get(1);
-                if(isEquality(left)) {
-                    check(left, right, mc);
-                } else if(isEquality(right)) {
-                    check(right, left, mc);
+                if (isEquality(left)) {
+                    checkEqual(left, right, mc);
+                } else if (isEquality(right)) {
+                    checkEqual(right, left, mc);
+                }
+            }
+        }
+        if (expr.getCode() == AstCode.LogicalOr) {
+            if (Nodes.isSideEffectFree(expr)) {
+                Expression left = expr.getArguments().get(0);
+                Expression right = expr.getArguments().get(1);
+                if (isNonEquality(left)) {
+                    checkNonEqual(left, right, mc);
+                } else if (isNonEquality(right)) {
+                    checkNonEqual(right, left, mc);
                 }
             }
         }
     }
-    
+
     private boolean isEquality(Expression expr) {
-        if(expr.getCode() == AstCode.CmpEq)
+        if (expr.getCode() == AstCode.CmpEq)
             return true;
-        if(expr.getCode() == AstCode.InvokeVirtual) {
+        if (expr.getCode() == AstCode.InvokeVirtual) {
             MethodReference mr = (MethodReference) expr.getOperand();
-            if(mr.getName().equals("equals") && mr.getSignature().equals("(Ljava/lang/Object;)Z"))
+            if (mr.getName().equals("equals") && mr.getSignature().equals("(Ljava/lang/Object;)Z"))
                 return true;
         }
         return false;
     }
 
-    private void check(Expression equality, Expression other, MethodContext mc) {
+    private boolean isNonEquality(Expression expr) {
+        if (expr.getCode() == AstCode.CmpNe)
+            return true;
+        if (expr.getCode() == AstCode.Neg) {
+            Expression arg = expr.getArguments().get(0);
+            if (arg.getCode() == AstCode.InvokeVirtual) {
+                MethodReference mr = (MethodReference) arg.getOperand();
+                if (mr.getName().equals("equals") && mr.getSignature().equals("(Ljava/lang/Object;)Z"))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private void checkEqual(Expression equality, Expression other, MethodContext mc) {
         Nodes.ifBinaryWithConst(equality, (arg, constant) -> {
-            if(isEquality(other)) {
+            if (isEquality(other)) {
                 Nodes.ifBinaryWithConst(other, (arg2, constant2) -> {
-                    if(Equi.equiExpressions(arg, arg2) && 
-                            !Objects.equals(constant, constant2)) {
-                        mc.report("AndEqualsAlwaysFalse", 0, arg, new WarningAnnotation<>("CONST1", constant),
-                            new WarningAnnotation<>("CONST2", constant2));
+                    if (Equi.equiExpressions(arg, arg2) && !Objects.equals(constant, constant2)) {
+                        // non-short-circuit logic is intended
+                        if (reported.add(arg) & reported.add(arg2)) {
+                            mc.report("AndEqualsAlwaysFalse", 0, arg, new WarningAnnotation<>("CONST1", constant),
+                                new WarningAnnotation<>("CONST2", constant2));
+                        }
                     }
                 });
             }
-            if(other.getCode() == AstCode.LogicalAnd) {
-                check(equality, other.getArguments().get(0), mc);
-                check(equality, other.getArguments().get(1), mc);
+            if (other.getCode() == AstCode.LogicalAnd) {
+                checkEqual(equality, other.getArguments().get(0), mc);
+                checkEqual(equality, other.getArguments().get(1), mc);
+            }
+        });
+    }
+
+    private void checkNonEqual(Expression equality, Expression other, MethodContext mc) {
+        Nodes.ifBinaryWithConst(equality, (arg, constant) -> {
+            if (isNonEquality(other)) {
+                Nodes.ifBinaryWithConst(other, (arg2, constant2) -> {
+                    if (Equi.equiExpressions(arg, arg2) && !Objects.equals(constant, constant2)) {
+                        // non-short-circuit logic is intended
+                        if (reported.add(arg) & reported.add(arg2)) {
+                            mc.report("OrNotEqualsAlwaysTrue", 0, arg, new WarningAnnotation<>("CONST1", constant),
+                                new WarningAnnotation<>("CONST2", constant2));
+                        }
+                    }
+                });
+            }
+            if (other.getCode() == AstCode.LogicalOr) {
+                checkNonEqual(equality, other.getArguments().get(0), mc);
+                checkNonEqual(equality, other.getArguments().get(1), mc);
             }
         });
     }
