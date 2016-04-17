@@ -33,7 +33,6 @@ public class AsserterTest {
         Context ctx = new Context(Repository.createSelfRepository(), new AnalysisOptions());
         ctx.analyzePackage("one/util/huntbugs/asserter");
         assertEquals(4, ctx.getErrorCount());
-        ctx.reportErrors(System.out);
         assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule: AssertNoWarning(type = RoughConstantValue)")));
         assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule: AssertNoWarning(type = Rough*)")));
         assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule is not satisfied: AssertWarning(type = AAA; score = 0..100)")));

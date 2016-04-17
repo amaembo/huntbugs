@@ -97,6 +97,7 @@ abbrev="Nm" type="NM_CLASS_NAMING_CONVENTION" category="BAD_PRACTICE" --> BadNam
 abbrev="Nm" type="NM_CLASS_NOT_EXCEPTION" category="BAD_PRACTICE" --> BadNameOfClassException
 abbrev="RI" type="RI_REDUNDANT_INTERFACES" category="STYLE" --> RedundantInterface
 abbrev="DMI" type="DMI_CALLING_NEXT_FROM_HASNEXT" category="CORRECTNESS" --> IteratorHasNextCallsNext
+abbrev="BSHIFT" type="ICAST_BAD_SHIFT_AMOUNT" category="CORRECTNESS" --> BitShiftInvalidAmount
 
 ==== Not reimplemented
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
@@ -394,7 +395,6 @@ abbrev="RE" type="RE_POSSIBLE_UNINTENDED_PATTERN" category="CORRECTNESS"
 abbrev="RE" type="RE_BAD_SYNTAX_FOR_REGULAR_EXPRESSION" category="CORRECTNESS"
 abbrev="RE" type="RE_CANT_USE_FILE_SEPARATOR_AS_REGULAR_EXPRESSION" category="CORRECTNESS"
 abbrev="DLS" type="DLS_OVERWRITTEN_INCREMENT" category="CORRECTNESS"
-abbrev="BSHIFT" type="ICAST_BAD_SHIFT_AMOUNT" category="CORRECTNESS"
 abbrev="BSHIFT" type="BSHIFT_WRONG_ADD_PRIORITY" category="CORRECTNESS"
 abbrev="IM" type="IM_MULTIPLYING_RESULT_OF_IREM" category="CORRECTNESS"
 abbrev="IM" type="IM_BAD_CHECK_FOR_ODD" category="STYLE"

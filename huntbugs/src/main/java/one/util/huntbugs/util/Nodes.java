@@ -339,6 +339,9 @@ public class Nodes {
         case Rem: return "%";
         case LogicalAnd: return "&&";
         case LogicalOr: return "||";
+        case Shl: return "<<";
+        case Shr: return ">>";
+        case UShr: return ">>>";
         default:
             return code.getName();
         }

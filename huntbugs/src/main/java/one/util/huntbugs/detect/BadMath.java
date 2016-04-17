@@ -39,30 +39,34 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "RedundantCode", name = "UselessAndWithMinusOne", maxScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "UselessAndWithZero", maxScore = 70)
 @WarningDefinition(category = "Correctness", name = "BitCheckGreaterNegative", maxScore = 80)
+@WarningDefinition(category = "Correctness", name = "BitShiftInvalidAmount", maxScore = 75)
 @WarningDefinition(category = "BadPractice", name = "BitCheckGreater", maxScore = 35)
 // TODO: procyon optimizes too hard to detect "UselessAndWithZero"
 public class BadMath {
-    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
+    @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, NodeChain nc, MethodContext mc) {
         TypeReference inferredType = expr.getInferredType();
         if (inferredType == null)
             return;
         JvmType exprType = inferredType.getSimpleType();
-        if (expr.getCode() == AstCode.Rem) {
+        switch (expr.getCode()) {
+        case Rem:
             if (isConst(expr.getArguments().get(1), 1)) {
                 mc.report("RemOne", 0, expr.getArguments().get(0));
             }
-        }
-        if ((expr.getCode() == AstCode.Or || expr.getCode() == AstCode.Xor)
-            && (exprType == JvmType.Long || exprType == JvmType.Integer)) {
-            Nodes.ifBinaryWithConst(expr, (child, constant) -> {
-                if (constant instanceof Number && ((Number) constant).longValue() == 0
-                    && !Nodes.isCompoundAssignment(nc.getNode())) {
-                    mc.report("UselessOrWithZero", 0, child, WarningAnnotation.forOperation(expr));
-                }
-            });
-        }
-        if (expr.getCode() == AstCode.And) {
+            break;
+        case Or:
+        case Xor:
+            if (exprType == JvmType.Long || exprType == JvmType.Integer) {
+                Nodes.ifBinaryWithConst(expr, (child, constant) -> {
+                    if (constant instanceof Number && ((Number) constant).longValue() == 0
+                        && !Nodes.isCompoundAssignment(nc.getNode())) {
+                        mc.report("UselessOrWithZero", 0, child, WarningAnnotation.forOperation(expr));
+                    }
+                });
+            }
+            break;
+        case And:
             Nodes.ifBinaryWithConst(expr, (child, constant) -> {
                 if (constant instanceof Number) {
                     long val = ((Number) constant).longValue();
@@ -73,15 +77,16 @@ public class BadMath {
                         mc.report("UselessAndWithZero", 0, child);
                 }
             });
-        }
-        if (expr.getCode() == AstCode.CmpGt || expr.getCode() == AstCode.CmpLt) {
-            Expression bitAnd = Nodes.getChild(expr, expr.getCode() == AstCode.CmpGt ? 0 : 1); 
-            Object zero = Nodes.getConstant(expr.getArguments().get(expr.getCode() == AstCode.CmpGt ? 1 : 0)); 
-            if(isIntegral(zero) && ((Number)zero).longValue() == 0 && bitAnd.getCode() == AstCode.And) {
+            break;
+        case CmpGt:
+        case CmpLt: {
+            Expression bitAnd = Nodes.getChild(expr, expr.getCode() == AstCode.CmpGt ? 0 : 1);
+            Object zero = Nodes.getConstant(expr.getArguments().get(expr.getCode() == AstCode.CmpGt ? 1 : 0));
+            if (isIntegral(zero) && ((Number) zero).longValue() == 0 && bitAnd.getCode() == AstCode.And) {
                 Nodes.ifBinaryWithConst(bitAnd, (flags, mask) -> {
-                    if(isIntegral(mask)) {
-                        if(mask instanceof Integer && ((Integer)mask) < 0 ||
-                                mask instanceof Long && ((Long)mask) < 0) {
+                    if (isIntegral(mask)) {
+                        if (mask instanceof Integer && ((Integer) mask) < 0 || mask instanceof Long
+                            && ((Long) mask) < 0) {
                             mc.report("BitCheckGreaterNegative", 0, flags, WarningAnnotation.forNumber((Number) mask));
                         } else {
                             mc.report("BitCheckGreater", 0, flags, WarningAnnotation.forNumber((Number) mask));
@@ -89,29 +94,49 @@ public class BadMath {
                     }
                 });
             }
+            break;
         }
-        if (expr.getCode() == AstCode.CmpEq || expr.getCode() == AstCode.CmpNe) {
+        case CmpEq:
+        case CmpNe:
             Nodes.ifBinaryWithConst(expr, (child, outerConst) -> {
                 if (isIntegral(outerConst) && (child.getCode() == AstCode.And || child.getCode() == AstCode.Or)) {
                     long outerVal = ((Number) outerConst).longValue();
-                    Nodes.ifBinaryWithConst(child, (grandChild, innerConst) -> {
-                        if (isIntegral(innerConst)) {
-                            long innerVal = ((Number) innerConst).longValue();
-                            if(child.getCode() == AstCode.And) {
-                                if ((outerVal & ~innerVal) != 0) {
-                                    mc.report("CompareBitAndIncompatible", 0, expr, new WarningAnnotation<>("AND_OPERAND",
-                                            innerVal), new WarningAnnotation<>("COMPARED_TO", outerVal));
-                                }
-                            } else {
-                                if ((~outerVal & innerVal) != 0) {
-                                    mc.report("CompareBitOrIncompatible", 0, expr, new WarningAnnotation<>("OR_OPERAND",
-                                            innerVal), new WarningAnnotation<>("COMPARED_TO", outerVal));
+                    Nodes.ifBinaryWithConst(child,
+                        (grandChild, innerConst) -> {
+                            if (isIntegral(innerConst)) {
+                                long innerVal = ((Number) innerConst).longValue();
+                                if (child.getCode() == AstCode.And) {
+                                    if ((outerVal & ~innerVal) != 0) {
+                                        mc.report("CompareBitAndIncompatible", 0, expr, new WarningAnnotation<>(
+                                                "AND_OPERAND", innerVal), new WarningAnnotation<>("COMPARED_TO",
+                                                outerVal));
+                                    }
+                                } else {
+                                    if ((~outerVal & innerVal) != 0) {
+                                        mc.report("CompareBitOrIncompatible", 0, expr, new WarningAnnotation<>(
+                                                "OR_OPERAND", innerVal), new WarningAnnotation<>("COMPARED_TO",
+                                                outerVal));
+                                    }
                                 }
                             }
-                        }
-                    });
+                        });
                 }
             });
+            break;
+        case Shl:
+        case Shr:
+        case UShr: {
+            Object constant = Nodes.getConstant(expr.getArguments().get(1));
+            if (constant instanceof Integer) {
+                int bits = (int) constant;
+                if (bits < 0 || bits > 63 || (bits > 31 && exprType == JvmType.Integer)) {
+                    mc.report("BitShiftInvalidAmount", 0, expr, WarningAnnotation.forNumber(bits), WarningAnnotation
+                            .forOperation(expr), new WarningAnnotation<>("MAX_VALUE", exprType == JvmType.Integer ? 31
+                            : 63));
+                }
+            }
+        }
+        default:
         }
     }
 

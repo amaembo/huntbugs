@@ -281,4 +281,29 @@ public class TestBadMath {
         return (flags & FLAG_FOO) != 0;
     }
     
+    @AssertWarning(type="BitShiftInvalidAmount")
+    public long shift(long input) {
+        return input >> 64;
+    }
+    
+    @AssertWarning(type="BitShiftInvalidAmount")
+    public int shift(int input) {
+        return input >>> 32;
+    }
+    
+    @AssertWarning(type="BitShiftInvalidAmount")
+    public int shiftLeft(int input) {
+        int amount = -1;
+        return input << amount;
+    }
+    
+    @AssertNoWarning(type="BitShiftInvalidAmount")
+    public long shiftOk(long input) {
+        return input >> 32;
+    }
+    
+    @AssertNoWarning(type="BitShiftInvalidAmount")
+    public int shiftOk(int input) {
+        return input >>> 31;
+    }
 }

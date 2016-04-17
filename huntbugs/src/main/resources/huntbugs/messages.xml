@@ -655,5 +655,11 @@
       <Description>Method $METHOD$ invokes $RETURN_VALUE_OF$.</Description>
       <LongDescription><![CDATA[The iterator method $METHOD$ invokes $RETURN_VALUE_OF$. This is almost certainly wrong, since the <code>hasNext()</code> method is not supposed to change the state of the iterator, and the <code>next()</code> method is supposed to change the state of the iterator.]]></LongDescription>
     </Warning>
+    <Warning Type="BitShiftInvalidAmount">
+      <Title>Suspicious bit count in bit shift operation</Title>
+      <Description>Bit shift operation (x $OPERATION$ $NUMBER$) has suspicious bit count.</Description>
+      <LongDescription><![CDATA[This code performs a bit shift like <code>(x $OPERATION$ $NUMBER$)</code> where number of bits is not in the (0..$MAX_VALUE$) range.
+      In this case only lower bits will be used (e.g. <code>val &gt;&gt; 70</code> is equal to <code>val &gt;&gt; 6</code>). Probably something else was meant here.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>
