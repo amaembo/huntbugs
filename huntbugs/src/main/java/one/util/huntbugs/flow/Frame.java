@@ -420,7 +420,12 @@ class Frame {
         }
         if (right == null || right.getClass() != rightType)
             return this;
-        Object result = op.apply(leftType.cast(left), rightType.cast(right));
+        Object result = UNKNOWN_VALUE;
+        try {
+            result = op.apply(leftType.cast(left), rightType.cast(right));
+        } catch (Exception e) {
+            // ignore
+        }
         storeValue(expr, result);
         return this;
     }

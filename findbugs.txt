@@ -90,9 +90,10 @@ abbrev="RV" type="RV_EXCEPTION_NOT_THROWN" category="CORRECTNESS" --> DroppedExc
 abbrev="Dm" type="DMI_FUTILE_ATTEMPT_TO_CHANGE_MAXPOOL_SIZE_OF_SCHEDULED_THREAD_POOL_EXECUTOR" category="CORRECTNESS" --> ScheduledThreadPoolExecutorChangePoolSize
 abbrev="IO" type="IO_APPENDING_TO_OBJECT_OUTPUT_STREAM" category="CORRECTNESS" --> AppendObjectOutputStream
 abbrev="DMI" type="DMI_BAD_MONTH" category="CORRECTNESS" --> DateBadMonth
+abbrev="DMI" type="DMI_USELESS_SUBSTRING" category="STYLE" --> UselessStringSubstring
+abbrev="RANGE" type="RANGE_STRING_INDEX" category="CORRECTNESS" --> StringIndexIsLessThanZero, StringIndexIsGreaterThanAllowed
 
 ==== Not reimplemented
-abbrev="DMI" type="DMI_USELESS_SUBSTRING" category="STYLE"
 
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SERVLET_WRITER" category="SECURITY"
@@ -269,7 +270,6 @@ abbrev="UC" type="UC_USELESS_OBJECT_STACK" category="STYLE"
 abbrev="RANGE" type="RANGE_ARRAY_INDEX" category="CORRECTNESS"
 abbrev="RANGE" type="RANGE_ARRAY_OFFSET" category="CORRECTNESS"
 abbrev="RANGE" type="RANGE_ARRAY_LENGTH" category="CORRECTNESS"
-abbrev="RANGE" type="RANGE_STRING_INDEX" category="CORRECTNESS"
 abbrev="RV" type="RV_RETURN_VALUE_IGNORED" category="CORRECTNESS"
 abbrev="RV" type="RV_RETURN_VALUE_IGNORED_INFERRED" category="STYLE"
 abbrev="RV" type="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT" category="STYLE"

@@ -612,5 +612,21 @@
       <Description>$CALLED_METHOD$ is called with incorrect argument $NUMBER$.</Description>
       <LongDescription><![CDATA[A $CALLED_METHOD$ is called, but the argument $NUMBER$ is out of range: it should be from 0 (January) to 11 (December).]]></LongDescription>
     </Warning>
+    <Warning Type="UselessStringSubstring">
+      <Title>Useless String.substring(0)</Title>
+      <Description>Passing 0 to $RETURN_VALUE_OF$ is useless.</Description>
+      <LongDescription><![CDATA[A $RETURN_VALUE_OF$ is called like <code>str.$RETURN_VALUE_OF:name$(0)</code>. This is useless as the resulting string
+      will be the same as the original one. Remove this call.]]></LongDescription>
+    </Warning>
+    <Warning Type="StringIndexIsLessThanZero">
+      <Title>String index is less than zero</Title>
+      <Description>Negative index or length $INDEX$ is passed to $RETURN_VALUE_OF$.</Description>
+      <LongDescription><![CDATA[Negative index or length $INDEX$ is passed to $RETURN_VALUE_OF$ which will result in <code>IndexOutOfBoundsException</code> at runtime.]]></LongDescription>
+    </Warning>
+    <Warning Type="StringIndexIsGreaterThanAllowed">
+      <Title>String index is too big</Title>
+      <Description>Index $INDEX$ passed to $RETURN_VALUE_OF$ exceeds maximum possible value of $MAX_VAL$.</Description>
+      <LongDescription><![CDATA[Index or length $INDEX$ passed to $RETURN_VALUE_OF$ exceeds $MAX_VAL$ which will result in <code>IndexOutOfBoundsException</code> at runtime.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>
