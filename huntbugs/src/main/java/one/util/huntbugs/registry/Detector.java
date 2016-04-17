@@ -36,6 +36,7 @@ import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
+import one.util.huntbugs.registry.anno.ClassVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.WarningType;
@@ -47,6 +48,8 @@ import one.util.huntbugs.warning.WarningType;
 public class Detector {
     static final MethodType METHOD_VISITOR_TYPE = MethodType.methodType(boolean.class, Object.class,
         MethodContext.class, MethodDefinition.class, TypeDefinition.class);
+    static final MethodType CLASS_VISITOR_TYPE = MethodType.methodType(boolean.class, Object.class,
+        ClassContext.class, TypeDefinition.class);
     private static final MethodHandle ALWAYS_TRUE = MethodHandles.constant(boolean.class, true);
     private static final MethodType NODE_VISITOR_TYPE = MethodType.methodType(boolean.class, Object.class, Node.class,
         NodeChain.class, MethodContext.class, MethodDefinition.class, TypeDefinition.class);
@@ -56,6 +59,7 @@ public class Detector {
     private final Class<?> clazz;
     final List<VisitorInfo> astVisitors = new ArrayList<>();
     final List<MethodHandle> methodVisitors = new ArrayList<>();
+    final List<MethodHandle> classVisitors = new ArrayList<>();
 
     class VisitorInfo {
         final VisitorType type;
@@ -151,6 +155,9 @@ public class Detector {
             }
             if (m.getAnnotation(MethodVisitor.class) != null) {
                 methodVisitors.add(adapt(MethodHandles.publicLookup().unreflect(m), METHOD_VISITOR_TYPE, databases));
+            }
+            if (m.getAnnotation(ClassVisitor.class) != null) {
+                classVisitors.add(adapt(MethodHandles.publicLookup().unreflect(m), CLASS_VISITOR_TYPE, databases));
             }
         }
     }

@@ -25,13 +25,25 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestExposeRepresentation {
+    private class InternalClass {
+        private int[] f;
+        
+        @AssertNoWarning(type="*")
+        public void setField(int[] f) {
+            this.f = f;
+        }
+    }
+    
     int[] f;
     static Hashtable<String, Integer> ht;
+    InternalClass ic = new InternalClass();
 
     @AssertWarning(type="ExposeMutableFieldViaParameter", minScore=40)
     public void setField(int[] f) {
         if(f.length > 2)
             this.f = f;
+        if(ic.f == null)
+            ic.setField(f);
     }
     
     @AssertNoWarning(type="ExposeMutableFieldViaParameter")

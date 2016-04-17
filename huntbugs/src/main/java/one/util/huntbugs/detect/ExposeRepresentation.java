@@ -27,6 +27,7 @@ import com.strobel.decompiler.ast.Variable;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
+import one.util.huntbugs.registry.anno.ClassVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
@@ -40,9 +41,14 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "MaliciousCode", name = "ExposeMutableFieldViaParameter", maxScore = 45)
 @WarningDefinition(category = "MaliciousCode", name = "ExposeMutableStaticFieldViaParameter", maxScore = 55)
 public class ExposeRepresentation {
+    @ClassVisitor
+    public boolean checkClass(TypeDefinition td) {
+        return td.isPublic();
+    }
+    
     @MethodVisitor
-    public boolean checkMethod(MethodDefinition md, TypeDefinition td) {
-        return td.isPublic() && (md.isPublic() || md.isProtected()) && !md.getParameters().isEmpty();
+    public boolean checkMethod(MethodDefinition md) {
+        return (md.isPublic() || md.isProtected()) && !md.getParameters().isEmpty();
     }
 
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)

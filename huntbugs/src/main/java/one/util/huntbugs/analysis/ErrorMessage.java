@@ -18,6 +18,7 @@ package one.util.huntbugs.analysis;
 import one.util.huntbugs.registry.Detector;
 
 import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.TypeDefinition;
 
 /**
  * @author lan
@@ -37,6 +38,10 @@ public class ErrorMessage {
                 .getFullName(), method.getSignature(), line, error);
     }
 
+    public ErrorMessage(Detector detector, TypeDefinition type, Throwable error) {
+        this(detector == null ? null : detector.toString(), type.getFullName(), null, null, -1, error);
+    }
+    
     public ErrorMessage(Detector detector, MethodDefinition method, int line, String message) {
         this(detector == null ? null : detector.toString(), method.getDeclaringType().getFullName(), method
                 .getFullName(), method.getSignature(), line, message);

@@ -180,7 +180,8 @@ public class DetectorRegistry {
 
     public void analyzeClass(TypeDefinition type) {
         ctx.incStat("TotalClasses");
-        ClassContext[] ccs = detectors.stream().map(d -> new ClassContext(ctx, type, d)).toArray(ClassContext[]::new);
+        ClassContext[] ccs = detectors.stream().map(d -> new ClassContext(ctx, type, d)).filter(
+            ClassContext::visitClass).toArray(ClassContext[]::new);
 
         for (MethodDefinition md : type.getDeclaredMethods()) {
             MethodAsserter ma = MethodAsserter.forMethod(md);

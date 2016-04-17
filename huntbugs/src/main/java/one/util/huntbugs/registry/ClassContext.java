@@ -15,9 +15,12 @@
  */
 package one.util.huntbugs.registry;
 
+import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
 import java.util.List;
+
 import one.util.huntbugs.analysis.Context;
+import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.warning.WarningAnnotation;
 
 import com.strobel.assembler.ir.attributes.SourceAttribute;
@@ -62,6 +65,20 @@ public class ClassContext {
             }
         }
         return null;
+    }
+
+    boolean visitClass() {
+        for(MethodHandle mh : detector.classVisitors) {
+            try {
+                if (!(boolean) detector.bindDatabases(Detector.CLASS_VISITOR_TYPE.parameterCount(), type, mh)
+                        .invoke(det, this, type)) {
+                    return false;
+                }
+            } catch (Throwable e) {
+                ctx.addError(new ErrorMessage(detector, type, e));
+            }
+        }
+        return !detector.methodVisitors.isEmpty() || !detector.astVisitors.isEmpty();
     }
 
     public MethodContext forMethod(MethodDefinition md) {
