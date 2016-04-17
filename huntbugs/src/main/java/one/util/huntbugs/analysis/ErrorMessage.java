@@ -42,6 +42,10 @@ public class ErrorMessage {
         this(detector == null ? null : detector.toString(), type.getFullName(), null, null, -1, error);
     }
     
+    public ErrorMessage(Detector detector, TypeDefinition type, String message) {
+        this(detector == null ? null : detector.toString(), type.getFullName(), null, null, -1, message);
+    }
+    
     public ErrorMessage(Detector detector, MethodDefinition method, int line, String message) {
         this(detector == null ? null : detector.toString(), method.getDeclaringType().getFullName(), method
                 .getFullName(), method.getSignature(), line, message);

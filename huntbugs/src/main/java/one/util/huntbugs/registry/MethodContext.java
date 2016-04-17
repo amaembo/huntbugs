@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
-import one.util.huntbugs.assertions.MethodAsserter;
+import one.util.huntbugs.assertions.MemberAsserter;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.Warning;
@@ -100,7 +100,7 @@ public class MethodContext {
     private OffsetToLineNumberConverter ltc;
     private final ClassContext cc;
     List<WarningAnnotation<?>> annot;
-    private MethodAsserter ma;
+    private MemberAsserter ma;
     private WarningInfo lastWarning;
     private final List<MethodHandle> astVisitors;
     private MethodDefinition realMethod;
@@ -109,17 +109,13 @@ public class MethodContext {
         this.cc = classCtx;
         this.md = this.realMethod = md;
         this.ctx = ctx;
-        this.detector = classCtx == null ? null : classCtx.detector;
-        this.det = classCtx == null ? null : classCtx.det;
-        if (detector == null) {
-            astVisitors = Collections.emptyList();
-        } else {
-            astVisitors = detector.astVisitors.stream().filter(vi -> vi.isApplicable(md)).map(
-                vi -> vi.bind(classCtx.type)).collect(Collectors.toCollection(ArrayList::new));
-        }
+        this.detector = classCtx.detector;
+        this.det = classCtx.det;
+        astVisitors = detector.astVisitors.stream().filter(vi -> vi.isApplicable(md)).map(
+            vi -> vi.bind(classCtx.type)).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    void setMethodAsserter(MethodAsserter ma) {
+    void setAsserter(MemberAsserter ma) {
         this.ma = ma;
     }
 
@@ -178,7 +174,7 @@ public class MethodContext {
     void finalizeMethod() {
         if (lastWarning != null) {
             Warning warn = lastWarning.build();
-            ma.checkWarning(this, warn);
+            ma.checkWarning(this::error, warn);
             ctx.addWarning(warn);
         }
     }
@@ -235,7 +231,7 @@ public class MethodContext {
             lastWarning = info;
         } else if (!lastWarning.tryMerge(info)) {
             Warning warn = lastWarning.build();
-            ma.checkWarning(this, warn);
+            ma.checkWarning(this::error, warn);
             ctx.addWarning(warn);
             lastWarning = info;
         }

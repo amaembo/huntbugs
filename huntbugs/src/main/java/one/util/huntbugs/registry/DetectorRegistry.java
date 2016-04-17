@@ -41,7 +41,7 @@ import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
-import one.util.huntbugs.assertions.MethodAsserter;
+import one.util.huntbugs.assertions.MemberAsserter;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.repo.Repository;
@@ -57,17 +57,18 @@ import one.util.huntbugs.warning.WarningType;
  */
 public class DetectorRegistry {
     private static final WarningType METHOD_TOO_LARGE = new WarningType("System", "MethodTooLarge", 30);
-    
+
     static final String DETECTORS_PACKAGE = "one.util.huntbugs.detect";
-    
+
     private final Map<WarningType, Detector> typeToDetector = new HashMap<>();
     private final List<Detector> detectors = new ArrayList<>();
     private final Context ctx;
     private final Detector systemDetector;
 
     private final DatabaseRegistry databases;
-    
-    public static class SystemDetector {}
+
+    public static class SystemDetector {
+    }
 
     public DetectorRegistry(Context ctx) {
         this.ctx = ctx;
@@ -83,8 +84,8 @@ public class DetectorRegistry {
     }
 
     private Map<String, WarningType> createWarningMap(Stream<WarningType> stream) {
-        Map<String, WarningType> systemWarnings = stream.map(ctx.getOptions().getRule()::adjust)
-                .collect(Collectors.toMap(WarningType::getName, Function.identity()));
+        Map<String, WarningType> systemWarnings = stream.map(ctx.getOptions().getRule()::adjust).collect(
+            Collectors.toMap(WarningType::getName, Function.identity()));
         return systemWarnings;
     }
 
@@ -103,7 +104,7 @@ public class DetectorRegistry {
             wds.forEach(wd -> ctx.incStat("WarningTypes.Total"));
             Map<String, WarningType> wts = createWarningMap(wds.stream().map(WarningType::new));
             Detector detector = createDetector(clazz, wts);
-            if(detector == null)
+            if (detector == null)
                 return false;
             detectors.add(detector);
         } catch (Exception e) {
@@ -113,9 +114,9 @@ public class DetectorRegistry {
     }
 
     private Detector createDetector(Class<?> clazz, Map<String, WarningType> wts) throws IllegalAccessException {
-        List<WarningType> activeWts = wts.values().stream().filter(
-            wt -> wt.getMaxScore() >= ctx.getOptions().minScore).collect(Collectors.toList());
-        if(activeWts.isEmpty())
+        List<WarningType> activeWts = wts.values().stream().filter(wt -> wt.getMaxScore() >= ctx.getOptions().minScore)
+                .collect(Collectors.toList());
+        if (activeWts.isEmpty())
             return null;
         Detector detector = new Detector(wts, clazz, databases);
         activeWts.forEach(wt -> {
@@ -139,7 +140,7 @@ public class DetectorRegistry {
                 String name = className.replace('/', '.');
                 try {
                     ctx.incStat("Detectors.Total");
-                    if(addDetector(MetadataSystem.class.getClassLoader().loadClass(name)))
+                    if (addDetector(MetadataSystem.class.getClassLoader().loadClass(name)))
                         ctx.incStat("Detectors");
                 } catch (ClassNotFoundException e) {
                     ctx.addError(new ErrorMessage(name, null, null, null, -1, e));
@@ -148,15 +149,17 @@ public class DetectorRegistry {
         });
     }
 
-    private void visitChildren(Node node, NodeChain parents, List<MethodContext> list, MethodDefinition realMethod, boolean isAnnotationComplete) {
+    private void visitChildren(Node node, NodeChain parents, List<MethodContext> list, MethodDefinition realMethod,
+            boolean isAnnotationComplete) {
         for (MethodContext mc : list) {
             mc.visitNode(node, parents, realMethod);
         }
-        if(node instanceof Lambda) {
-            Object arg = ((Lambda)node).getCallSite().getBootstrapArguments().get(1);
-            if(arg instanceof MethodHandle) {
+        if (node instanceof Lambda) {
+            Object arg = ((Lambda) node).getCallSite().getBootstrapArguments().get(1);
+            if (arg instanceof MethodHandle) {
                 MethodDefinition lm = ((MethodHandle) arg).getMethod().resolve();
-                if(lm != null) realMethod = lm;
+                if (lm != null)
+                    realMethod = lm;
             }
         }
         List<Node> children = node.getChildren();
@@ -166,11 +169,11 @@ public class DetectorRegistry {
                 visitChildren(child, newChain, list, realMethod, isAnnotationComplete);
         }
     }
-    
+
     public boolean hasDatabases() {
         return !databases.instances.isEmpty();
     }
-    
+
     public void populateDatabases(TypeDefinition type) {
         databases.visitType(type);
         for (TypeDefinition subType : type.getDeclaredTypes()) {
@@ -180,28 +183,29 @@ public class DetectorRegistry {
 
     public void analyzeClass(TypeDefinition type) {
         ctx.incStat("TotalClasses");
-        ClassContext[] ccs = detectors.stream().map(d -> new ClassContext(ctx, type, d)).filter(
-            ClassContext::visitClass).toArray(ClassContext[]::new);
+        MemberAsserter ca = MemberAsserter.forMember(type);
+        ClassContext[] ccs = detectors.stream().map(d -> new ClassContext(ctx, type, d)).peek(
+            cc -> cc.setAsserter(ca)).filter(ClassContext::visitClass).toArray(ClassContext[]::new);
 
         for (MethodDefinition md : type.getDeclaredMethods()) {
-            MethodAsserter ma = MethodAsserter.forMethod(md);
+            MemberAsserter ma = MemberAsserter.forMember(ca, md);
 
-            Map<Boolean, List<MethodContext>> mcs = Stream.of(ccs).map(cc -> cc.forMethod(md)).peek(mc -> mc.setMethodAsserter(ma))
-                    .collect(Collectors.partitioningBy(MethodContext::visitMethod));
+            Map<Boolean, List<MethodContext>> mcs = Stream.of(ccs).map(cc -> cc.forMethod(md)).peek(
+                mc -> mc.setAsserter(ma)).collect(Collectors.partitioningBy(MethodContext::visitMethod));
 
             MethodBody body = md.getBody();
             if (body != null) {
-                if(body.getCodeSize() > ctx.getOptions().maxMethodSize) {
-                    if(systemDetector != null) {
+                if (body.getCodeSize() > ctx.getOptions().maxMethodSize) {
+                    if (systemDetector != null) {
                         MethodContext mc = new ClassContext(ctx, type, systemDetector).forMethod(md);
-                        mc.setMethodAsserter(ma);
+                        mc.setAsserter(ma);
                         mc.report(METHOD_TOO_LARGE.getName(), 0, new WarningAnnotation<>("BYTECODE_SIZE", body
                                 .getCodeSize()), new WarningAnnotation<>("LIMIT", ctx.getOptions().maxMethodSize));
                         mc.finalizeMethod();
                     }
                 } else if (!mcs.get(true).isEmpty()) {
                     final DecompilerContext context = new DecompilerContext();
-    
+
                     context.setCurrentMethod(md);
                     context.setCurrentType(type);
                     Block methodAst = new Block();
@@ -211,7 +215,8 @@ public class DetectorRegistry {
                         AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
                         isAnnotationComplete = ValuesFlow.annotate(ctx, md, methodAst);
                     } catch (Throwable t) {
-                        ctx.addError(new ErrorMessage(null, type.getFullName(), md.getFullName(), md.getSignature(), -1, t));
+                        ctx.addError(new ErrorMessage(null, type.getFullName(), md.getFullName(), md.getSignature(),
+                                -1, t));
                     }
                     visitChildren(methodAst, null, mcs.get(true), md, isAnnotationComplete);
                 }
@@ -222,64 +227,65 @@ public class DetectorRegistry {
             for (MethodContext mc : mcs.get(false)) {
                 mc.finalizeMethod();
             }
-            ma.checkFinally(new MethodContext(ctx, null, md));
+            ma.checkFinally(err -> ctx.addError(new ErrorMessage(null, md, -1, err)));
         }
+        ca.checkFinally(err -> ctx.addError(new ErrorMessage(null, type, err)));
 
         for (TypeDefinition subType : type.getDeclaredTypes()) {
             analyzeClass(subType);
         }
     }
-    
+
     private void printTree(PrintStream out, List<String> result, String arrow) {
         result.sort(null);
         String lastCategory = arrow;
-        for(int i=0; i<result.size(); i++) {
+        for (int i = 0; i < result.size(); i++) {
             String str = result.get(i);
-            if(str.startsWith(lastCategory)) {
+            if (str.startsWith(lastCategory)) {
                 out.printf("%" + lastCategory.length() + "s%s%n", i == result.size() - 1
                     || !result.get(i + 1).startsWith(lastCategory) ? "\\-> " : "|-> ", str.substring(lastCategory
                         .length()));
             } else {
                 out.println(str);
-                lastCategory = str.substring(0, str.indexOf(arrow)+arrow.length());
+                lastCategory = str.substring(0, str.indexOf(arrow) + arrow.length());
             }
         }
     }
 
     public void reportWarningTypes(PrintStream out) {
         List<String> result = new ArrayList<>();
-        
+
         String arrow = " --> ";
         typeToDetector.forEach((wt, detector) -> {
-            result.add(wt.getCategory()+arrow+wt.getName()+arrow+detector);
+            result.add(wt.getCategory() + arrow + wt.getName() + arrow + detector);
         });
         printTree(out, result, arrow);
-        out.println("Total types: "+typeToDetector.size());
+        out.println("Total types: " + typeToDetector.size());
     }
 
     public void reportDatabases(PrintStream out) {
         List<String> result = new ArrayList<>();
         String arrow = " --> ";
-        detectors.forEach(det -> det.dbFetchers.keySet().forEach(db -> result.add(db.getName()+arrow+det)));
+        detectors.forEach(det -> det.dbFetchers.keySet().forEach(db -> result.add(db.getName() + arrow + det)));
         databases.instances.forEach((db, dbi) -> {
-            if(dbi.parentDb != null) {
-                result.add(dbi.parentDb.getClass().getName()+arrow+"Derived DB: "+db.getName());
+            if (dbi.parentDb != null) {
+                result.add(dbi.parentDb.getClass().getName() + arrow + "Derived DB: " + db.getName());
             }
         });
         printTree(out, result, arrow);
-        out.println("Total databases: "+databases.instances.size());
+        out.println("Total databases: " + databases.instances.size());
     }
-    
+
     public void reportTitles(PrintStream out) {
         List<String> rows = new ArrayList<>();
-        for(WarningType wt : typeToDetector.keySet()) {
+        for (WarningType wt : typeToDetector.keySet()) {
             Message msg = ctx.getMessages().getMessagesForType(wt);
             ctx.incStat("Messages.Total");
-            if(msg.getTitle().equals(wt.getName())) {
-                rows.add(wt.getName()+": ?");
+            if (msg.getTitle().equals(wt.getName())) {
+                rows.add(wt.getName() + ": ?");
             } else {
                 ctx.incStat("Messages");
-                rows.add(wt.getName()+": "+msg.getTitle());
+                rows.add(wt.getName() + ": " + msg.getTitle());
             }
         }
         rows.sort(null);

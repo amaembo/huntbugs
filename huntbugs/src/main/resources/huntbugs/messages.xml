@@ -628,5 +628,12 @@
       <Description>Index $INDEX$ passed to $RETURN_VALUE_OF$ exceeds maximum possible value of $MAX_VAL$.</Description>
       <LongDescription><![CDATA[Index or length $INDEX$ passed to $RETURN_VALUE_OF$ exceeds $MAX_VAL$ which will result in <code>IndexOutOfBoundsException</code> at runtime.]]></LongDescription>
     </Warning>
+    <Warning Type="ComparatorIsNotSerializable">
+      <Title>Comparator is not serializable</Title>
+      <Description>Comparator $TYPE$ doesn't implement $SHOULD_IMPLEMENT$.</Description>
+      <LongDescription><![CDATA[The $TYPE$ class implements the <code>Comparator</code> interface. Consider implementing also $SHOULD_IMPLEMENT$ interface.<br>
+      If a comparator is used to construct an ordered collection such as a <code>TreeMap</code>, then the <code>TreeMap</code> will be serializable only if the comparator is also serializable. 
+      As most comparators have little or no state, making them serializable is generally easy and good defensive programming. ]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

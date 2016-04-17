@@ -18,14 +18,14 @@ package one.util.huntbugs.assertions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.function.Consumer;
 
 import one.util.huntbugs.assertions.AssertionData.Status;
-import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 import one.util.huntbugs.warning.Warning;
 
-import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.annotations.AnnotationParameter;
 import com.strobel.assembler.metadata.annotations.ConstantAnnotationElement;
 import com.strobel.assembler.metadata.annotations.CustomAnnotation;
@@ -34,19 +34,35 @@ import com.strobel.assembler.metadata.annotations.CustomAnnotation;
  * @author lan
  *
  */
-public class MethodAsserter {
-    private static final MethodAsserter EMPTY_ASSERTER = new MethodAsserter(null);
+public class MemberAsserter {
+    private static final MemberAsserter EMPTY_ASSERTER = new MemberAsserter(null, null);
     
     private final List<AssertionData> data;
     private final List<AssertionData> finalData;
+    private final MemberAsserter parent;
     
-    public MethodAsserter(List<AssertionData> data) {
+    private MemberAsserter(MemberAsserter parent, List<AssertionData> data) {
         super();
+        this.parent = parent;
         this.data = data;
         this.finalData = data == null ? null : new ArrayList<>(data);
     }
 
-    public static MethodAsserter forMethod(MethodDefinition md) {
+    public static MemberAsserter forMember(MemberReference md) {
+        List<AssertionData> assertions = analyzeMember(md);
+        if(assertions.isEmpty())
+            return EMPTY_ASSERTER;
+        return new MemberAsserter(null, assertions);
+    }
+
+    public static MemberAsserter forMember(MemberAsserter parent, MemberReference md) {
+        List<AssertionData> assertions = analyzeMember(md);
+        if(assertions.isEmpty() && parent == EMPTY_ASSERTER)
+            return EMPTY_ASSERTER;
+        return new MemberAsserter(parent, assertions);
+    }
+    
+    private static List<AssertionData> analyzeMember(MemberReference md) {
         List<AssertionData> assertions = new ArrayList<>();
         for(CustomAnnotation anno : md.getAnnotations()) {
             if(anno.getAnnotationType().getFullName().equals(AssertWarning.class.getName())) {
@@ -70,12 +86,10 @@ public class MethodAsserter {
                 assertions.add(new AssertionData(false, type, Warning.MIN_SCORE, Warning.MAX_SCORE));
             }
         }
-        if(assertions.isEmpty())
-            return EMPTY_ASSERTER;
-        return new MethodAsserter(assertions);
+        return assertions;
     }
     
-    public void checkWarning(MethodContext ctx, Warning warning) {
+    public void checkWarning(Consumer<String> errorConsumer, Warning warning) {
         if(data == null)
             return;
         for(int i=0; i<data.size(); i++) {
@@ -84,12 +98,12 @@ public class MethodAsserter {
             if(status == Status.PASS)
                 finalData.set(i, null);
             else if(status == Status.FAIL) {
-                ctx.error("Unexpected warning: "+warning+" (rule: "+ad+")");
+                errorConsumer.accept("Unexpected warning: "+warning+" (rule: "+ad+")");
             }
         }
     }
     
-    public void checkFinally(MethodContext ctx) {
+    public void checkFinally(Consumer<String> errorConsumer) {
         if(finalData == null)
             return;
         for(ListIterator<AssertionData> it = finalData.listIterator(); it.hasNext(); ) {
@@ -97,7 +111,7 @@ public class MethodAsserter {
             if(ad == null) continue;
             Status status = ad.finalStatus();
             if(status == Status.FAIL) {
-                ctx.error("Warning rule is not satisfied: "+ad);
+                errorConsumer.accept("Warning rule is not satisfied: "+ad);
             }
         }        
     }

@@ -17,11 +17,15 @@ package one.util.huntbugs.registry;
 
 import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
+import one.util.huntbugs.assertions.MemberAsserter;
+import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.WarningType;
 
 import com.strobel.assembler.ir.attributes.SourceAttribute;
 import com.strobel.assembler.ir.attributes.SourceFileAttribute;
@@ -38,6 +42,7 @@ public class ClassContext {
     final Context ctx;
     final Object det;
     List<WarningAnnotation<?>> annot;
+    private MemberAsserter ca;
 
     ClassContext(Context ctx, TypeDefinition type, Detector detector) {
         super();
@@ -67,6 +72,10 @@ public class ClassContext {
         return null;
     }
 
+    void setAsserter(MemberAsserter ma) {
+        this.ca = ma;
+    }
+
     boolean visitClass() {
         for(MethodHandle mh : detector.classVisitors) {
             try {
@@ -80,8 +89,33 @@ public class ClassContext {
         }
         return !detector.methodVisitors.isEmpty() || !detector.astVisitors.isEmpty();
     }
+    
+    public void report(String warning, int priority, WarningAnnotation<?>... annotations) {
+        WarningType wt = detector.getWarningType(warning);
+        if (wt == null) {
+            error("Tries to report a warning of non-declared type: " + warning);
+            return;
+        }
+        if (priority < 0) {
+            error("Tries to report a warning " + warning + " with negative priority " + priority);
+            return;
+        }
+        if (wt.getMaxScore() - priority < ctx.getOptions().minScore) {
+            return;
+        }
+        List<WarningAnnotation<?>> anno = new ArrayList<>();
+        anno.addAll(getTypeSpecificAnnotations());
+        anno.addAll(Arrays.asList(annotations));
+        Warning w = new Warning(wt, priority, anno);
+        ca.checkWarning(this::error, w);
+        ctx.addWarning(w);
+    }
 
-    public MethodContext forMethod(MethodDefinition md) {
+    public void error(String message) {
+        ctx.addError(new ErrorMessage(detector, type, message));
+    }
+
+    MethodContext forMethod(MethodDefinition md) {
         return new MethodContext(ctx, this, md);
     }
 }
