@@ -165,6 +165,10 @@ public class Context {
         return warnings.stream();
     }
 
+    public Stream<ErrorMessage> errors() {
+        return errors.stream();
+    }
+
     public void reportWarnings(PrintStream app) {
         List<Warning> warns = new ArrayList<>(warnings);
         warns.sort(Comparator.comparingInt(Warning::getScore).reversed().thenComparing(w -> w.getType().getName())
