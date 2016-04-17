@@ -468,6 +468,16 @@
       <Description>Name of the method $METHOD$ violates the convention.</Description>
       <LongDescription><![CDATA[Methods should be named in mixed case (camel-case) with the first letter lowercase and the first letter of each internal word capitalized.]]></LongDescription>
     </Warning>
+    <Warning Type="BadNameOfClass">
+      <Title>Class names should start with an upper case letter</Title>
+      <Description>Name of the class $TYPE$ violates the convention.</Description>
+      <LongDescription><![CDATA[Class names should be nouns, in mixed case with the first letter of each internal word capitalized. Try to keep your class names simple and descriptive. Use whole words-avoid acronyms and abbreviations (unless the abbreviation is much more widely used than the long form, such as URL or HTML).]]></LongDescription>
+    </Warning>
+    <Warning Type="BadNameOfClassException">
+      <Title>Class is not derived from an Exception, even though it is named as such</Title>
+      <Description>$TYPE$ ends with Exception, but does not inherit Throwable.</Description>
+      <LongDescription><![CDATA[The class $TYPE$ is not derived from another <code>Exception</code> or even <code>Throwable</code>, but ends with 'Exception'. This will be confusing to users of this class.]]></LongDescription>
+    </Warning>
     <Warning Type="FloatComparison">
       <Title>Test for floating point equality</Title>
       <Description>Test for floating point equality in $METHOD$.</Description>

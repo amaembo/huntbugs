@@ -18,7 +18,9 @@ package one.util.huntbugs.detect;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
 
+import one.util.huntbugs.registry.ClassContext;
 import one.util.huntbugs.registry.MethodContext;
+import one.util.huntbugs.registry.anno.ClassVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Types;
@@ -30,8 +32,24 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
  *
  */
 @WarningDefinition(category = "CodeStyle", name = "BadNameOfMethod", maxScore = 30)
+@WarningDefinition(category = "CodeStyle", name = "BadNameOfClass", maxScore = 30)
+@WarningDefinition(category = "CodeStyle", name = "BadNameOfClassException", maxScore = 40)
 @WarningDefinition(category = "Correctness", name = "BadNameOfMethodMistake", maxScore = 60)
 public class Naming {
+    @ClassVisitor
+    public void visitClass(TypeDefinition td, ClassContext cc) {
+        if(td.isAnonymous() || td.isSynthetic())
+            return;
+        String name = td.getSimpleName();
+        if (Character.isLetter(name.charAt(0)) && !Character.isUpperCase(name.charAt(0))
+                && name.indexOf('_') == -1) {
+            cc.report("BadNameOfClass", td.isPublic() ? 0 : 15);
+        }
+        if (name.endsWith("Exception") && !Types.isInstance(td, "java/lang/Throwable")) {
+            cc.report("BadNameOfClassException", td.isPublic() ? 0 : 15);
+        }
+    }
+    
     @MethodVisitor
     public void visitMethod(MethodDefinition md, TypeDefinition td, MethodContext mc) {
         if (badMethodName(md.getName()) && !Types.isInstance(td, "org/eclipse/osgi/util/NLS")) {

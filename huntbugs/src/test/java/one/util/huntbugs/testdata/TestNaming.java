@@ -86,4 +86,24 @@ public class TestNaming {
             return 31;
         }
     }
+    
+    @AssertWarning(type="BadNameOfClass", minScore=30)
+    public static class cls1 {
+        // empty
+    }
+    
+    @AssertWarning(type="BadNameOfClass", maxScore=20)
+    protected static class cls2 {
+        // empty
+    }
+    
+    @AssertWarning(type="BadNameOfClassException", minScore=40)
+    public static class MyException {
+        // empty
+    }
+    
+    @AssertNoWarning(type="BadNameOfClassException")
+    public static class MyOkException extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+    }
 }
