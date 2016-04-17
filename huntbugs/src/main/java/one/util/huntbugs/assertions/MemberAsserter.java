@@ -90,6 +90,8 @@ public class MemberAsserter {
     }
     
     public void checkWarning(Consumer<String> errorConsumer, Warning warning) {
+        if(parent != null)
+            parent.checkWarning(errorConsumer, warning);
         if(data == null)
             return;
         for(int i=0; i<data.size(); i++) {

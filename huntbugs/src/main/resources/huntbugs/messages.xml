@@ -650,5 +650,10 @@
       <Description>Class $TYPE$ implements $INTERFACE$ which is already implemented by superclass.</Description>
       <LongDescription><![CDATA[The $TYPE$ class declares that it implements an interface $INTERFACE$ that is also implemented by a superclass. This is redundant because once a superclass implements an interface, all subclasses by default also implement this interface.]]></LongDescription>
     </Warning>
+    <Warning Type="IteratorHasNextCallsNext">
+      <Title>The hasNext() method invokes next()</Title>
+      <Description>Method $METHOD$ invokes $RETURN_VALUE_OF$.</Description>
+      <LongDescription><![CDATA[The iterator method $METHOD$ invokes $RETURN_VALUE_OF$. This is almost certainly wrong, since the <code>hasNext()</code> method is not supposed to change the state of the iterator, and the <code>next()</code> method is supposed to change the state of the iterator.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

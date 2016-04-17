@@ -96,9 +96,9 @@ abbrev="Se" type="SE_COMPARATOR_SHOULD_BE_SERIALIZABLE" category="BAD_PRACTICE" 
 abbrev="Nm" type="NM_CLASS_NAMING_CONVENTION" category="BAD_PRACTICE" --> BadNameOfClass
 abbrev="Nm" type="NM_CLASS_NOT_EXCEPTION" category="BAD_PRACTICE" --> BadNameOfClassException
 abbrev="RI" type="RI_REDUNDANT_INTERFACES" category="STYLE" --> RedundantInterface
+abbrev="DMI" type="DMI_CALLING_NEXT_FROM_HASNEXT" category="CORRECTNESS" --> IteratorHasNextCallsNext
 
 ==== Not reimplemented
-
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SERVLET_WRITER" category="SECURITY"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_JSP_WRITER" category="SECURITY"
@@ -401,7 +401,6 @@ abbrev="IM" type="IM_BAD_CHECK_FOR_ODD" category="STYLE"
 abbrev="IM" type="IM_AVERAGE_COMPUTATION_COULD_OVERFLOW" category="STYLE"
 abbrev="BSHIFT" type="ICAST_QUESTIONABLE_UNSIGNED_RIGHT_SHIFT" category="STYLE"
 abbrev="DMI" type="DMI_HARDCODED_ABSOLUTE_FILENAME" category="STYLE"
-abbrev="DMI" type="DMI_CALLING_NEXT_FROM_HASNEXT" category="CORRECTNESS"
 abbrev="SWL" type="SWL_SLEEP_WITH_LOCK_HELD" category="MT_CORRECTNESS"
 abbrev="J2EE" type="J2EE_STORE_OF_NON_SERIALIZABLE_OBJECT_INTO_SESSION" category="BAD_PRACTICE" cweid="579"
 abbrev="DMI" type="DMI_NONSERIALIZABLE_OBJECT_WRITTEN" category="STYLE"
