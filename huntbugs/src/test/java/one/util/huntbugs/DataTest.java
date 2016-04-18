@@ -38,7 +38,7 @@ public class DataTest {
         ctx.reportStats(System.out);
         ctx.reportErrors(System.err);
         ctx.reportWarnings(new PrintStream("target/testWarnings.out"));
-        new XmlReportWriter(Paths.get("target/testWarnings.xml")).write(ctx);
+        new XmlReportWriter(Paths.get("target/testWarnings.xml"), Paths.get("target/testWarnings.html")).write(ctx);
         System.out.println("Analyzed "+ctx.getClassesCount()+" classes");
         if(ctx.getErrorCount() > 0)
             Assert.fail("Analysis finished with "+ctx.getErrorCount()+" errors");

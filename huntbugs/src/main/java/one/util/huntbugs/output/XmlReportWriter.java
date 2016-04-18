@@ -16,6 +16,7 @@
 package one.util.huntbugs.output;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -23,9 +24,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-
-
-
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -35,15 +33,10 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
-
-
+import javax.xml.transform.stream.StreamSource;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-
-
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.warning.Formatter;
@@ -57,14 +50,24 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
  *
  */
 public class XmlReportWriter {
+    private static final String XSL_PATH = "huntbugs/report.xsl";
     private final Path target;
-
-    public XmlReportWriter(Path target) {
+    private final Path htmlTarget;
+    
+    public XmlReportWriter(Path target, Path htmlTarget) {
         this.target = target;
+        this.htmlTarget = htmlTarget;
     }
 
     public void write(Context ctx) {
         Document dom = makeDom(ctx);
+        if(target != null)
+            writeXml(dom);
+        if(htmlTarget != null)
+            writeHtml(dom);
+    }
+
+    private void writeXml(Document dom) {
         try {
             Transformer transformer = TransformerFactory.newInstance().newTransformer();
             DOMSource source = new DOMSource(dom);
@@ -82,6 +85,24 @@ public class XmlReportWriter {
         }
     }
 
+    private void writeHtml(Document dom) {
+        try {
+            try(InputStream is = XmlReportWriter.class.getClassLoader().getResourceAsStream(XSL_PATH);
+                    OutputStream os = Files.newOutputStream(htmlTarget)) {
+                StreamSource xsl = new StreamSource(is);
+                Transformer transformer = TransformerFactory.newInstance().newTransformer(xsl);
+                transformer.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes");
+                transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+                StreamResult result = new StreamResult(os);
+                transformer.transform(new DOMSource(dom), result);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        } catch (TransformerFactoryConfigurationError | TransformerException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    
     private Document makeDom(Context ctx) {
         Document doc;
         try {

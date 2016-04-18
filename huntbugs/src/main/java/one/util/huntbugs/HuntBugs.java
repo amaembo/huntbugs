@@ -183,7 +183,7 @@ public class HuntBugs {
                 ctx.reportErrors(new PrintStream("huntbugs.errors.txt"));
                 ctx.reportWarnings(new PrintStream("huntbugs.warnings.txt"));
                 ctx.reportStats(new PrintStream("huntbugs.stats.txt"));
-                new XmlReportWriter(Paths.get("huntbugs.warnings.xml")).write(ctx);
+                new XmlReportWriter(Paths.get("huntbugs.warnings.xml"), Paths.get("huntbugs.warnings.html")).write(ctx);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
