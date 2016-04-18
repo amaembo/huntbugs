@@ -1,6 +1,7 @@
 /target/
 /huntbugs*.txt
 /huntbugs*.xml
+/huntbugs*.html
 /run.bat
 /procyon-decompiler-*.jar
 /dependency-reduced-pom.xml

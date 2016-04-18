@@ -4,13 +4,33 @@
 
   <groupId>one.util</groupId>
   <artifactId>huntbugs-maven-plugin</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.1</version>
   <packaging>maven-plugin</packaging>
 
   <name>huntbugs-maven-plugin Maven Plugin</name>
+  <description>Maven plugin for HuntBugs Java bytecode static analysis tool</description>
+  <url>https://github.com/amaembo/huntbugs</url>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
-  <!-- FIXME change it to the project's website -->
-  <url>http://maven.apache.org</url>
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <developers>
+    <developer>
+      <name>Tagir Valeev</name>
+      <email>lany@ngs.ru</email>
+    </developer>
+  </developers>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -36,7 +56,7 @@
     <dependency>
       <groupId>one.util</groupId>
       <artifactId>huntbugs</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <version>0.0.1</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
@@ -83,6 +103,67 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+       <groupId>org.apache.maven.plugins</groupId>
+       <artifactId>maven-source-plugin</artifactId>
+       <version>2.4</version>
+       <executions>
+        <execution>
+         <id>attach-sources</id>
+         <goals>
+          <goal>jar-no-fork</goal>
+         </goals>
+        </execution>
+       </executions>
+      </plugin>
+      <plugin>
+       <groupId>org.apache.maven.plugins</groupId>
+       <artifactId>maven-javadoc-plugin</artifactId>
+       <version>2.10.3</version>
+       <executions>
+        <execution>
+         <id>attach-javadocs</id>
+         <goals>
+          <goal>jar</goal>
+         </goals>
+         <configuration>
+          <quiet>true</quiet>
+          <additionalparam>-Xdoclint:none</additionalparam>
+         </configuration>
+        </execution>
+       </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.6</version>
+        <extensions>true</extensions>
+        <configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>1.5</version>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
+
+  <scm>
+    <connection>scm:git:https://github.com/amaembo/huntbugs.git</connection>
+    <developerConnection>scm:git:https://github.com/amaembo/huntbugs.git</developerConnection>
+    <url>https://github.com/amaembo/huntbugs.git</url>
+  </scm>
 </project>
