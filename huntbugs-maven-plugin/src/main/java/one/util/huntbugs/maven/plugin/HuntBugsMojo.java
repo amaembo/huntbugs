@@ -27,16 +27,14 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
  * Goal which launches the HuntBugs static analyzer tool.
  */
-@Mojo(name = "huntbugs", defaultPhase = LifecyclePhase.PREPARE_PACKAGE)
+@Mojo(name = "huntbugs", defaultPhase = LifecyclePhase.PREPARE_PACKAGE, requiresProject = true, threadSafe = true)
 public class HuntBugsMojo extends AbstractMojo {
     /**
      * Location of the file.
@@ -64,21 +62,23 @@ public class HuntBugsMojo extends AbstractMojo {
             options.minScore = minScore;
             Context ctx = new Context(repo, options);
             ctx.addListener((stepName, className) -> {
-                if(!stepName.equals("Preparing")) {
+                if (!stepName.equals("Preparing")) {
                     int totalClasses = ctx.getTotalClasses();
                     int classesCount = ctx.getClassesCount() + 1;
-                    if(classesCount == totalClasses || classesCount % 50 == 0)
-                        getLog().info("HuntBugs: "+stepName+" ["+classesCount+"/"+totalClasses+"]");
+                    if (classesCount == totalClasses || classesCount % 50 == 0)
+                        getLog().info("HuntBugs: " + stepName + " [" + classesCount + "/" + totalClasses + "]");
                 }
                 return true;
             });
             getLog().info("HuntBugs: Preparing");
             ctx.analyzePackage("");
-            getLog().info("HuntBugs: Writing report ("+ctx.getStat("Warnings")+" warnings)");
+            getLog().info("HuntBugs: Writing report (" + ctx.getStat("Warnings") + " warnings)");
             Path path = outputDirectory.toPath();
             Files.createDirectories(path);
-            new XmlReportWriter(path.resolve("report.xml")).write(ctx);
-        } catch (IOException | RuntimeException e) {
+            Path xmlFile = path.resolve("report.xml");
+            Path htmlFile = path.resolve("report.html");
+            new XmlReportWriter(xmlFile, htmlFile).write(ctx);
+        } catch (Exception e) {
             throw new MojoExecutionException("Failed to run HuntBugs", e);
         }
     }
