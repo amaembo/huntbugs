@@ -101,6 +101,11 @@ abbrev="BSHIFT" type="ICAST_BAD_SHIFT_AMOUNT" category="CORRECTNESS" --> BitShif
 abbrev="INT" type="INT_BAD_COMPARISON_WITH_INT_VALUE" category="CORRECTNESS" --> ComparisonWithOutOfRangeValue
 abbrev="UC" type="UC_USELESS_CONDITION_TYPE" category="STYLE" --> ComparisonWithOutOfRangeValue
 abbrev="Eq" type="EQ_COMPARING_CLASS_NAMES" category="CORRECTNESS" --> EqualsClassNames
+abbrev="Eq" type="EQ_DONT_DEFINE_EQUALS_FOR_ENUM" category="CORRECTNESS" --> EqualsEnum
+abbrev="Eq" type="EQ_SELF_USE_OBJECT" category="CORRECTNESS" --> EqualsSelf
+abbrev="Eq" type="EQ_SELF_NO_OBJECT" category="BAD_PRACTICE" --> EqualsSelf
+abbrev="Eq" type="EQ_OTHER_USE_OBJECT" category="CORRECTNESS" --> EqualsOther
+abbrev="Eq" type="EQ_OTHER_NO_OBJECT" category="CORRECTNESS" --> EqualsOther
 
 ==== Not reimplemented
 
@@ -160,11 +165,6 @@ abbrev="Eq" type="EQ_UNUSUAL" category="STYLE"
 abbrev="Eq" type="EQ_GETCLASS_AND_CLASS_CONSTANT" category="BAD_PRACTICE"
 abbrev="Eq" type="EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC" category="CORRECTNESS"
 abbrev="Eq" type="EQ_DOESNT_OVERRIDE_EQUALS" category="STYLE"
-abbrev="Eq" type="EQ_DONT_DEFINE_EQUALS_FOR_ENUM" category="CORRECTNESS"
-abbrev="Eq" type="EQ_SELF_USE_OBJECT" category="CORRECTNESS"
-abbrev="Eq" type="EQ_OTHER_USE_OBJECT" category="CORRECTNESS"
-abbrev="Eq" type="EQ_OTHER_NO_OBJECT" category="CORRECTNESS"
-abbrev="Eq" type="EQ_SELF_NO_OBJECT" category="BAD_PRACTICE"
 abbrev="Co" type="CO_SELF_NO_OBJECT" category="BAD_PRACTICE"
 abbrev="Co" type="CO_COMPARETO_RESULTS_MIN_VALUE" category="BAD_PRACTICE"
 abbrev="Co" type="CO_COMPARETO_INCORRECT_FLOATING" category="BAD_PRACTICE"

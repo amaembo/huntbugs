@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.testdata;
 
+import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
 /**
@@ -55,6 +56,37 @@ public class TestEqualsContract {
 	            return false;
 	        ClassName other = (ClassName)obj;
 	        return i == other.i;
+	    }
+	}
+	
+	@AssertWarning(type="EqualsOther")
+	public static class OtherEquals {
+	    public boolean equals(TestEqualsContract other) {
+	        return other != null;
+	    }
+	}
+	
+	@AssertWarning(type="EqualsSelf")
+	public static class SelfEquals {
+	    public boolean equals(SelfEquals other) {
+	        return other == this;
+	    }
+	}
+	
+	@AssertWarning(type="EqualsEnum")
+	@AssertNoWarning(type="EqualsSelf")
+	public static enum EnumEquals {
+	    A,B,C;
+	    
+	    public boolean equals(EnumEquals other) {
+	        return other == this;
+	    }
+	}
+	
+	@AssertNoWarning(type="*")
+	public static class EqualsOk {
+	    public boolean equals(EqualsOk other, int check) {
+	        return other != this && check > 2;
 	    }
 	}
 }

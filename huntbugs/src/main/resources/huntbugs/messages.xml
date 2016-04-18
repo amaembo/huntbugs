@@ -422,6 +422,22 @@
       Just check to see if the class objects are the same like <code>this.getClass() == other.getClass()</code>.
       ]]></LongDescription>
     </Warning>
+    <Warning Type="EqualsOther">
+      <Title>The equals() method defined that doesn't override equals(Object)</Title>
+      <Description>The $METHOD$ method doesn't override $NORMAL_EQUALS$.</Description>
+      <LongDescription><![CDATA[The $METHOD$ method doesn't override $NORMAL_EQUALS$. Probably this is a mistake.]]></LongDescription>
+    </Warning>
+    <Warning Type="EqualsSelf">
+      <Title>The covariant equals() method defined that doesn't override equals(Object)</Title>
+      <Description>The covariant $METHOD$ method doesn't override $NORMAL_EQUALS$.</Description>
+      <LongDescription><![CDATA[The covariant $METHOD$ method is defined which doesn't override $NORMAL_EQUALS$. Probably this is a mistake.]]></LongDescription>
+    </Warning>
+    <Warning Type="EqualsEnum">
+      <Title>The covariant equals() method defined for enum</Title>
+      <Description>The covariant $METHOD$ method is defined for enum.</Description>
+      <LongDescription><![CDATA[This class defines an enumeration, and equality on enumerations is defined using object identity. 
+      Defining a covariant equals method $METHOD$ for an enumeration value is exceptionally bad practice, since it would likely result in having two different enumeration values that compare as equals using the covariant enum method, and as not equal when compared normally.]]></LongDescription>
+    </Warning>
     <Warning Type="WrongMapIterator">
       <Title>Inefficient use of keySet() iterator instead of entrySet() iterator</Title>
       <Description>Inefficient use of keySet() iterator instead of entrySet() iterator in $METHOD$.</Description>
