@@ -52,7 +52,7 @@ public class WrongMapIterator {
                         MethodReference keySetMr = getCalledMethod(keySet);
                         if (keySetMr != null && keySetMr.getName().equals("keySet")) {
                             if (Nodes.isEquivalent(mapArg, Nodes.getChild(keySet, 0))) {
-                                mc.report("WrongMapIterator", 0, mapArg);
+                                mc.report("WrongMapIterator", 0, expr);
                             }
                         }
                     }
