@@ -15,11 +15,13 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
@@ -102,6 +104,13 @@ public class TestWrongMapIterator {
         }
         String k = "special";
         System.out.println(m.get(k));
+    }
+
+    @AssertNoWarning(type="WrongMapIterator")
+    public void testEnumMap(EnumMap<TimeUnit, String> m) {
+        for(TimeUnit key : m.keySet()) {
+            System.out.println(m.get(key));
+        }
     }
 
     @AssertNoWarning(type="WrongMapIterator")

@@ -160,7 +160,7 @@ public class NumericComparison {
             }
             if(result == null)
                 return;
-            mc.report("ComparisonWithOutOfRangeValue", 0, WarningAnnotation.forOperation(code), WarningAnnotation.forNumber(constant),
+            mc.report("ComparisonWithOutOfRangeValue", 0, expr, WarningAnnotation.forOperation(code), WarningAnnotation.forNumber(constant),
                 new WarningAnnotation<>("MIN_VALUE", realRange.minValue), new WarningAnnotation<>("MAX_VALUE", realRange.maxValue),
                 new WarningAnnotation<>("RESULT", result));
         }

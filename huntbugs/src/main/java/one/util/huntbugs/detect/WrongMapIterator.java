@@ -15,7 +15,6 @@
  */
 package one.util.huntbugs.detect;
 
-import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
@@ -34,11 +33,12 @@ import one.util.huntbugs.util.Types;
 @WarningDefinition(category = "Performance", name = "WrongMapIterator", maxScore = 50)
 public class WrongMapIterator {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
-    public void visit(Expression expr, MethodContext mc, MethodDefinition md) {
+    public void visit(Expression expr, MethodContext mc) {
         MethodReference getMr = getCalledMethod(expr);
         if (getMr != null && getMr.getName().equals("get")) {
             Expression mapArg = Nodes.getChild(expr, 0);
-            if (Types.isInstance(mapArg.getInferredType(), "java/util/Map")) {
+            if (Types.isInstance(mapArg.getInferredType(), "java/util/Map") &&
+                    !Types.isInstance(mapArg.getInferredType(), "java/util/EnumMap")) {
                 Expression key = Nodes.getChild(expr, 1);
                 while (key.getCode() == AstCode.CheckCast || Nodes.isBoxing(key) || Nodes.isUnboxing(key))
                     key = Nodes.getChild(key, 0);
