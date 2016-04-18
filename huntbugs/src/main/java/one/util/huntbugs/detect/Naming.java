@@ -52,7 +52,16 @@ public class Naming {
     
     @MethodVisitor
     public void visitMethod(MethodDefinition md, TypeDefinition td, MethodContext mc) {
-        if (badMethodName(md.getName()) && !Types.isInstance(td, "org/eclipse/osgi/util/NLS")) {
+        if (badMethodName(md.getName())) {
+            if(Types.isInstance(td, "org/eclipse/osgi/util/NLS"))
+                return;
+            // javacc generated methods
+            if(td.getName().equals("SimpleCharStream") && (md.getName().equals("ReInit") ||
+                    md.getName().equals("BeginToken") || md.getName().equals("Done") ||
+                    md.getName().equals("GetSuffix") || md.getName().equals("GetImage")))
+                return;
+            if(td.getName().endsWith("TokenManager") && md.getName().equals("ReInit"))
+                return;
             int priority = 0;
             if (!td.isPublic())
                 priority += 20;
