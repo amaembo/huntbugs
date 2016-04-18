@@ -32,66 +32,68 @@ import com.strobel.decompiler.ast.Variable;
  *
  */
 public class Types {
-    private static final Set<String> SIDE_EFFECT_FREE_TYPES = new HashSet<>(Arrays.asList("java/lang/Integer", "java/lang/Long",
-        "java/lang/Short", "java/lang/Double", "java/lang/Byte", "java/lang/Character", "java/lang/Boolean", "java/lang/Float",
-        "java/lang/Math"));
+    private static final Set<String> SIDE_EFFECT_FREE_TYPES = new HashSet<>(Arrays.asList("java/lang/Integer",
+        "java/lang/Long", "java/lang/Short", "java/lang/Double", "java/lang/Byte", "java/lang/Character",
+        "java/lang/Boolean", "java/lang/Float", "java/lang/Math"));
 
     private static final Set<String> BOXED_TYPES = new HashSet<>(Arrays.asList("java/lang/Integer", "java/lang/Long",
-        "java/lang/Short", "java/lang/Double", "java/lang/Byte", "java/lang/Character", "java/lang/Boolean", "java/lang/Float"));
-    
+        "java/lang/Short", "java/lang/Double", "java/lang/Byte", "java/lang/Character", "java/lang/Boolean",
+        "java/lang/Float"));
+
     private static final Set<String> MUTABLE_TYPES = new HashSet<>(Arrays.asList("java/util/Hashtable",
         "java/util/Vector", "java/util/Date", "java/sql/Date", "java/sql/Timestamp", "java/awt/Point",
         "java/awt/Dimension", "java/awt/Rectangle"));
 
-	public static List<TypeReference> getBaseTypes(TypeReference input) {
-		List<TypeReference> result = new ArrayList<>();
-		while (true) {
-			result.add(input);
-			TypeDefinition td = input.resolve();
-			if (td == null)
-				break;
-			input = td.getBaseType();
-			if (input == null)
-				break;
-		}
-		Collections.reverse(result);
-		return result;
-	}
-	
-	public static boolean isInstance(TypeReference type, TypeReference wantedType) {
-	    return isInstance(type, wantedType.getInternalName());
-	}
+    public static List<TypeReference> getBaseTypes(TypeReference input) {
+        List<TypeReference> result = new ArrayList<>();
+        while (true) {
+            result.add(input);
+            TypeDefinition td = input.resolve();
+            if (td == null)
+                break;
+            input = td.getBaseType();
+            if (input == null)
+                break;
+        }
+        Collections.reverse(result);
+        return result;
+    }
 
-	public static boolean isInstance(TypeReference type, String wantedType) {
-	    if(type == null)
-	        return false;
-	    if(type.getInternalName().equals(wantedType))
-	        return true;
-	    TypeDefinition td = type.resolve();
-	    if(td == null)
-	        return false;
-	    for(TypeReference iface : td.getExplicitInterfaces()) {
-	        if(isInstance(iface, wantedType))
-	            return true;
-	    }
-	    TypeReference bt = td.getBaseType();
-	    if(bt == null)
-	        return false;
-	    return isInstance(bt, wantedType);
-	}
+    public static boolean isInstance(TypeReference type, TypeReference wantedType) {
+        return isInstance(type, wantedType.getInternalName());
+    }
 
-	public static boolean isRandomClass(TypeReference type) {
-	    String typeName = type.getInternalName();
-		return typeName.equals("java/util/Random") || typeName.equals("java/security/SecureRandom") ||
-		        typeName.equals("java/util/concurrent/ThreadLocalRandom") || typeName.equals("java/util/SplittableRandom");
-	}
+    public static boolean isInstance(TypeReference type, String wantedType) {
+        if (type == null)
+            return false;
+        if (type.getInternalName().equals(wantedType))
+            return true;
+        TypeDefinition td = type.resolve();
+        if (td == null)
+            return false;
+        for (TypeReference iface : td.getExplicitInterfaces()) {
+            if (isInstance(iface, wantedType))
+                return true;
+        }
+        TypeReference bt = td.getBaseType();
+        if (bt == null)
+            return false;
+        return isInstance(bt, wantedType);
+    }
+
+    public static boolean isRandomClass(TypeReference type) {
+        String typeName = type.getInternalName();
+        return typeName.equals("java/util/Random") || typeName.equals("java/security/SecureRandom")
+            || typeName.equals("java/util/concurrent/ThreadLocalRandom")
+            || typeName.equals("java/util/SplittableRandom");
+    }
 
     public static TypeReference getExpressionType(Expression expr) {
         TypeReference exprType = expr.getInferredType();
-        if(expr.getOperand() instanceof Variable) {
-            Variable var = (Variable)expr.getOperand();
+        if (expr.getOperand() instanceof Variable) {
+            Variable var = (Variable) expr.getOperand();
             exprType = var.getType();
-            if(var.getOriginalParameter() != null)
+            if (var.getOriginalParameter() != null)
                 exprType = var.getOriginalParameter().getParameterType();
         }
         return exprType;
@@ -99,17 +101,18 @@ public class Types {
 
     /**
      * @param type
-     * @return true if all methods of given type are known not to produce side-effects
+     * @return true if all methods of given type are known not to produce
+     *         side-effects
      */
     public static boolean isSideEffectFreeType(TypeReference type) {
         return SIDE_EFFECT_FREE_TYPES.contains(type.getInternalName());
     }
-    
+
     public static boolean samePackage(String internalName1, String internalName2) {
         int pos = internalName1.lastIndexOf('/');
-        if(pos == -1)
+        if (pos == -1)
             return internalName2.indexOf('/') == 1;
-        return internalName2.startsWith(internalName1.substring(0, pos+1));
+        return internalName2.startsWith(internalName1.substring(0, pos + 1));
     }
 
     /**
