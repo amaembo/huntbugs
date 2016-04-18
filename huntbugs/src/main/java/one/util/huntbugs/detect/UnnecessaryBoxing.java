@@ -70,6 +70,7 @@ public class UnnecessaryBoxing {
                         Collectors.partitioningBy(Nodes::isUnboxing));
                     if (!map.get(true).isEmpty()) {
                         List<WarningAnnotation<?>> annotations = getUsedLocations(arg, mc, map.get(true));
+                        annotations.add(WarningAnnotation.forType("BOXED_TYPE", type));
                         mc.report("BoxedForUnboxing", 0, arg, annotations.toArray(new WarningAnnotation<?>[0]));
                     }
                     if (!map.get(false).isEmpty()) {
