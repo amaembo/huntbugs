@@ -18,8 +18,10 @@ package one.util.huntbugs;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UncheckedIOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -103,10 +105,11 @@ public class HuntBugs {
                         + ": ruletype must be either 'category' or 'pattern'");
                 }
             } else {
-                Path root = Paths.get(arg);
+                Path path = Paths.get(arg);
                 try {
-                    repos.add(Files.isDirectory(root) ? new DirRepository(root) : new JarRepository(new JarFile(root
-                            .toFile())));
+                    PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + path.getFileName());
+                    Files.list(path.getParent()).filter(p -> pathMatcher.matches(p.getFileName())).map(
+                        this::createRepository).forEach(repos::add);
                 } catch (IOException e) {
                     throw new IllegalArgumentException("Cannot open JAR file " + arg);
                 }
@@ -119,6 +122,14 @@ public class HuntBugs {
             options.setRule(rules.get(0));
         else if (rules.size() > 1)
             options.setRule(new CompositeRule(rules));
+    }
+
+    private Repository createRepository(Path path) {
+        try {
+            return Files.isDirectory(path) ? new DirRepository(path) : new JarRepository(new JarFile(path.toFile()));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     private int run(String[] args) {
@@ -178,22 +189,24 @@ public class HuntBugs {
             System.out.printf("\r%70s\r[%d/%d] %s", "", ctx.getClassesCount(), ctx.getTotalClasses(), name);
             return true;
         });
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                ctx.reportErrors(new PrintStream("huntbugs.errors.txt"));
-                ctx.reportWarnings(new PrintStream("huntbugs.warnings.txt"));
-                ctx.reportStats(new PrintStream("huntbugs.stats.txt"));
-                new XmlReportWriter(Paths.get("huntbugs.warnings.xml"), Paths.get("huntbugs.warnings.html")).write(ctx);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-            long end = System.nanoTime();
-            Duration dur = Duration.ofNanos(end - start);
-            System.out.printf("\r%70s\r\n", "");
-            System.out.println("Analyzed " + ctx.getClassesCount() + " of " + ctx.getTotalClasses() + " classes");
-            ctx.reportStats(System.out);
-            System.out.println("Analyzis time " + dur.toMinutes() + "m" + dur.getSeconds() % 60 + "s");
-        }));
+        Runtime.getRuntime().addShutdownHook(
+            new Thread(() -> {
+                try {
+                    ctx.reportErrors(new PrintStream("huntbugs.errors.txt"));
+                    ctx.reportWarnings(new PrintStream("huntbugs.warnings.txt"));
+                    ctx.reportStats(new PrintStream("huntbugs.stats.txt"));
+                    new XmlReportWriter(Paths.get("huntbugs.warnings.xml"), Paths.get("huntbugs.warnings.html"))
+                            .write(ctx);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+                long end = System.nanoTime();
+                Duration dur = Duration.ofNanos(end - start);
+                System.out.printf("\r%70s\r\n", "");
+                System.out.println("Analyzed " + ctx.getClassesCount() + " of " + ctx.getTotalClasses() + " classes");
+                ctx.reportStats(System.out);
+                System.out.println("Analyzis time " + dur.toMinutes() + "m" + dur.getSeconds() % 60 + "s");
+            }));
         ctx.analyzePackage("");
         return 0;
     }
