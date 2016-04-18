@@ -229,4 +229,8 @@ public class Context {
     public WarningType getWarningType(String typeName) {
         return registry.getWarningType(typeName);
     }
+
+    public long getStat(String key) {
+        return stat.getOrDefault(key, 0L);
+    }
 }
