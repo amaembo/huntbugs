@@ -415,6 +415,13 @@
       In addition, it means that the equals method is not symmetric.</code>
       ]]></LongDescription>
     </Warning>
+    <Warning Type="EqualsClassNames">
+      <Title>The equals() method compares class names</Title>
+      <Description>The $METHOD$ method compares class names.</Description>
+      <LongDescription><![CDATA[This method checks to see if two objects are the same class by checking to see if the names of their classes are equal. You can have different classes with the same name if they are loaded by different class loaders. 
+      Just check to see if the class objects are the same like <code>this.getClass() == other.getClass()</code>.
+      ]]></LongDescription>
+    </Warning>
     <Warning Type="WrongMapIterator">
       <Title>Inefficient use of keySet() iterator instead of entrySet() iterator</Title>
       <Description>Inefficient use of keySet() iterator instead of entrySet() iterator in $METHOD$.</Description>

@@ -23,6 +23,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
@@ -35,8 +36,7 @@ public class NewGetClass {
     public void visit(Expression node, MethodContext ctx) {
         if(node.getCode() == AstCode.InvokeVirtual) {
             MethodReference ref = (MethodReference) node.getOperand();
-            if(ref.getName().equals("getClass") && ref.getErasedSignature().equals("()Ljava/lang/Class;")
-                    && node.getArguments().get(0).getCode() == AstCode.InitObject) {
+            if (Methods.isGetClass(ref) && node.getArguments().get(0).getCode() == AstCode.InitObject) {
                 ctx.report("NewForGetClass", 0, node, WarningAnnotation.forType("OBJECT_TYPE", ref.getDeclaringType()));
             }
         }

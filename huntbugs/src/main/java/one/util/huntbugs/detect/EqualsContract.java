@@ -18,41 +18,86 @@ package one.util.huntbugs.detect;
 import java.util.List;
 
 import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
+import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 
 /**
  * @author lan
  *
  */
-@WarningDefinition(category="BadPractice", name="EqualsReturnsTrue", maxScore=50)
-@WarningDefinition(category="BadPractice", name="EqualsReturnsFalse", maxScore=50)
+@WarningDefinition(category = "BadPractice", name = "EqualsReturnsTrue", maxScore = 50)
+@WarningDefinition(category = "BadPractice", name = "EqualsReturnsFalse", maxScore = 50)
+@WarningDefinition(category = "BadPractice", name = "EqualsClassNames", maxScore = 45)
 public class EqualsContract {
-    @AstVisitor(nodes=AstNodes.ROOT, methodName="equals", methodSignature="(Ljava/lang/Object;)Z")
+    @AstVisitor(nodes = AstNodes.ROOT, methodName = "equals", methodSignature = "(Ljava/lang/Object;)Z")
     public void visitMethod(Block body, MethodContext mc, MethodDefinition md, TypeDefinition td) {
         List<Node> list = body.getBody();
-        if(list.size() == 1) {
+        if (list.size() == 1) {
             Node node = list.get(0);
-            if(Nodes.isOp(node, AstCode.Return)) {
+            if (Nodes.isOp(node, AstCode.Return)) {
                 Object constant = Nodes.getConstant(Nodes.getChild(node, 0));
                 int priority = 0;
-                if(td.isNonPublic())
+                if (td.isNonPublic())
                     priority += 30;
-                if(td.isFinal())
+                if (td.isFinal())
                     priority += 5;
-                if(((Integer)1).equals(constant))
+                if (((Integer) 1).equals(constant))
                     mc.report("EqualsReturnsTrue", priority, node);
-                else if(((Integer)0).equals(constant))
+                else if (((Integer) 0).equals(constant))
                     mc.report("EqualsReturnsFalse", priority, node);
             }
         }
+    }
+
+    @AstVisitor(nodes = AstNodes.EXPRESSIONS, methodName = "equals", methodSignature = "(Ljava/lang/Object;)Z")
+    public void visitExpression(Expression expr, MethodContext mc) {
+        if (expr.getCode() == AstCode.InvokeVirtual) {
+            if (Methods.isEqualsMethod((MethodReference) expr.getOperand())) {
+                Expression left = Nodes.getChild(expr, 0);
+                checkGetName(expr, mc, left);
+                Expression right = Nodes.getChild(expr, 1);
+                checkGetName(expr, mc, right);
+            }
+        }
+    }
+
+    private void checkGetName(Expression expr, MethodContext mc, Expression getName) {
+        if (isClassGetName(getName)) {
+            Expression getClass = Nodes.getChild(getName, 0);
+            if(isGetClass(getClass)) {
+                Expression source = Nodes.getChild(getClass, 0);
+                if (Nodes.isThis(source) || Nodes.isParameter(source)) {
+                    mc.report("EqualsClassNames", 0, expr);
+                }
+            }
+        }
+    }
+
+    private static boolean isClassGetName(Expression expr) {
+        if (expr.getCode() == AstCode.InvokeVirtual) {
+            MethodReference mr = (MethodReference) expr.getOperand();
+            if (mr.getName().equals("getName") && mr.getDeclaringType().getInternalName().equals("java/lang/Class"))
+                return true;
+        }
+        return false;
+    }
+
+    private static boolean isGetClass(Expression expr) {
+        if (expr.getCode() == AstCode.InvokeVirtual) {
+            MethodReference mr = (MethodReference) expr.getOperand();
+            return Methods.isGetClass(mr);
+        }
+        return false;
     }
 }

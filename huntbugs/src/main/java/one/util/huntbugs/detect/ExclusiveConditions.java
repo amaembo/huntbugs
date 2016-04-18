@@ -17,7 +17,6 @@ package one.util.huntbugs.detect;
 
 import java.util.HashSet;
 import java.util.Objects;
-
 import java.util.Set;
 
 import com.strobel.assembler.metadata.MethodReference;
@@ -30,6 +29,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Equi;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation;
 
@@ -77,9 +77,7 @@ public class ExclusiveConditions {
         if (expr.getCode() == AstCode.CmpEq)
             return true;
         if (expr.getCode() == AstCode.InvokeVirtual) {
-            MethodReference mr = (MethodReference) expr.getOperand();
-            if (mr.getName().equals("equals") && mr.getSignature().equals("(Ljava/lang/Object;)Z"))
-                return true;
+            return Methods.isEqualsMethod((MethodReference) expr.getOperand());
         }
         return false;
     }
@@ -90,9 +88,7 @@ public class ExclusiveConditions {
         if (expr.getCode() == AstCode.Neg) {
             Expression arg = expr.getArguments().get(0);
             if (arg.getCode() == AstCode.InvokeVirtual) {
-                MethodReference mr = (MethodReference) arg.getOperand();
-                if (mr.getName().equals("equals") && mr.getSignature().equals("(Ljava/lang/Object;)Z"))
-                    return true;
+                return Methods.isEqualsMethod((MethodReference) arg.getOperand());
             }
         }
         return false;

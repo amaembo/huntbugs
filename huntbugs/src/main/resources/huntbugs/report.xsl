@@ -36,6 +36,11 @@
         font-size: 140%;
       }
       
+      span.WarningType {
+        font-size: 70%;
+        color: gray;
+      }
+      
       code.Member {
         border-bottom: 1px gray dotted;
       }
@@ -79,7 +84,7 @@
   <xsl:template match="Warning">
     <tr>
         <td rowspan="2">
-            <div class="Title"><xsl:value-of select="Title"/></div>
+            <div class="Title"><xsl:value-of select="Title"/><br/><span class="WarningType">(<xsl:value-of select="@Type"/>)</span></div>
             <table class="Properties">
             <tr><th>Category:</th><td><xsl:value-of select="@Category"/></td></tr>
             <tr><th>Score:</th><td><xsl:value-of select="@Score"/></td></tr>

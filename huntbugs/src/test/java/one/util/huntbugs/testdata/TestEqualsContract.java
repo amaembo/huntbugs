@@ -44,4 +44,17 @@ public class TestEqualsContract {
 	        return false;
 	    }
 	}
+
+	public static final class ClassName {
+	    public int i;
+	    
+	    @Override
+	    @AssertWarning(type="EqualsClassNames")
+	    public boolean equals(Object obj) {
+	        if(!"one.util.huntbugs.testdata.TestEqualsContract.ClassName".equals(obj.getClass().getName()))
+	            return false;
+	        ClassName other = (ClassName)obj;
+	        return i == other.i;
+	    }
+	}
 }

@@ -100,8 +100,10 @@ abbrev="DMI" type="DMI_CALLING_NEXT_FROM_HASNEXT" category="CORRECTNESS" --> Ite
 abbrev="BSHIFT" type="ICAST_BAD_SHIFT_AMOUNT" category="CORRECTNESS" --> BitShiftInvalidAmount
 abbrev="INT" type="INT_BAD_COMPARISON_WITH_INT_VALUE" category="CORRECTNESS" --> ComparisonWithOutOfRangeValue
 abbrev="UC" type="UC_USELESS_CONDITION_TYPE" category="STYLE" --> ComparisonWithOutOfRangeValue
+abbrev="Eq" type="EQ_COMPARING_CLASS_NAMES" category="CORRECTNESS" --> EqualsClassNames
 
 ==== Not reimplemented
+
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SERVLET_WRITER" category="SECURITY"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_JSP_WRITER" category="SECURITY"
@@ -154,7 +156,6 @@ abbrev="SQL" type="SQL_PREPARED_STATEMENT_GENERATED_FROM_NONCONSTANT_STRING" cat
 abbrev="DC" type="DC_DOUBLECHECK" category="MT_CORRECTNESS" cweid="609"
 abbrev="DC" type="DC_PARTIALLY_CONSTRUCTED" category="MT_CORRECTNESS" cweid="609"
 abbrev="Eq" type="EQ_CHECK_FOR_OPERAND_NOT_COMPATIBLE_WITH_THIS" category="BAD_PRACTICE"
-abbrev="Eq" type="EQ_COMPARING_CLASS_NAMES" category="CORRECTNESS"
 abbrev="Eq" type="EQ_UNUSUAL" category="STYLE"
 abbrev="Eq" type="EQ_GETCLASS_AND_CLASS_CONSTANT" category="BAD_PRACTICE"
 abbrev="Eq" type="EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC" category="CORRECTNESS"

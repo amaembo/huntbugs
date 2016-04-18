@@ -23,6 +23,7 @@ import java.util.function.Predicate;
 import one.util.huntbugs.flow.ValuesFlow;
 
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.assembler.metadata.VariableDefinition;
 import com.strobel.decompiler.ast.AstCode;
@@ -351,6 +352,16 @@ public class Nodes {
         if (self.getCode() == AstCode.Load && self.getOperand() instanceof Variable) {
             VariableDefinition origVar = ((Variable) self.getOperand()).getOriginalVariable();
             return origVar != null && origVar.getSlot() == 0;
+        }
+        return false;
+    }
+
+    public static boolean isParameter(Expression self) {
+        if (self.getCode() == AstCode.Load) {
+            if(self.getOperand() instanceof ParameterDefinition)
+                return true;
+            if(self.getOperand() instanceof Variable && ((Variable)self.getOperand()).getOriginalParameter() != null)
+                return true;
         }
         return false;
     }
