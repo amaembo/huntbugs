@@ -23,13 +23,12 @@ import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
-import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
-import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
+import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
@@ -48,29 +47,30 @@ public class ReturnNull {
         TYPE_TO_WARNING.put("java/lang/Boolean", "BooleanReturnNull");
     }
 
-    @MethodVisitor
     public boolean checkMethod(MethodDefinition md) {
         return md.getReturnType().isArray() || TYPE_TO_WARNING.containsKey(md.getReturnType().getInternalName());
     }
 
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
-    public boolean visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md, TypeDefinition td) {
-        // TODO: support lambdas properly
-        if (nc.getLambdaMethod() != null)
-            return true;
-        if (expr.getCode() == AstCode.Return) {
-            Expression child = ValuesFlow.getSource(expr.getArguments().get(0));
+    public void visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md, TypeDefinition td) {
+        if (expr.getCode() == AstCode.Return && !expr.getArguments().isEmpty()) {
+            Expression child = Nodes.getChild(expr, 0);
             if (child.getCode() == AstCode.AConstNull) {
-                String warningType = md.getReturnType().isArray() ? "ArrayReturnNull" : TYPE_TO_WARNING.get(md
-                        .getReturnType().getInternalName());
-                int priority = 0;
-                if(!td.isPublic() || md.isPrivate() || md.isPackagePrivate())
-                    priority = 20;
-                else if(md.isProtected())
-                    priority = 10;
-                mc.report(warningType, priority, expr.getArguments().get(0), WarningAnnotation.forType("RETURN_TYPE", md.getReturnType()));
+                MethodDefinition curMethod = nc.getLambdaMethod();
+                if (curMethod == null)
+                    curMethod = md;
+                String warningType = curMethod.getReturnType().isArray() ? "ArrayReturnNull" : TYPE_TO_WARNING
+                        .get(curMethod.getReturnType().getInternalName());
+                if (warningType != null) {
+                    int priority = 0;
+                    if (!td.isPublic() || md.isPrivate() || md.isPackagePrivate())
+                        priority = 20;
+                    else if (md.isProtected() || md != curMethod)
+                        priority = 10;
+                    mc.report(warningType, priority, expr.getArguments().get(0), WarningAnnotation.forType(
+                        "RETURN_TYPE", md.getReturnType()));
+                }
             }
         }
-        return true;
     }
 }

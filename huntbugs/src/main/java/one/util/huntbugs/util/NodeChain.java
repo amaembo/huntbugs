@@ -17,7 +17,7 @@ package one.util.huntbugs.util;
 
 import java.util.Objects;
 
-import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.CatchBlock;
@@ -86,11 +86,11 @@ public class NodeChain {
         return false;
     }
     
-    public MethodReference getLambdaMethod() {
+    public MethodDefinition getLambdaMethod() {
         NodeChain nc = this;
         while(nc != null) {
             if(nc.getNode() instanceof Lambda) {
-                return ((Lambda)nc.getNode()).getMethod();
+                return Nodes.getLambdaMethod((Lambda) nc.getNode());
             }
             nc = nc.getParent();
         }

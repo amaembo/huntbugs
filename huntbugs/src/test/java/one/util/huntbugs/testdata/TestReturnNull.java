@@ -16,7 +16,7 @@
 package one.util.huntbugs.testdata;
 
 import java.util.Optional;
-import com.strobel.functions.Supplier;
+import java.util.function.Function;
 
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -47,10 +47,9 @@ public class TestReturnNull {
         return null;
     }
     
-    //TODO
-    //@AssertWarning(type="OptionalReturnNull")
-    String testInLambda() {
-        Supplier<Optional<String>> s = () -> null;
-        return s.get().get();
+    @AssertWarning(type="OptionalReturnNull")
+    String testInLambda(String x) {
+        Function<String, Optional<String>> s = y -> null;
+        return s.apply(x).get();
     }
 }
