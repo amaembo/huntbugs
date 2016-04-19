@@ -496,6 +496,18 @@
       <Description>Name of the class $TYPE$ violates the convention.</Description>
       <LongDescription><![CDATA[Class names should be nouns, in mixed case with the first letter of each internal word capitalized. Try to keep your class names simple and descriptive. Use whole words-avoid acronyms and abbreviations (unless the abbreviation is much more widely used than the long form, such as URL or HTML).]]></LongDescription>
     </Warning>
+    <Warning Type="BadNameOfClassSameAsSuperclass">
+      <Title>Class simple name is identical to superclass simple name</Title>
+      <Description>$TYPE$ simple name is the same as superclass simple name.</Description>
+      <LongDescription><![CDATA[This class $TYPE$ has a simple name that is identical to that of its superclass $SUPERCLASS$, except that its superclass is in a different package.
+      This can be exceptionally confusing, create lots of situations in which you have to look at import statements to resolve references and creates many opportunities to accidentally define methods that do not override methods in their superclasses.]]></LongDescription>
+    </Warning>
+    <Warning Type="BadNameOfClassSameAsInterface">
+      <Title>Class simple name is identical to interface simple name</Title>
+      <Description>$TYPE$ simple name is the same as interface simple name.</Description>
+      <LongDescription><![CDATA[This class or interface $TYPE$ has a simple name that is identical to that of the implemented interface $INTERFACE$, except that the superinterface is in a different package.
+      This can be exceptionally confusing, create lots of situations in which you have to look at import statements to resolve references and creates many opportunities to accidentally define methods that do not override methods in their superclasses.]]></LongDescription>
+    </Warning>
     <Warning Type="BadNameOfClassException">
       <Title>Class is not derived from an Exception, even though it is named as such</Title>
       <Description>$TYPE$ ends with Exception, but does not inherit Throwable.</Description>
@@ -689,6 +701,25 @@
       <Description>Numeric comparison like (x $OPERATION$ $NUMBER$) is always $RESULT$.</Description>
       <LongDescription><![CDATA[This code performs a comparison like (x $OPERATION$ $NUMBER$). However due to the value type or previous operations it's known that <code>x = $MIN_VALUE$..$MAX_VALUE$</code>,
       thus the result of this comparison is always $RESULT$. Probably there's some logic error or typo.]]></LongDescription>
+    </Warning>
+    <Warning Type="RegexBadSyntax">
+      <Title>Incorrect syntax of regular expression</Title>
+      <Description>Incorrect syntax of regular expression $REGEXP:const$.</Description>
+      <LongDescription><![CDATA[This code uses a regular expression <code>$REGEXP:const$</code> which has the following syntax error:<br>
+      <pre>$ERROR_MESSAGE$</pre>]]></LongDescription>
+    </Warning>
+    <Warning Type="RegexUnintended">
+      <Title>"." or "|" used for regular expression</Title>
+      <Description>$REGEXP:const$ is used for regular expression.</Description>
+      <LongDescription><![CDATA[This code uses a regular expression <code>$REGEXP:const$</code>. Such regular expression is mostly useless. 
+      Probably <code>"\\$REGEXP$"</code> was intended instead.]]></LongDescription>
+    </Warning>
+    <Warning Type="RegexFileSeparator">
+      <Title>File separator is used for regular expression</Title>
+      <Description>File separator is used for regular expression in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code uses file separator as a regular expression. This will fail on Windows platforms, where the <code>File.separator</code> is a backslash, 
+      which is interpreted in a regular expression as an escape character.<br>
+      To fix this code you may use <code>Pattern.quote(File.separator)</code>.]]></LongDescription>
     </Warning>
   </WarningList>
 </p:Messages>

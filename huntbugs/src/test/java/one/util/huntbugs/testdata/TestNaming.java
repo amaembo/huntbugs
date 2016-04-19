@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.io.IOException;
+
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -105,5 +107,22 @@ public class TestNaming {
     @AssertNoWarning(type="BadNameOfClassException")
     public static class MyOkException extends RuntimeException {
         private static final long serialVersionUID = 1L;
+    }
+
+    @AssertWarning(type="BadNameOfClassSameAsSuperclass")
+    public static class File extends java.io.File {
+        private static final long serialVersionUID = 1L;
+
+        public File(String pathname) {
+            super(pathname);
+        }
+    }
+    
+    @AssertWarning(type="BadNameOfClassSameAsInterface")
+    public static class Closeable implements Cloneable, java.io.Closeable {
+        @Override
+        public void close() throws IOException {
+            // empty
+        }
     }
 }

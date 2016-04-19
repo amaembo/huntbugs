@@ -17,6 +17,7 @@ package one.util.huntbugs.detect;
 
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
+import com.strobel.assembler.metadata.TypeReference;
 
 import one.util.huntbugs.registry.ClassContext;
 import one.util.huntbugs.registry.MethodContext;
@@ -34,6 +35,8 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 @WarningDefinition(category = "CodeStyle", name = "BadNameOfMethod", maxScore = 30)
 @WarningDefinition(category = "CodeStyle", name = "BadNameOfClass", maxScore = 30)
 @WarningDefinition(category = "CodeStyle", name = "BadNameOfClassException", maxScore = 40)
+@WarningDefinition(category = "CodeStyle", name = "BadNameOfClassSameAsSuperclass", maxScore = 45)
+@WarningDefinition(category = "CodeStyle", name = "BadNameOfClassSameAsInterface", maxScore = 45)
 @WarningDefinition(category = "Correctness", name = "BadNameOfMethodMistake", maxScore = 60)
 public class Naming {
     @ClassVisitor
@@ -47,6 +50,15 @@ public class Naming {
         }
         if (name.endsWith("Exception") && !Types.isInstance(td, "java/lang/Throwable")) {
             cc.report("BadNameOfClassException", td.isPublic() ? 0 : 15);
+        }
+        TypeReference superClass = td.getBaseType();
+        if(superClass != null && superClass.getSimpleName().equals(name)) {
+            cc.report("BadNameOfClassSameAsSuperclass", td.isPublic() ? 0 : 15, WarningAnnotation.forType("SUPERCLASS", superClass));
+        }
+        for(TypeReference iface : td.getExplicitInterfaces()) {
+            if(iface.getSimpleName().equals(name)) {
+                cc.report("BadNameOfClassSameAsInterface", td.isPublic() ? 0 : 15, WarningAnnotation.forType("INTERFACE", iface));
+            }
         }
     }
     

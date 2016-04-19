@@ -106,6 +106,11 @@ abbrev="Eq" type="EQ_SELF_USE_OBJECT" category="CORRECTNESS" --> EqualsSelf
 abbrev="Eq" type="EQ_SELF_NO_OBJECT" category="BAD_PRACTICE" --> EqualsSelf
 abbrev="Eq" type="EQ_OTHER_USE_OBJECT" category="CORRECTNESS" --> EqualsOther
 abbrev="Eq" type="EQ_OTHER_NO_OBJECT" category="CORRECTNESS" --> EqualsOther
+abbrev="RE" type="RE_POSSIBLE_UNINTENDED_PATTERN" category="CORRECTNESS" --> RegexUnintended
+abbrev="RE" type="RE_BAD_SYNTAX_FOR_REGULAR_EXPRESSION" category="CORRECTNESS" --> RegexBadSyntax
+abbrev="RE" type="RE_CANT_USE_FILE_SEPARATOR_AS_REGULAR_EXPRESSION" category="CORRECTNESS" --> RegexFileSeparator
+abbrev="Nm" type="NM_SAME_SIMPLE_NAME_AS_INTERFACE" category="BAD_PRACTICE" --> BadNameOfClassSameAsInterface
+abbrev="Nm" type="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS" category="BAD_PRACTICE" --> BadNameOfClassSameAsSuperclass
 
 ==== Not reimplemented
 
@@ -216,8 +221,6 @@ abbrev="MS" type="MS_CANNOT_BE_FINAL" category="MALICIOUS_CODE"
 abbrev="ME" type="ME_MUTABLE_ENUM_FIELD" category="BAD_PRACTICE"
 abbrev="ME" type="ME_ENUM_FIELD_SETTER" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_FIELD_NAMING_CONVENTION" category="BAD_PRACTICE"
-abbrev="Nm" type="NM_SAME_SIMPLE_NAME_AS_INTERFACE" category="BAD_PRACTICE"
-abbrev="Nm" type="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_VERY_CONFUSING" category="CORRECTNESS"
 abbrev="Nm" type="NM_VERY_CONFUSING_INTENTIONAL" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_WRONG_PACKAGE" category="CORRECTNESS"
@@ -392,9 +395,6 @@ abbrev="BC" type="BC_IMPOSSIBLE_DOWNCAST" category="CORRECTNESS" cweid="570"
 abbrev="BC" type="BC_IMPOSSIBLE_INSTANCEOF" category="CORRECTNESS" cweid="570"
 abbrev="BC" type="BC_VACUOUS_INSTANCEOF" category="STYLE" cweid="571"
 abbrev="BC" type="BC_BAD_CAST_TO_ABSTRACT_COLLECTION" category="STYLE"
-abbrev="RE" type="RE_POSSIBLE_UNINTENDED_PATTERN" category="CORRECTNESS"
-abbrev="RE" type="RE_BAD_SYNTAX_FOR_REGULAR_EXPRESSION" category="CORRECTNESS"
-abbrev="RE" type="RE_CANT_USE_FILE_SEPARATOR_AS_REGULAR_EXPRESSION" category="CORRECTNESS"
 abbrev="DLS" type="DLS_OVERWRITTEN_INCREMENT" category="CORRECTNESS"
 abbrev="BSHIFT" type="BSHIFT_WRONG_ADD_PRIORITY" category="CORRECTNESS"
 abbrev="IM" type="IM_MULTIPLYING_RESULT_OF_IREM" category="CORRECTNESS"
