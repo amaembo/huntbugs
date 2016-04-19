@@ -74,6 +74,36 @@ public class TestSameBranches {
             System.out.println(Stream.of(1, 2, 3).reduce((m, n) -> m - n));
         }
     }
+
+    @AssertWarning(type = "SameBranchesIf")
+    public void testSameLambdaCapture(int a, int b) {
+        if (a > 0) {
+            System.out.println(Stream.of(1, 2, 3).map(x -> x + a).reduce((m, n) -> n + m));
+        } else {
+            System.out.println(Stream.of(1, 2, 3).map(x -> x + a).reduce((m, n) -> m + n));
+        }
+    }
+    
+    @AssertWarning(type = "SameBranchesIf")
+    public void testSameSwitch(int a, int b) {
+        if (a > 0) {
+            switch(b) {
+            case 1:
+                System.out.println("One!");
+                break;
+            case 2:
+                System.out.println("Two!");
+            }
+        } else {
+            switch(b) {
+            case 1:
+                System.out.println("One!");
+                break;
+            case 2:
+                System.out.println("Two!");
+            }
+        }
+    }
     
     @AssertNoWarning(type = "SameBranchesIf")
     public void testDiffComplex(int a, int b) {

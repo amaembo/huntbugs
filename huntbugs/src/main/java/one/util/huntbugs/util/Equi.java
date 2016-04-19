@@ -18,7 +18,6 @@ package one.util.huntbugs.util;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiPredicate;
-
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
@@ -28,12 +27,14 @@ import com.strobel.assembler.metadata.VariableDefinition;
 import com.strobel.core.StringUtilities;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
+import com.strobel.decompiler.ast.CaseBlock;
 import com.strobel.decompiler.ast.CatchBlock;
 import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Lambda;
 import com.strobel.decompiler.ast.Loop;
 import com.strobel.decompiler.ast.Node;
+import com.strobel.decompiler.ast.Switch;
 import com.strobel.decompiler.ast.TryCatchBlock;
 import com.strobel.decompiler.ast.Variable;
 
@@ -107,9 +108,26 @@ public class Equi {
                 TryCatchBlock rightTry = (TryCatchBlock) rightNode;
                 if (!equiTryCatch(leftTry, rightTry, ctx))
                     return false;
-            } else
-                // TODO: support switch
+            } else if (leftNode instanceof Switch) {
+                Switch leftSwitch = (Switch) leftNode;
+                Switch rightSwitch = (Switch) rightNode;
+                List<CaseBlock> leftCases = leftSwitch.getCaseBlocks();
+                List<CaseBlock> rightCases = rightSwitch.getCaseBlocks();
+                if(leftCases.size() != rightCases.size())
+                    return false;
+                if(!equiExpressions(leftSwitch.getCondition(), rightSwitch.getCondition(), ctx))
+                    return false;
+                for(int j=0; j<leftCases.size(); j++) {
+                    CaseBlock leftCase = leftCases.get(j);
+                    CaseBlock rightCase = rightCases.get(j);
+                    if(!leftCase.getValues().equals(rightCase.getValues()))
+                        return false;
+                    if(!equiBlocks(leftCase, rightCase, ctx))
+                        return false;
+                }
+            } else {
                 return false;
+            }
         }
         return true;
     }
