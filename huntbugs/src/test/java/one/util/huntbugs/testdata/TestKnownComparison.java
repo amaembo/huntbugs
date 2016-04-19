@@ -192,4 +192,28 @@ public class TestKnownComparison {
             System.out.println("Iteration!");
         }
     }
+
+    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testInLambda(int x) {
+        Runnable r = () -> {
+            int a = 2;
+            int b = 3;
+            if (a > b && x > 2) {
+                System.out.println("Never ever!");
+            }
+        };
+        r.run();
+    }
+    
+    @AssertNoWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testInLambdaFP(int x) {
+        Runnable r = () -> {
+            int a = 2;
+            if (x > a) {
+                System.out.println("Can be");
+            }
+        };
+        r.run();
+    }
+
 }

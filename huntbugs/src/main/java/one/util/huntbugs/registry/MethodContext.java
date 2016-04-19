@@ -18,34 +18,23 @@ package one.util.huntbugs.registry;
 import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
-import one.util.huntbugs.assertions.MemberAsserter;
 import one.util.huntbugs.flow.ValuesFlow;
-import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
 import one.util.huntbugs.warning.WarningType;
 
-import com.strobel.assembler.ir.attributes.LineNumberTableAttribute;
-import com.strobel.assembler.ir.attributes.SourceAttribute;
 import com.strobel.assembler.metadata.FieldReference;
-import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
-import com.strobel.decompiler.ast.Block;
-import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 import com.strobel.decompiler.ast.Variable;
-import com.strobel.decompiler.languages.java.LineNumberTableConverter;
-import com.strobel.decompiler.languages.java.OffsetToLineNumberConverter;
 
 /**
  * @author lan
@@ -93,79 +82,47 @@ public class MethodContext {
         }
     }
 
-    private final MethodDefinition md;
+    private final MethodData mdata;
     private final Detector detector;
     private final Context ctx;
     private final Object det;
-    private OffsetToLineNumberConverter ltc;
     private final ClassContext cc;
-    List<WarningAnnotation<?>> annot;
-    private MemberAsserter ma;
     private WarningInfo lastWarning;
     private final List<MethodHandle> astVisitors;
-    private MethodDefinition realMethod;
 
-    MethodContext(Context ctx, ClassContext classCtx, MethodDefinition md) {
+    MethodContext(Context ctx, ClassContext classCtx, MethodData md) {
         this.cc = classCtx;
-        this.md = this.realMethod = md;
+        this.mdata = md;
         this.ctx = ctx;
         this.detector = classCtx.detector;
         this.det = classCtx.det;
-        astVisitors = detector.astVisitors.stream().filter(vi -> vi.isApplicable(md)).map(
+        astVisitors = detector.astVisitors.stream().filter(vi -> vi.isApplicable(md.mainMethod)).map(
             vi -> vi.bind(classCtx.type)).collect(Collectors.toCollection(ArrayList::new));
     }
 
-    void setAsserter(MemberAsserter ma) {
-        this.ma = ma;
-    }
-
-    // TODO: fix line numbers in lambdas
-    int getLineNumber(int offset) {
-        int line = getConverter().getLineForOffset(offset);
-        return line == OffsetToLineNumberConverter.UNKNOWN_LINE_NUMBER ? -1 : line;
-    }
-    
-    private OffsetToLineNumberConverter getConverter() {
-        if(realMethod != md)
-            return createConverter(realMethod);
-        if(ltc == null) 
-            ltc = createConverter(md);
-        return ltc;
-    }
-
-    private static OffsetToLineNumberConverter createConverter(MethodDefinition md) {
-        for (SourceAttribute sa : md.getSourceAttributes()) {
-            if (sa instanceof LineNumberTableAttribute) {
-                return new LineNumberTableConverter((LineNumberTableAttribute) sa);
-            }
-        }
-        return OffsetToLineNumberConverter.NOOP_CONVERTER;
-    }
-    
     boolean visitMethod() {
         for(MethodHandle mh : detector.methodVisitors) {
             try {
                 if (!(boolean) detector.bindDatabases(Detector.METHOD_VISITOR_TYPE.parameterCount(), cc.type, mh)
-                        .invoke(det, this, md, cc.type)) {
+                        .invoke(det, this, mdata.mainMethod, cc.type)) {
                     return false;
                 }
             } catch (Throwable e) {
-                ctx.addError(new ErrorMessage(detector, md, -1, e));
+                ctx.addError(new ErrorMessage(detector, mdata.mainMethod, -1, e));
             }
         }
         return !astVisitors.isEmpty();
     }
 
-    boolean visitNode(Node node, NodeChain parents, MethodDefinition realMethod) {
-        this.realMethod = realMethod;
+    boolean visitNode(Node node) {
         for (Iterator<MethodHandle> it = astVisitors.iterator(); it.hasNext();) {
             try {
                 MethodHandle mh = it.next();
-                if (!(boolean) mh.invoke(det, node, parents, this, md, cc.type)) {
+                if (!(boolean) mh.invoke(det, node, mdata.parents, this, mdata.mainMethod, cc.type)) {
                     it.remove();
                 }
             } catch (Throwable e) {
-                ctx.addError(new ErrorMessage(detector, md, -1, e));
+                ctx.addError(new ErrorMessage(detector, mdata.mainMethod, -1, e));
             }
         }
         return !astVisitors.isEmpty();
@@ -174,18 +131,11 @@ public class MethodContext {
     void finalizeMethod() {
         if (lastWarning != null) {
             Warning warn = lastWarning.build();
-            ma.checkWarning(this::error, warn);
+            mdata.ma.checkWarning(this::error, warn);
             ctx.addWarning(warn);
         }
     }
 
-    List<WarningAnnotation<?>> getMethodSpecificAnnotations() {
-        if (annot == null) {
-            annot = Collections.singletonList(WarningAnnotation.forMethod(md));
-        }
-        return annot;
-    }
-    
     public void report(String warning, int priority, WarningAnnotation<?>... annotations) {
         report(warning, priority, null, annotations);
     }
@@ -205,7 +155,7 @@ public class MethodContext {
         }
         List<WarningAnnotation<?>> anno = new ArrayList<>();
         anno.addAll(cc.getTypeSpecificAnnotations());
-        anno.addAll(getMethodSpecificAnnotations());
+        anno.addAll(mdata.getMethodSpecificAnnotations());
         Location loc = getLocation(node);
         if (node instanceof Expression) {
             Expression expr = (Expression) node;
@@ -231,31 +181,14 @@ public class MethodContext {
             lastWarning = info;
         } else if (!lastWarning.tryMerge(info)) {
             Warning warn = lastWarning.build();
-            ma.checkWarning(this::error, warn);
+            mdata.ma.checkWarning(this::error, warn);
             ctx.addWarning(warn);
             lastWarning = info;
         }
     }
 
     public Location getLocation(Node node) {
-        if(node == null) {
-            return new Location(0, getLineNumber(0));
-        }
-        int offset = Expression.MYSTERY_OFFSET;
-        if (node instanceof Expression) {
-            Expression expr = (Expression) node;
-            offset = expr.getOffset();
-        } else if (node instanceof Condition) {
-            offset = ((Condition) node).getCondition().getOffset();
-        } else if (node instanceof Block) {
-            List<Node> body = ((Block) node).getBody();
-            return body.stream().map(this::getLocation).filter(Objects::nonNull).findFirst().orElse(
-                new Location(0, getLineNumber(0)));
-        }
-        if (offset != Expression.MYSTERY_OFFSET) {
-            return new Location(offset, getLineNumber(offset));
-        }
-        return null;
+        return mdata.getLocation(node);
     }
 
     public void forgetLastBug() {
@@ -263,11 +196,11 @@ public class MethodContext {
     }
 
     public void error(String message) {
-        ctx.addError(new ErrorMessage(detector, md, -1, message));
+        ctx.addError(new ErrorMessage(detector, mdata.mainMethod, -1, message));
     }
 
     @Override
     public String toString() {
-        return "Analyzing method " + md.getDeclaringType() + "." + md + " with detector " + detector;
+        return "Analyzing method " + mdata + " with detector " + detector;
     }
 }

@@ -47,8 +47,10 @@ public class TestReturnNull {
         return null;
     }
     
-    Optional<String> testInLambda(int a) {
+    //TODO
+    //@AssertWarning(type="OptionalReturnNull")
+    String testInLambda() {
         Supplier<Optional<String>> s = () -> null;
-        return s.get();
+        return s.get().get();
     }
 }

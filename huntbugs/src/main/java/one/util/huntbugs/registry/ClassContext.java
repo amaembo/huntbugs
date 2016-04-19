@@ -29,7 +29,6 @@ import one.util.huntbugs.warning.WarningType;
 
 import com.strobel.assembler.ir.attributes.SourceAttribute;
 import com.strobel.assembler.ir.attributes.SourceFileAttribute;
-import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
 
 /**
@@ -115,7 +114,7 @@ public class ClassContext {
         ctx.addError(new ErrorMessage(detector, type, message));
     }
 
-    MethodContext forMethod(MethodDefinition md) {
+    MethodContext forMethod(MethodData md) {
         return new MethodContext(ctx, this, md);
     }
 }

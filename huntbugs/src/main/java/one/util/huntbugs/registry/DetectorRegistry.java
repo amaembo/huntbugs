@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.MethodBody;
 import com.strobel.assembler.metadata.MethodDefinition;
-import com.strobel.assembler.metadata.MethodHandle;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.DecompilerContext;
 import com.strobel.decompiler.ast.AstBuilder;
@@ -47,6 +46,7 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.repo.Repository;
 import one.util.huntbugs.repo.RepositoryVisitor;
 import one.util.huntbugs.util.NodeChain;
+import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Messages.Message;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningType;
@@ -149,24 +149,28 @@ public class DetectorRegistry {
         });
     }
 
-    private void visitChildren(Node node, NodeChain parents, List<MethodContext> list, MethodDefinition realMethod,
-            boolean isAnnotationComplete) {
+    private void visitChildren(Node node, NodeChain parents, List<MethodContext> list, MethodData mdata) {
+        mdata.parents = parents;
         for (MethodContext mc : list) {
-            mc.visitNode(node, parents, realMethod);
+            mc.visitNode(node);
         }
         if (node instanceof Lambda) {
-            Object arg = ((Lambda) node).getCallSite().getBootstrapArguments().get(1);
-            if (arg instanceof MethodHandle) {
-                MethodDefinition lm = ((MethodHandle) arg).getMethod().resolve();
-                if (lm != null)
-                    realMethod = lm;
+            MethodDefinition curMethod = mdata.realMethod;
+            mdata.realMethod = Nodes.getLambdaMethod((Lambda) node);
+            List<Node> children = node.getChildren();
+            if (!children.isEmpty()) {
+                NodeChain newChain = new NodeChain(parents, node);
+                for (Node child : children)
+                    visitChildren(child, newChain, list, mdata);
             }
-        }
-        List<Node> children = node.getChildren();
-        if (!children.isEmpty()) {
-            NodeChain newChain = new NodeChain(parents, node);
-            for (Node child : children)
-                visitChildren(child, newChain, list, realMethod, isAnnotationComplete);
+            mdata.realMethod = curMethod;
+        } else {
+            List<Node> children = node.getChildren();
+            if (!children.isEmpty()) {
+                NodeChain newChain = new NodeChain(parents, node);
+                for (Node child : children)
+                    visitChildren(child, newChain, list, mdata);
+            }
         }
     }
 
@@ -188,17 +192,19 @@ public class DetectorRegistry {
             cc -> cc.setAsserter(ca)).filter(ClassContext::visitClass).toArray(ClassContext[]::new);
 
         for (MethodDefinition md : type.getDeclaredMethods()) {
+            if(md.isSynthetic() && md.getName().startsWith("lambda$"))
+                continue;
             MemberAsserter ma = MemberAsserter.forMember(ca, md);
+            MethodData mdata = new MethodData(md, ma);
 
-            Map<Boolean, List<MethodContext>> mcs = Stream.of(ccs).map(cc -> cc.forMethod(md)).peek(
-                mc -> mc.setAsserter(ma)).collect(Collectors.partitioningBy(MethodContext::visitMethod));
+            Map<Boolean, List<MethodContext>> mcs = Stream.of(ccs).map(cc -> cc.forMethod(mdata)).collect(
+                Collectors.partitioningBy(MethodContext::visitMethod));
 
             MethodBody body = md.getBody();
             if (body != null) {
                 if (body.getCodeSize() > ctx.getOptions().maxMethodSize) {
                     if (systemDetector != null) {
-                        MethodContext mc = new ClassContext(ctx, type, systemDetector).forMethod(md);
-                        mc.setAsserter(ma);
+                        MethodContext mc = new ClassContext(ctx, type, systemDetector).forMethod(mdata);
                         mc.report(METHOD_TOO_LARGE.getName(), 0, new WarningAnnotation<>("BYTECODE_SIZE", body
                                 .getCodeSize()), new WarningAnnotation<>("LIMIT", ctx.getOptions().maxMethodSize));
                         mc.finalizeMethod();
@@ -213,12 +219,12 @@ public class DetectorRegistry {
                     try {
                         methodAst.getBody().addAll(AstBuilder.build(body, true, context));
                         AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
-                        isAnnotationComplete = ValuesFlow.annotate(ctx, md, methodAst);
+                        mdata.isAnnotationComplete = ValuesFlow.annotate(ctx, md, methodAst);
                     } catch (Throwable t) {
                         ctx.addError(new ErrorMessage(null, type.getFullName(), md.getFullName(), md.getSignature(),
                                 -1, t));
                     }
-                    visitChildren(methodAst, null, mcs.get(true), md, isAnnotationComplete);
+                    visitChildren(methodAst, null, mcs.get(true), mdata);
                 }
             }
             for (MethodContext mc : mcs.get(true)) {

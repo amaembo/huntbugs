@@ -22,6 +22,8 @@ import java.util.function.Predicate;
 
 import one.util.huntbugs.flow.ValuesFlow;
 
+import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.MethodHandle;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.assembler.metadata.TypeReference;
@@ -29,6 +31,7 @@ import com.strobel.assembler.metadata.VariableDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.Expression;
+import com.strobel.decompiler.ast.Lambda;
 import com.strobel.decompiler.ast.Node;
 import com.strobel.decompiler.ast.TryCatchBlock;
 import com.strobel.decompiler.ast.Variable;
@@ -364,5 +367,15 @@ public class Nodes {
                 return true;
         }
         return false;
+    }
+    
+    public static MethodDefinition getLambdaMethod(Lambda l) {
+        Object arg = l.getCallSite().getBootstrapArguments().get(1);
+        if (arg instanceof MethodHandle) {
+            MethodDefinition lm = ((MethodHandle) arg).getMethod().resolve();
+            if (lm != null)
+                return lm;
+        }
+        throw new InternalError("Unable to determine original method for lambda "+l);
     }
 }

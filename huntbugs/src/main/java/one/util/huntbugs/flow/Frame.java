@@ -36,17 +36,18 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.assembler.metadata.VariableDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
-import com.strobel.decompiler.ast.Lambda;
 import com.strobel.decompiler.ast.Variable;
 
 class Frame {
     final Expression[] sources;
+    final MethodDefinition md;
     static final AstCode PHI_TYPE = AstCode.Wrap;
     static final AstCode UPDATE_TYPE = AstCode.Nop;
     static final Object UNKNOWN_VALUE = new Object();
 
     Frame(MethodDefinition md) {
         this.sources = new Expression[md.getBody().getMaxLocals()];
+        this.md = md;
         for (ParameterDefinition pd : md.getParameters()) {
             Expression expression = new Expression(AstCode.Load, pd, 0);
             expression.setInferredType(pd.getParameterType());
@@ -59,15 +60,6 @@ class Frame {
         Frame result = this;
         for (Expression child : expr.getArguments()) {
             result = result.process(child);
-        }
-        if (expr.getOperand() instanceof Lambda) {
-            Lambda lambda = (Lambda) expr.getOperand();
-            MethodReference method = lambda.getMethod();
-            // TODO: support lambdas
-            /*
-             * if (method != null) new
-             * Frame(method).process(lambda.getBody());
-             */
         }
         return result;
     }
@@ -216,7 +208,8 @@ class Frame {
         case Load: {
             Variable var = ((Variable) expr.getOperand());
             VariableDefinition origVar = var.getOriginalVariable();
-            if (origVar != null) {
+            // TODO: support transferring variables from outer method to lambda
+            if (origVar != null && ValuesFlow.getMethodDefinition(origVar) == md) {
                 Expression source = sources[origVar.getSlot()];
                 if (source != null) {
                     expr.putUserData(ValuesFlow.SOURCE_KEY, source);
@@ -331,7 +324,7 @@ class Frame {
                 res = sources.clone();
             res[i] = phi;
         }
-        return res == null ? this : new Frame(res);
+        return res == null ? this : new Frame(this, res);
     }
     
     private static boolean isEqual(Expression left, Expression right) {
@@ -375,7 +368,8 @@ class Frame {
         return left.merge(right);
     }
 
-    private Frame(Expression[] sources) {
+    private Frame(Frame parent, Expression[] sources) {
+        this.md = parent.md;
         this.sources = sources;
     }
 
@@ -383,7 +377,7 @@ class Frame {
         if (sources[pos] != replacement) {
             Expression[] res = sources.clone();
             res[pos] = replacement;
-            return new Frame(res);
+            return new Frame(this, res);
         }
         return this;
     }
@@ -400,7 +394,7 @@ class Frame {
                 res[i] = expr;
             }
         }
-        return res == null ? this : new Frame(res);
+        return res == null ? this : new Frame(this, res);
     }
 
     private <A, B> Frame processBinaryOp(Expression expr, Class<A> leftType, Class<B> rightType, BiFunction<A, B, ?> op) {

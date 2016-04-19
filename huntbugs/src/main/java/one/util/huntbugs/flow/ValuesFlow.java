@@ -15,6 +15,10 @@
  */
 package one.util.huntbugs.flow;
 
+import java.lang.reflect.Field;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +33,7 @@ import one.util.huntbugs.util.Types;
 
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeReference;
+import com.strobel.assembler.metadata.VariableDefinition;
 import com.strobel.componentmodel.Key;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
@@ -36,6 +41,7 @@ import com.strobel.decompiler.ast.CaseBlock;
 import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Label;
+import com.strobel.decompiler.ast.Lambda;
 import com.strobel.decompiler.ast.Loop;
 import com.strobel.decompiler.ast.Node;
 import com.strobel.decompiler.ast.Switch;
@@ -49,6 +55,28 @@ public class ValuesFlow {
     static final Key<Expression> SOURCE_KEY = Key.create("hb.valueSource");
     static final Key<Object> VALUE_KEY = Key.create("hb.value");
     static final Key<Set<Expression>> BACK_LINKS_KEY = Key.create("hb.backlinks");
+    
+    static final Field variableMethodDefinitionField;
+    
+    static {
+        variableMethodDefinitionField = AccessController.doPrivileged((PrivilegedAction<Field>) () -> {
+            try {
+                Field f = VariableDefinition.class.getDeclaredField("_declaringMethod");
+                f.setAccessible(true);
+                return f;
+            } catch (NoSuchFieldException | SecurityException e) {
+                throw new InternalError(e);
+            }
+        });
+    }
+    
+    static MethodDefinition getMethodDefinition(VariableDefinition vd) {
+        try {
+            return (MethodDefinition) variableMethodDefinitionField.get(vd);
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+            throw new InternalError(e);
+        }
+    }
 
     static <T> T reduce(Expression input, Function<Expression, T> mapper, BinaryOperator<T> reducer) {
         Expression source = getSource(input);
@@ -281,30 +309,40 @@ public class ValuesFlow {
         }
     }
 
-    private static void initBackLinks(Expression expr) {
+    private static void initBackLinks(Expression expr, List<Lambda> lambdas) {
         Set<Expression> backLink = Collections.singleton(expr);
         for(Expression child : expr.getArguments()) {
             child.putUserData(BACK_LINKS_KEY, backLink);
-            initBackLinks(child);
+            initBackLinks(child, lambdas);
+        }
+        if(expr.getOperand() instanceof Lambda) {
+            lambdas.add((Lambda) expr.getOperand());
         }
     }
     
-    private static void initBackLinks(Node node) {
+    private static void initBackLinks(Node node, List<Lambda> lambdas) {
         if(node instanceof Expression)
-            initBackLinks((Expression)node);
+            initBackLinks((Expression)node, lambdas);
         else
             for(Node child : node.getChildren())
-                initBackLinks(child);
+                initBackLinks(child, lambdas);
     }
 
     public static boolean annotate(Context ctx, MethodDefinition md, Block method) {
         ctx.incStat("ValuesFlow.Total");
-        initBackLinks(method);
+        List<Lambda> lambdas = new ArrayList<>();
+        initBackLinks(method, lambdas);
         FrameSet fs = new FrameSet(new Frame(md));
         fs.process(ctx, method);
         if (fs.valid) {
-            ctx.incStat("ValuesFlow");
-            return true;
+            boolean valid = true;
+            for(Lambda lambda : lambdas) {
+                valid &= annotate(ctx, Nodes.getLambdaMethod(lambda), lambda.getBody());
+            }
+            if (valid) {
+                ctx.incStat("ValuesFlow");
+                return true;
+            }
         }
         return false;
     }
