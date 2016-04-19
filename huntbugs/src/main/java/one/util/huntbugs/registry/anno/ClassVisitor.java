@@ -20,6 +20,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import one.util.huntbugs.registry.ClassContext;
+
 import com.strobel.assembler.metadata.TypeDefinition;
 
 /**
