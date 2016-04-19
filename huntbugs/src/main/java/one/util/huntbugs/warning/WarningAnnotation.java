@@ -81,12 +81,33 @@ public class WarningAnnotation<T> {
 
         public String getSimpleName() {
             String type = typeName;
-            while(type.startsWith("["))
-                type = type.substring(1)+"[]";
+            String suffix = "";
+            while(type.startsWith("[")) {
+                type = type.substring(1);
+                suffix += "[]";
+            }
+            switch(type) {
+            case "B":
+                type = "byte";break;
+            case "C":
+                type = "char";break;
+            case "J":
+                type = "long";break;
+            case "I":
+                type = "int";break;
+            case "S":
+                type = "short";break;
+            case "Z":
+                type = "boolean";break;
+            case "F":
+                type = "float";break;
+            case "D":
+                type = "double";break;
+            }
             int pos = type.lastIndexOf('/');
             if(pos > -1)
                 type = type.substring(pos+1).replace('$', '.');
-            return type;
+            return type+suffix;
         }
         
         @Override

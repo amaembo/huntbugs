@@ -26,6 +26,7 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -41,25 +42,29 @@ import one.util.huntbugs.warning.WarningAnnotation;
 public class FloatingPointComparison {
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression node, MethodContext ctx, MethodDefinition md) {
-        if (node.getCode() == AstCode.CmpEq || node.getCode() == AstCode.CmpNe) {
-            List<Expression> args = node.getArguments();
-            TypeReference inferredType = args.get(0).getInferredType();
-            if(inferredType != null) {
-                JvmType type = inferredType.getSimpleType();
-                if (type == JvmType.Double || type == JvmType.Float) {
-                    Object left = Nodes.getConstant(args.get(0));
-                    Object right = Nodes.getConstant(args.get(1));
-                    int priority = tweakPriority(args.get(0)) + tweakPriority(args.get(1));
-                    if(md.getName().toLowerCase(Locale.ENGLISH).contains("equal"))
-                        priority += 20;
-                    Number n = left instanceof Number ? (Number) left : right instanceof Number ? (Number) right : null;
-                    if(n != null)
-                        ctx.report("FloatComparison", priority, node, WarningAnnotation.forNumber(n));
-                    else
-                        ctx.report("FloatComparison", priority, node);
-                }
-            }
-        }
+        if (node.getCode() != AstCode.CmpEq && node.getCode() != AstCode.CmpNe)
+            return;
+        List<Expression> args = node.getArguments();
+        TypeReference inferredType = args.get(0).getInferredType();
+        if(inferredType == null)
+            return;
+        JvmType type = inferredType.getSimpleType();
+        if (type != JvmType.Double && type != JvmType.Float)
+            return;
+        Expression leftArg = Nodes.getChild(node, 0);
+        Expression rightArg = Nodes.getChild(node, 1);
+        Object left = Nodes.getConstant(leftArg);
+        Object right = Nodes.getConstant(rightArg);
+        int priority = tweakPriority(args.get(0)) + tweakPriority(args.get(1));
+        if(ValuesFlow.anyMatch(leftArg, rightArg::equals) || ValuesFlow.anyMatch(rightArg, leftArg::equals))
+            priority += 20;
+        if(md.getName().toLowerCase(Locale.ENGLISH).contains("equal"))
+            priority += 20;
+        Number n = left instanceof Number ? (Number) left : right instanceof Number ? (Number) right : null;
+        if(n != null)
+            ctx.report("FloatComparison", priority, node, WarningAnnotation.forNumber(n));
+        else
+            ctx.report("FloatComparison", priority, node);
     }
 
     private int tweakPriority(Expression expr) {

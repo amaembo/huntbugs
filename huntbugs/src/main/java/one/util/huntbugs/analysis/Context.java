@@ -36,6 +36,7 @@ import com.strobel.assembler.metadata.CompositeTypeLoader;
 import com.strobel.assembler.metadata.ITypeLoader;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
+import com.strobel.assembler.metadata.TypeReference;
 
 import one.util.huntbugs.registry.DetectorRegistry;
 import one.util.huntbugs.repo.Repository;
@@ -51,6 +52,7 @@ import one.util.huntbugs.warning.WarningType;
 public class Context {
     private final List<ErrorMessage> errors = Collections.synchronizedList(new ArrayList<>());
     private final List<Warning> warnings = Collections.synchronizedList(new ArrayList<>());
+    private final Set<String> missingClasses = ConcurrentHashMap.newKeySet();
     private final DetectorRegistry registry;
     private final Repository repository;
     private final AtomicInteger classesCount = new AtomicInteger();
@@ -130,20 +132,21 @@ public class Context {
             }
             TypeDefinition type;
             try {
-                type = ms.resolve(ms.lookupType(className));
+                type = lookUp(ms, className);
             } catch (Throwable t) {
                 addError(new ErrorMessage(null, className, null, null, -1, t));
                 continue;
             }
-            for(ConstantPool.Entry entry : type.getConstantPool()) {
-                if(entry instanceof TypeInfoEntry) {
-                    String depName = getMainType(((TypeInfoEntry)entry).getName());
-                    if(depName != null && !classes.contains(depName))
-                        auxClasses.add(depName);
+            if (type != null) {
+                for(ConstantPool.Entry entry : type.getConstantPool()) {
+                    if(entry instanceof TypeInfoEntry) {
+                        String depName = getMainType(((TypeInfoEntry)entry).getName());
+                        if(depName != null && !classes.contains(depName))
+                            auxClasses.add(depName);
+                    }
                 }
-            }
-            if (type != null)
                 registry.populateDatabases(type);
+            }
         }
         if (!fireEvent("Reading classes", null, classes.size(), classes.size()))
             return false;
@@ -157,7 +160,7 @@ public class Context {
             }
             TypeDefinition type;
             try {
-                type = ms.resolve(ms.lookupType(className));
+                type = lookUp(ms, className);
             } catch (Throwable t) {
                 addError(new ErrorMessage(null, className, null, null, -1, t));
                 continue;
@@ -166,6 +169,15 @@ public class Context {
                 registry.populateDatabases(type);
         }
         return fireEvent("Reading dep classes", null, auxClasses.size(), auxClasses.size());
+    }
+
+    private TypeDefinition lookUp(MetadataSystem ms, String className) {
+        TypeReference tr = ms.lookupType(className);
+        if(tr == null) {
+            missingClasses.add(className);
+            return null;
+        }
+        return ms.resolve(tr);
     }
 
     private void analyzingClasses(Set<String> classes) {
@@ -186,7 +198,7 @@ public class Context {
         classesCount.incrementAndGet();
         TypeDefinition type;
         try {
-            type = ms.resolve(ms.lookupType(name));
+            type = lookUp(ms, name);
         } catch (Throwable t) {
             addError(new ErrorMessage(null, name, null, null, -1, t));
             return;

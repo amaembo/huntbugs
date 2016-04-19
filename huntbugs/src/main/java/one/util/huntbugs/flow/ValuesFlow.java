@@ -355,18 +355,28 @@ public class ValuesFlow {
     public static boolean allMatch(Expression src, Predicate<Expression> pred) {
         if(src.getCode() == Frame.PHI_TYPE)
             return src.getArguments().stream().allMatch(pred);
+        if(src.getCode() == AstCode.TernaryOp)
+            return allMatch(getSource(src.getArguments().get(1)), pred) &&
+                    allMatch(getSource(src.getArguments().get(2)), pred);
         return pred.test(src);
     }
 
     public static boolean anyMatch(Expression src, Predicate<Expression> pred) {
         if(src.getCode() == Frame.PHI_TYPE)
             return src.getArguments().stream().anyMatch(pred);
+        if(src.getCode() == AstCode.TernaryOp)
+            return anyMatch(getSource(src.getArguments().get(1)), pred) ||
+                    anyMatch(getSource(src.getArguments().get(2)), pred);
         return pred.test(src);
     }
     
     public static Expression findFirst(Expression src, Predicate<Expression> pred) {
         if(src.getCode() == Frame.PHI_TYPE)
             return src.getArguments().stream().filter(pred).findFirst().orElse(null);
+        if(src.getCode() == AstCode.TernaryOp) {
+            Expression result = findFirst(getSource(src.getArguments().get(1)), pred);
+            return result == null ? findFirst(getSource(src.getArguments().get(2)), pred) : result;
+        }
         return pred.test(src) ? src : null;
     }
 

@@ -96,7 +96,8 @@ public class NumericPromotion {
                         if(parent.getArguments().get(0) == expr) {
                             // Lower priority for scenarios like ((a*1000)/b)/10.0
                             Object divisor = Nodes.getConstant(parent.getArguments().get(1));
-                            if(divisor instanceof Number && multiplier.equals(BigInteger.valueOf(((Number)divisor).longValue()*100)))
+                            if(divisor instanceof Number && (multiplier.equals(BigInteger.valueOf(((Number)divisor).longValue()*100))
+                                    || multiplier.equals(BigInteger.valueOf(((Number)divisor).longValue()))))
                                 priority += 100;
                         }
                     }

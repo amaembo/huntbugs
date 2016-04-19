@@ -66,4 +66,19 @@ public class TestFloatComparison {
         if(a == 10.5)
             System.out.println("Equals");
     }
+
+    @AssertWarning(type="FloatComparison", minScore = 10, maxScore = 20)
+    void testDoublePhi(boolean b, double a) {
+        double x = a;
+        if(b) x = a+10;
+        if(a == x)
+            System.out.println("Equals");
+    }
+    
+    @AssertWarning(type="FloatComparison", minScore = 10, maxScore = 20)
+    void testDoubleTernary(boolean b, double a) {
+        double x = b ? a : a+10;
+        if(a == x)
+            System.out.println("Equals");
+    }
 }
