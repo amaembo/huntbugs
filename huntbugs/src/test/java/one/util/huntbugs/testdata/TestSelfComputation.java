@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.util.List;
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -47,6 +48,16 @@ public class TestSelfComputation {
     public int test(int[] x, int idx) {
         return x[idx++] - x[idx++];
     }
+    
+    @AssertNoWarning(type = "*")
+    public void testLambdas(List<Integer> l1, List<Integer> l2) {
+        l1.forEach(a -> {
+            l2.forEach(b -> {
+                System.out.println(a - b);
+            });
+        });
+    }
+    
 
     // Fails due to Procyon bug, reported https://bitbucket.org/mstrobel/procyon/issues/287/variables-incorerctly-merged
 //    @AssertNoWarning(type = "SelfComputation")

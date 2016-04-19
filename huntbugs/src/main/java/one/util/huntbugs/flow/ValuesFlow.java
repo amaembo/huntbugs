@@ -15,9 +15,6 @@
  */
 package one.util.huntbugs.flow;
 
-import java.lang.reflect.Field;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -33,7 +30,6 @@ import one.util.huntbugs.util.Types;
 
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeReference;
-import com.strobel.assembler.metadata.VariableDefinition;
 import com.strobel.componentmodel.Key;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
@@ -56,28 +52,6 @@ public class ValuesFlow {
     static final Key<Object> VALUE_KEY = Key.create("hb.value");
     static final Key<Set<Expression>> BACK_LINKS_KEY = Key.create("hb.backlinks");
     
-    static final Field variableMethodDefinitionField;
-    
-    static {
-        variableMethodDefinitionField = AccessController.doPrivileged((PrivilegedAction<Field>) () -> {
-            try {
-                Field f = VariableDefinition.class.getDeclaredField("_declaringMethod");
-                f.setAccessible(true);
-                return f;
-            } catch (NoSuchFieldException | SecurityException e) {
-                throw new InternalError(e);
-            }
-        });
-    }
-    
-    static MethodDefinition getMethodDefinition(VariableDefinition vd) {
-        try {
-            return (MethodDefinition) variableMethodDefinitionField.get(vd);
-        } catch (IllegalArgumentException | IllegalAccessException e) {
-            throw new InternalError(e);
-        }
-    }
-
     static <T> T reduce(Expression input, Function<Expression, T> mapper, BinaryOperator<T> reducer) {
         Expression source = getSource(input);
         if (source.getCode() != Frame.PHI_TYPE)

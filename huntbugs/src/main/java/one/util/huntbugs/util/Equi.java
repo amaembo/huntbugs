@@ -17,10 +17,14 @@ package one.util.huntbugs.util;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiPredicate;
 
 import com.strobel.assembler.metadata.FieldReference;
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.assembler.metadata.TypeReference;
+import com.strobel.assembler.metadata.VariableDefinition;
 import com.strobel.core.StringUtilities;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
@@ -38,10 +42,11 @@ import com.strobel.decompiler.ast.Variable;
  *
  */
 public class Equi {
-    static class Counter {
+    static class EquiContext {
         private static final int MAX_COUNT = 1000;
         
         int count;
+        BiPredicate<Variable, Variable> varMatcher = Variable::equals;
         
         boolean addAndCheck() {
             if(++count > MAX_COUNT) {
@@ -52,13 +57,13 @@ public class Equi {
     }
     
     public static boolean equiBlocks(Block left, Block right) {
-        return equiBlocks(left, right, new Counter());
+        return equiBlocks(left, right, new EquiContext());
     }
     
-    public static boolean equiBlocks(Block left, Block right, Counter count) {
+    private static boolean equiBlocks(Block left, Block right, EquiContext ctx) {
         if (left == null)
             return right == null;
-        if (!count.addAndCheck())
+        if (!ctx.addAndCheck())
             return false;
         if (right == null)
             return false;
@@ -77,30 +82,30 @@ public class Equi {
             Node leftNode = leftBody.get(i);
             Node rightNode = rightBody.get(i);
             if (leftNode instanceof Expression) {
-                if (!equiExpressions((Expression) leftNode, (Expression) rightNode, count))
+                if (!equiExpressions((Expression) leftNode, (Expression) rightNode, ctx))
                     return false;
             } else if (leftNode instanceof Condition) {
                 Condition leftCond = (Condition) leftNode;
                 Condition rightCond = (Condition) rightNode;
-                if (!equiExpressions(leftCond.getCondition(), rightCond.getCondition(), count))
+                if (!equiExpressions(leftCond.getCondition(), rightCond.getCondition(), ctx))
                     return false;
-                if (!equiBlocks(leftCond.getTrueBlock(), rightCond.getTrueBlock(), count))
+                if (!equiBlocks(leftCond.getTrueBlock(), rightCond.getTrueBlock(), ctx))
                     return false;
-                if (!equiBlocks(leftCond.getFalseBlock(), rightCond.getFalseBlock(), count))
+                if (!equiBlocks(leftCond.getFalseBlock(), rightCond.getFalseBlock(), ctx))
                     return false;
             } else if (leftNode instanceof Loop) {
                 Loop leftLoop = (Loop) leftNode;
                 Loop rightLoop = (Loop) rightNode;
                 if (leftLoop.getLoopType() != rightLoop.getLoopType())
                     return false;
-                if (!equiExpressions(leftLoop.getCondition(), rightLoop.getCondition(), count))
+                if (!equiExpressions(leftLoop.getCondition(), rightLoop.getCondition(), ctx))
                     return false;
-                if (!equiBlocks(leftLoop.getBody(), rightLoop.getBody(), count))
+                if (!equiBlocks(leftLoop.getBody(), rightLoop.getBody(), ctx))
                     return false;
             } else if (leftNode instanceof TryCatchBlock) {
                 TryCatchBlock leftTry = (TryCatchBlock) leftNode;
                 TryCatchBlock rightTry = (TryCatchBlock) rightNode;
-                if (!equiTryCatch(leftTry, rightTry, count))
+                if (!equiTryCatch(leftTry, rightTry, ctx))
                     return false;
             } else
                 // TODO: support switch
@@ -109,7 +114,7 @@ public class Equi {
         return true;
     }
 
-    private static boolean equiTryCatch(TryCatchBlock leftTry, TryCatchBlock rightTry, Counter count) {
+    private static boolean equiTryCatch(TryCatchBlock leftTry, TryCatchBlock rightTry, EquiContext ctx) {
         List<CatchBlock> leftCatches = leftTry.getCatchBlocks();
         List<CatchBlock> rightCatches = rightTry.getCatchBlocks();
         if (leftCatches.size() != rightCatches.size())
@@ -127,24 +132,24 @@ public class Equi {
                 if (!equiTypes(leftTypes.get(k), rightTypes.get(k)))
                     return false;
             }
-            if (!equiBlocks(leftCatch, rightCatch, count))
+            if (!equiBlocks(leftCatch, rightCatch, ctx))
                 return false;
         }
-        if (!equiBlocks(leftTry.getTryBlock(), rightTry.getTryBlock(), count))
+        if (!equiBlocks(leftTry.getTryBlock(), rightTry.getTryBlock(), ctx))
             return false;
-        if (!equiBlocks(leftTry.getFinallyBlock(), rightTry.getFinallyBlock(), count))
+        if (!equiBlocks(leftTry.getFinallyBlock(), rightTry.getFinallyBlock(), ctx))
             return false;
         return true;
     }
     
     public static boolean equiExpressions(Expression left, Expression right) {
-        return equiExpressions(left, right, new Counter());
+        return equiExpressions(left, right, new EquiContext());
     }
     
-    public static boolean equiExpressions(Expression left, Expression right, Counter count) {
+    private static boolean equiExpressions(Expression left, Expression right, EquiContext ctx) {
         if (left == null)
             return right == null;
-        if (!count.addAndCheck())
+        if (!ctx.addAndCheck())
             return false;
         if (right == null)
             return false;
@@ -154,8 +159,8 @@ public class Equi {
                     (left.getCode() == AstCode.CmpLe && right.getCode() == AstCode.CmpGe) ||
                     (left.getCode() == AstCode.CmpLt && right.getCode() == AstCode.CmpGt)) {
                 return left.getArguments().size() == 2 && right.getArguments().size() == 2 &&
-                        equiExpressions(left.getArguments().get(0), right.getArguments().get(1), count) &&
-                        equiExpressions(left.getArguments().get(1), right.getArguments().get(0), count);
+                        equiExpressions(left.getArguments().get(0), right.getArguments().get(1), ctx) &&
+                        equiExpressions(left.getArguments().get(1), right.getArguments().get(0), ctx);
             }
             return false;
         }
@@ -163,7 +168,7 @@ public class Equi {
         Object leftOp = left.getOperand();
         Object rightOp = right.getOperand();
 
-        if (!equiOperands(leftOp, rightOp, count))
+        if (!equiOperands(leftOp, rightOp, ctx))
             return false;
 
         if (left.getArguments().size() != right.getArguments().size()) {
@@ -180,10 +185,10 @@ public class Equi {
             case Mul:
             case CmpEq:
             case CmpNe:
-                return (equiExpressions(left.getArguments().get(0), right.getArguments().get(0)) &&
-                        equiExpressions(left.getArguments().get(1), right.getArguments().get(1))) ||
-                        (equiExpressions(left.getArguments().get(0), right.getArguments().get(1)) &&
-                                equiExpressions(left.getArguments().get(1), right.getArguments().get(0)));
+                return (equiExpressions(left.getArguments().get(0), right.getArguments().get(0), ctx) &&
+                        equiExpressions(left.getArguments().get(1), right.getArguments().get(1), ctx)) ||
+                        (equiExpressions(left.getArguments().get(0), right.getArguments().get(1), ctx) &&
+                                equiExpressions(left.getArguments().get(1), right.getArguments().get(0), ctx));
             default:
             }
         }
@@ -192,7 +197,7 @@ public class Equi {
             final Expression a1 = left.getArguments().get(i);
             final Expression a2 = right.getArguments().get(i);
 
-            if (!equiExpressions(a1, a2)) {
+            if (!equiExpressions(a1, a2, ctx)) {
                 return false;
             }
         }
@@ -200,7 +205,7 @@ public class Equi {
         return true;
     }
 
-    private static boolean equiOperands(Object left, Object right, Counter count) {
+    private static boolean equiOperands(Object left, Object right, EquiContext ctx) {
         if (left == null)
             return right == null;
         if (right == null)
@@ -218,22 +223,14 @@ public class Equi {
         if (left instanceof Lambda) {
             if(right.getClass() != left.getClass())
                 return false;
-            return equiLambdas((Lambda)left, (Lambda)right, count);
+            return equiLambdas((Lambda)left, (Lambda)right, ctx);
         }
         if (left instanceof Variable) {
             if(right.getClass() != left.getClass())
                 return false;
-            return equiVariables((Variable)left, (Variable)right);
+            return ctx.varMatcher.test((Variable)left, (Variable)right);
         }
         return Objects.equals(right, left);
-    }
-
-    private static boolean equiVariables(Variable left, Variable right) {
-        if(left.isLambdaParameter() && right.isLambdaParameter() && left.getOriginalParameter() != null
-                && right.getOriginalParameter() != null) {
-            return left.getOriginalParameter().getPosition() == right.getOriginalParameter().getPosition();
-        }
-        return left.equals(right);
     }
 
     private static boolean equiMethods(final MethodReference left, final MethodReference right) {
@@ -245,10 +242,33 @@ public class Equi {
         return StringUtilities.equals(left.getFullName(), right.getFullName());
     }
 
-    private static boolean equiLambdas(Lambda left, Lambda right, Counter count) {
-        return equiMethods(left.getMethod(), right.getMethod())
-                && equiTypes(left.getFunctionType(), right.getFunctionType())
-                && equiBlocks(left.getBody(), right.getBody(), count);
+    private static boolean equiLambdas(Lambda left, Lambda right, EquiContext ctx) {
+        if(!equiMethods(left.getMethod(), right.getMethod())
+                || !equiTypes(left.getFunctionType(), right.getFunctionType()))
+            return false;
+        MethodDefinition leftMd = Nodes.getLambdaMethod(left);
+        MethodDefinition rightMd = Nodes.getLambdaMethod(right);
+        BiPredicate<Variable, Variable> curMatcher = ctx.varMatcher;
+        ctx.varMatcher = (vl, vr) -> {
+            if(curMatcher.test(vl, vr))
+                return true;
+            VariableDefinition vlo = vl.getOriginalVariable();
+            VariableDefinition vro = vr.getOriginalVariable();
+            if(vlo != null && vro != null) {
+                if(Variables.getMethodDefinition(vlo) == leftMd && Variables.getMethodDefinition(vro) == rightMd) {
+                    return vlo.getVariableType().isEquivalentTo(vro.getVariableType()) && vlo.getSlot() == vro.getSlot();
+                }
+            }
+            ParameterDefinition pl = vl.getOriginalParameter();
+            ParameterDefinition pr = vr.getOriginalParameter();
+            if(pl != null && pr != null && pl.getMethod() == leftMd && pr.getMethod() == rightMd) {
+                return pl.getPosition() == pr.getPosition();
+            }
+            return false;
+        };
+        boolean result = equiBlocks(left.getBody(), right.getBody(), ctx);
+        ctx.varMatcher = curMatcher;
+        return result;
     }
 
     private static boolean equiTypes(TypeReference left, TypeReference right) {

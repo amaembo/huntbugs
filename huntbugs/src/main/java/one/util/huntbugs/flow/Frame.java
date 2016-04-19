@@ -25,6 +25,7 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.util.Variables;
 
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
@@ -209,7 +210,7 @@ class Frame {
             Variable var = ((Variable) expr.getOperand());
             VariableDefinition origVar = var.getOriginalVariable();
             // TODO: support transferring variables from outer method to lambda
-            if (origVar != null && ValuesFlow.getMethodDefinition(origVar) == md) {
+            if (origVar != null && Variables.getMethodDefinition(origVar) == md) {
                 Expression source = sources[origVar.getSlot()];
                 if (source != null) {
                     expr.putUserData(ValuesFlow.SOURCE_KEY, source);
