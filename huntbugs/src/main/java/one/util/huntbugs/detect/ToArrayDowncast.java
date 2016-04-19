@@ -39,7 +39,7 @@ public class ToArrayDowncast {
         if (expr.getCode() != AstCode.CheckCast)
             return;
         TypeReference targetType = (TypeReference) expr.getOperand();
-        if (!targetType.isArray() || targetType.getElementType().getInternalName().equals("java/lang/Object"))
+        if (!targetType.isArray() || Types.isObject(targetType.getElementType()))
             return;
         Expression arg = Nodes.getChild(expr, 0);
         if (arg.getCode() != AstCode.InvokeVirtual && arg.getCode() != AstCode.InvokeInterface)

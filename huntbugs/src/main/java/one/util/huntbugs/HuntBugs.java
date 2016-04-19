@@ -182,11 +182,15 @@ public class HuntBugs {
             return -2;
         }
         long start = System.nanoTime();
-        ctx.addListener((stage, className) -> {
-            if (className == null)
-                return true;
-            String name = className.length() > 50 ? "..." + className.substring(className.length() - 47) : className;
-            System.out.printf("\r%70s\r[%d/%d] %s", "", ctx.getClassesCount(), ctx.getTotalClasses(), name);
+        ctx.addListener((stage, className, count, total) -> {
+            if (count == 0)
+                System.out.printf("\r%70s\r%s...%n", "", stage);
+            else {
+                if (className == null)
+                    className = "";
+                String name = className.length() > 50 ? "..." + className.substring(className.length() - 47) : className;
+                System.out.printf("\r%70s\r[%d/%d] %s", "", count, total, name);
+            }
             return true;
         });
         Runtime.getRuntime().addShutdownHook(
@@ -202,7 +206,7 @@ public class HuntBugs {
                 }
                 long end = System.nanoTime();
                 Duration dur = Duration.ofNanos(end - start);
-                System.out.printf("\r%70s\r\n", "");
+                System.out.printf("\r%70s\r", "");
                 System.out.println("Analyzed " + ctx.getClassesCount() + " of " + ctx.getTotalClasses() + " classes");
                 ctx.reportStats(System.out);
                 System.out.println("Analyzis time " + dur.toMinutes() + "m" + dur.getSeconds() % 60 + "s");

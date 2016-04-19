@@ -128,4 +128,8 @@ public class Types {
     public static boolean isBoxed(TypeReference type) {
         return BOXED_TYPES.contains(type.getInternalName());
     }
+    
+    public static boolean isObject(TypeReference type) {
+        return type.getInternalName().equals("java/lang/Object");
+    }
 }

@@ -24,7 +24,9 @@ public interface AnalysisListener {
     /**
      * @param stepName
      * @param className
+     * @param count number of classes processed
+     * @param total number of classes to process
      * @return false if cancel is requested
      */
-    public boolean eventOccurred(String stepName, String className);
+    public boolean eventOccurred(String stepName, String className, int count, int total);
 }

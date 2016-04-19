@@ -33,7 +33,7 @@ public class RedundantInterfaces {
     @ClassVisitor
     public void visit(TypeDefinition td, ClassContext cc) {
         TypeDefinition baseType = td.getBaseType().resolve();
-        if(baseType == null || baseType.getInternalName().equals("java/lang/Object"))
+        if(baseType == null || Types.isObject(baseType))
             return;
         for(TypeReference tr : td.getExplicitInterfaces()) {
             if(tr.getInternalName().equals("java/io/Serializable")) {

@@ -28,6 +28,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
@@ -104,7 +105,7 @@ public class FinalizerContract {
 
     private static MethodDefinition getSuperfinalizer(TypeDefinition type) {
         TypeDefinition superType = type.getBaseType().resolve();
-        if (superType == null || superType.getInternalName().equals("java/lang/Object"))
+        if (superType == null || Types.isObject(superType))
             return null;
         for (MethodDefinition child : superType.getDeclaredMethods()) {
             if (isFinalizer(child))

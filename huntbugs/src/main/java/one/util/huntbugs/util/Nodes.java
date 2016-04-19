@@ -208,7 +208,7 @@ public class Nodes {
         if(!(operand instanceof MethodReference))
             return false;
         MethodReference mr = (MethodReference) operand;
-        if(mr.getName().equals("equals") && mr.getSignature().equals("(Ljava/lang/Object;)Z"))
+        if(Methods.isEqualsMethod(mr))
             return true;
         if(mr.getName().equals("hashCode") && mr.getSignature().equals("()I"))
             return true;

@@ -48,7 +48,7 @@ public class Hierarchy extends AbstractTypeDatabase<Hierarchy.TypeHierarchy> {
     }
 
     private void link(TypeHierarchy th, TypeReference superType) {
-        if (superType == null || superType.getInternalName().equals("java/lang/Object"))
+        if (superType == null || Types.isObject(superType))
             return;
         TypeHierarchy superTh = getOrCreate(superType);
         th.superClasses.add(superTh);

@@ -32,6 +32,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
@@ -46,7 +47,7 @@ public class WaitContract {
     public void visit(Expression expr, NodeChain parents, MethodContext mc) {
         if (expr.getCode() == AstCode.InvokeVirtual) {
             MethodReference mr = (MethodReference) expr.getOperand();
-            if (mr.getName().equals("wait") && mr.getDeclaringType().getInternalName().equals("java/lang/Object")) {
+            if (mr.getName().equals("wait") && Types.isObject(mr.getDeclaringType())) {
                 NodeChain cur = parents;
                 boolean sawCondition = false;
                 boolean sawLoop = false;

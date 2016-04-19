@@ -55,14 +55,14 @@ public class EqualsContract {
         MethodDefinition equalsObject = null;
         MethodDefinition equalsOther = null;
         for (MethodDefinition md : td.getDeclaredMethods()) {
-            if (md.getName().equals("equals") && md.getReturnType().getSimpleType() == JvmType.Boolean
+            if (!md.isStatic() && md.getName().equals("equals") && md.getReturnType().getSimpleType() == JvmType.Boolean
                 && md.getParameters().size() == 1) {
                 TypeReference type = md.getParameters().get(0).getParameterType();
-                if (type.getInternalName().equals("java/lang/Object")) {
+                if (Types.isObject(type)) {
                     equalsObject = md;
                 } else if (type.isEquivalentTo(td)) {
                     equalsSelf = md;
-                } else {
+                } else if (!type.isPrimitive()) {
                     equalsOther = md;
                 }
             }

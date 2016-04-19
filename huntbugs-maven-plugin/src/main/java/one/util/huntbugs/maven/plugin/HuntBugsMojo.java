@@ -19,6 +19,8 @@ package one.util.huntbugs.maven.plugin;
 import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.output.XmlReportWriter;
+import one.util.huntbugs.repo.AuxRepository;
+import one.util.huntbugs.repo.CompositeRepository;
 import one.util.huntbugs.repo.DirRepository;
 import one.util.huntbugs.repo.Repository;
 
@@ -27,9 +29,19 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import com.strobel.assembler.metadata.ClasspathTypeLoader;
+import com.strobel.assembler.metadata.CompositeTypeLoader;
+import com.strobel.assembler.metadata.ITypeLoader;
+import com.strobel.assembler.metadata.JarTypeLoader;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.jar.JarFile;
 
 /**
  * Goal which launches the HuntBugs static analyzer tool.
@@ -53,24 +65,40 @@ public class HuntBugsMojo extends AbstractMojo {
      */
     @Parameter(defaultValue = "30", property = "minScore", required = true)
     private int minScore;
-
+    
+    @Parameter( defaultValue = "${project.compileClasspathElements}", readonly = true, required = true )
+    private List<String> classpathElements;
+    
     @Override
     public void execute() throws MojoExecutionException {
         try {
+            List<ITypeLoader> deps = new ArrayList<>();
+            for(String classpathElement : classpathElements) {
+                Path path = Paths.get(classpathElement);
+                if(path.toAbsolutePath().normalize().equals(classesDirectory.toPath().toAbsolutePath().normalize()))
+                    continue;
+                getLog().info("HuntBugs: adding "+path);
+                if(Files.isRegularFile(path)) {
+                    deps.add(new JarTypeLoader(new JarFile(path.toFile())));
+                } else if(Files.isDirectory(path)){
+                    deps.add(new ClasspathTypeLoader(path.toString()));
+                }
+            }
             Repository repo = new DirRepository(classesDirectory.toPath());
+            if(!deps.isEmpty())
+                repo = new CompositeRepository(Arrays.asList(repo, new AuxRepository(new CompositeTypeLoader(deps
+                        .toArray(new ITypeLoader[0])))));
             AnalysisOptions options = new AnalysisOptions();
             options.minScore = minScore;
             Context ctx = new Context(repo, options);
-            ctx.addListener((stepName, className) -> {
-                if (!stepName.equals("Preparing")) {
-                    int totalClasses = ctx.getTotalClasses();
-                    int classesCount = ctx.getClassesCount() + 1;
-                    if (classesCount == totalClasses || classesCount % 50 == 0)
-                        getLog().info("HuntBugs: " + stepName + " [" + classesCount + "/" + totalClasses + "]");
+            long[] lastPrint = {0};
+            ctx.addListener((stepName, className, count, total) -> {
+                if (count == total || System.currentTimeMillis()-lastPrint[0] > 2000) {
+                    getLog().info("HuntBugs: " + stepName + " [" + count + "/" + total + "]");
+                    lastPrint[0] = System.currentTimeMillis();
                 }
                 return true;
             });
-            getLog().info("HuntBugs: Preparing");
             ctx.analyzePackage("");
             getLog().info("HuntBugs: Writing report (" + ctx.getStat("Warnings") + " warnings)");
             Path path = outputDirectory.toPath();
