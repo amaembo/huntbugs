@@ -288,6 +288,10 @@ class Frame {
     }
 
     private static void link(Expression target, Expression source) {
+        if(source.getCode() == PHI_TYPE) {
+            source.getArguments().forEach(arg -> link(target, arg));
+            return;
+        }
         Set<Expression> set = source.getUserData(ValuesFlow.BACK_LINKS_KEY);
         if(set == null) {
             set = new HashSet<>();
