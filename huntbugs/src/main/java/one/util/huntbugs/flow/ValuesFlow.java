@@ -28,6 +28,7 @@ import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 
+import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.componentmodel.Key;
@@ -394,5 +395,26 @@ public class ValuesFlow {
                     return findTransitiveUsages(x, includePhi);
                 return Stream.of(x);
             });
+    }
+    
+    private static boolean isAssertionStatusCheck(Expression expr) {
+        if(expr.getCode() != AstCode.LogicalNot)
+            return false;
+        Expression arg = expr.getArguments().get(0);
+        if(arg.getCode() != AstCode.GetStatic)
+            return false;
+        FieldReference fr = (FieldReference) arg.getOperand();
+        return fr.getName().startsWith("$assertions");
+    }
+    
+    private static boolean isAssertionCondition(Expression expr) {
+        if(expr.getCode() != AstCode.LogicalAnd)
+            return false;
+        return expr.getArguments().stream().anyMatch(ValuesFlow::isAssertionStatusCheck);
+    }
+    
+    public static boolean isAssertion(Expression expr) {
+        Set<Expression> usages = findUsages(expr);
+        return !usages.isEmpty() && usages.stream().allMatch(ValuesFlow::isAssertionCondition);
     }
 }

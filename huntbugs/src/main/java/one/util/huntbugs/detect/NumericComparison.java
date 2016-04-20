@@ -20,6 +20,7 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -74,21 +75,21 @@ public class NumericComparison {
             maxValue = max;
             invert = false;
         }
-        
+
         boolean isTrueEmpty(LongRange realRange) {
-            if(invert)
+            if (invert)
                 return new LongRange(minValue, maxValue).isFalseEmpty(realRange);
             return realRange.minValue > maxValue || realRange.maxValue < minValue;
         }
 
         boolean isFalseEmpty(LongRange realRange) {
-            if(invert)
+            if (invert)
                 return new LongRange(minValue, maxValue).isTrueEmpty(realRange);
             return realRange.minValue >= minValue && realRange.maxValue <= maxValue;
         }
     }
 
-    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
+    @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
         if (Nodes.isComparison(expr)) {
             TypeReference type = expr.getArguments().get(0).getInferredType();
@@ -138,7 +139,7 @@ public class NumericComparison {
                 realRange = new LongRange(Byte.MIN_VALUE, Byte.MAX_VALUE);
                 break;
             case Long:
-                if(arg.getCode() == AstCode.I2L)
+                if (arg.getCode() == AstCode.I2L)
                     realRange = intRange(Nodes.getChild(arg, 0));
                 else
                     realRange = new LongRange(Long.MIN_VALUE, Long.MAX_VALUE);
@@ -153,45 +154,84 @@ public class NumericComparison {
                 return;
             }
             Boolean result = null;
-            if(cmpRange.isTrueEmpty(realRange)) {
+            if (cmpRange.isTrueEmpty(realRange)) {
                 result = false;
-            } else if(cmpRange.isFalseEmpty(realRange)) {
+            } else if (cmpRange.isFalseEmpty(realRange)) {
                 result = true;
             }
-            if(result == null)
+            if (result == null || ValuesFlow.isAssertion(expr))
                 return;
-            mc.report("ComparisonWithOutOfRangeValue", 0, expr, WarningAnnotation.forOperation(code), WarningAnnotation.forNumber(constant),
-                new WarningAnnotation<>("MIN_VALUE", realRange.minValue), new WarningAnnotation<>("MAX_VALUE", realRange.maxValue),
-                new WarningAnnotation<>("RESULT", result));
+            int priority = 0;
+            if (realRange.minValue == constant || realRange.maxValue == constant)
+                priority += 15;
+            mc.report("ComparisonWithOutOfRangeValue", priority, expr, WarningAnnotation.forOperation(code),
+                WarningAnnotation.forNumber(constant), new WarningAnnotation<>("MIN_VALUE", realRange.minValue),
+                new WarningAnnotation<>("MAX_VALUE", realRange.maxValue), new WarningAnnotation<>("RESULT", result));
         }
     }
 
     private LongRange intRange(Expression arg) {
-        if(arg.getCode() == AstCode.ArrayLength)
+        switch (arg.getCode()) {
+        case ArrayLength:
             return new LongRange(0, Integer.MAX_VALUE);
-        if(arg.getCode() == AstCode.And) {
+        case And: {
             Object constant = Nodes.getConstant(arg.getArguments().get(1));
-            if(constant instanceof Integer) {
+            if (constant instanceof Integer) {
                 int andOp = (int) constant;
-                if(andOp > 0) {
+                if (andOp > 0) {
                     return new LongRange(0, (Integer.highestOneBit(andOp) << 1) - 1);
                 }
             }
+            break;
         }
-        if(arg.getCode() == AstCode.InvokeVirtual) {
+        case Rem: {
+            Object constant = Nodes.getConstant(arg.getArguments().get(1));
+            if (constant instanceof Integer) {
+                int remOp = (int) constant;
+                if (remOp != 0 && remOp != Integer.MIN_VALUE) {
+                    return new LongRange(1 - Math.abs(remOp), Math.abs(remOp) - 1);
+                }
+            }
+            break;
+        }
+        case Shr: {
+            Object constant = Nodes.getConstant(arg.getArguments().get(1));
+            if (constant instanceof Integer) {
+                int shrOp = ((int) constant) & 0x1F;
+                int bits = 31 - shrOp;
+                int max = (1 << bits) - 1;
+                return new LongRange(-max - 1, max);
+            }
+            break;
+        }
+        case UShr: {
+            Object constant = Nodes.getConstant(arg.getArguments().get(1));
+            if (constant instanceof Integer) {
+                int shrOp = ((int) constant) & 0x1F;
+                if (shrOp > 0) {
+                    int bits = 32 - shrOp;
+                    int max = (1 << bits);
+                    return new LongRange(0, max - 1);
+                }
+            }
+            break;
+        }
+        case InvokeVirtual:
             MethodReference mr = (MethodReference) arg.getOperand();
-            if(mr.getName().equals("size") && mr.getSignature().equals("()I")) {
-                if(Types.isInstance(mr.getDeclaringType(), "java/util/Collection") ||
-                        Types.isInstance(mr.getDeclaringType(), "java/util/Map")) {
+            if (mr.getName().equals("size") && mr.getSignature().equals("()I")) {
+                if (Types.isInstance(mr.getDeclaringType(), "java/util/Collection")
+                    || Types.isInstance(mr.getDeclaringType(), "java/util/Map")) {
                     return new LongRange(0, Integer.MAX_VALUE);
                 }
             }
-            if(mr.getDeclaringType().getInternalName().equals("java/lang/Byte") && mr.getName().endsWith("Value")) {
+            if (mr.getDeclaringType().getInternalName().equals("java/lang/Byte") && mr.getName().endsWith("Value")) {
                 return new LongRange(Byte.MIN_VALUE, Byte.MAX_VALUE);
             }
-            if(mr.getDeclaringType().getInternalName().equals("java/lang/Short") && mr.getName().endsWith("Value")) {
+            if (mr.getDeclaringType().getInternalName().equals("java/lang/Short") && mr.getName().endsWith("Value")) {
                 return new LongRange(Short.MIN_VALUE, Short.MAX_VALUE);
             }
+            break;
+        default:
         }
         return new LongRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
     }

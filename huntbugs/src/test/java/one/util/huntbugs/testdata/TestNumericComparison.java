@@ -17,6 +17,7 @@ package one.util.huntbugs.testdata;
 
 import java.util.ArrayList;
 
+import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
 /**
@@ -31,6 +32,14 @@ public class TestNumericComparison {
         }
         if(c >= 0) {
             System.out.println("Always");
+        }
+    }
+
+    @AssertNoWarning(type="*")
+    public void testAssert(char c) {
+        assert c >= 0;
+        if(c == 'x') {
+            System.out.println("X!");
         }
     }
 
@@ -68,6 +77,46 @@ public class TestNumericComparison {
         int result = input & 0xFF0;
         if(result > 0xFFFF) {
             System.out.println("Never!");
+        }
+    }
+
+    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    public void testRem(int input) {
+        int result = input % 3;
+        if(result == 3) {
+            System.out.println("Never!");
+        }
+    }
+
+    @AssertNoWarning(type="ComparisonWithOutOfRangeValue")
+    public void testShrOk(int input) {
+        int result = input >> 10;
+        if(result == 0x1FFFFF || result == -0x200000) {
+            System.out.println("Ok");
+        }
+    }
+    
+    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    public void testShr(int input) {
+        int result = input >> 10;
+        if(result == 0x200000) {
+            System.out.println("Never");
+        }
+    }
+    
+    @AssertNoWarning(type="ComparisonWithOutOfRangeValue")
+    public void testUShrOk(int input) {
+        int result = input >>> 10;
+        if(result == 0x3FFFFF) {
+            System.out.println("Ok");
+        }
+    }
+    
+    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    public void testUShr(int input) {
+        int result = input >>> 10;
+        if(result == 0x400000) {
+            System.out.println("Never");
         }
     }
 }
