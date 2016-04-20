@@ -111,6 +111,8 @@ abbrev="RE" type="RE_BAD_SYNTAX_FOR_REGULAR_EXPRESSION" category="CORRECTNESS" -
 abbrev="RE" type="RE_CANT_USE_FILE_SEPARATOR_AS_REGULAR_EXPRESSION" category="CORRECTNESS" --> RegexFileSeparator
 abbrev="Nm" type="NM_SAME_SIMPLE_NAME_AS_INTERFACE" category="BAD_PRACTICE" --> BadNameOfClassSameAsInterface
 abbrev="Nm" type="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS" category="BAD_PRACTICE" --> BadNameOfClassSameAsSuperclass
+abbrev="INT" type="INT_BAD_COMPARISON_WITH_NONNEGATIVE_VALUE" category="CORRECTNESS" --> ComparisonWithOutOfRangeValue
+abbrev="INT" type="INT_VACUOUS_COMPARISON" category="STYLE" --> ComparisonWithOutOfRangeValue
 
 ==== Not reimplemented
 
@@ -335,8 +337,6 @@ abbrev="EC" type="EC_UNRELATED_CLASS_AND_INTERFACE" category="CORRECTNESS"
 abbrev="MWN" type="MWN_MISMATCHED_WAIT" category="MT_CORRECTNESS"
 abbrev="MWN" type="MWN_MISMATCHED_NOTIFY" category="MT_CORRECTNESS"
 abbrev="INT" type="INT_BAD_COMPARISON_WITH_SIGNED_BYTE" category="CORRECTNESS"
-abbrev="INT" type="INT_BAD_COMPARISON_WITH_NONNEGATIVE_VALUE" category="CORRECTNESS"
-abbrev="INT" type="INT_VACUOUS_COMPARISON" category="STYLE"
 abbrev="BIT" type="BIT_ADD_OF_SIGNED_BYTE" category="CORRECTNESS"
 abbrev="BIT" type="BIT_IOR_OF_SIGNED_BYTE" category="CORRECTNESS"
 abbrev="BIT" type="BIT_AND_ZZ" category="CORRECTNESS"
@@ -397,7 +397,6 @@ abbrev="BC" type="BC_VACUOUS_INSTANCEOF" category="STYLE" cweid="571"
 abbrev="BC" type="BC_BAD_CAST_TO_ABSTRACT_COLLECTION" category="STYLE"
 abbrev="DLS" type="DLS_OVERWRITTEN_INCREMENT" category="CORRECTNESS"
 abbrev="BSHIFT" type="BSHIFT_WRONG_ADD_PRIORITY" category="CORRECTNESS"
-abbrev="IM" type="IM_MULTIPLYING_RESULT_OF_IREM" category="CORRECTNESS"
 abbrev="IM" type="IM_BAD_CHECK_FOR_ODD" category="STYLE"
 abbrev="IM" type="IM_AVERAGE_COMPUTATION_COULD_OVERFLOW" category="STYLE"
 abbrev="BSHIFT" type="ICAST_QUESTIONABLE_UNSIGNED_RIGHT_SHIFT" category="STYLE"
@@ -437,6 +436,10 @@ abbrev="Dm" type="DM_DEFAULT_ENCODING" category="I18N"
 abbrev="NP" type="NP_METHOD_RETURN_RELAXING_ANNOTATION" category="STYLE" 
 abbrev="NP" type="NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION" category="STYLE" 
 
+=== Dubious
+abbrev="IM" type="IM_MULTIPLYING_RESULT_OF_IREM" category="CORRECTNESS"
+
+=== Junk
 abbrev="SKIPPED" type="SKIPPED_CLASS_TOO_BIG" category="EXPERIMENTAL"
 abbrev="VR" type="VR_UNRESOLVABLE_REFERENCE" category="CORRECTNESS" experimental="true"
 abbrev="TEST" type="UNKNOWN" category="EXPERIMENTAL"

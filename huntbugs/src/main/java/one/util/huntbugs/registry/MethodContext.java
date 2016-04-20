@@ -187,16 +187,36 @@ public class MethodContext {
         }
     }
 
+    /**
+     * @param node to get the location for
+     * @return location object which describes given node
+     */
     public Location getLocation(Node node) {
         return mdata.getLocation(node);
     }
 
+    /**
+     * Forget last bug reported by current detector. Subsequent calls of this
+     * method have no effect if no new bugs were reported.
+     */
     public void forgetLastBug() {
         lastWarning = null;
     }
 
+    /**
+     * Report an internal analysis error. Alternatively detector may just throw any exception instead.
+     * 
+     * @param message message to report
+     */
     public void error(String message) {
         ctx.addError(new ErrorMessage(detector, mdata.mainMethod, -1, message));
+    }
+
+    /**
+     * @return true if the method is fully annotated via ValuesFlow
+     */
+    public boolean isAnnotated() {
+        return mdata.isAnnotationComplete;
     }
 
     @Override
