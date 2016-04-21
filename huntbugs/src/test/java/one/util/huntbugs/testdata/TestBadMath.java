@@ -306,4 +306,24 @@ public class TestBadMath {
     public int shiftOk(int input) {
         return input >>> 31;
     }
+    
+    @AssertWarning(type="BitAddSignedByte")
+    public int bitAdd(int src, byte add) {
+        return (src << 8) + add;
+    }
+
+    @AssertWarning(type="BitAddSignedByte")
+    public long bitAdd(long src, byte add) {
+        return (src << 8) + add;
+    }
+
+    @AssertWarning(type="BitAddSignedByte")
+    public int bitAdd2(int src, byte add) {
+        return (src & 0xFFFFFF00) + add;
+    }
+
+    @AssertWarning(type="BitOrSignedByte")
+    public int bitOr(int src, byte add) {
+        return (src << 8) | add;
+    }
 }

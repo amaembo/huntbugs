@@ -696,6 +696,19 @@
       <LongDescription><![CDATA[This code performs a bit shift like <code>(x $OPERATION$ $NUMBER$)</code> where number of bits is not in the (0..$MAX_VALUE$) range.
       In this case only lower bits will be used (e.g. <code>val &gt;&gt; 70</code> is equal to <code>val &gt;&gt; 6</code>). Probably something else was meant here.]]></LongDescription>
     </Warning>
+    <Warning Type="BitAddSignedByte">
+      <Title>Adding a signed byte to the value with low 8 bits clear</Title>
+      <Description>Adding a signed byte to the value with low 8 bits clear in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code adds a signed byte value to another value which has low 8 bits clear like <code>(x << 8) + byteValue</code>.
+      Probably it was intended to add unsigned byte value like <code>(x << 8) + (byteValue &amp; 0xFF)</code>.]]></LongDescription>
+    </Warning>
+    <Warning Type="BitOrSignedByte">
+      <Title>Bitwise or with a signed byte</Title>
+      <Description>Bitwise or with a signed byte in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code performs bitwise or of a signed byte value with another value which has low 8 bits clear like <code>(x << 8) | byteValue</code>.
+      Usually this is a mistake as if byteValue is negative, it will be widened to <code>0xFFFFFFbb</code> and higher bits
+      will be affected as well. Probably it was intended to use unsigned byte value like <code>(x << 8) | (byteValue &amp; 0xFF)</code>.]]></LongDescription>
+    </Warning>
     <Warning Type="ComparisonWithOutOfRangeValue">
       <Title>Numeric comparison is always true or false</Title>
       <Description>Numeric comparison like (x $OPERATION$ $NUMBER$) is always $RESULT$.</Description>

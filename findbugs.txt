@@ -115,6 +115,9 @@ abbrev="INT" type="INT_BAD_COMPARISON_WITH_NONNEGATIVE_VALUE" category="CORRECTN
 abbrev="INT" type="INT_VACUOUS_COMPARISON" category="STYLE" --> ComparisonWithOutOfRangeValue
 abbrev="IP" type="IP_PARAMETER_IS_DEAD_BUT_OVERWRITTEN" category="CORRECTNESS" cweid="563" --> ParameterOverwritten
 abbrev="INT" type="INT_BAD_COMPARISON_WITH_SIGNED_BYTE" category="CORRECTNESS" --> ComparisonWithOutOfRangeValue, SwitchBranchUnreachable
+abbrev="BIT" type="BIT_ADD_OF_SIGNED_BYTE" category="CORRECTNESS" --> BitAddSignedByte
+abbrev="BIT" type="BIT_IOR_OF_SIGNED_BYTE" category="CORRECTNESS" --> BitOrSignedByte
+abbrev="BIT" type="BIT_AND_ZZ" category="CORRECTNESS" --> UselessAndWithZero *
 
 ==== Not reimplemented
 
@@ -338,9 +341,6 @@ abbrev="EC" type="EC_UNRELATED_INTERFACES" category="CORRECTNESS"
 abbrev="EC" type="EC_UNRELATED_CLASS_AND_INTERFACE" category="CORRECTNESS"
 abbrev="MWN" type="MWN_MISMATCHED_WAIT" category="MT_CORRECTNESS"
 abbrev="MWN" type="MWN_MISMATCHED_NOTIFY" category="MT_CORRECTNESS"
-abbrev="BIT" type="BIT_ADD_OF_SIGNED_BYTE" category="CORRECTNESS"
-abbrev="BIT" type="BIT_IOR_OF_SIGNED_BYTE" category="CORRECTNESS"
-abbrev="BIT" type="BIT_AND_ZZ" category="CORRECTNESS"
 abbrev="SA" type="SA_LOCAL_DOUBLE_ASSIGNMENT" category="STYLE"
 abbrev="SA" type="SA_FIELD_DOUBLE_ASSIGNMENT" category="STYLE"
 abbrev="LI" type="LI_LAZY_INIT_STATIC" category="MT_CORRECTNESS" cweid="543"

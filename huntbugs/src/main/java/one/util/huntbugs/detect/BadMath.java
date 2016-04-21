@@ -20,6 +20,7 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -41,6 +42,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "Correctness", name = "BitCheckGreaterNegative", maxScore = 80)
 @WarningDefinition(category = "Correctness", name = "BitShiftInvalidAmount", maxScore = 75)
 @WarningDefinition(category = "BadPractice", name = "BitCheckGreater", maxScore = 35)
+@WarningDefinition(category = "Correctness", name = "BitOrSignedByte", maxScore = 50)
+@WarningDefinition(category = "Correctness", name = "BitAddSignedByte", maxScore = 35)
 // TODO: procyon optimizes too hard to detect "UselessAndWithZero"
 public class BadMath {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
@@ -55,7 +58,12 @@ public class BadMath {
                 mc.report("RemOne", 0, expr.getArguments().get(0));
             }
             break;
+        case Add:
+            checkSignedByte(expr, mc);
+            break;
         case Or:
+            checkSignedByte(expr, mc);
+            // passthru
         case Xor:
             if (exprType == JvmType.Long || exprType == JvmType.Integer) {
                 Nodes.ifBinaryWithConst(expr, (child, constant) -> {
@@ -138,6 +146,48 @@ public class BadMath {
         }
         default:
         }
+    }
+
+    private void checkSignedByte(Expression expr, MethodContext mc) {
+        JvmType type = expr.getInferredType().getSimpleType();
+        if (type != JvmType.Integer && type != JvmType.Long)
+            return;
+        if (ValuesFlow.findUsages(expr).stream().allMatch(e -> e.getCode() == AstCode.I2B))
+            return;
+        Expression left = Nodes.getChild(expr, 0);
+        Expression right = Nodes.getChild(expr, 1);
+        if (isByte(left) && isLow8BitsClear(right)
+            || isByte(right) && isLow8BitsClear(left)) {
+            mc.report(expr.getCode() == AstCode.Add ? "BitAddSignedByte" : "BitOrSignedByte", 0, expr);
+        }
+    }
+
+    private static boolean isByte(Expression expr) {
+        if(expr.getCode() == AstCode.I2L)
+            return isByte(Nodes.getChild(expr, 0));
+        TypeReference type = expr.getInferredType();
+        return type != null && type.getInternalName().equals("B");
+    }
+
+    private static boolean isLow8BitsClear(Expression arg) {
+        Object value = Nodes.getConstant(arg);
+        if (value instanceof Number) {
+            long num = ((Number) value).longValue();
+            return num != 0x100 && (num & 0xFF) == 0;
+        }
+        if (arg.getCode() == AstCode.Shl) {
+            Object shiftAmount = Nodes.getConstant(arg.getArguments().get(1));
+            return shiftAmount instanceof Number && (((Number) shiftAmount).intValue() & 0x1F) >= 8;
+        }
+        if (arg.getCode() == AstCode.And) {
+            Object leftOp = Nodes.getConstant(arg.getArguments().get(0));
+            Object rightOp = Nodes.getConstant(arg.getArguments().get(1));
+            if (leftOp instanceof Number && (((Number) leftOp).longValue() & 0xFF) == 0)
+                return true;
+            if (rightOp instanceof Number && (((Number) rightOp).longValue() & 0xFF) == 0)
+                return true;
+        }
+        return false;
     }
 
     private static boolean isConst(Expression expr, long wantedValue) {
