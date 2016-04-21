@@ -229,12 +229,12 @@ class Frame {
                 link(expr, source);
                 target = target.replace(slot, expr);
                 Object val = source.getUserData(ValuesFlow.VALUE_KEY);
-                if(val == UNKNOWN_VALUE)
+                if (val == UNKNOWN_VALUE)
                     expr.putUserData(ValuesFlow.VALUE_KEY, UNKNOWN_VALUE);
-                else if(val instanceof Integer)
-                    return target.processUnaryOp(expr, Integer.class, inc -> ((int)val)+inc);
-                else if(val instanceof Long)
-                    return target.processUnaryOp(expr, Long.class, inc -> ((long)val)+inc);
+                else if (val instanceof Integer)
+                    return target.processUnaryOp(expr, Integer.class, inc -> ((int) val) + inc);
+                else if (val instanceof Long)
+                    return target.processUnaryOp(expr, Long.class, inc -> ((long) val) + inc);
             }
             return target;
         case PostIncrement:
@@ -266,7 +266,7 @@ class Frame {
         }
         case GetStatic: {
             FieldDefinition fd = ((FieldReference) expr.getOperand()).resolve();
-            if(fd != null && fd.isEnumConstant()) {
+            if (fd != null && fd.isEnumConstant()) {
                 storeValue(expr, new EnumConstant(fd.getDeclaringType().getInternalName(), fd.getName()));
             }
             return target;
@@ -288,15 +288,15 @@ class Frame {
     }
 
     private static void link(Expression target, Expression source) {
-        if(source.getCode() == PHI_TYPE) {
+        if (source.getCode() == PHI_TYPE) {
             source.getArguments().forEach(arg -> link(target, arg));
             return;
         }
         Set<Expression> set = source.getUserData(ValuesFlow.BACK_LINKS_KEY);
-        if(set == null) {
+        if (set == null) {
             set = new HashSet<>();
             source.putUserData(ValuesFlow.BACK_LINKS_KEY, set);
-        } else if(!(set instanceof HashSet)) {
+        } else if (!(set instanceof HashSet)) {
             set = new HashSet<>(set);
             source.putUserData(ValuesFlow.BACK_LINKS_KEY, set);
         }
@@ -305,8 +305,9 @@ class Frame {
 
     private void storeValue(Expression expr, Object val) {
         Object curValue = expr.getUserData(ValuesFlow.VALUE_KEY);
-        if(Objects.equals(val, curValue) || curValue == UNKNOWN_VALUE) return;
-        if(curValue == null)
+        if (Objects.equals(val, curValue) || curValue == UNKNOWN_VALUE)
+            return;
+        if (curValue == null)
             expr.putUserData(ValuesFlow.VALUE_KEY, val);
         else
             expr.putUserData(ValuesFlow.VALUE_KEY, UNKNOWN_VALUE);
@@ -323,7 +324,7 @@ class Frame {
                 && Objects.equals(left.getOperand(), right.getOperand()))
                 continue;
             Expression phi = makePhiNode(left, right);
-            if(phi == left)
+            if (phi == left)
                 continue;
             if (res == null)
                 res = sources.clone();
@@ -331,26 +332,26 @@ class Frame {
         }
         return res == null ? this : new Frame(this, res);
     }
-    
+
     private static boolean isEqual(Expression left, Expression right) {
-        if(left == right)
+        if (left == right)
             return true;
         if (left == null || right == null)
             return false;
         if (left.getCode() == PHI_TYPE && right.getCode() == PHI_TYPE) {
             List<Expression> leftArgs = left.getArguments();
             List<Expression> rightArgs = right.getArguments();
-            if(leftArgs.size() != rightArgs.size())
+            if (leftArgs.size() != rightArgs.size())
                 return false;
-            for(Expression arg : rightArgs) {
-                if(!leftArgs.contains(arg))
+            for (Expression arg : rightArgs) {
+                if (!leftArgs.contains(arg))
                     return false;
             }
             return true;
         }
         return false;
     }
-    
+
     static boolean isEqual(Frame left, Frame right) {
         if (left == right)
             return true;
@@ -358,8 +359,8 @@ class Frame {
             return false;
         Expression[] l = left.sources;
         Expression[] r = right.sources;
-        for(int i=0; i<l.length; i++) {
-            if(!isEqual(l[i], r[i]))
+        for (int i = 0; i < l.length; i++) {
+            if (!isEqual(l[i], r[i]))
                 return false;
         }
         return true;
@@ -553,7 +554,7 @@ class Frame {
         }
         return target;
     }
-    
+
     private Frame processAdd(Expression expr, Frame target) {
         switch (getType(expr)) {
         case Integer:
@@ -572,17 +573,14 @@ class Frame {
     private Frame processCmpGe(Expression expr, Frame target) {
         switch (getType(expr.getArguments().get(0))) {
         case Integer:
-            return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() >= b
-                    .intValue());
+            return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() >= b.intValue());
         case Long:
-            return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a.longValue() >= b
-                    .longValue());
+            return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a.longValue() >= b.longValue());
         case Double:
             return target.processBinaryOp(expr, Double.class, Double.class, (a, b) -> a.doubleValue() >= b
                     .doubleValue());
         case Float:
-            return target.processBinaryOp(expr, Float.class, Float.class, (a, b) -> a.floatValue() >= b
-                    .floatValue());
+            return target.processBinaryOp(expr, Float.class, Float.class, (a, b) -> a.floatValue() >= b.floatValue());
         default:
         }
         return target;
@@ -591,17 +589,14 @@ class Frame {
     private Frame processCmpGt(Expression expr, Frame target) {
         switch (getType(expr.getArguments().get(0))) {
         case Integer:
-            return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() > b
-                    .intValue());
+            return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() > b.intValue());
         case Long:
-            return target
-                    .processBinaryOp(expr, Long.class, Long.class, (a, b) -> a.longValue() > b.longValue());
+            return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a.longValue() > b.longValue());
         case Double:
-            return target.processBinaryOp(expr, Double.class, Double.class, (a, b) -> a.doubleValue() > b
-                    .doubleValue());
+            return target
+                    .processBinaryOp(expr, Double.class, Double.class, (a, b) -> a.doubleValue() > b.doubleValue());
         case Float:
-            return target.processBinaryOp(expr, Float.class, Float.class, (a, b) -> a.floatValue() > b
-                    .floatValue());
+            return target.processBinaryOp(expr, Float.class, Float.class, (a, b) -> a.floatValue() > b.floatValue());
         default:
         }
         return target;
@@ -610,16 +605,14 @@ class Frame {
     private Frame processCmpLe(Expression expr, Frame target) {
         switch (getType(expr.getArguments().get(0))) {
         case Integer:
-            return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() <= b
-                    .intValue());
+            return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() <= b.intValue());
         case Long:
             return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a.longValue() <= b.longValue());
         case Double:
             return target.processBinaryOp(expr, Double.class, Double.class, (a, b) -> a.doubleValue() <= b
                     .doubleValue());
         case Float:
-            return target.processBinaryOp(expr, Float.class, Float.class, (a, b) -> a.floatValue() <= b
-                    .floatValue());
+            return target.processBinaryOp(expr, Float.class, Float.class, (a, b) -> a.floatValue() <= b.floatValue());
         default:
         }
         return target;
@@ -628,16 +621,14 @@ class Frame {
     private Frame processCmpLt(Expression expr, Frame target) {
         switch (getType(expr.getArguments().get(0))) {
         case Integer:
-            return target
-                    .processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() < b.intValue());
+            return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() < b.intValue());
         case Long:
             return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a.longValue() < b.longValue());
         case Double:
-            return target.processBinaryOp(expr, Double.class, Double.class, (a, b) -> a.doubleValue() < b
-                    .doubleValue());
-        case Float:
             return target
-                    .processBinaryOp(expr, Float.class, Float.class, (a, b) -> a.floatValue() < b.floatValue());
+                    .processBinaryOp(expr, Double.class, Double.class, (a, b) -> a.doubleValue() < b.doubleValue());
+        case Float:
+            return target.processBinaryOp(expr, Float.class, Float.class, (a, b) -> a.floatValue() < b.floatValue());
         default:
         }
         return target;
@@ -646,16 +637,14 @@ class Frame {
     private Frame processCmpNe(Expression expr, Frame target) {
         switch (getType(expr.getArguments().get(0))) {
         case Integer:
-            return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() != b
-                    .intValue());
+            return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() != b.intValue());
         case Long:
             return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a.longValue() != b.longValue());
         case Double:
             return target.processBinaryOp(expr, Double.class, Double.class, (a, b) -> a.doubleValue() != b
                     .doubleValue());
         case Float:
-            return target.processBinaryOp(expr, Float.class, Float.class, (a, b) -> a.floatValue() != b
-                    .floatValue());
+            return target.processBinaryOp(expr, Float.class, Float.class, (a, b) -> a.floatValue() != b.floatValue());
         default:
         }
         return target;
@@ -664,50 +653,55 @@ class Frame {
     private Frame processCmpEq(Expression expr, Frame target) {
         switch (getType(expr.getArguments().get(0))) {
         case Integer:
-            return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() == b
-                    .intValue());
+            return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() == b.intValue());
         case Long:
             return target.processBinaryOp(expr, Long.class, Long.class, (a, b) -> a.longValue() == b.longValue());
         case Double:
             return target.processBinaryOp(expr, Double.class, Double.class, (a, b) -> a.doubleValue() == b
                     .doubleValue());
         case Float:
-            return target.processBinaryOp(expr, Float.class, Float.class, (a, b) -> a.floatValue() == b
-                    .floatValue());
+            return target.processBinaryOp(expr, Float.class, Float.class, (a, b) -> a.floatValue() == b.floatValue());
         default:
         }
         return target;
     }
 
     private Expression makePhiNode(Expression left, Expression right) {
-        if(left == null)
+        if (left == null)
             return right;
-        if(right == null)
+        if (right == null)
             return left;
+        if (left.getCode() == UPDATE_TYPE) {
+            Expression leftContent = left.getArguments().get(0);
+            if (leftContent == right || right.getCode() == UPDATE_TYPE && leftContent == right.getArguments().get(0))
+                return left;
+        } else if (right.getCode() == UPDATE_TYPE && right.getArguments().get(0) == left) {
+            return right;
+        }
         List<Expression> children = new ArrayList<>();
-        if(left.getCode() == PHI_TYPE) {
+        if (left.getCode() == PHI_TYPE) {
             children.addAll(left.getArguments());
         } else {
             children.add(left);
         }
         int baseSize = children.size();
-        if(right.getCode() == PHI_TYPE) {
-            for(Expression arg : right.getArguments()) {
-                if(!children.contains(arg))
+        if (right.getCode() == PHI_TYPE) {
+            for (Expression arg : right.getArguments()) {
+                if (!children.contains(arg))
                     children.add(arg);
             }
         } else {
-            if(!children.contains(right))
+            if (!children.contains(right))
                 children.add(right);
         }
-        if(children.size() == baseSize) {
+        if (children.size() == baseSize) {
             return left;
         }
         Expression phi = new Expression(PHI_TYPE, null, 0, children);
         Object leftValue = ValuesFlow.getValue(left);
         Object rightValue = ValuesFlow.getValue(right);
-        if(leftValue != null || rightValue != null) {
-            if(Objects.equals(leftValue, rightValue))
+        if (leftValue != null || rightValue != null) {
+            if (Objects.equals(leftValue, rightValue))
                 storeValue(phi, leftValue);
             else
                 storeValue(phi, UNKNOWN_VALUE);
