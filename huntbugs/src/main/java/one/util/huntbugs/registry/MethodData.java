@@ -47,9 +47,9 @@ final class MethodData {
     // May differ from mainMethod when inside lambda
     MethodDefinition realMethod;
     NodeChain parents;
-    boolean isAnnotationComplete;
 
     private OffsetToLineNumberConverter ltc;
+    List<Expression> origParams;
 
     MethodData(MethodDefinition md, MemberAsserter ma) {
         this.mainMethod = this.realMethod = md;

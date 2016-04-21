@@ -16,12 +16,15 @@
 package one.util.huntbugs.flow;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import one.util.huntbugs.analysis.Context;
@@ -303,23 +306,26 @@ public class ValuesFlow {
                 initBackLinks(child, lambdas);
     }
 
-    public static boolean annotate(Context ctx, MethodDefinition md, Block method) {
+    public static List<Expression> annotate(Context ctx, MethodDefinition md, Block method) {
         ctx.incStat("ValuesFlow.Total");
         List<Lambda> lambdas = new ArrayList<>();
         initBackLinks(method, lambdas);
-        FrameSet fs = new FrameSet(new Frame(md));
+        Frame origFrame = new Frame(md);
+        List<Expression> origParams = Arrays.stream(origFrame.sources)
+                .filter(Objects::nonNull).collect(Collectors.toList());
+        FrameSet fs = new FrameSet(origFrame);
         fs.process(ctx, method);
         if (fs.valid) {
             boolean valid = true;
             for(Lambda lambda : lambdas) {
-                valid &= annotate(ctx, Nodes.getLambdaMethod(lambda), lambda.getBody());
+                valid &= annotate(ctx, Nodes.getLambdaMethod(lambda), lambda.getBody()) != null;
             }
             if (valid) {
                 ctx.incStat("ValuesFlow");
-                return true;
+                return origParams;
             }
         }
-        return false;
+        return null;
     }
 
     public static TypeReference reduceType(Expression input) {

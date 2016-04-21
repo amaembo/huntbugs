@@ -215,11 +215,10 @@ public class DetectorRegistry {
                     context.setCurrentMethod(md);
                     context.setCurrentType(type);
                     Block methodAst = new Block();
-                    boolean isAnnotationComplete = false;
                     try {
                         methodAst.getBody().addAll(AstBuilder.build(body, true, context));
                         AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
-                        mdata.isAnnotationComplete = ValuesFlow.annotate(ctx, md, methodAst);
+                        mdata.origParams = ValuesFlow.annotate(ctx, md, methodAst);
                     } catch (Throwable t) {
                         ctx.addError(new ErrorMessage(null, type.getFullName(), md.getFullName(), md.getSignature(),
                                 -1, t));

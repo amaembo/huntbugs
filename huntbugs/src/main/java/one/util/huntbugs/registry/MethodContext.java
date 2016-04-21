@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import one.util.huntbugs.analysis.Context;
@@ -32,6 +33,7 @@ import one.util.huntbugs.warning.WarningType;
 
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 import com.strobel.decompiler.ast.Variable;
@@ -216,7 +218,17 @@ public class MethodContext {
      * @return true if the method is fully annotated via ValuesFlow
      */
     public boolean isAnnotated() {
-        return mdata.isAnnotationComplete;
+        return mdata.origParams != null;
+    }
+    
+    public Set<Expression> getParameterUsages(ParameterDefinition pd) {
+        if(mdata.origParams == null)
+            return null;
+        for(Expression expr : mdata.origParams) {
+            if(expr.getOperand() == pd)
+                return ValuesFlow.findUsages(expr);
+        }
+        return null;
     }
 
     @Override

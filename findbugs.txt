@@ -113,6 +113,7 @@ abbrev="Nm" type="NM_SAME_SIMPLE_NAME_AS_INTERFACE" category="BAD_PRACTICE" --> 
 abbrev="Nm" type="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS" category="BAD_PRACTICE" --> BadNameOfClassSameAsSuperclass
 abbrev="INT" type="INT_BAD_COMPARISON_WITH_NONNEGATIVE_VALUE" category="CORRECTNESS" --> ComparisonWithOutOfRangeValue
 abbrev="INT" type="INT_VACUOUS_COMPARISON" category="STYLE" --> ComparisonWithOutOfRangeValue
+abbrev="IP" type="IP_PARAMETER_IS_DEAD_BUT_OVERWRITTEN" category="CORRECTNESS" cweid="563" --> ParameterOverwritten
 
 ==== Not reimplemented
 
@@ -375,7 +376,6 @@ abbrev="DLS" type="DLS_DEAD_STORE_OF_CLASS_LITERAL" category="CORRECTNESS"
 abbrev="DLS" type="DLS_DEAD_LOCAL_STORE" category="STYLE"
 abbrev="DLS" type="DLS_DEAD_LOCAL_STORE_SHADOWS_FIELD" category="STYLE"
 abbrev="DLS" type="DLS_DEAD_LOCAL_STORE_OF_NULL" category="STYLE"
-abbrev="IP" type="IP_PARAMETER_IS_DEAD_BUT_OVERWRITTEN" category="CORRECTNESS" cweid="563"
 abbrev="MF" type="MF_METHOD_MASKS_FIELD" category="CORRECTNESS"
 abbrev="MF" type="MF_CLASS_MASKS_FIELD" category="CORRECTNESS"
 abbrev="ISC" type="ISC_INSTANTIATE_STATIC_CLASS" category="BAD_PRACTICE"

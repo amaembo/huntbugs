@@ -15,32 +15,47 @@
  */
 package one.util.huntbugs.detect;
 
-import java.util.Collections;
+import java.util.Set;
 
+
+
+import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.decompiler.ast.AstCode;
+import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.Expression;
+import com.strobel.decompiler.ast.Node;
+import com.strobel.decompiler.ast.Variable;
 
-import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Nodes;
 
 /**
  * @author lan
  *
  */
-@WarningDefinition(category="RedundantCode", name="DeadStoreOfLocalVariable", maxScore=60)
+@WarningDefinition(category="Correctness", name="ParameterOverwritten", maxScore=60)
 public class DeadLocalStore {
-    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
-    public boolean visit(Expression expr, MethodContext mc) {
+    @AstVisitor(nodes=AstNodes.ROOT)
+    public void visitBody(Block body, MethodContext mc, MethodDefinition md) {
         if(!mc.isAnnotated())
-            return false;
-        if (expr.getCode() == AstCode.Store
-            && ValuesFlow.getSource(expr) == expr
-            && ValuesFlow.findUsages(expr.getArguments().get(0)).equals(Collections.singleton(expr))) {
-            mc.report("DeadStoreOfLocalVariable", 0, expr);
+            return;
+        for(ParameterDefinition pd : md.getParameters()) {
+            Set<Expression> usages = mc.getParameterUsages(pd);
+            if(usages != null && usages.isEmpty()) {
+                Node overwrite = Nodes.find(body, n -> {
+                    if(!(n instanceof Expression)) return false;
+                    Expression expr = (Expression) n;
+                    return expr.getCode() == AstCode.Store
+                            && ((Variable)expr.getOperand()).getOriginalParameter() == pd;
+                });
+                if(overwrite != null) {
+                    mc.report("ParameterOverwritten", 0, overwrite);
+                }
+            }
         }
-        return true;
     }
 }

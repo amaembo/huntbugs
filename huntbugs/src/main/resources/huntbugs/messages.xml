@@ -721,5 +721,11 @@
       which is interpreted in a regular expression as an escape character.<br>
       To fix this code you may use <code>Pattern.quote(File.separator)</code>.]]></LongDescription>
     </Warning>
+    <Warning Type="ParameterOverwritten">
+      <Title>Argument is not used and overwritten</Title>
+      <Description>Argument $VARIABLE$ is not used and overwritten in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code method accepts an argument $VARIABLE$, but its initial value
+      is not used and overwritten in the method. This may indicate a logical error in the program.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

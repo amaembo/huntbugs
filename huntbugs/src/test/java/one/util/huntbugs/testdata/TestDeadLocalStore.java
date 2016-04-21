@@ -22,9 +22,9 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestDeadLocalStore {
-    @AssertWarning(type="DeadStoreOfLocalVariable")
-    public void testDeadLocalSimple() {
-        int a = 5;
-        System.out.println(5);
+    @AssertWarning(type="ParameterOverwritten")
+    public void testDeadLocalSimple(int x) {
+        x = 10;
+        System.out.println(x);
     }
 }
