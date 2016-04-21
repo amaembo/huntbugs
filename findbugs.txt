@@ -119,9 +119,12 @@ abbrev="BIT" type="BIT_ADD_OF_SIGNED_BYTE" category="CORRECTNESS" --> BitAddSign
 abbrev="BIT" type="BIT_IOR_OF_SIGNED_BYTE" category="CORRECTNESS" --> BitOrSignedByte
 abbrev="BIT" type="BIT_AND_ZZ" category="CORRECTNESS" --> UselessAndWithZero *
 abbrev="JLM" type="JML_JSR166_CALLING_WAIT_RATHER_THAN_AWAIT" category="MT_CORRECTNESS" --> IncorrectConcurrentMethod
+abbrev="DL" type="DL_SYNCHRONIZATION_ON_BOOLEAN" category="MT_CORRECTNESS" --> SynchronizationOnBoolean
+abbrev="DL" type="DL_SYNCHRONIZATION_ON_BOXED_PRIMITIVE" category="MT_CORRECTNESS" --> SynchronizationOnBoxedNumber
+abbrev="DL" type="DL_SYNCHRONIZATION_ON_UNSHARED_BOXED_PRIMITIVE" category="MT_CORRECTNESS" --> SynchronizationOnUnsharedBoxed
 
 ==== Not reimplemented
-
+abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SERVLET_WRITER" category="SECURITY"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_JSP_WRITER" category="SECURITY"
@@ -193,10 +196,6 @@ abbrev="HE" type="HE_INHERITS_EQUALS_USE_HASHCODE" category="BAD_PRACTICE"
 abbrev="HE" type="HE_EQUALS_NO_HASHCODE" category="BAD_PRACTICE"
 abbrev="Eq" type="EQ_ABSTRACT_SELF" category="BAD_PRACTICE"
 abbrev="Co" type="CO_ABSTRACT_SELF" category="BAD_PRACTICE"
-abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"
-abbrev="DL" type="DL_SYNCHRONIZATION_ON_BOOLEAN" category="MT_CORRECTNESS"
-abbrev="DL" type="DL_SYNCHRONIZATION_ON_BOXED_PRIMITIVE" category="MT_CORRECTNESS"
-abbrev="DL" type="DL_SYNCHRONIZATION_ON_UNSHARED_BOXED_PRIMITIVE" category="MT_CORRECTNESS"
 abbrev="WL" type="WL_USING_GETCLASS_RATHER_THAN_CLASS_LITERAL" category="MT_CORRECTNESS"
 abbrev="ESync" type="ESync_EMPTY_SYNC" category="MT_CORRECTNESS" cweid="585"
 abbrev="MSF" type="MSF_MUTABLE_SERVLET_FIELD" category="MT_CORRECTNESS"

@@ -16,15 +16,12 @@
 package one.util.huntbugs.flow;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import one.util.huntbugs.analysis.Context;
@@ -311,8 +308,7 @@ public class ValuesFlow {
         List<Lambda> lambdas = new ArrayList<>();
         initBackLinks(method, lambdas);
         Frame origFrame = new Frame(md);
-        List<Expression> origParams = Arrays.stream(origFrame.sources)
-                .filter(Objects::nonNull).collect(Collectors.toList());
+        List<Expression> origParams = new ArrayList<>(origFrame.initial.values());
         FrameSet fs = new FrameSet(origFrame);
         fs.process(ctx, method);
         if (fs.valid) {

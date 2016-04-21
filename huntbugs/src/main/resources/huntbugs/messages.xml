@@ -753,5 +753,22 @@
       like $REPLACEMENT$ was intended. Even if this code is written as intended, this is a bad practice and might be extremely confusing for
       other developers.]]></LongDescription>
     </Warning>
+    <Warning Type="SynchronizationOnBoolean">
+      <Title>Synchronization on Boolean</Title>
+      <Description>Synchronization on $MONITOR_TYPE$ in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code synchronizes on a boxed $MONITOR_TYPE$ value. Since there normally exist only two Boolean objects, this code could be synchronizing on the same object as other, unrelated code, leading to unresponsiveness and possible deadlock.]]></LongDescription>
+    </Warning>
+    <Warning Type="SynchronizationOnBoxedNumber">
+      <Title>Synchronization on boxed number</Title>
+      <Description>Synchronization on $MONITOR_TYPE$ in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code synchronizes on a boxed $MONITOR_TYPE$ value. Since $MONITOR_TYPE$ objects can be cached and shared, this code could be synchronizing on the same object as other, unrelated code, leading to unresponsiveness and possible deadlock.]]></LongDescription>
+    </Warning>
+    <Warning Type="SynchronizationOnUnsharedBoxed">
+      <Title>Synchronization on unshared boxed value</Title>
+      <Description>Synchronization on newly-created $MONITOR_TYPE$ in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code synchronizes on a newly-created $MONITOR_TYPE$ value. 
+      This may work correctly, but confusing and prone to errors. For example, applying automatic refactoring IDE feature like 'Remove unnecessary boxing'
+      may silently break your code. It's much better to use <code>new Object()</code> as a lock variable.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

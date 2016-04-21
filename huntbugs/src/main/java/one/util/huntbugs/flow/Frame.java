@@ -17,7 +17,10 @@ package one.util.huntbugs.flow;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -25,8 +28,6 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.util.Variables;
-
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.JvmType;
@@ -34,26 +35,34 @@ import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.assembler.metadata.TypeReference;
-import com.strobel.assembler.metadata.VariableDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Variable;
 
 class Frame {
-    final Expression[] sources;
-    final MethodDefinition md;
+    private final Map<Variable, Expression> sources;
+    private final MethodDefinition md;
+    final Map<ParameterDefinition, Expression> initial;
     static final AstCode PHI_TYPE = AstCode.Wrap;
     static final AstCode UPDATE_TYPE = AstCode.Nop;
     static final Object UNKNOWN_VALUE = new Object();
+    
+    Expression get(Variable var) {
+        Expression expr = sources.get(var);
+        if(expr != null)
+            return expr;
+        return initial.get(var.getOriginalParameter());
+    }
 
     Frame(MethodDefinition md) {
-        this.sources = new Expression[md.getBody().getMaxLocals()];
+        this.sources = new IdentityHashMap<>();
         this.md = md;
-        for (ParameterDefinition pd : md.getParameters()) {
-            Expression expression = new Expression(AstCode.Load, pd, 0);
-            expression.setInferredType(pd.getParameterType());
-            expression.setExpectedType(pd.getParameterType());
-            sources[pd.getSlot()] = expression;
+        this.initial = new IdentityHashMap<>();
+        for(ParameterDefinition pd : md.getParameters()) {
+            Expression pde = new Expression(AstCode.Load, pd, 0);
+            pde.setExpectedType(pd.getParameterType());
+            pde.setInferredType(pd.getParameterType());
+            initial.put(pd, pde);
         }
     }
 
@@ -83,10 +92,7 @@ class Frame {
             Expression source = ValuesFlow.getSource(arg);
             Object val = arg.getUserData(ValuesFlow.VALUE_KEY);
             storeValue(expr, val);
-            VariableDefinition origVar = var.getOriginalVariable();
-            if (origVar != null)
-                return target.replace(origVar.getSlot(), source);
-            return target;
+            return target.replace(var, source);
         }
         case LdC: {
             storeValue(expr, expr.getOperand());
@@ -208,26 +214,22 @@ class Frame {
             return processNeg(expr, target);
         case Load: {
             Variable var = ((Variable) expr.getOperand());
-            VariableDefinition origVar = var.getOriginalVariable();
             // TODO: support transferring variables from outer method to lambda
-            if (origVar != null && Variables.getMethodDefinition(origVar) == md) {
-                Expression source = sources[origVar.getSlot()];
-                if (source != null) {
-                    expr.putUserData(ValuesFlow.SOURCE_KEY, source);
-                    link(expr, source);
-                    Object val = source.getUserData(ValuesFlow.VALUE_KEY);
-                    storeValue(expr, val);
-                }
+            Expression source = get(var);
+            if (source != null) {
+                expr.putUserData(ValuesFlow.SOURCE_KEY, source);
+                link(expr, source);
+                Object val = source.getUserData(ValuesFlow.VALUE_KEY);
+                storeValue(expr, val);
             }
             return this;
         }
         case Inc:
             if (expr.getOperand() instanceof Variable) {
                 Variable var = ((Variable) expr.getOperand());
-                int slot = var.getOriginalVariable().getSlot();
-                Expression source = sources[slot];
+                Expression source = get(var);
                 link(expr, source);
-                target = target.replace(slot, expr);
+                target = target.replace(var, expr);
                 Object val = source.getUserData(ValuesFlow.VALUE_KEY);
                 if (val == UNKNOWN_VALUE)
                     expr.putUserData(ValuesFlow.VALUE_KEY, UNKNOWN_VALUE);
@@ -242,11 +244,10 @@ class Frame {
             Expression arg = expr.getArguments().get(0);
             if (arg.getOperand() instanceof Variable) {
                 Variable var = ((Variable) arg.getOperand());
-                int slot = var.getOriginalVariable().getSlot();
-                Expression source = sources[slot];
+                Expression source = get(var);
                 link(expr, source);
                 // TODO: pass values
-                return target.replace(slot, expr);
+                return target.replace(var, expr);
             }
             return target;
         }
@@ -314,10 +315,10 @@ class Frame {
     }
 
     Frame merge(Frame other) {
-        Expression[] res = null;
-        for (int i = 0; i < sources.length; i++) {
-            Expression left = sources[i];
-            Expression right = other.sources[i];
+        Map<Variable, Expression> res = null;
+        for (Entry<Variable, Expression> e : sources.entrySet()) {
+            Expression left = e.getValue();
+            Expression right = other.sources.get(e.getKey());
             if (right == null || right == left)
                 continue;
             if (left != null && left.getCode() == AstCode.LdC && right.getCode() == AstCode.LdC
@@ -327,10 +328,25 @@ class Frame {
             if (phi == left)
                 continue;
             if (res == null)
-                res = sources.clone();
-            res[i] = phi;
+                res = new IdentityHashMap<>(sources);
+            res.put(e.getKey(), phi);
+        }
+        for(Entry<Variable, Expression> e : other.sources.entrySet()) {
+            if(!sources.containsKey(e.getKey())) {
+                if (res == null)
+                    res = new IdentityHashMap<>(sources);
+                res.put(e.getKey(), e.getValue());
+            }
         }
         return res == null ? this : new Frame(this, res);
+    }
+
+    static Frame merge(Frame left, Frame right) {
+        if (left == null || left == right)
+            return right;
+        if (right == null)
+            return left;
+        return left.merge(right);
     }
 
     private static boolean isEqual(Expression left, Expression right) {
@@ -357,47 +373,41 @@ class Frame {
             return true;
         if (left == null || right == null)
             return false;
-        Expression[] l = left.sources;
-        Expression[] r = right.sources;
-        for (int i = 0; i < l.length; i++) {
-            if (!isEqual(l[i], r[i]))
+        Map<Variable, Expression> l = left.sources;
+        Map<Variable, Expression> r = right.sources;
+        if(l.size() != r.size())
+            return false;
+        for(Entry<Variable, Expression> e : l.entrySet()) {
+            if(!isEqual(e.getValue(), r.get(e.getKey())))
                 return false;
         }
         return true;
     }
 
-    static Frame merge(Frame left, Frame right) {
-        if (left == null)
-            return right;
-        if (right == null)
-            return left;
-        return left.merge(right);
-    }
-
-    private Frame(Frame parent, Expression[] sources) {
+    private Frame(Frame parent, Map<Variable, Expression> sources) {
         this.md = parent.md;
+        this.initial = parent.initial;
         this.sources = sources;
     }
 
-    private Frame replace(int pos, Expression replacement) {
-        if (sources[pos] != replacement) {
-            Expression[] res = sources.clone();
-            res[pos] = replacement;
+    private Frame replace(Variable var, Expression replacement) {
+        Expression expression = get(var);
+        if (expression != replacement) {
+            Map<Variable, Expression> res = new IdentityHashMap<>(sources);
+            res.put(var, replacement);
             return new Frame(this, res);
         }
         return this;
     }
 
     private Frame replaceAll(UnaryOperator<Expression> op) {
-        Expression[] res = null;
-        for (int i = 0; i < sources.length; i++) {
-            if (sources[i] == null)
-                continue;
-            Expression expr = op.apply(sources[i]);
-            if (expr != sources[i]) {
+        Map<Variable, Expression> res = null;
+        for (Entry<Variable, Expression> e : sources.entrySet()) {
+            Expression expr = op.apply(e.getValue());
+            if (expr != e.getValue()) {
                 if (res == null)
-                    res = sources.clone();
-                res[i] = expr;
+                    res = new IdentityHashMap<>(sources);
+                res.put(e.getKey(), expr);
             }
         }
         return res == null ? this : new Frame(this, res);
