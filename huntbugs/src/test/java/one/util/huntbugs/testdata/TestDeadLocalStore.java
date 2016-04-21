@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.testdata;
 
+import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
 /**
@@ -25,6 +26,13 @@ public class TestDeadLocalStore {
     @AssertWarning(type="ParameterOverwritten")
     public void testDeadLocalSimple(int x) {
         x = 10;
+        System.out.println(x);
+    }
+
+    @AssertNoWarning(type="ParameterOverwritten")
+    public void testDeadLocalBranch(int x) {
+        if(Math.random() > 0.5)
+            x = 10;
         System.out.println(x);
     }
 }

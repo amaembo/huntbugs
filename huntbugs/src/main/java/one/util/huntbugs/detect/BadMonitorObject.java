@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.detect;
 
+import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
@@ -38,16 +39,17 @@ public class BadMonitorObject {
     public void visit(Expression expr, MethodContext mc) {
         if(expr.getCode() == AstCode.MonitorEnter) {
             Expression arg = Nodes.getChild(expr, 0);
-            if(Types.isBoxed(arg.getInferredType())) {
+            TypeReference type = arg.getInferredType();
+            if(type != null && Types.isBoxed(type)) {
                 String warningType;
                 if(arg.getCode() == AstCode.InitObject) {
                     warningType = "SynchronizationOnUnsharedBoxed";
-                } else if(arg.getInferredType().getInternalName().equals("java/lang/Boolean")) {
+                } else if(type.getInternalName().equals("java/lang/Boolean")) {
                     warningType = "SynchronizationOnBoolean";
                 } else {
                     warningType = "SynchronizationOnBoxedNumber";
                 }
-                mc.report(warningType, 0, arg, WarningAnnotation.forType("MONITOR_TYPE", arg.getInferredType()));
+                mc.report(warningType, 0, arg, WarningAnnotation.forType("MONITOR_TYPE", type));
             }
         }
     }

@@ -318,7 +318,7 @@ class Frame {
         Map<Variable, Expression> res = null;
         for (Entry<Variable, Expression> e : sources.entrySet()) {
             Expression left = e.getValue();
-            Expression right = other.sources.get(e.getKey());
+            Expression right = other.get(e.getKey());
             if (right == null || right == left)
                 continue;
             if (left != null && left.getCode() == AstCode.LdC && right.getCode() == AstCode.LdC
@@ -335,7 +335,7 @@ class Frame {
             if(!sources.containsKey(e.getKey())) {
                 if (res == null)
                     res = new IdentityHashMap<>(sources);
-                res.put(e.getKey(), e.getValue());
+                res.put(e.getKey(), makePhiNode(e.getValue(), initial.get(e.getKey().getOriginalParameter())));
             }
         }
         return res == null ? this : new Frame(this, res);
