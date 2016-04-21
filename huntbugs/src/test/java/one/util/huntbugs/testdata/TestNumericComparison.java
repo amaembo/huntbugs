@@ -35,6 +35,14 @@ public class TestNumericComparison {
         }
     }
 
+    @AssertNoWarning(type="ComparisonWithOutOfRangeValue")
+    public void testCharOk(char c) {
+        int r = c - 'a';
+        if(r < 0) {
+            System.out.println("Ok!");
+        }
+    }
+
     @AssertNoWarning(type="*")
     public void testAssert(char c) {
         assert c >= 0;
@@ -62,6 +70,40 @@ public class TestNumericComparison {
     public void testArrayLength(int[] array) {
         if(array.length < 0) {
             System.out.println("Never!");
+        }
+    }
+
+    @AssertWarning(type="SwitchBranchUnreachable")
+    public int testArrayLengthSwitch(int[] array) {
+        switch(array.length) {
+        case 0:
+            return -1;
+        case 1:
+            return 0;
+        case 2:
+            return 10;
+        case Integer.MAX_VALUE:
+            return 12;
+        case -1:
+            return Integer.MIN_VALUE;
+        default:
+            return -2;
+        }
+    }
+
+    @AssertNoWarning(type="SwitchBranchUnreachable")
+    public int testArrayLengthSwitchOk(int[] array) {
+        switch(array.length) {
+        case 0:
+            return -1;
+        case 1:
+            return 0;
+        case 2:
+            return 10;
+        case Integer.MAX_VALUE:
+            return 12;
+        default:
+            return -2;
         }
     }
 

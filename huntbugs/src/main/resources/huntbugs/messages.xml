@@ -702,6 +702,12 @@
       <LongDescription><![CDATA[This code performs a comparison like (x $OPERATION$ $NUMBER$). However due to the value type or previous operations it's known that <code>x = $MIN_VALUE$..$MAX_VALUE$</code>,
       thus the result of this comparison is always $RESULT$. Probably there's some logic error or typo.]]></LongDescription>
     </Warning>
+    <Warning Type="SwitchBranchUnreachable">
+      <Title>Switch branch is unreachable due to expression range</Title>
+      <Description>Unreachable switch branch "case $NUMBER$".</Description>
+      <LongDescription><![CDATA[The <code>case $NUMBER$:</code> switch branch will never be executed, because it's statically known that
+      switch expression range is <code>$MIN_VALUE$..$MAX_VALUE$</code>. Probably there's some logic error or typo.]]></LongDescription>
+    </Warning>
     <Warning Type="RegexBadSyntax">
       <Title>Incorrect syntax of regular expression</Title>
       <Description>Incorrect syntax of regular expression $REGEXP:const$.</Description>

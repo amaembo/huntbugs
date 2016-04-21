@@ -15,10 +15,14 @@
  */
 package one.util.huntbugs.detect;
 
+import com.strobel.assembler.metadata.JvmType;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
+import com.strobel.decompiler.ast.CaseBlock;
 import com.strobel.decompiler.ast.Expression;
+import com.strobel.decompiler.ast.Node;
+import com.strobel.decompiler.ast.Switch;
 
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
@@ -34,6 +38,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
  *
  */
 @WarningDefinition(category = "Correctness", name = "ComparisonWithOutOfRangeValue", maxScore = 65)
+@WarningDefinition(category = "RedundantCode", name = "SwitchBranchUnreachable", maxScore = 65)
 public class NumericComparison {
     class LongRange {
         final long minValue, maxValue;
@@ -89,9 +94,10 @@ public class NumericComparison {
         }
     }
 
-    @AstVisitor(nodes = AstNodes.EXPRESSIONS)
-    public void visit(Expression expr, MethodContext mc) {
-        if (Nodes.isComparison(expr)) {
+    @AstVisitor(nodes = AstNodes.ALL)
+    public void visit(Node node, MethodContext mc) {
+        if (Nodes.isComparison(node)) {
+            Expression expr = (Expression) node;
             TypeReference type = expr.getArguments().get(0).getInferredType();
             if (type == null)
                 return;
@@ -130,29 +136,9 @@ public class NumericComparison {
                 arg = Nodes.getChild(expr, 0);
             }
             LongRange cmpRange = new LongRange(code, constant);
-            LongRange realRange;
-            switch (type.getSimpleType()) {
-            case Integer:
-                realRange = intRange(arg);
-                break;
-            case Byte:
-                realRange = new LongRange(Byte.MIN_VALUE, Byte.MAX_VALUE);
-                break;
-            case Long:
-                if (arg.getCode() == AstCode.I2L)
-                    realRange = intRange(Nodes.getChild(arg, 0));
-                else
-                    realRange = new LongRange(Long.MIN_VALUE, Long.MAX_VALUE);
-                break;
-            case Character:
-                realRange = new LongRange(Character.MIN_VALUE, Character.MAX_VALUE);
-                break;
-            case Short:
-                realRange = new LongRange(Short.MIN_VALUE, Short.MAX_VALUE);
-                break;
-            default:
+            LongRange realRange = getExpressionRange(type.getSimpleType(), arg);
+            if(realRange == null)
                 return;
-            }
             Boolean result = null;
             if (cmpRange.isTrueEmpty(realRange)) {
                 result = false;
@@ -167,6 +153,41 @@ public class NumericComparison {
             mc.report("ComparisonWithOutOfRangeValue", priority, expr, WarningAnnotation.forOperation(code),
                 WarningAnnotation.forNumber(constant), new WarningAnnotation<>("MIN_VALUE", realRange.minValue),
                 new WarningAnnotation<>("MAX_VALUE", realRange.maxValue), new WarningAnnotation<>("RESULT", result));
+        }
+        else if(node instanceof Switch) {
+            Switch switchNode = (Switch)node;
+            Expression condition = switchNode.getCondition();
+            JvmType type = condition.getInferredType() == null ? JvmType.Integer : condition.getInferredType().getSimpleType();
+            LongRange realRange = getExpressionRange(type, condition);
+            if(realRange == null || realRange.minValue <= Integer.MIN_VALUE &&
+                    realRange.maxValue >= Integer.MAX_VALUE)
+                return;
+            for(CaseBlock block : switchNode.getCaseBlocks()) {
+                block.getValues().stream().filter(val -> new LongRange(AstCode.CmpEq, val).isTrueEmpty(realRange)).findFirst()
+                    .ifPresent(val -> {
+                        mc.report("SwitchBranchUnreachable", 0, block, WarningAnnotation.forNumber(val), new WarningAnnotation<>("MIN_VALUE", realRange.minValue),
+                            new WarningAnnotation<>("MAX_VALUE", realRange.maxValue));
+                    });
+            }
+        }
+    }
+
+    private LongRange getExpressionRange(JvmType type, Expression arg) {
+        switch (type) {
+        case Integer:
+            return intRange(arg);
+        case Byte:
+            return new LongRange(Byte.MIN_VALUE, Byte.MAX_VALUE);
+        case Long:
+            if (arg.getCode() == AstCode.I2L)
+                return intRange(Nodes.getChild(arg, 0));
+            return new LongRange(Long.MIN_VALUE, Long.MAX_VALUE);
+        case Character:
+            return new LongRange(Character.MIN_VALUE, Character.MAX_VALUE);
+        case Short:
+            return new LongRange(Short.MIN_VALUE, Short.MAX_VALUE);
+        default:
+            return null;
         }
     }
 

@@ -114,6 +114,7 @@ abbrev="Nm" type="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS" category="BAD_PRACTICE" -->
 abbrev="INT" type="INT_BAD_COMPARISON_WITH_NONNEGATIVE_VALUE" category="CORRECTNESS" --> ComparisonWithOutOfRangeValue
 abbrev="INT" type="INT_VACUOUS_COMPARISON" category="STYLE" --> ComparisonWithOutOfRangeValue
 abbrev="IP" type="IP_PARAMETER_IS_DEAD_BUT_OVERWRITTEN" category="CORRECTNESS" cweid="563" --> ParameterOverwritten
+abbrev="INT" type="INT_BAD_COMPARISON_WITH_SIGNED_BYTE" category="CORRECTNESS" --> ComparisonWithOutOfRangeValue, SwitchBranchUnreachable
 
 ==== Not reimplemented
 
@@ -337,7 +338,6 @@ abbrev="EC" type="EC_UNRELATED_INTERFACES" category="CORRECTNESS"
 abbrev="EC" type="EC_UNRELATED_CLASS_AND_INTERFACE" category="CORRECTNESS"
 abbrev="MWN" type="MWN_MISMATCHED_WAIT" category="MT_CORRECTNESS"
 abbrev="MWN" type="MWN_MISMATCHED_NOTIFY" category="MT_CORRECTNESS"
-abbrev="INT" type="INT_BAD_COMPARISON_WITH_SIGNED_BYTE" category="CORRECTNESS"
 abbrev="BIT" type="BIT_ADD_OF_SIGNED_BYTE" category="CORRECTNESS"
 abbrev="BIT" type="BIT_IOR_OF_SIGNED_BYTE" category="CORRECTNESS"
 abbrev="BIT" type="BIT_AND_ZZ" category="CORRECTNESS"
