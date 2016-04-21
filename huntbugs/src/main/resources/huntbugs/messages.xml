@@ -746,5 +746,12 @@
       <LongDescription><![CDATA[This code method accepts an argument $VARIABLE$, but its initial value
       is not used and overwritten in the method. This may indicate a logical error in the program.]]></LongDescription>
     </Warning>
+    <Warning Type="IncorrectConcurrentMethod">
+      <Title>Using monitor style wait methods on java.util.concurrent abstraction</Title>
+      <Description>Method $CALLED_METHOD:name$() is called on $TARGET$ type.</Description>
+      <LongDescription><![CDATA[This code calls $CALLED_METHOD$ on object of $TARGET$ type. Probably the correspoding concurrency API method
+      like $REPLACEMENT$ was intended. Even if this code is written as intended, this is a bad practice and might be extremely confusing for
+      other developers.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

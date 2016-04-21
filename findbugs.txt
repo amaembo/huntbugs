@@ -118,6 +118,7 @@ abbrev="INT" type="INT_BAD_COMPARISON_WITH_SIGNED_BYTE" category="CORRECTNESS" -
 abbrev="BIT" type="BIT_ADD_OF_SIGNED_BYTE" category="CORRECTNESS" --> BitAddSignedByte
 abbrev="BIT" type="BIT_IOR_OF_SIGNED_BYTE" category="CORRECTNESS" --> BitOrSignedByte
 abbrev="BIT" type="BIT_AND_ZZ" category="CORRECTNESS" --> UselessAndWithZero *
+abbrev="JLM" type="JML_JSR166_CALLING_WAIT_RATHER_THAN_AWAIT" category="MT_CORRECTNESS" --> IncorrectConcurrentMethod
 
 ==== Not reimplemented
 
@@ -346,7 +347,6 @@ abbrev="SA" type="SA_FIELD_DOUBLE_ASSIGNMENT" category="STYLE"
 abbrev="LI" type="LI_LAZY_INIT_STATIC" category="MT_CORRECTNESS" cweid="543"
 abbrev="LI" type="LI_LAZY_INIT_UPDATE_STATIC" category="MT_CORRECTNESS" cweid="543"
 abbrev="JLM" type="JLM_JSR166_UTILCONCURRENT_MONITORENTER" category="MT_CORRECTNESS"
-abbrev="JLM" type="JML_JSR166_CALLING_WAIT_RATHER_THAN_AWAIT" category="MT_CORRECTNESS"
 abbrev="JLM" type="JLM_JSR166_LOCK_MONITORENTER" category="MT_CORRECTNESS"
 abbrev="UPM" type="UPM_UNCALLED_PRIVATE_METHOD" category="PERFORMANCE"
 abbrev="UMAC" type="UMAC_UNCALLABLE_METHOD_OF_ANONYMOUS_CLASS" category="CORRECTNESS"

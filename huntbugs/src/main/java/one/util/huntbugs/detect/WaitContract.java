@@ -77,6 +77,7 @@ public class WaitContract {
                     List<Node> body = ((Block) parents.getNode()).getBody();
                     if (!body.isEmpty() && body.get(0) == expr
                         && (body.size() == 1 || body.size() == 2 && Nodes.isOp(body.get(1), AstCode.MonitorExit))
+                        && parents.getParent() != null
                         && Nodes.isSynchorizedBlock(parents.getParent().getNode())
                         && !parents.getParent().getParent().isSynchronized()) {
                         mc.report("NotifyNaked", 0, expr.getArguments().get(0), WarningAnnotation.forMember("CALLED_METHOD", mr));
