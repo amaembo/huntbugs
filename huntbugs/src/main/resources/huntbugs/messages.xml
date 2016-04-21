@@ -770,5 +770,11 @@
       This may work correctly, but confusing and prone to errors. For example, applying automatic refactoring IDE feature like 'Remove unnecessary boxing'
       may silently break your code. It's much better to use <code>new Object()</code> as a lock variable.]]></LongDescription>
     </Warning>
+    <Warning Type="EmptySynchronizeBlock">
+      <Title>Empty synchronization block</Title>
+      <Description>Empty synchronization block in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code contains empty synchronization block. This is almost always a bug: it's hardly possible that such block
+      serves its purpose.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

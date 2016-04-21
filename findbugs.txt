@@ -122,6 +122,7 @@ abbrev="JLM" type="JML_JSR166_CALLING_WAIT_RATHER_THAN_AWAIT" category="MT_CORRE
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_BOOLEAN" category="MT_CORRECTNESS" --> SynchronizationOnBoolean
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_BOXED_PRIMITIVE" category="MT_CORRECTNESS" --> SynchronizationOnBoxedNumber
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_UNSHARED_BOXED_PRIMITIVE" category="MT_CORRECTNESS" --> SynchronizationOnUnsharedBoxed
+abbrev="ESync" type="ESync_EMPTY_SYNC" category="MT_CORRECTNESS" cweid="585"
 
 ==== Not reimplemented
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"
@@ -197,7 +198,6 @@ abbrev="HE" type="HE_EQUALS_NO_HASHCODE" category="BAD_PRACTICE"
 abbrev="Eq" type="EQ_ABSTRACT_SELF" category="BAD_PRACTICE"
 abbrev="Co" type="CO_ABSTRACT_SELF" category="BAD_PRACTICE"
 abbrev="WL" type="WL_USING_GETCLASS_RATHER_THAN_CLASS_LITERAL" category="MT_CORRECTNESS"
-abbrev="ESync" type="ESync_EMPTY_SYNC" category="MT_CORRECTNESS" cweid="585"
 abbrev="MSF" type="MSF_MUTABLE_SERVLET_FIELD" category="MT_CORRECTNESS"
 abbrev="IS" type="IS2_INCONSISTENT_SYNC" category="MT_CORRECTNESS"
 abbrev="MS" type="MS_EXPOSE_REP" category="MALICIOUS_CODE"
