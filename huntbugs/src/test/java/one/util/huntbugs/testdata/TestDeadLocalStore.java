@@ -23,7 +23,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestDeadLocalStore {
-    @AssertWarning(type="ParameterOverwritten")
+    @AssertWarning(type="ParameterOverwritten", minScore=55)
     public void testDeadLocalSimple(int x) {
         x = 10;
         System.out.println(x);
@@ -34,5 +34,14 @@ public class TestDeadLocalStore {
         if(Math.random() > 0.5)
             x = 10;
         System.out.println(x);
+    }
+    
+    class Extension extends TestDeadLocalStore {
+        @Override
+        @AssertWarning(type="ParameterOverwritten", maxScore = 40)
+        public void testDeadLocalSimple(int x) {
+            x = 10;
+            System.out.println(x);
+        }
     }
 }

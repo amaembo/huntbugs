@@ -20,6 +20,7 @@ import java.util.Set;
 
 
 
+
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.decompiler.ast.AstCode;
@@ -32,6 +33,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 
@@ -58,7 +60,7 @@ public class DeadLocalStore {
                             && ((Variable)expr.getOperand()).getOriginalParameter() == pd;
                 });
                 if(overwrite != null) {
-                    mc.report("ParameterOverwritten", 0, overwrite);
+                    mc.report("ParameterOverwritten", Methods.findSuperMethod(md) == null ? 0 : 20, overwrite);
                 }
             }
         }
