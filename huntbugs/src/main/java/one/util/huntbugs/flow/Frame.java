@@ -228,8 +228,10 @@ class Frame {
             if (expr.getOperand() instanceof Variable) {
                 Variable var = ((Variable) expr.getOperand());
                 Expression source = get(var);
-                link(expr, source);
                 target = target.replace(var, expr);
+                if(source == null)
+                    return target;
+                link(expr, source);
                 Object val = source.getUserData(ValuesFlow.VALUE_KEY);
                 if (val == UNKNOWN_VALUE)
                     expr.putUserData(ValuesFlow.VALUE_KEY, UNKNOWN_VALUE);

@@ -46,7 +46,7 @@ public class NumericPromotion {
             if (arg.getCode() == AstCode.Mul) {
                 BigInteger res = getMultiplicationConstant(arg);
                 int priority = 0;
-                if(md.getName().equals("hashCode"))
+                if (md.getName().equals("hashCode"))
                     priority += 30;
                 try {
                     int factor = Math.abs(res.intValueExact());
@@ -69,46 +69,74 @@ public class NumericPromotion {
                 }
             }
         }
-        if (expr.getCode() == AstCode.I2F || expr.getCode() == AstCode.I2D || expr.getCode() == AstCode.L2F || expr.getCode() == AstCode.L2D) {
-            if(Nodes.isOp(nc.getNode(), AstCode.InvokeStatic)) {
-                MethodReference mr = (MethodReference) ((Expression)nc.getNode()).getOperand();
-                if(mr.getDeclaringType().getInternalName().equals("java/lang/Math") && (mr.getName().equals("ceil") || mr.getName().equals("round"))) {
+        if (expr.getCode() == AstCode.I2F || expr.getCode() == AstCode.I2D || expr.getCode() == AstCode.L2F
+            || expr.getCode() == AstCode.L2D) {
+            if (Nodes.isOp(nc.getNode(), AstCode.InvokeStatic)) {
+                MethodReference mr = (MethodReference) ((Expression) nc.getNode()).getOperand();
+                if (mr.getDeclaringType().getInternalName().equals("java/lang/Math")
+                    && (mr.getName().equals("ceil") || mr.getName().equals("round"))) {
                     mc.report("IntegerPromotionInCeilOrRound", 0, nc.getNode(), new WarningAnnotation<>("SOURCE_TYPE",
-                            expr.getArguments().get(0).getInferredType().getSimpleName()), new WarningAnnotation<>(
-                            "TARGET_TYPE", expr.getInferredType().getSimpleName()));
+                            getSourceType(expr)), new WarningAnnotation<>("TARGET_TYPE", getTargetType(expr)));
                     return;
                 }
             }
             Expression arg = ValuesFlow.getSource(expr.getArguments().get(0));
-            if(arg.getCode() == AstCode.Div) {
+            if (arg.getCode() == AstCode.Div) {
                 Object constant = Nodes.getConstant(arg.getArguments().get(1));
                 int priority = 0;
-                if(constant instanceof Number) {
-                    long val = Math.abs(((Number)constant).longValue());
-                    if(val >= 2 && val <= 4)
+                if (constant instanceof Number) {
+                    long val = Math.abs(((Number) constant).longValue());
+                    if (val >= 2 && val <= 4)
                         priority += 10;
                 }
                 Expression divident = arg.getArguments().get(0);
-                if(divident.getCode() == AstCode.Mul) {
+                if (divident.getCode() == AstCode.Mul) {
                     BigInteger multiplier = getMultiplicationConstant(divident);
-                    if(Nodes.isOp(nc.getNode(), AstCode.Div)) {
+                    if (Nodes.isOp(nc.getNode(), AstCode.Div)) {
                         Expression parent = (Expression) nc.getNode();
-                        if(parent.getArguments().get(0) == expr) {
-                            // Lower priority for scenarios like ((a*1000)/b)/10.0
+                        if (parent.getArguments().get(0) == expr) {
+                            // Lower priority for scenarios like
+                            // ((a*1000)/b)/10.0
                             Object divisor = Nodes.getConstant(parent.getArguments().get(1));
-                            if(divisor instanceof Number && (multiplier.equals(BigInteger.valueOf(((Number)divisor).longValue()*100))
-                                    || multiplier.equals(BigInteger.valueOf(((Number)divisor).longValue()))))
+                            if (divisor instanceof Number
+                                && (multiplier.equals(BigInteger.valueOf(((Number) divisor).longValue() * 100)) || multiplier
+                                        .equals(BigInteger.valueOf(((Number) divisor).longValue()))))
                                 priority += 100;
                         }
                     }
                 }
-                mc.report("IntegerDivisionPromotedToFloat", priority, expr, new WarningAnnotation<>("SOURCE_TYPE", arg
-                        .getInferredType().getSimpleName()), new WarningAnnotation<>("TARGET_TYPE", expr
-                        .getInferredType().getSimpleName()));
+                mc.report("IntegerDivisionPromotedToFloat", priority, expr, new WarningAnnotation<>("SOURCE_TYPE",
+                        getSourceType(expr)), new WarningAnnotation<>("TARGET_TYPE", getTargetType(expr)));
             }
         }
     }
 
+    private static String getSourceType(Expression expr) {
+        switch(expr.getCode()) {
+        case I2F:
+        case I2D:
+            return "int";
+        case L2F:
+        case L2D:
+            return "long";
+        default:
+            throw new InternalError(expr.getCode().toString());
+        }
+    }
+
+    private static String getTargetType(Expression expr) {
+        switch(expr.getCode()) {
+        case I2F:
+        case L2F:
+            return "float";
+        case I2D:
+        case L2D:
+            return "double";
+        default:
+            throw new InternalError(expr.getCode().toString());
+        }
+    }
+    
     private static BigInteger getMultiplicationConstant(Expression arg) {
         Expression left = arg.getArguments().get(0);
         Expression right = arg.getArguments().get(1);
