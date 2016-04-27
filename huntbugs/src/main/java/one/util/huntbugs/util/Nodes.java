@@ -60,6 +60,10 @@ public class Nodes {
         return args.get(0).getCode() == AstCode.AConstNull ^ args.get(1).getCode() == AstCode.AConstNull;
     }
     
+    public static boolean isFieldRead(Node node) {
+        return isOp(node, AstCode.GetStatic) || isOp(node, AstCode.GetField);
+    }
+    
     public static Node getChild(Node node, int i) {
         if(node instanceof Expression) {
             return ValuesFlow.getSource(((Expression)node).getArguments().get(i));

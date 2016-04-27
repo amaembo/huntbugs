@@ -124,6 +124,7 @@ abbrev="DL" type="DL_SYNCHRONIZATION_ON_BOXED_PRIMITIVE" category="MT_CORRECTNES
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_UNSHARED_BOXED_PRIMITIVE" category="MT_CORRECTNESS" --> SynchronizationOnUnsharedBoxed
 abbrev="ESync" type="ESync_EMPTY_SYNC" category="MT_CORRECTNESS" cweid="585" --> EmptySynchronizeBlock
 abbrev="SBSC" type="SBSC_USE_STRINGBUFFER_CONCATENATION" category="PERFORMANCE" --> StringConcatInLoop
+abbrev="SP" type="SP_SPIN_ON_FIELD" category="MT_CORRECTNESS" --> SpinLoopOnField
 
 ==== Not reimplemented
 
@@ -205,7 +206,6 @@ abbrev="IS" type="IS2_INCONSISTENT_SYNC" category="MT_CORRECTNESS"
 abbrev="MS" type="MS_EXPOSE_REP" category="MALICIOUS_CODE"
 abbrev="EI" type="EI_EXPOSE_REP" category="MALICIOUS_CODE" cweid="374"
 abbrev="Ru" type="RU_INVOKE_RUN" category="MT_CORRECTNESS" cweid="572"
-abbrev="SP" type="SP_SPIN_ON_FIELD" category="MT_CORRECTNESS"
 abbrev="TLW" type="TLW_TWO_LOCK_WAIT" category="MT_CORRECTNESS"
 abbrev="UR" type="UR_UNINIT_READ" category="CORRECTNESS"
 abbrev="UR" type="UR_UNINIT_READ_CALLED_FROM_SUPER_CONSTRUCTOR" category="CORRECTNESS"

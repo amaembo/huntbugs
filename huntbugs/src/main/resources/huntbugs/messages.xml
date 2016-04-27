@@ -776,6 +776,13 @@
       <LongDescription><![CDATA[This code contains empty synchronization block. This is almost always a bug: it's hardly possible that such block
       serves its purpose.]]></LongDescription>
     </Warning>
+    <Warning Type="SpinLoopOnField">
+      <Title>Spin loop on non-volatile field</Title>
+      <Description>Spin loop on non-volatile field $FIELD$.</Description>
+      <LongDescription><![CDATA[This code spins in a loop which reads a field $FIELD$. 
+      The compiler may legally hoist the read out of the loop, turning the code into an infinite loop.  
+      The class should be changed so it uses proper synchronization (including wait and notify calls).]]></LongDescription>
+    </Warning>
     <Warning Type="StringConcatInLoop">
       <Title>String concatenation in a loop</Title>
       <Description>Variable $VARIABLE$ is concatenated in loop.</Description>
