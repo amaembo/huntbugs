@@ -39,7 +39,7 @@ import one.util.huntbugs.util.Nodes;
  * @author lan
  *
  */
-@WarningDefinition(category = "Performance", name = "StringConcatInLoop", maxScore = 60)
+@WarningDefinition(category = "Performance", name = "StringConcatInLoop", maxScore = 50)
 public class StringConcatInLoop {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression store, NodeChain nc, MethodContext mc) {
