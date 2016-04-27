@@ -122,9 +122,11 @@ abbrev="JLM" type="JML_JSR166_CALLING_WAIT_RATHER_THAN_AWAIT" category="MT_CORRE
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_BOOLEAN" category="MT_CORRECTNESS" --> SynchronizationOnBoolean
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_BOXED_PRIMITIVE" category="MT_CORRECTNESS" --> SynchronizationOnBoxedNumber
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_UNSHARED_BOXED_PRIMITIVE" category="MT_CORRECTNESS" --> SynchronizationOnUnsharedBoxed
-abbrev="ESync" type="ESync_EMPTY_SYNC" category="MT_CORRECTNESS" cweid="585"
+abbrev="ESync" type="ESync_EMPTY_SYNC" category="MT_CORRECTNESS" cweid="585" --> EmptySynchronizeBlock
+abbrev="SBSC" type="SBSC_USE_STRINGBUFFER_CONCATENATION" category="PERFORMANCE" --> StringConcatInLoop
 
 ==== Not reimplemented
+
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SERVLET_WRITER" category="SECURITY"
@@ -351,7 +353,6 @@ abbrev="UPM" type="UPM_UNCALLED_PRIVATE_METHOD" category="PERFORMANCE"
 abbrev="UMAC" type="UMAC_UNCALLABLE_METHOD_OF_ANONYMOUS_CLASS" category="CORRECTNESS"
 abbrev="ODR" type="ODR_OPEN_DATABASE_RESOURCE" category="BAD_PRACTICE"
 abbrev="ODR" type="ODR_OPEN_DATABASE_RESOURCE_EXCEPTION_PATH" category="BAD_PRACTICE"
-abbrev="SBSC" type="SBSC_USE_STRINGBUFFER_CONCATENATION" category="PERFORMANCE"
 abbrev="IIL" type="IIL_ELEMENTS_GET_LENGTH_IN_LOOP" category="PERFORMANCE" experimental="true"
 abbrev="IIL" type="IIL_PREPARE_STATEMENT_IN_LOOP" category="PERFORMANCE" experimental="true"
 abbrev="IIL" type="IIL_PATTERN_COMPILE_IN_LOOP" category="PERFORMANCE" experimental="true"

@@ -776,5 +776,10 @@
       <LongDescription><![CDATA[This code contains empty synchronization block. This is almost always a bug: it's hardly possible that such block
       serves its purpose.]]></LongDescription>
     </Warning>
+    <Warning Type="StringConcatInLoop">
+      <Title>String concatenation in a loop</Title>
+      <Description>Variable $VARIABLE$ is concatenated in loop.</Description>
+      <LongDescription><![CDATA[This code concatenates a string (stored in variable <code>$VARIABLE$</code>) in a loop. This could be really inefficient. Consider using <code>StringBuilder</code> instead.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>
