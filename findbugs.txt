@@ -125,9 +125,9 @@ abbrev="DL" type="DL_SYNCHRONIZATION_ON_UNSHARED_BOXED_PRIMITIVE" category="MT_C
 abbrev="ESync" type="ESync_EMPTY_SYNC" category="MT_CORRECTNESS" cweid="585" --> EmptySynchronizeBlock
 abbrev="SBSC" type="SBSC_USE_STRINGBUFFER_CONCATENATION" category="PERFORMANCE" --> StringConcatInLoop
 abbrev="SP" type="SP_SPIN_ON_FIELD" category="MT_CORRECTNESS" --> SpinLoopOnField
+abbrev="SW" type="SW_SWING_METHODS_INVOKED_IN_SWING_THREAD" category="BAD_PRACTICE" --> SwingMethodNotInSwingThread
 
 ==== Not reimplemented
-
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SERVLET_WRITER" category="SECURITY"
@@ -142,7 +142,6 @@ abbrev="STCAL" type="STCAL_INVOKE_ON_STATIC_CALENDAR_INSTANCE" category="MT_CORR
 abbrev="STCAL" type="STCAL_INVOKE_ON_STATIC_DATE_FORMAT_INSTANCE" category="MT_CORRECTNESS"
 abbrev="NP" type="NP_SYNC_AND_NULL_CHECK_FIELD" category="MT_CORRECTNESS" cweid="585"
 abbrev="NP" type="NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" category="CORRECTNESS"
-abbrev="SW" type="SW_SWING_METHODS_INVOKED_IN_SWING_THREAD" category="BAD_PRACTICE"
 abbrev="IL" type="IL_INFINITE_LOOP" category="CORRECTNESS"
 abbrev="IL" type="IL_INFINITE_RECURSIVE_LOOP" category="CORRECTNESS" cweid="674"
 abbrev="IL" type="IL_CONTAINER_ADDED_TO_ITSELF" category="CORRECTNESS"

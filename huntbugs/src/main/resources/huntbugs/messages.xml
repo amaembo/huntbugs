@@ -788,5 +788,11 @@
       <Description>Variable $VARIABLE$ is concatenated in loop.</Description>
       <LongDescription><![CDATA[This code concatenates a string (stored in variable <code>$VARIABLE$</code>) in a loop. This could be really inefficient. Consider using <code>StringBuilder</code> instead.]]></LongDescription>
     </Warning>
+    <Warning Type="SwingMethodNotInSwingThread">
+      <Title>Certain swing methods needs to be invoked in Swing thread</Title>
+      <Description>Swing method $CALLED_METHOD$ is not invoked in the Swing thread.</Description>
+      <LongDescription><![CDATA[This code calls $CALLED_METHOD$ not in the Swing thread. 
+      The Swing methods show(), setVisible(), and pack() will create the associated peer for the frame. With the creation of the peer, the system creates the event dispatch thread. This makes things problematic because the event dispatch thread could be notifying listeners while pack and validate are still processing. This situation could result in two threads going through the Swing component-based GUI -- it's a serious flaw that could result in deadlocks or other related threading issues. A pack call causes components to be realized. As they are being realized (that is, not necessarily visible), they could trigger listener notification on the event dispatch thread.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

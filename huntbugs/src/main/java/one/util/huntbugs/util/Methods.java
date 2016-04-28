@@ -79,4 +79,8 @@ public class Methods {
         }
         return null;
     }
+
+    public static boolean isMain(MethodDefinition md) {
+        return md.getName().equals("main") && md.isPublic() && md.isStatic() && md.getErasedSignature().startsWith("([Ljava/lang/String;)");
+    }
 }

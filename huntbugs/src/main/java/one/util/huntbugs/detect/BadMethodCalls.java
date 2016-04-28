@@ -30,6 +30,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -97,7 +98,7 @@ public class BadMethodCalls {
         String signature = mr.getSignature();
         if (typeName.equals("java/lang/System") && name.equals("exit")) {
             String curName = curMethod.getName();
-            if (isMain(curMethod) || curName.equals("processWindowEvent") || curName.startsWith("windowClos"))
+            if (Methods.isMain(curMethod) || curName.equals("processWindowEvent") || curName.startsWith("windowClos"))
                 return;
             int priority = 0;
             curName = curName.toLowerCase(Locale.ENGLISH);
@@ -109,13 +110,13 @@ public class BadMethodCalls {
             String curType = curMethod.getDeclaringType().getInternalName();
             if (curType.endsWith("Applet") || curType.endsWith("App") || curType.endsWith("Application"))
                 priority += 10;
-            if (curMethod.getDeclaringType().getDeclaredMethods().stream().anyMatch(BadMethodCalls::isMain))
+            if (curMethod.getDeclaringType().getDeclaredMethods().stream().anyMatch(Methods::isMain))
                 priority += 20;
             ctx.report("SystemExit", priority, node);
         } else if ((typeName.equals("java/lang/System") || typeName.equals("java/lang/Runtime")) && name.equals("gc")
             && signature.equals("()V")) {
             String curName = curMethod.getName();
-            if (isMain(curMethod) || curName.startsWith("test"))
+            if (Methods.isMain(curMethod) || curName.startsWith("test"))
                 return;
             if (nc.isInCatch("java/lang/OutOfMemoryError"))
                 return;
@@ -187,11 +188,6 @@ public class BadMethodCalls {
         if ((name.equals("print") || name.equals("println")) && signature.equals("(Ljava/lang/Object;)V"))
             return true;
         return false;
-    }
-
-    private static boolean isMain(MethodDefinition curMethod) {
-        return curMethod.getName().equals("main") && curMethod.isStatic()
-            && curMethod.getErasedSignature().startsWith("([Ljava/lang/String;)");
     }
 
     private static boolean isTimeMeasure(Node node) {
