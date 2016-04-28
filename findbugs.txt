@@ -126,8 +126,11 @@ abbrev="ESync" type="ESync_EMPTY_SYNC" category="MT_CORRECTNESS" cweid="585" -->
 abbrev="SBSC" type="SBSC_USE_STRINGBUFFER_CONCATENATION" category="PERFORMANCE" --> StringConcatInLoop
 abbrev="SP" type="SP_SPIN_ON_FIELD" category="MT_CORRECTNESS" --> SpinLoopOnField
 abbrev="SW" type="SW_SWING_METHODS_INVOKED_IN_SWING_THREAD" category="BAD_PRACTICE" --> SwingMethodNotInSwingThread
+abbrev="Dm" type="DM_CONVERT_CASE" category="I18N" --> ConvertCaseWithDefaultLocale
 
 ==== Not reimplemented
+abbrev="Dm" type="DM_DEFAULT_ENCODING" category="I18N" 
+
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SERVLET_WRITER" category="SECURITY"
@@ -165,7 +168,6 @@ abbrev="Dm" type="DMI_UNSUPPORTED_METHOD" category="STYLE"
 abbrev="Dm" type="DMI_THREAD_PASSED_WHERE_RUNNABLE_EXPECTED" category="STYLE"
 abbrev="Dm" type="DMI_COLLECTION_OF_URLS" category="PERFORMANCE"
 abbrev="Dm" type="DMI_ANNOTATION_IS_NOT_VISIBLE_TO_REFLECTION" category="CORRECTNESS"
-abbrev="Dm" type="DM_CONVERT_CASE" category="I18N"
 abbrev="Bx" type="DM_BOXED_PRIMITIVE_FOR_PARSING" category="PERFORMANCE"
 abbrev="Bx" type="DM_BOXED_PRIMITIVE_FOR_COMPARE" category="PERFORMANCE"
 abbrev="Bx" type="BX_UNBOXED_AND_COERCED_FOR_TERNARY_OPERATOR" category="PERFORMANCE"
@@ -431,7 +433,6 @@ abbrev="FB" type="FB_UNEXPECTED_WARNING" category="CORRECTNESS"
 abbrev="FB" type="FB_MISSING_EXPECTED_WARNING" category="CORRECTNESS"
 abbrev="RV" type="RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED" category="MT_CORRECTNESS"
 abbrev="LG" type="LG_LOST_LOGGER_DUE_TO_WEAK_REFERENCE" category="EXPERIMENTAL"
-abbrev="Dm" type="DM_DEFAULT_ENCODING" category="I18N" 
 abbrev="NP" type="NP_METHOD_RETURN_RELAXING_ANNOTATION" category="STYLE" 
 abbrev="NP" type="NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION" category="STYLE" 
 
