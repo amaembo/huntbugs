@@ -127,9 +127,9 @@ abbrev="SBSC" type="SBSC_USE_STRINGBUFFER_CONCATENATION" category="PERFORMANCE" 
 abbrev="SP" type="SP_SPIN_ON_FIELD" category="MT_CORRECTNESS" --> SpinLoopOnField
 abbrev="SW" type="SW_SWING_METHODS_INVOKED_IN_SWING_THREAD" category="BAD_PRACTICE" --> SwingMethodNotInSwingThread
 abbrev="Dm" type="DM_CONVERT_CASE" category="I18N" --> ConvertCaseWithDefaultLocale
+abbrev="Dm" type="DM_DEFAULT_ENCODING" category="I18N" --> MethodReliesOnDefaultEncoding
 
 ==== Not reimplemented
-abbrev="Dm" type="DM_DEFAULT_ENCODING" category="I18N" 
 
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"

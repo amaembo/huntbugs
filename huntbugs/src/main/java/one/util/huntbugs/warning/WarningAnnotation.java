@@ -167,7 +167,7 @@ public class WarningAnnotation<T> {
         public String toString() {
             if(isMethod()) {
                 if(name.equals("<init>"))
-                    return typeName+signature;
+                    return "new "+typeName+signature;
                 return typeName+"."+name+signature;
             }
             return typeName+"."+name+":"+signature;

@@ -34,6 +34,7 @@ import one.util.huntbugs.warning.WarningType;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.ParameterDefinition;
+import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 import com.strobel.decompiler.ast.Variable;
@@ -171,7 +172,7 @@ public class MethodContext {
             }
             if (operand instanceof MethodReference) {
                 MethodReference mr = (MethodReference) operand;
-                if (!mr.getReturnType().isVoid())
+                if (!mr.getReturnType().isVoid() || expr.getCode() == AstCode.InitObject)
                     anno.add(WarningAnnotation.forReturnValue(mr));
                 else
                     anno.add(WarningAnnotation.forMember("CALLED_METHOD", mr));

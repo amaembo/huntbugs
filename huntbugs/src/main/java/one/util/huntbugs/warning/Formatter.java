@@ -201,7 +201,7 @@ public class Formatter {
         String result;
         if (mi.isMethod()) {
             if (mi.getName().equals("<init>"))
-                result = type + "()";
+                result = "new " + type + "()";
             else if (mi.getName().equals("<clinit>"))
                 result = type + " static {}";
             else

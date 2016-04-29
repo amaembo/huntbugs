@@ -15,6 +15,9 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
@@ -43,5 +46,25 @@ public class TestInternationalization {
     @AssertNoWarning(type="*") 
     public String toUpperCaseOk(String s) {
         return s.toUpperCase(Locale.ENGLISH);
+    }
+
+    @AssertWarning(type="MethodReliesOnDefaultEncoding", minScore = 40, maxScore = 45) 
+    public byte[] toBytes(String s) {
+        return s.getBytes();
+    }
+    
+    @AssertWarning(type="MethodReliesOnDefaultEncoding", minScore = 28, maxScore = 35) 
+    public PrintWriter printWriter(OutputStream os) {
+        return new PrintWriter(os);
+    }
+
+    @AssertNoWarning(type="*") 
+    public PrintWriter printWriter() {
+        return new PrintWriter(System.out);
+    }
+    
+    @AssertNoWarning(type="*") 
+    public byte[] toBytesOk(String s) {
+        return s.getBytes(StandardCharsets.UTF_8);
     }
 }

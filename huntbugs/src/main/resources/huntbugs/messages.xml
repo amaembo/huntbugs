@@ -804,5 +804,12 @@
       <code>$REPLACEMENT:name$(Locale.ENGLISH)</code>. Even if system-default locale is desired it's better to use <code>$REPLACEMENT:name$(Locale.getDefault())</code>
       to explicitly manifest this.]]></LongDescription>
     </Warning>
+    <Warning Type="MethodReliesOnDefaultEncoding">
+      <Title>Method relies on default encoding</Title>
+      <Description>The called constructor or method $RETURN_VALUE_OF$ relies on default encoding.</Description>
+      <LongDescription><![CDATA[This code calls $RETURN_VALUE_OF$. The called method or constructor relies on system-default encoding which
+      might be inappropriate, especially on server applications. Consider using another method which allows to specify the encoding explicitly
+      either with string (like <code>"UTF-8"</code>) or with <code>Charset</code> object (like <code>StandardCharsets.UTF_8</code>).]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>
