@@ -108,6 +108,7 @@ public class ValuesFlow {
                         passFrame.processChildren(expr);
                         passFrame = null;
                         return;
+                    case Goto:
                     case Ret:
                         valid = false;
                         return;

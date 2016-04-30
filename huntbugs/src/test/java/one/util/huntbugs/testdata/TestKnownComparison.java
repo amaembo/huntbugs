@@ -41,7 +41,7 @@ public class TestKnownComparison {
             System.out.println("Never ever!");
         }
     }
-    
+
     @AssertWarning(type = "ResultOfComparisonIsStaticallyKnown")
     public void test() {
         int a = 2;
@@ -59,7 +59,7 @@ public class TestKnownComparison {
             System.out.println("Why not?");
         }
     }
-    
+
     @AssertWarning(type = "ResultOfComparisonIsStaticallyKnown")
     public void testInc() {
         int a = 2;
@@ -204,7 +204,7 @@ public class TestKnownComparison {
         };
         r.run();
     }
-    
+
     @AssertNoWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testInLambdaFP(int x) {
         Runnable r = () -> {
@@ -214,6 +214,79 @@ public class TestKnownComparison {
             }
         };
         r.run();
+    }
+
+    @AssertNoWarning(type = "*")
+    public void testComplexLoop(int x) {
+        int s = -1;
+        for (int i = 0; i < x; i++) {
+            if (i < 3) {
+                System.out.println(1);
+                if (s < 0)
+                    continue;
+            }
+            if (i < 5) {
+                System.out.println(2);
+                if (s < 0)
+                    s = i;
+                continue;
+            } else if (s < 0)
+                continue;
+            System.out.println(3);
+        }
+    }
+
+    @AssertNoWarning(type = "*")
+    public void testComplexLoop(String ssType, String type) {
+        if (ssType == null)
+            return;
+        int istart = -1;
+        for (int i = 0; i < 100; i++) {
+            if (i == 1) {
+                System.out.println(0);
+            } else {
+                System.out.println(1);
+            }
+            if (type.equals("test")) {
+                System.out.println(2);
+                --i;
+                if (istart < 0)
+                    continue;
+            } else if (type.equals("test2")) {
+                System.out.println(3);
+                if (istart < 0)
+                    istart = i;
+                continue;
+            } else if (istart < 0) {
+                continue;
+            }
+            if (type.equals("test3")) {
+                System.out.println(4);
+                if (i >= 0 && i <= 10)
+                    continue;
+                System.out.println(5);
+            }
+            System.out.println(6);
+            istart = -1;
+        }
+    }
+    
+    @AssertNoWarning(type = "*")
+    public void testComplexLoop2(String type) {
+        int x = -1;
+        for (int i = 0; i < 100; i++) {
+            if (type.equals("test")) {
+                System.out.println(2);
+                if (x < 0)
+                    continue;
+            } else if (type.equals("test2")) {
+                System.out.println(3);
+                if (x < 0)
+                    x = i;
+                continue;
+            }
+            x = -1;
+        }
     }
 
 }
