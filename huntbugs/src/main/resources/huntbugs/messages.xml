@@ -837,5 +837,11 @@
       <LongDescription><![CDATA[This code adds a collection to itself. This is dangerous as after that collection might work badly. For example,
       calling <code>hashCode</code> on it may throw <code>StackOverflowError</code>.]]></LongDescription>
     </Warning>
+    <Warning Type="PrimitiveArrayPassedAsVarArg">
+      <Title>Primitive array is passed as var-arg</Title>
+      <Description>Primitive array is passed to $CALLED_METHOD$ where var-arg is expected.</Description>
+      <LongDescription><![CDATA[This code calls $CALLED_METHOD$ and passes a primitive array of type $ARRAY_TYPE$ where var-arg argument is expected.
+      The primitive array will be wrapped into one-element object array which is likely a mistake.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

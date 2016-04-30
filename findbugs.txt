@@ -131,8 +131,11 @@ abbrev="Dm" type="DM_DEFAULT_ENCODING" category="I18N" --> MethodReliesOnDefault
 abbrev="IL" type="IL_INFINITE_RECURSIVE_LOOP" category="CORRECTNESS" cweid="674" --> InfiniteRecursion
 abbrev="IL" type="IL_CONTAINER_ADDED_TO_ITSELF" category="CORRECTNESS" --> CollectionAddedToItself
 abbrev="IL" type="IL_INFINITE_LOOP" category="CORRECTNESS" --> InfiniteLoop, InvariantLoopCondition
+abbrev="VA" type="VA_PRIMITIVE_ARRAY_PASSED_TO_OBJECT_VARARG" category="CORRECTNESS" --> PrimitiveArrayPassedAsVarArg
 
 ==== Not reimplemented
+abbrev="IM" type="IM_BAD_CHECK_FOR_ODD" category="STYLE"
+abbrev="IM" type="IM_AVERAGE_COMPUTATION_COULD_OVERFLOW" category="STYLE"
 
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
@@ -325,7 +328,6 @@ abbrev="UL" type="UL_UNRELEASED_LOCK_EXCEPTION_PATH" category="MT_CORRECTNESS"
 abbrev="RC" type="RC_REF_COMPARISON_BAD_PRACTICE" category="BAD_PRACTICE"
 abbrev="RC" type="RC_REF_COMPARISON_BAD_PRACTICE_BOOLEAN" category="BAD_PRACTICE"
 abbrev="RC" type="RC_REF_COMPARISON" category="CORRECTNESS"
-abbrev="VA" type="VA_PRIMITIVE_ARRAY_PASSED_TO_OBJECT_VARARG" category="CORRECTNESS"
 abbrev="FS" type="VA_FORMAT_STRING_USES_NEWLINE" category="BAD_PRACTICE"
 abbrev="FS" type="VA_FORMAT_STRING_BAD_CONVERSION" category="CORRECTNESS"
 abbrev="FS" type="VA_FORMAT_STRING_BAD_CONVERSION_TO_BOOLEAN" category="STYLE"
@@ -398,8 +400,6 @@ abbrev="BC" type="BC_VACUOUS_INSTANCEOF" category="STYLE" cweid="571"
 abbrev="BC" type="BC_BAD_CAST_TO_ABSTRACT_COLLECTION" category="STYLE"
 abbrev="DLS" type="DLS_OVERWRITTEN_INCREMENT" category="CORRECTNESS"
 abbrev="BSHIFT" type="BSHIFT_WRONG_ADD_PRIORITY" category="CORRECTNESS"
-abbrev="IM" type="IM_BAD_CHECK_FOR_ODD" category="STYLE"
-abbrev="IM" type="IM_AVERAGE_COMPUTATION_COULD_OVERFLOW" category="STYLE"
 abbrev="BSHIFT" type="ICAST_QUESTIONABLE_UNSIGNED_RIGHT_SHIFT" category="STYLE"
 abbrev="DMI" type="DMI_HARDCODED_ABSOLUTE_FILENAME" category="STYLE"
 abbrev="SWL" type="SWL_SLEEP_WITH_LOCK_HELD" category="MT_CORRECTNESS"
