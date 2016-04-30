@@ -214,6 +214,8 @@ public class Nodes {
         MethodReference mr = (MethodReference) operand;
         if(Methods.isEqualsMethod(mr))
             return true;
+        if(Types.isObject(mr.getDeclaringType()) && mr.isConstructor())
+            return true;
         if(mr.getName().equals("hashCode") && mr.getSignature().equals("()I"))
             return true;
         if(mr.getName().equals("toString") && mr.getSignature().equals("()Ljava/lang/String;"))

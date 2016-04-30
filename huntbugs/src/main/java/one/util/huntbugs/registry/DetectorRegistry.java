@@ -150,10 +150,6 @@ public class DetectorRegistry {
     }
 
     private void visitChildren(Node node, NodeChain parents, List<MethodContext> list, MethodData mdata) {
-        mdata.parents = parents;
-        for (MethodContext mc : list) {
-            mc.visitNode(node);
-        }
         if (node instanceof Lambda) {
             MethodDefinition curMethod = mdata.realMethod;
             mdata.realMethod = Nodes.getLambdaMethod((Lambda) node);
@@ -171,6 +167,10 @@ public class DetectorRegistry {
                 for (Node child : children)
                     visitChildren(child, newChain, list, mdata);
             }
+        }
+        mdata.parents = parents;
+        for (MethodContext mc : list) {
+            mc.visitNode(node);
         }
     }
 

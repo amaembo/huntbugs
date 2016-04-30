@@ -811,5 +811,11 @@
       might be inappropriate, especially on server applications. Consider using another method which allows to specify the encoding explicitly
       either with string (like <code>"UTF-8"</code>) or with <code>Charset</code> object (like <code>StandardCharsets.UTF_8</code>).]]></LongDescription>
     </Warning>
+    <Warning Type="InfiniteRecursion">
+      <Title>Infinite recursion is detected</Title>
+      <Description>Infinite recursion is detected in $METHOD$.</Description>
+      <LongDescription><![CDATA[This method calls itself in a way that will likely to cause infinite recursion and <code>StackOverflowError</code>.
+      Probably there's some logical mistake here.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>
