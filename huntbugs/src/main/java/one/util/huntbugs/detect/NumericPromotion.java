@@ -16,11 +16,14 @@
 package one.util.huntbugs.detect;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
+import com.strobel.decompiler.ast.Variable;
 
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
@@ -30,6 +33,7 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.WarningAnnotation.Location;
 
 /**
  * @author lan
@@ -105,8 +109,17 @@ public class NumericPromotion {
                         }
                     }
                 }
-                mc.report("IntegerDivisionPromotedToFloat", priority, expr, new WarningAnnotation<>("SOURCE_TYPE",
-                        getSourceType(expr)), new WarningAnnotation<>("TARGET_TYPE", getTargetType(expr)));
+                List<WarningAnnotation<?>> anno = new ArrayList<>();
+                anno.add(new WarningAnnotation<>("SOURCE_TYPE", getSourceType(expr)));
+                anno.add(new WarningAnnotation<>("TARGET_TYPE", getTargetType(expr)));
+                Location divLoc = mc.getLocation(arg);
+                if(divLoc.getSourceLine() != mc.getLocation(expr).getSourceLine())
+                    anno.add(WarningAnnotation.forLocation("DIVISION_AT", divLoc));
+                Object op = expr.getArguments().get(0).getOperand();
+                if(op instanceof Variable) {
+                    anno.add(new WarningAnnotation<>("VARIABLE", ((Variable)op).getName()));
+                }
+                mc.report("IntegerDivisionPromotedToFloat", priority, expr, anno.toArray(new WarningAnnotation[0]));
             }
         }
     }

@@ -63,18 +63,18 @@ public class WarningAnnotation<T> {
         WarningAnnotation<?> other = (WarningAnnotation<?>) obj;
         return Objects.equals(role, other.role) && Objects.equals(value, other.value);
     }
-    
+
     public static class TypeInfo {
         private final String typeName;
 
         public TypeInfo(String typeName) {
             this.typeName = Objects.requireNonNull(typeName);
         }
-        
+
         public TypeInfo(TypeReference ref) {
             this.typeName = ref.getInternalName();
         }
-        
+
         public String getTypeName() {
             return typeName;
         }
@@ -82,34 +82,42 @@ public class WarningAnnotation<T> {
         public String getSimpleName() {
             String type = typeName;
             String suffix = "";
-            while(type.startsWith("[")) {
+            while (type.startsWith("[")) {
                 type = type.substring(1);
                 suffix += "[]";
             }
-            switch(type) {
+            switch (type) {
             case "B":
-                type = "byte";break;
+                type = "byte";
+                break;
             case "C":
-                type = "char";break;
+                type = "char";
+                break;
             case "J":
-                type = "long";break;
+                type = "long";
+                break;
             case "I":
-                type = "int";break;
+                type = "int";
+                break;
             case "S":
-                type = "short";break;
+                type = "short";
+                break;
             case "Z":
-                type = "boolean";break;
+                type = "boolean";
+                break;
             case "F":
-                type = "float";break;
+                type = "float";
+                break;
             case "D":
-                type = "double";break;
+                type = "double";
+                break;
             }
             int pos = type.lastIndexOf('/');
-            if(pos > -1)
-                type = type.substring(pos+1).replace('$', '.');
-            return type+suffix;
+            if (pos > -1)
+                type = type.substring(pos + 1).replace('$', '.');
+            return type + suffix;
         }
-        
+
         @Override
         public int hashCode() {
             return typeName.hashCode();
@@ -124,12 +132,12 @@ public class WarningAnnotation<T> {
         @Override
         public String toString() {
             String type = typeName.replaceAll("[/$]", ".");
-            while(type.startsWith("["))
-                type = type.substring(1)+"[]";
+            while (type.startsWith("["))
+                type = type.substring(1) + "[]";
             return type;
         }
     }
-    
+
     public static class MemberInfo {
         private final String typeName;
         private final String name;
@@ -158,19 +166,19 @@ public class WarningAnnotation<T> {
         public String getSignature() {
             return signature;
         }
-        
+
         public boolean isMethod() {
             return signature.startsWith("(");
         }
 
         @Override
         public String toString() {
-            if(isMethod()) {
-                if(name.equals("<init>"))
-                    return "new "+typeName+signature;
-                return typeName+"."+name+signature;
+            if (isMethod()) {
+                if (name.equals("<init>"))
+                    return "new " + typeName + signature;
+                return typeName + "." + name + signature;
             }
-            return typeName+"."+name+":"+signature;
+            return typeName + "." + name + ":" + signature;
         }
 
         @Override
@@ -212,6 +220,21 @@ public class WarningAnnotation<T> {
                 return "byteCode: " + offset + "; line: " + sourceLine;
             return "byteCode: " + offset;
         }
+
+        @Override
+        public int hashCode() {
+            return offset * 31 + sourceLine;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null || getClass() != obj.getClass())
+                return false;
+            Location other = (Location) obj;
+            return offset == other.offset && sourceLine != other.sourceLine;
+        }
     }
 
     @Override
@@ -246,15 +269,16 @@ public class WarningAnnotation<T> {
     public static WarningAnnotation<Number> forNumber(Number number) {
         return new WarningAnnotation<>("NUMBER", number);
     }
-    
-    public static WarningAnnotation<MemberInfo> forMember(String role, String internalTypeName, String name, String signature) {
+
+    public static WarningAnnotation<MemberInfo> forMember(String role, String internalTypeName, String name,
+            String signature) {
         return new WarningAnnotation<>(role, new MemberInfo(internalTypeName, name, signature));
     }
 
     public static WarningAnnotation<MemberInfo> forMember(String role, MemberReference mr) {
         return new WarningAnnotation<>(role, new MemberInfo(mr));
     }
-    
+
     public static WarningAnnotation<Location> forLocation(int offset, int line) {
         return forLocation(new Location(offset, line));
     }
@@ -266,7 +290,7 @@ public class WarningAnnotation<T> {
     public static WarningAnnotation<Location> forLocation(String role, Location loc) {
         return new WarningAnnotation<>(role, loc);
     }
-    
+
     public static WarningAnnotation<Location> forAnotherInstance(Location loc) {
         return forLocation("ANOTHER_INSTANCE", loc);
     }
@@ -278,11 +302,11 @@ public class WarningAnnotation<T> {
     public static WarningAnnotation<String> forString(String str) {
         return new WarningAnnotation<>("STRING", str);
     }
-    
+
     public static WarningAnnotation<String> forOperation(Expression expr) {
         return new WarningAnnotation<>("OPERATION", Nodes.getOperation(expr.getCode()));
     }
-    
+
     public static WarningAnnotation<String> forOperation(AstCode code) {
         return new WarningAnnotation<>("OPERATION", Nodes.getOperation(code));
     }
