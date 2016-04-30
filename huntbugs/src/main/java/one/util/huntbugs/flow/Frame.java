@@ -27,7 +27,9 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
+
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.JvmType;
@@ -259,7 +261,7 @@ class Frame {
         case InvokeVirtual: {
             MethodReference mr = (MethodReference) expr.getOperand();
             target.processKnownMethods(expr, mr);
-            if (Nodes.isSideEffectFreeMethod(expr))
+            if (Methods.isSideEffectFree(mr))
                 return target;
             return target.replaceAll(src -> src.getCode() == AstCode.GetField || src.getCode() == AstCode.GetStatic
                 || src.getCode() == AstCode.LoadElement ? makeUpdatedNode(src) : src);

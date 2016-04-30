@@ -83,4 +83,58 @@ public class Methods {
     public static boolean isMain(MethodDefinition md) {
         return md.getName().equals("main") && md.isPublic() && md.isStatic() && md.getErasedSignature().startsWith("([Ljava/lang/String;)");
     }
+
+    public static boolean isSideEffectFree(MethodReference mr) {
+        if(isPure(mr))
+            return true;
+        if(isEqualsMethod(mr))
+            return true;
+        TypeReference tr = mr.getDeclaringType();
+        if(Types.isObject(tr) && mr.isConstructor())
+            return true;
+        String sig = mr.getErasedSignature();
+        String name = mr.getName();
+        if(name.equals("hashCode") && sig.equals("()I"))
+            return true;
+        if(name.equals("toString") && sig.equals("()Ljava/lang/String;"))
+            return true;
+        if(Types.isCollection(tr)) {
+            if(name.equals("contains") && sig.equals("(Ljava/lang/Object;)Z"))
+                return true;
+            if(name.equals("containsAll") && sig.equals("(Ljava/util/Collection;)Z"))
+                return true;
+            if(name.equals("isEmpty") && sig.equals("()Z"))
+                return true;
+            if(name.equals("size") && sig.equals("()I"))
+                return true;
+            if(Types.isInstance(tr, "java/util/List")) {
+                if(name.equals("get") && sig.equals("(I)Ljava/lang/Object;"))
+                    return true;
+            }
+            return false;
+        }
+        if(Types.isInstance(tr, "java/util/Map")) {
+            if ((name.equals("containsKey") || name.equals("containsValue"))
+                && sig.equals("(Ljava/lang/Object;)Z"))
+                return true;
+            if (name.equals("get") && sig.equals("(Ljava/lang/Object;)Ljava/lang/Object;"))
+                return true;
+        }
+        return Types.isSideEffectFreeType(tr);
+    }
+
+    public static boolean isPure(MethodReference mr) {
+        TypeReference tr = mr.getDeclaringType();
+        if(Types.isBoxed(tr) || tr.getInternalName().startsWith("java/time/"))
+            return true;
+        if(tr.getInternalName().equals("java/util/String"))
+            return !mr.getName().equals("getChars");
+        if(tr.getInternalName().equals("java/lang/Math"))
+            return !mr.getName().equals("random");
+        if(tr.getInternalName().equals("java/util/Objects"))
+            return true;
+        if(tr.getInternalName().equals("java/util/Optional"))
+            return mr.getName().equals("get") || mr.getName().equals("orElse") || mr.getName().equals("isPresent");
+        return false;
+    }
 }

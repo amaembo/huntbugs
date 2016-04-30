@@ -817,6 +817,20 @@
       <LongDescription><![CDATA[This method calls itself in a way that will likely to cause infinite recursion and <code>StackOverflowError</code>.
       Probably there's some logical mistake here.]]></LongDescription>
     </Warning>
+    <Warning Type="InfiniteLoop">
+      <Title>Infinite loop is detected</Title>
+      <Description>Infinite loop is detected in $METHOD$.</Description>
+      <LongDescription><![CDATA[This method defines a loop with non-trivial condition which is unlikely to change.
+      So this loop can finish only exceptionally. Probably there's some error in the code. If such behavior is intended 
+      consider defining infinite loop more explicitly like <code>while(true)</code> or <code>for(;;)</code>.]]></LongDescription>
+    </Warning>
+    <Warning Type="InvariantLoopCondition">
+      <Title>Invariant loop condition</Title>
+      <Description>Invariant loop condition in $METHOD$.</Description>
+      <LongDescription><![CDATA[This non-trivial condition defined in a loop is unlikely to change over the loop iterations.
+      Probably there's some error in the code. If such behavior is intended 
+      consider moving the condition out of the loop or using explicitly infinite loop like <code>while(true)</code>.]]></LongDescription>
+    </Warning>
     <Warning Type="CollectionAddedToItself">
       <Title>Collection added to itself</Title>
       <Description>Collection is added to itself in $METHOD$.</Description>

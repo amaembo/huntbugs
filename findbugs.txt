@@ -130,6 +130,7 @@ abbrev="Dm" type="DM_CONVERT_CASE" category="I18N" --> ConvertCaseWithDefaultLoc
 abbrev="Dm" type="DM_DEFAULT_ENCODING" category="I18N" --> MethodReliesOnDefaultEncoding
 abbrev="IL" type="IL_INFINITE_RECURSIVE_LOOP" category="CORRECTNESS" cweid="674" --> InfiniteRecursion
 abbrev="IL" type="IL_CONTAINER_ADDED_TO_ITSELF" category="CORRECTNESS" --> CollectionAddedToItself
+abbrev="IL" type="IL_INFINITE_LOOP" category="CORRECTNESS" --> InfiniteLoop, InvariantLoopCondition
 
 ==== Not reimplemented
 
@@ -147,7 +148,6 @@ abbrev="STCAL" type="STCAL_INVOKE_ON_STATIC_CALENDAR_INSTANCE" category="MT_CORR
 abbrev="STCAL" type="STCAL_INVOKE_ON_STATIC_DATE_FORMAT_INSTANCE" category="MT_CORRECTNESS"
 abbrev="NP" type="NP_SYNC_AND_NULL_CHECK_FIELD" category="MT_CORRECTNESS" cweid="585"
 abbrev="NP" type="NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" category="CORRECTNESS"
-abbrev="IL" type="IL_INFINITE_LOOP" category="CORRECTNESS"
 abbrev="VO" type="VO_VOLATILE_REFERENCE_TO_ARRAY" category="MT_CORRECTNESS"
 abbrev="HSC" type="HSC_HUGE_SHARED_STRING_CONSTANT" category="PERFORMANCE"
 abbrev="DP" type="DP_DO_INSIDE_DO_PRIVILEGED" category="MALICIOUS_CODE"

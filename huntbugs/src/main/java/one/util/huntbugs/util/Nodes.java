@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import one.util.huntbugs.flow.ValuesFlow;
 
@@ -212,18 +213,10 @@ public class Nodes {
         if(!(operand instanceof MethodReference))
             return false;
         MethodReference mr = (MethodReference) operand;
-        if(Methods.isEqualsMethod(mr))
-            return true;
-        if(Types.isObject(mr.getDeclaringType()) && mr.isConstructor())
-            return true;
-        if(mr.getName().equals("hashCode") && mr.getSignature().equals("()I"))
-            return true;
-        if(mr.getName().equals("toString") && mr.getSignature().equals("()Ljava/lang/String;"))
-            return true;
-        return Types.isSideEffectFreeType(mr.getDeclaringType());
+        return Methods.isSideEffectFree(mr);
     }
 
-	public static boolean isSideEffectFree(Node node) {
+    public static boolean isSideEffectFree(Node node) {
 	    if(node == null)
 	        return true;
 	    if(!(node instanceof Expression))
@@ -245,7 +238,8 @@ public class Nodes {
 	    case InvokeSpecial:
 	    case InvokeStatic:
 	    case InvokeVirtual:
-	        if(!isSideEffectFreeMethod(node))
+	    case InvokeInterface:
+	        if(!Methods.isSideEffectFree((MethodReference) expr.getOperand()))
 	            return false;
 	    default:
 	        for(Expression child : expr.getArguments()) {
@@ -255,6 +249,43 @@ public class Nodes {
 	    }
 		return true;
 	}
+
+    public static boolean isPure(Node node) {
+        if(node == null)
+            return true;
+        if(!(node instanceof Expression))
+            return false;
+        Expression expr = (Expression)node;
+        switch(expr.getCode()) {
+        case PreIncrement:
+        case PostIncrement:
+        case InvokeDynamic:
+        case Store:
+        case StoreElement:
+        case CompoundAssignment:
+        case PutField:
+        case PutStatic:
+        case NewArray:
+        case InitArray:
+        case InitObject:
+        case GetField:
+        case GetStatic:
+        case LoadElement:
+            return false;
+        case InvokeSpecial:
+        case InvokeStatic:
+        case InvokeVirtual:
+        case InvokeInterface:
+            if(!Methods.isPure((MethodReference) expr.getOperand()))
+                return false;
+        default:
+            for(Expression child : expr.getArguments()) {
+                if(!isPure(child))
+                    return false;
+            }
+        }
+        return true;
+    }
 	
 	public static boolean isSynchorizedBlock(Node node) {
 	    if(!(node instanceof TryCatchBlock)) {
@@ -387,5 +418,9 @@ public class Nodes {
 
     public static int estimateCodeSize(Node node) {
         return node.getChildrenAndSelfRecursive().size();
+    }
+
+    public static Stream<Expression> stream(Expression expr) {
+        return Stream.concat(Stream.of(expr), expr.getArguments().stream().flatMap(Nodes::stream));
     }
 }

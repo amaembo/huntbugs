@@ -105,7 +105,7 @@ public class Types {
      *         side-effects
      */
     public static boolean isSideEffectFreeType(TypeReference type) {
-        return SIDE_EFFECT_FREE_TYPES.contains(type.getInternalName());
+        return SIDE_EFFECT_FREE_TYPES.contains(type.getInternalName()) || type.getInternalName().startsWith("java/time/");
     }
 
     public static boolean samePackage(String internalName1, String internalName2) {
