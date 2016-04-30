@@ -115,13 +115,13 @@ public class SameBranches {
         }
     }
 
-    private int computePriority(Node block, int n) {
-        int codeSize = block.getChildrenAndSelfRecursive().size();
+    private static int computePriority(Node block, int n) {
+        int codeSize = Nodes.estimateCodeSize(block);
         return Math.max(0, 55 - ((int) (Math.sqrt(n * codeSize) * 5)));
     }
 
     // This check is not complete: it's still possible that it will return false for nonFallThrough
-    private boolean nonFallThrough(List<Node> body) {
+    private static boolean nonFallThrough(List<Node> body) {
         if (body.isEmpty())
             return false;
         Node last = body.get(body.size() - 1);

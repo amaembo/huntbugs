@@ -384,4 +384,8 @@ public class Nodes {
         }
         throw new InternalError("Unable to determine original method for lambda "+l);
     }
+
+    public static int estimateCodeSize(Node node) {
+        return node.getChildrenAndSelfRecursive().size();
+    }
 }

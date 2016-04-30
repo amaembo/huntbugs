@@ -48,8 +48,12 @@ public class NonShortCircuit {
                     ctx.report("NonShortCircuitDangerous", 0, node, op, repl);
                 else if (Nodes.find(left, n -> Nodes.isInvoke(n) && !Nodes.isSideEffectFreeMethod(n)) != null)
                     ctx.report("NonShortCircuitDangerous", 10, node, op, repl);
-                else
-                    ctx.report("NonShortCircuit", 0, node, op, repl);
+                else {
+                    int priority = 0;
+                    if(Nodes.estimateCodeSize(node) < 4)
+                        priority = 10;
+                    ctx.report("NonShortCircuit", priority, node, op, repl);
+                }
             }
         }
     }
