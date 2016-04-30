@@ -17,6 +17,8 @@ package one.util.huntbugs.testdata;
 
 import java.math.BigDecimal;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -201,5 +203,15 @@ public class TestBadMethodCalls {
     @AssertWarning(type="DateBadMonth")
     public void testBadMonth(Date date) {
         date.setMonth(12);
+    }
+    
+    @AssertWarning(type="CollectionAddedToItself") 
+    public void testAddCollection(Collection<Object> c) {
+        c.add(c);
+    }
+
+    @AssertWarning(type="CollectionAddedToItself") 
+    public void testAddArrayList(ArrayList<Object> c) {
+        c.add(c);
     }
 }

@@ -132,4 +132,8 @@ public class Types {
     public static boolean isObject(TypeReference type) {
         return type.getInternalName().equals("java/lang/Object");
     }
+
+    public static boolean isCollection(TypeReference type) {
+        return isInstance(type, "java/util/Collection");
+    }
 }

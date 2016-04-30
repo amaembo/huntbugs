@@ -817,5 +817,11 @@
       <LongDescription><![CDATA[This method calls itself in a way that will likely to cause infinite recursion and <code>StackOverflowError</code>.
       Probably there's some logical mistake here.]]></LongDescription>
     </Warning>
+    <Warning Type="CollectionAddedToItself">
+      <Title>Collection added to itself</Title>
+      <Description>Collection is added to itself in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code adds a collection to itself. This is dangerous as after that collection might work badly. For example,
+      calling <code>hashCode</code> on it may throw <code>StackOverflowError</code>.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

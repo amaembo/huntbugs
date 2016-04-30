@@ -33,6 +33,7 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
@@ -52,6 +53,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "Correctness", name = "DoubleLongBitsToDoubleOnInt", maxScore = 70)
 @WarningDefinition(category = "Correctness", name = "ScheduledThreadPoolExecutorChangePoolSize", maxScore = 70)
 @WarningDefinition(category = "Correctness", name = "DateBadMonth", maxScore = 70)
+@WarningDefinition(category = "Correctness", name = "CollectionAddedToItself", maxScore = 65)
 public class BadMethodCalls {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression node, NodeChain nc, MethodContext ctx, MethodDefinition curMethod) {
@@ -175,6 +177,10 @@ public class BadMethodCalls {
                 if(m < 0 || m > 11) {
                     ctx.report("DateBadMonth", 0, node, WarningAnnotation.forNumber(m));
                 }
+            }
+        } else if(name.equals("add") && mr.getErasedSignature().equals("(Ljava/lang/Object;)Z") && Types.isCollection(mr.getDeclaringType())) {
+            if(Nodes.isEquivalent(Nodes.getChild(node, 0), Nodes.getChild(node, 1))) {
+                ctx.report("CollectionAddedToItself", 0, node);
             }
         }
     }

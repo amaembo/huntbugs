@@ -108,4 +108,52 @@ public class TestInfiniteRecursion {
             return test(x+1);
         }
     }
+    
+    public static abstract class InfiniteLoop {
+        int x;
+        int y;
+
+        @AssertWarning(type="InfiniteRecursion")
+        void report() {
+            report();
+        }
+
+        @AssertWarning(type="InfiniteRecursion")
+        void report2(Object a, Object b) {
+            if (a.equals(b)) // we miss this one because we assume equals can do
+                             // a store
+                report2(a, b);
+        }
+
+        @AssertWarning(type="InfiniteRecursion")
+        static void report3(InfiniteLoop obj) {
+            InfiniteLoop.report3(obj);
+        }
+
+        @AssertNoWarning(type="InfiniteRecursion")
+        void doNotReport(Object a, Object b) {
+            if (a.equals(b)) {
+                doNotReport(b, a);
+            }
+        }
+
+        @AssertNoWarning(type="InfiniteRecursion")
+        void doNotReport2(Object a, Object b) {
+            if (x == 0) {
+                x = 1;
+                // A field has been checked and modified
+                doNotReport2(a, b);
+            }
+        }
+
+        @AssertNoWarning(type="InfiniteRecursion")
+        void doNotReport3(Object a, Object b) {
+            if (opaque()) {
+                // Assume method invocation reads and writes all fields
+                doNotReport3(a, b);
+            }
+        }
+
+        protected abstract boolean opaque();
+    }
 }
