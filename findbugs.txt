@@ -132,9 +132,9 @@ abbrev="IL" type="IL_INFINITE_RECURSIVE_LOOP" category="CORRECTNESS" cweid="674"
 abbrev="IL" type="IL_CONTAINER_ADDED_TO_ITSELF" category="CORRECTNESS" --> CollectionAddedToItself
 abbrev="IL" type="IL_INFINITE_LOOP" category="CORRECTNESS" --> InfiniteLoop, InvariantLoopCondition
 abbrev="VA" type="VA_PRIMITIVE_ARRAY_PASSED_TO_OBJECT_VARARG" category="CORRECTNESS" --> PrimitiveArrayPassedAsVarArg
+abbrev="IM" type="IM_BAD_CHECK_FOR_ODD" category="STYLE" --> CheckForOddnessFailsForNegative
 
 ==== Not reimplemented
-abbrev="IM" type="IM_BAD_CHECK_FOR_ODD" category="STYLE"
 abbrev="IM" type="IM_AVERAGE_COMPUTATION_COULD_OVERFLOW" category="STYLE"
 
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"

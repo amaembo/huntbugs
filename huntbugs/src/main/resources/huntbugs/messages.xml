@@ -843,5 +843,12 @@
       <LongDescription><![CDATA[This code calls $CALLED_METHOD$ and passes a primitive array of type $ARRAY_TYPE$ where var-arg argument is expected.
       The primitive array will be wrapped into one-element object array which is likely a mistake.]]></LongDescription>
     </Warning>
+    <Warning Type="CheckForOddnessFailsForNegative">
+      <Title>Check for oddness may fail for negative input</Title>
+      <Description>Check for oddness like (x % 2 $OPERATION$ 1) may fail for negative input.</Description>
+      <LongDescription><![CDATA[This code checks for oddness using pattern like <code>(x % 2 $OPERATION$ 1)</code>. This would fail if
+      <code>x</code> happens to be negative. Even if it's impossible in your case the error-proof practice is to replace this code with
+      <code>(x % 2 $REPLACEMENT$ 0)</code>.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

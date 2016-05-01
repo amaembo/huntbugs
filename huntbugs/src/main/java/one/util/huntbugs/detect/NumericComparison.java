@@ -39,6 +39,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
  */
 @WarningDefinition(category = "Correctness", name = "ComparisonWithOutOfRangeValue", maxScore = 65)
 @WarningDefinition(category = "RedundantCode", name = "SwitchBranchUnreachable", maxScore = 65)
+@WarningDefinition(category = "BadPractice", name = "CheckForOddnessFailsForNegative", maxScore = 40)
 public class NumericComparison {
     class LongRange {
         final long minValue, maxValue;
@@ -135,6 +136,9 @@ public class NumericComparison {
                 constant = ((Number) right).longValue();
                 arg = Nodes.getChild(expr, 0);
             }
+            
+            checkRem2Eq1(mc, type, code, arg, constant);
+            
             LongRange cmpRange = new LongRange(code, constant);
             LongRange realRange = getExpressionRange(type.getSimpleType(), arg);
             if(realRange == null)
@@ -168,6 +172,22 @@ public class NumericComparison {
                         mc.report("SwitchBranchUnreachable", 0, block, WarningAnnotation.forNumber(val), new WarningAnnotation<>("MIN_VALUE", realRange.minValue),
                             new WarningAnnotation<>("MAX_VALUE", realRange.maxValue));
                     });
+            }
+        }
+    }
+
+    private void checkRem2Eq1(MethodContext mc, TypeReference type, AstCode code, Expression arg, long constant) {
+        if(constant == 1 && (code == AstCode.CmpEq || code == AstCode.CmpNe) && arg.getCode() == AstCode.Rem && Integer.valueOf(2).equals(Nodes.getConstant(arg.getArguments().get(1)))) {
+            Expression remInput = Nodes.getChild(arg, 0);
+            if(remInput.getCode() == AstCode.InvokeStatic) {
+                MethodReference mr = (MethodReference) remInput.getOperand();
+                if(mr.getName().equals("abs") && mr.getDeclaringType().getInternalName().equals("java/lang/Math")) {
+                    return;
+                }
+            }
+            if(getExpressionRange(type.getSimpleType(), remInput).minValue < 0) {
+                mc.report("CheckForOddnessFailsForNegative", 0, arg, WarningAnnotation.forOperation(code),
+                    new WarningAnnotation<>("REPLACEMENT", code == AstCode.CmpEq ? "!=" : "=="));
             }
         }
     }
@@ -210,6 +230,8 @@ public class NumericComparison {
             if (constant instanceof Integer) {
                 int remOp = (int) constant;
                 if (remOp != 0 && remOp != Integer.MIN_VALUE) {
+                    if(intRange(arg.getArguments().get(0)).minValue >= 0)
+                        return new LongRange(0, Math.abs(remOp) - 1);
                     return new LongRange(1 - Math.abs(remOp), Math.abs(remOp) - 1);
                 }
             }
@@ -238,6 +260,7 @@ public class NumericComparison {
             break;
         }
         case InvokeVirtual:
+        case InvokeInterface:
             MethodReference mr = (MethodReference) arg.getOperand();
             if (mr.getName().equals("size") && mr.getSignature().equals("()I")) {
                 if (Types.isInstance(mr.getDeclaringType(), "java/util/Collection")

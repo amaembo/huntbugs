@@ -16,6 +16,7 @@
 package one.util.huntbugs.testdata;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
@@ -130,6 +131,14 @@ public class TestNumericComparison {
         }
     }
 
+    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    public void testRem(List<String> list) {
+        int result = list.size() % 3;
+        if(result < 0) {
+            System.out.println("Never!");
+        }
+    }
+
     @AssertNoWarning(type="ComparisonWithOutOfRangeValue")
     public void testShrOk(int input) {
         int result = input >> 10;
@@ -159,6 +168,20 @@ public class TestNumericComparison {
         int result = input >>> 10;
         if(result == 0x400000) {
             System.out.println("Never");
+        }
+    }
+
+    @AssertWarning(type="CheckForOddnessFailsForNegative")
+    public void testRem2(int input) {
+        if(input % 2 == 1) {
+            System.out.println("odd");
+        }
+    }
+
+    @AssertNoWarning(type="CheckForOddnessFailsForNegative")
+    public void testRem2Ok(List<String> list) {
+        if(list.size() % 2 == 1) {
+            System.out.println("odd");
         }
     }
 }
