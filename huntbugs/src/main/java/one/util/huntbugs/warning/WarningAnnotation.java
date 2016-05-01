@@ -233,7 +233,7 @@ public class WarningAnnotation<T> {
             if (obj == null || getClass() != obj.getClass())
                 return false;
             Location other = (Location) obj;
-            return offset == other.offset && sourceLine != other.sourceLine;
+            return offset == other.offset && sourceLine == other.sourceLine;
         }
     }
 
