@@ -24,11 +24,16 @@ import one.util.huntbugs.repo.CompositeRepository;
 import one.util.huntbugs.repo.DirRepository;
 import one.util.huntbugs.repo.Repository;
 
+import org.apache.maven.artifact.Artifact;
+import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
+
 import com.strobel.assembler.metadata.ClasspathTypeLoader;
 import com.strobel.assembler.metadata.CompositeTypeLoader;
 import com.strobel.assembler.metadata.ITypeLoader;
@@ -37,7 +42,6 @@ import com.strobel.assembler.metadata.JarTypeLoader;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -75,22 +79,37 @@ public class HuntBugsMojo extends AbstractMojo {
     @Parameter( defaultValue = "${project.compileClasspathElements}", readonly = true, required = true )
     private List<String> classpathElements;
     
+    @Parameter( defaultValue = "${project}", readonly = true, required = true )
+    private MavenProject project;
+
+    @Parameter( defaultValue = "${session}", readonly = true, required = true )
+    private MavenSession session;
+    
     @Override
     public void execute() throws MojoExecutionException {
         try {
+            Repository repo = new DirRepository(classesDirectory.toPath());
+            if(!quiet) {
+                getLog().info("HuntBugs: +dir "+classesDirectory);
+            }
             List<ITypeLoader> deps = new ArrayList<>();
-            for(String classpathElement : classpathElements) {
-                Path path = Paths.get(classpathElement);
-                if(path.toAbsolutePath().normalize().equals(classesDirectory.toPath().toAbsolutePath().normalize()))
-                    continue;
-                getLog().info("HuntBugs: adding "+path);
-                if(Files.isRegularFile(path)) {
-                    deps.add(new JarTypeLoader(new JarFile(path.toFile())));
-                } else if(Files.isDirectory(path)){
-                    deps.add(new ClasspathTypeLoader(path.toString()));
+            ArtifactRepository localRepository = session.getLocalRepository();
+            for(Artifact art : project.getDependencyArtifacts()) {
+                if(art.getScope().equals("compile")) {
+                    File f = localRepository.find(art).getFile();
+                    if(f != null) {
+                        Path path = f.toPath();
+                        if(!quiet) {
+                            getLog().info("HuntBugs: +dep "+path);
+                        }
+                        if(Files.isRegularFile(path)) {
+                            deps.add(new JarTypeLoader(new JarFile(path.toFile())));
+                        } else if(Files.isDirectory(path)){
+                            deps.add(new ClasspathTypeLoader(path.toString()));
+                        }
+                    }
                 }
             }
-            Repository repo = new DirRepository(classesDirectory.toPath());
             if(!deps.isEmpty())
                 repo = new CompositeRepository(Arrays.asList(repo, new AuxRepository(new CompositeTypeLoader(deps
                         .toArray(new ITypeLoader[0])))));
