@@ -15,6 +15,9 @@
  */
 package one.util.huntbugs.analysis;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import one.util.huntbugs.registry.Detector;
 
 import com.strobel.assembler.metadata.MethodDefinition;
@@ -71,6 +74,34 @@ public class ErrorMessage {
         this.errorMessage = message;
     }
     
+    public String getClassName() {
+        return className;
+    }
+
+    public String getElementName() {
+        return elementName;
+    }
+
+    public String getDescriptor() {
+        return descriptor;
+    }
+
+    public int getLine() {
+        return line;
+    }
+
+    public String getDetector() {
+        return detector;
+    }
+    
+    public String getError() {
+        if(errorMessage != null)
+            return errorMessage;
+        StringWriter sw = new StringWriter();
+        error.printStackTrace(new PrintWriter(sw));
+        return sw.toString();
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

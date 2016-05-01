@@ -39,11 +39,12 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import one.util.huntbugs.analysis.Context;
+import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.warning.Formatter;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
-
+import one.util.huntbugs.warning.WarningAnnotation.TypeInfo;
 
 /**
  * @author lan
@@ -53,7 +54,7 @@ public class XmlReportWriter {
     private static final String XSL_PATH = "huntbugs/report.xsl";
     private final Path target;
     private final Path htmlTarget;
-    
+
     public XmlReportWriter(Path target, Path htmlTarget) {
         this.target = target;
         this.htmlTarget = htmlTarget;
@@ -61,9 +62,9 @@ public class XmlReportWriter {
 
     public void write(Context ctx) {
         Document dom = makeDom(ctx);
-        if(target != null)
+        if (target != null)
             writeXml(dom);
-        if(htmlTarget != null)
+        if (htmlTarget != null)
             writeHtml(dom);
     }
 
@@ -87,7 +88,7 @@ public class XmlReportWriter {
 
     private void writeHtml(Document dom) {
         try {
-            try(InputStream is = XmlReportWriter.class.getClassLoader().getResourceAsStream(XSL_PATH);
+            try (InputStream is = XmlReportWriter.class.getClassLoader().getResourceAsStream(XSL_PATH);
                     OutputStream os = Files.newOutputStream(htmlTarget)) {
                 StreamSource xsl = new StreamSource(is);
                 Transformer transformer = TransformerFactory.newInstance().newTransformer(xsl);
@@ -102,7 +103,7 @@ public class XmlReportWriter {
             throw new RuntimeException(e);
         }
     }
-    
+
     private Document makeDom(Context ctx) {
         Document doc;
         try {
@@ -111,16 +112,36 @@ public class XmlReportWriter {
             throw new RuntimeException(e);
         }
         Element root = doc.createElement("HuntBugs");
-        Element list = doc.createElement("WarningList");
+        Element errors = doc.createElement("ErrorList");
+        ctx.errors().map(e -> writeError(doc, e)).forEach(errors::appendChild);
+        if(errors.hasChildNodes())
+            root.appendChild(errors);
+        Element warnings = doc.createElement("WarningList");
         Formatter formatter = new Formatter(ctx.getMessages());
-        ctx.warnings().sorted(Comparator.comparing(Warning::getScore).reversed()
-            .thenComparing(w -> w.getType().getName()).thenComparing(Warning::getClassName)).map(
-            w -> writeWarning(doc, w, formatter)).forEach(list::appendChild);
-        root.appendChild(list);
+        ctx.warnings().sorted(
+            Comparator.comparing(Warning::getScore).reversed().thenComparing(w -> w.getType().getName()).thenComparing(
+                Warning::getClassName)).map(w -> writeWarning(doc, w, formatter)).forEach(warnings::appendChild);
+        root.appendChild(warnings);
         doc.appendChild(root);
         return doc;
     }
     
+    private Element writeError(Document doc, ErrorMessage e) {
+        Element element = doc.createElement("Error");
+        if(e.getDetector() != null)
+            element.setAttribute("Detector", e.getDetector());
+        if(e.getClassName() != null)
+            element.setAttribute("Class", e.getClassName());
+        if(e.getElementName() != null)
+            element.setAttribute("Member", e.getElementName());
+        if(e.getDescriptor() != null)
+            element.setAttribute("Signature", e.getDescriptor());
+        if(e.getLine() != -1)
+            element.setAttribute("Line", String.valueOf(e.getLine()));
+        element.appendChild(doc.createCDATASection(e.getError()));
+        return element;
+    }
+
     private Element writeWarning(Document doc, Warning w, Formatter formatter) {
         Element element = doc.createElement("Warning");
         element.setAttribute("Type", w.getType().getName());
@@ -142,60 +163,79 @@ public class XmlReportWriter {
         Element location = doc.createElement("Location");
         List<Element> anotherLocations = new ArrayList<>();
         List<Element> attributes = new ArrayList<>();
-        w.annotations().forEach(anno -> {
-            switch(anno.getRole()) {
-            case "TYPE":
-                classElement.setAttribute("Name", formatter.formatValue(anno.getValue(), Formatter.FORMAT_PLAIN));
-                break;
-            case "FILE":
-                classElement.setAttribute("SourceFile", formatter.formatValue(anno.getValue(), Formatter.FORMAT_PLAIN));
-                break;
-            case "LOCATION": {
-                location.setAttribute("Offset", String.valueOf(((Location)anno.getValue()).getOffset()));
-                int line = ((Location)anno.getValue()).getSourceLine();
-                if(line != -1)
-                    location.setAttribute("Line", String.valueOf(line));
-                break;
-            }
-            case "ANOTHER_INSTANCE": {
-                Element anotherLocation = doc.createElement("AnotherLocation");
-                anotherLocation.setAttribute("Offset", String.valueOf(((Location)anno.getValue()).getOffset()));
-                int line = ((Location)anno.getValue()).getSourceLine();
-                if(line != -1)
-                    anotherLocation.setAttribute("Line", String.valueOf(line));
-                anotherLocations.add(anotherLocation);
-                break;
-            }
-            case "METHOD": {
-                MemberInfo mr = (MemberInfo) anno.getValue();
-                methodElement.setAttribute("Name", mr.getName());
-                methodElement.setAttribute("Signature", mr.getSignature());
-                break;
-            }
-            case "FIELD": {
-                MemberInfo mr = (MemberInfo) anno.getValue();
-                fieldElement.setAttribute("Name", mr.getName());
-                fieldElement.setAttribute("Signature", mr.getSignature());
-                break;
-            }
-            default:
-                Element attribute = doc.createElement("Annotation");
-                attribute.setAttribute("Name", anno.getRole());
-                attribute.appendChild(doc.createTextNode(formatter.formatValue(anno.getValue(), Formatter.FORMAT_PLAIN)));
-                attributes.add(attribute);
-            }
-        });
-        if(methodElement.hasAttribute("Name"))
+        w.annotations().forEach(
+            anno -> {
+                switch (anno.getRole()) {
+                case "TYPE":
+                    classElement.setAttribute("Name", ((TypeInfo)anno.getValue()).getTypeName());
+                    break;
+                case "FILE":
+                    classElement.setAttribute("SourceFile", formatter.formatValue(anno.getValue(),
+                        Formatter.FORMAT_PLAIN));
+                    break;
+                case "LOCATION": {
+                    location.setAttribute("Offset", String.valueOf(((Location) anno.getValue()).getOffset()));
+                    int line = ((Location) anno.getValue()).getSourceLine();
+                    if (line != -1)
+                        location.setAttribute("Line", String.valueOf(line));
+                    break;
+                }
+                case "ANOTHER_INSTANCE": {
+                    Element anotherLocation = doc.createElement("AnotherLocation");
+                    anotherLocation.setAttribute("Offset", String.valueOf(((Location) anno.getValue()).getOffset()));
+                    int line = ((Location) anno.getValue()).getSourceLine();
+                    if (line != -1)
+                        anotherLocation.setAttribute("Line", String.valueOf(line));
+                    anotherLocations.add(anotherLocation);
+                    break;
+                }
+                case "METHOD": {
+                    MemberInfo mr = (MemberInfo) anno.getValue();
+                    methodElement.setAttribute("Name", mr.getName());
+                    methodElement.setAttribute("Signature", mr.getSignature());
+                    break;
+                }
+                case "FIELD": {
+                    MemberInfo mr = (MemberInfo) anno.getValue();
+                    fieldElement.setAttribute("Name", mr.getName());
+                    fieldElement.setAttribute("Signature", mr.getSignature());
+                    break;
+                }
+                default:
+                    Object value = anno.getValue();
+                    Element attribute;
+                    if (value instanceof TypeInfo) {
+                        attribute = doc.createElement("TypeAnnotation");
+                        attribute.setAttribute("Name", ((TypeInfo) value).getTypeName());
+                    } else if (value instanceof Location) {
+                        attribute = doc.createElement("LocationAnnotation");
+                        attribute.setAttribute("Line", String.valueOf(((Location) value).getSourceLine()));
+                    } else if (value instanceof MemberInfo) {
+                        MemberInfo mr = (MemberInfo) anno.getValue();
+                        attribute = doc.createElement("MemberAnnotation");
+                        attribute.setAttribute("Type", mr.getTypeName());
+                        attribute.setAttribute("Name", mr.getName());
+                        attribute.setAttribute("Signature", mr.getSignature());
+                    } else {
+                        attribute = doc.createElement("Annotation");
+                        attribute.appendChild(doc.createTextNode(formatter.formatValue(anno.getValue(),
+                            Formatter.FORMAT_PLAIN)));
+                    }
+                    attribute.setAttribute("Role", anno.getRole());
+                    attributes.add(attribute);
+                }
+            });
+        if (methodElement.hasAttribute("Name"))
             element.appendChild(methodElement);
-        if(fieldElement.hasAttribute("Name"))
+        if (fieldElement.hasAttribute("Name"))
             element.appendChild(fieldElement);
-        if(location.hasAttribute("Offset")) {
-            if(classElement.hasAttribute("SourceFile"))
+        if (location.hasAttribute("Offset")) {
+            if (classElement.hasAttribute("SourceFile"))
                 location.setAttribute("SourceFile", classElement.getAttribute("SourceFile"));
             element.appendChild(location);
         }
         anotherLocations.forEach(al -> {
-            if(classElement.hasAttribute("SourceFile"))
+            if (classElement.hasAttribute("SourceFile"))
                 al.setAttribute("SourceFile", classElement.getAttribute("SourceFile"));
             element.appendChild(al);
         });

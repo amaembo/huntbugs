@@ -13,6 +13,7 @@
       <!-- HTML header -->
       <xsl:call-template name="make-html-header"/>
       <body>
+        <h1>HuntBugs report</h1>
         <xsl:apply-templates/>
       </body>
     </html>
@@ -45,13 +46,32 @@
         border-bottom: 1px gray dotted;
       }
       
-      table.Warnings {
+      .AnotherLocation {
+        color: gray;
+      }
+      
+      table.Warnings, table.Errors {
         border-collapse: collapse;
+        margin: 3pt;
       }
       
       table.Warnings, table.Warnings > tbody > tr > td {
         border: 1px solid blue;
         padding: 3pt;
+      }
+
+      table.Errors thead {
+        background-color: red;
+        color: white;
+      }
+      
+      table.Errors, table.Errors > tbody > tr > td {
+        border: 1px solid red;
+        padding: 3pt;
+      }
+      
+      table.Errors > tbody > tr > td {
+        vertical-align: top;
       }
       
       .Title {
@@ -61,6 +81,7 @@
       td.Description {
         background-color: yellow;
         height: 10pt;
+        vertical-align: top;
       }
       
       table.Properties th {
@@ -73,8 +94,30 @@
     </head>
   </xsl:template>
 
+  <xsl:template match="ErrorList">
+    <table class="Errors"><thead><tr><th colspan="2">Errors (<xsl:value-of select="count(Error)"/>)</th></tr></thead>
+      <tbody>
+        <xsl:apply-templates/>
+      </tbody>
+    </table>
+  </xsl:template>
+
+  <xsl:template match="Error">
+    <tr>
+        <td rowspan="2">
+            <table class="Properties">
+              <xsl:choose><xsl:when test="@Class"><tr><th>Class:</th><td><xsl:value-of select="@Class"/></td></tr></xsl:when></xsl:choose>
+              <xsl:choose><xsl:when test="@Member"><tr><th>Member:</th><td><xsl:value-of select="@Member"/></td></tr></xsl:when></xsl:choose>
+              <xsl:choose><xsl:when test="@Detector"><tr><th>Detector:</th><td><xsl:value-of select="@Detector"/></td></tr></xsl:when></xsl:choose>
+            </table>
+        </td>
+        <td><pre><xsl:value-of select="."/></pre>
+        </td>
+    </tr>
+  </xsl:template>
+  
   <xsl:template match="WarningList">
-    <table class="Warnings"><thead><th colspan="2">Warnings</th></thead>
+    <table class="Warnings"><thead><tr><th colspan="2">Warnings (<xsl:value-of select="count(Warning)"/>)</th></tr></thead>
       <tbody>
         <xsl:apply-templates/>
       </tbody>
@@ -105,7 +148,11 @@
   </xsl:template>
 
   <xsl:template match="Location">
-    <tr><th>Location:</th><td><xsl:value-of select="@SourceFile"/>:<xsl:value-of select="@Line"/></td></tr>
+    <tr><th>Location:</th><td><xsl:value-of select="@SourceFile"/>:<xsl:value-of select="@Line"/><xsl:apply-templates select="../AnotherLocation"/></td></tr>
+  </xsl:template>
+
+  <xsl:template match="AnotherLocation">
+    <span class="AnotherLocation">; <xsl:value-of select="@Line"/></span>
   </xsl:template>
 
   <xsl:template match="Class">
