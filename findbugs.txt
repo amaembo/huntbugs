@@ -133,10 +133,10 @@ abbrev="IL" type="IL_CONTAINER_ADDED_TO_ITSELF" category="CORRECTNESS" --> Colle
 abbrev="IL" type="IL_INFINITE_LOOP" category="CORRECTNESS" --> InfiniteLoop, InvariantLoopCondition
 abbrev="VA" type="VA_PRIMITIVE_ARRAY_PASSED_TO_OBJECT_VARARG" category="CORRECTNESS" --> PrimitiveArrayPassedAsVarArg
 abbrev="IM" type="IM_BAD_CHECK_FOR_ODD" category="STYLE" --> CheckForOddnessFailsForNegative
+abbrev="IM" type="IM_AVERAGE_COMPUTATION_COULD_OVERFLOW" category="STYLE" --> AverageComputationCouldOverflow
 
 ==== Not reimplemented
-abbrev="IM" type="IM_AVERAGE_COMPUTATION_COULD_OVERFLOW" category="STYLE"
-
+abbrev="Ru" type="RU_INVOKE_RUN" category="MT_CORRECTNESS" cweid="572"
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SERVLET_WRITER" category="SECURITY"
@@ -209,7 +209,6 @@ abbrev="MSF" type="MSF_MUTABLE_SERVLET_FIELD" category="MT_CORRECTNESS"
 abbrev="IS" type="IS2_INCONSISTENT_SYNC" category="MT_CORRECTNESS"
 abbrev="MS" type="MS_EXPOSE_REP" category="MALICIOUS_CODE"
 abbrev="EI" type="EI_EXPOSE_REP" category="MALICIOUS_CODE" cweid="374"
-abbrev="Ru" type="RU_INVOKE_RUN" category="MT_CORRECTNESS" cweid="572"
 abbrev="TLW" type="TLW_TWO_LOCK_WAIT" category="MT_CORRECTNESS"
 abbrev="UR" type="UR_UNINIT_READ" category="CORRECTNESS"
 abbrev="UR" type="UR_UNINIT_READ_CALLED_FROM_SUPER_CONSTRUCTOR" category="CORRECTNESS"

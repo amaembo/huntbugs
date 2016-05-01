@@ -850,5 +850,11 @@
       <code>x</code> happens to be negative. Even if it's impossible in your case the error-proof practice is to replace this code with
       <code>(x % 2 $REPLACEMENT$ 0)</code>.]]></LongDescription>
     </Warning>
+    <Warning Type="AverageComputationCouldOverflow">
+      <Title>Average computation could overflow</Title>
+      <Description>Average computation could overflow in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code computes average array index in a way which could cause signed integer overflow if sum of indices
+      exceeds 2<sup>31</sup>. To compute average index safely use unsigned right shift: <code>((low + high) &gt;&gt;&gt; 1)</code>]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>
