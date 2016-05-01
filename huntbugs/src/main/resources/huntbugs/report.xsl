@@ -104,7 +104,7 @@
 
   <xsl:template match="Error">
     <tr>
-        <td rowspan="2">
+        <td>
             <table class="Properties">
               <xsl:choose><xsl:when test="@Class"><tr><th>Class:</th><td><xsl:value-of select="@Class"/></td></tr></xsl:when></xsl:choose>
               <xsl:choose><xsl:when test="@Member"><tr><th>Member:</th><td><xsl:value-of select="@Member"/></td></tr></xsl:when></xsl:choose>
