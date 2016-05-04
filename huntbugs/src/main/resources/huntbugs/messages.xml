@@ -868,5 +868,17 @@
       <LongDescription><![CDATA[This code calls <code>$RETURN_VALUE_OF:name$($ANNOTATION:name$.class)</code>. However the annotation $ANNOTATION$ is
       not visible to reflection as it does not annotated with <code>@Retention(RetentionPolicy.RUNTIME)</code>.]]></LongDescription>
     </Warning>
+    <Warning Type="DeadStoreInReturn">
+      <Title>Useless local variable update in return statement</Title>
+      <Description>Useless update of variable $VARIABLE$ in return statement.</Description>
+      <LongDescription><![CDATA[This code updates local variable $VARIABLE$ and immediately returns. Updating local variable is useless here as the updated value is never used.
+      Probably something else was meant here or assignment could be removed.]]></LongDescription>
+    </Warning>
+    <Warning Type="DeadIncrementInReturn">
+      <Title>Useless increment of local variable in return statement</Title>
+      <Description>Useless increment of variable $VARIABLE$ in return statement.</Description>
+      <LongDescription><![CDATA[This code increments local variable $VARIABLE$ and immediately returns. Updating local variable is useless here as the updated value is never used.
+      Probably something else was meant here or increment statement could be removed or replaced with addition.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

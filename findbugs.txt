@@ -136,6 +136,8 @@ abbrev="IM" type="IM_BAD_CHECK_FOR_ODD" category="STYLE" --> CheckForOddnessFail
 abbrev="IM" type="IM_AVERAGE_COMPUTATION_COULD_OVERFLOW" category="STYLE" --> AverageComputationCouldOverflow
 abbrev="Dm" type="DMI_ANNOTATION_IS_NOT_VISIBLE_TO_REFLECTION" category="CORRECTNESS" --> AnnotationNoRuntimeRetention
 abbrev="It" type="IT_NO_SUCH_ELEMENT" category="BAD_PRACTICE" --> IteratorNoThrow
+abbrev="DLS" type="DLS_DEAD_LOCAL_STORE_IN_RETURN" category="STYLE" --> DeadStoreInReturn
+abbrev="DLS" type="DLS_DEAD_LOCAL_INCREMENT_IN_RETURN" category="CORRECTNESS" --> DeadIncrementInReturn
 
 ==== Not reimplemented
 
@@ -373,8 +375,6 @@ abbrev="EC" type="EC_INCOMPATIBLE_ARRAY_COMPARE" category="CORRECTNESS"
 abbrev="EC" type="EC_BAD_ARRAY_COMPARE" category="CORRECTNESS"
 abbrev="STI" type="STI_INTERRUPTED_ON_CURRENTTHREAD" category="CORRECTNESS"
 abbrev="STI" type="STI_INTERRUPTED_ON_UNKNOWNTHREAD" category="CORRECTNESS"
-abbrev="DLS" type="DLS_DEAD_LOCAL_STORE_IN_RETURN" category="STYLE"
-abbrev="DLS" type="DLS_DEAD_LOCAL_INCREMENT_IN_RETURN" category="CORRECTNESS"
 abbrev="DLS" type="DLS_DEAD_STORE_OF_CLASS_LITERAL" category="CORRECTNESS"
 abbrev="DLS" type="DLS_DEAD_LOCAL_STORE" category="STYLE"
 abbrev="DLS" type="DLS_DEAD_LOCAL_STORE_SHADOWS_FIELD" category="STYLE"

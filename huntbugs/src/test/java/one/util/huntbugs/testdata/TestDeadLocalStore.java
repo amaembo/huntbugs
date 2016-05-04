@@ -23,6 +23,8 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestDeadLocalStore {
+    int x;
+    
     @AssertWarning(type="ParameterOverwritten", minScore=55)
     public void testDeadLocalSimple(int x) {
         x = 10;
@@ -43,5 +45,21 @@ public class TestDeadLocalStore {
             x = 10;
             System.out.println(x);
         }
+    }
+
+    @AssertWarning(type="DeadIncrementInReturn")
+    public int testDeadIncrement(int x) {
+        return x++;
+    }
+    
+    @AssertNoWarning(type="DeadIncrementInReturn")
+    public int testFieldIncrement() {
+        return x++;
+    }
+    
+    @SuppressWarnings("unused")
+    @AssertWarning(type="DeadStoreInReturn")
+    public boolean testDeadStore(boolean b) {
+        return b = true;
     }
 }

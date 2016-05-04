@@ -42,6 +42,8 @@ import one.util.huntbugs.util.Types;
  *
  */
 @WarningDefinition(category="Correctness", name="ParameterOverwritten", maxScore=60)
+@WarningDefinition(category="RedundantCode", name="DeadStoreInReturn", maxScore=50)
+@WarningDefinition(category="RedundantCode", name="DeadIncrementInReturn", maxScore=60)
 public class DeadLocalStore {
     @AstVisitor(nodes=AstNodes.ROOT)
     public void visitBody(Block body, MethodContext mc, MethodDefinition md) {
@@ -62,6 +64,20 @@ public class DeadLocalStore {
                 if(overwrite != null) {
                     mc.report("ParameterOverwritten", Methods.findSuperMethod(md) == null ? 0 : 20, overwrite);
                 }
+            }
+        }
+    }
+    
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
+    public void visit(Expression expr, MethodContext mc) {
+        if(expr.getCode() == AstCode.Return && expr.getArguments().size() == 1) {
+            Expression arg = expr.getArguments().get(0);
+            if(arg.getCode() == AstCode.Store) {
+                mc.report("DeadStoreInReturn", 0, arg);
+            } else if(arg.getCode() == AstCode.PreIncrement || arg.getCode() == AstCode.PostIncrement) {
+                Expression var = arg.getArguments().get(0);
+                if(var.getOperand() instanceof Variable)
+                    mc.report("DeadIncrementInReturn", 0, var);
             }
         }
     }
