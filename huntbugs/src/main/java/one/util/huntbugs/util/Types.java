@@ -136,4 +136,8 @@ public class Types {
     public static boolean isCollection(TypeReference type) {
         return isInstance(type, "java/util/Collection");
     }
+    
+    public static boolean is(TypeReference type, Class<?> clazz) {
+        return type.getFullName().equals(clazz.getName());
+    }
 }

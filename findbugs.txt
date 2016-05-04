@@ -134,8 +134,10 @@ abbrev="IL" type="IL_INFINITE_LOOP" category="CORRECTNESS" --> InfiniteLoop, Inv
 abbrev="VA" type="VA_PRIMITIVE_ARRAY_PASSED_TO_OBJECT_VARARG" category="CORRECTNESS" --> PrimitiveArrayPassedAsVarArg
 abbrev="IM" type="IM_BAD_CHECK_FOR_ODD" category="STYLE" --> CheckForOddnessFailsForNegative
 abbrev="IM" type="IM_AVERAGE_COMPUTATION_COULD_OVERFLOW" category="STYLE" --> AverageComputationCouldOverflow
+abbrev="Dm" type="DMI_ANNOTATION_IS_NOT_VISIBLE_TO_REFLECTION" category="CORRECTNESS" --> AnnotationNoRuntimeRetention
 
 ==== Not reimplemented
+
 abbrev="Ru" type="RU_INVOKE_RUN" category="MT_CORRECTNESS" cweid="572"
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
@@ -170,7 +172,6 @@ abbrev="Dm" type="DMI_EMPTY_DB_PASSWORD" category="SECURITY" cweid="259"
 abbrev="Dm" type="DMI_UNSUPPORTED_METHOD" category="STYLE"
 abbrev="Dm" type="DMI_THREAD_PASSED_WHERE_RUNNABLE_EXPECTED" category="STYLE"
 abbrev="Dm" type="DMI_COLLECTION_OF_URLS" category="PERFORMANCE"
-abbrev="Dm" type="DMI_ANNOTATION_IS_NOT_VISIBLE_TO_REFLECTION" category="CORRECTNESS"
 abbrev="Bx" type="DM_BOXED_PRIMITIVE_FOR_PARSING" category="PERFORMANCE"
 abbrev="Bx" type="DM_BOXED_PRIMITIVE_FOR_COMPARE" category="PERFORMANCE"
 abbrev="Bx" type="BX_UNBOXED_AND_COERCED_FOR_TERNARY_OPERATOR" category="PERFORMANCE"

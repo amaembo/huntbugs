@@ -856,5 +856,11 @@
       <LongDescription><![CDATA[This code computes average array index in a way which could cause signed integer overflow if sum of indices
       exceeds 2<sup>31</sup>. To compute average index safely use unsigned right shift: <code>((low + high) &gt;&gt;&gt; 1)</code>]]></LongDescription>
     </Warning>
+    <Warning Type="AnnotationNoRuntimeRetention">
+      <Title>Useless reflection call for an annotation without RUNTIME retention</Title>
+      <Description>Call to $RETURN_VALUE_OF$ will have no effect as $ANNOTATION$ has no runtime retention.</Description>
+      <LongDescription><![CDATA[This code calls <code>$RETURN_VALUE_OF:name$($ANNOTATION:name$.class)</code>. However the annotation $ANNOTATION$ is
+      not visible to reflection as it does not annotated with <code>@Retention(RetentionPolicy.RUNTIME)</code>.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>
