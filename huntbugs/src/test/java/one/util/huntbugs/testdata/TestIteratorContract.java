@@ -42,8 +42,25 @@ public class TestIteratorContract implements Iterator<String> {
     }
 
     @Override
+    @AssertNoWarning(type="*")
     public String next() {
         return nextElement == null ? input.next() : nextElement;
+    }
+    
+    public class Iterator2 implements Iterator<String> {
+        int state = 0;
+
+        @Override
+        public boolean hasNext() {
+            return state == 0;
+        }
+
+        @Override
+        @AssertWarning(type="IteratorNoThrow")
+        public String next() {
+            return ++state == 1 ? "Hello!".toLowerCase() : null;
+        }
+        
     }
     
     @AssertNoWarning(type="*")

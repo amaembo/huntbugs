@@ -135,6 +135,7 @@ abbrev="VA" type="VA_PRIMITIVE_ARRAY_PASSED_TO_OBJECT_VARARG" category="CORRECTN
 abbrev="IM" type="IM_BAD_CHECK_FOR_ODD" category="STYLE" --> CheckForOddnessFailsForNegative
 abbrev="IM" type="IM_AVERAGE_COMPUTATION_COULD_OVERFLOW" category="STYLE" --> AverageComputationCouldOverflow
 abbrev="Dm" type="DMI_ANNOTATION_IS_NOT_VISIBLE_TO_REFLECTION" category="CORRECTNESS" --> AnnotationNoRuntimeRetention
+abbrev="It" type="IT_NO_SUCH_ELEMENT" category="BAD_PRACTICE" --> IteratorNoThrow
 
 ==== Not reimplemented
 
@@ -217,7 +218,6 @@ abbrev="UG" type="UG_SYNC_SET_UNSYNC_GET" category="MT_CORRECTNESS"
 abbrev="IC" type="IC_INIT_CIRCULARITY" category="STYLE"
 abbrev="IC" type="IC_SUPERCLASS_USES_SUBCLASS_DURING_INITIALIZATION" category="BAD_PRACTICE"
 abbrev="SI" type="SI_INSTANCE_BEFORE_FINALS_ASSIGNED" category="BAD_PRACTICE"
-abbrev="It" type="IT_NO_SUCH_ELEMENT" category="BAD_PRACTICE"
 abbrev="IS" type="IS_FIELD_NOT_GUARDED" category="MT_CORRECTNESS"
 abbrev="ML" type="ML_SYNC_ON_FIELD_TO_GUARD_CHANGING_THAT_FIELD" category="MT_CORRECTNESS"
 abbrev="ML" type="ML_SYNC_ON_UPDATED_FIELD" category="MT_CORRECTNESS"
