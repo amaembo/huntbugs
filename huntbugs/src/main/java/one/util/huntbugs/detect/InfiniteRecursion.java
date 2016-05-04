@@ -23,6 +23,7 @@ import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
+import com.strobel.decompiler.ast.Lambda;
 import com.strobel.decompiler.ast.Loop;
 import com.strobel.decompiler.ast.Node;
 import com.strobel.decompiler.ast.Switch;
@@ -63,7 +64,9 @@ public class InfiniteRecursion {
         if ((Nodes.isInvoke(expr) || expr.getCode() == AstCode.InitObject) && !Nodes.isSideEffectFreeMethod(expr)) {
             stateChange = true;
         }
-        if (expr.getCode() == AstCode.Return || expr.getCode() == AstCode.AThrow) {
+        if (expr.getCode() == AstCode.Return || expr.getCode() == AstCode.AThrow
+            || expr.getCode() == AstCode.LoopContinue || expr.getCode() == AstCode.LoopOrSwitchBreak
+            || expr.getCode() == AstCode.Goto) {
             controlTransfer = true;
         }
         if (controlTransfer && stateChange)
@@ -95,7 +98,7 @@ public class InfiniteRecursion {
         while (nc != null) {
             Node node = nc.getNode();
             if (node instanceof Condition || node instanceof Switch || node instanceof Loop
-                || node instanceof TryCatchBlock)
+                || node instanceof TryCatchBlock || node instanceof Lambda)
                 return false;
             if (node instanceof Expression) {
                 Expression expr = (Expression)node;
