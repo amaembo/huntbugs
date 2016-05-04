@@ -114,7 +114,18 @@ public class MethodContext {
                 ctx.addError(new ErrorMessage(detector, mdata.mainMethod, -1, e));
             }
         }
-        return !astVisitors.isEmpty();
+        return !astVisitors.isEmpty() || !detector.methodAfterVisitors.isEmpty();
+    }
+
+    void visitAfterMethod() {
+        for(MethodHandle mh : detector.methodVisitors) {
+            try {
+                detector.bindDatabases(Detector.METHOD_VISITOR_TYPE.parameterCount(), cc.type, mh)
+                        .invoke(det, this, mdata.mainMethod, cc.type);
+            } catch (Throwable e) {
+                ctx.addError(new ErrorMessage(detector, mdata.mainMethod, -1, e));
+            }
+        }
     }
 
     boolean visitNode(Node node) {

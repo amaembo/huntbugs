@@ -38,6 +38,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.ClassVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
+import one.util.huntbugs.registry.anno.VisitOrder;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.WarningType;
 
@@ -59,7 +60,9 @@ public class Detector {
     private final Class<?> clazz;
     final List<VisitorInfo> astVisitors = new ArrayList<>();
     final List<MethodHandle> methodVisitors = new ArrayList<>();
+    final List<MethodHandle> methodAfterVisitors = new ArrayList<>();
     final List<MethodHandle> classVisitors = new ArrayList<>();
+    final List<MethodHandle> classAfterVisitors = new ArrayList<>();
 
     class VisitorInfo {
         final VisitorType type;
@@ -144,20 +147,24 @@ public class Detector {
         this.wts = Objects.requireNonNull(wts);
         this.clazz = Objects.requireNonNull(clazz);
         for (Method m : clazz.getMethods()) {
-            AstVisitor annotation = m.getAnnotation(AstVisitor.class);
-            if (annotation != null) {
+            AstVisitor av = m.getAnnotation(AstVisitor.class);
+            if (av != null) {
                 for (VisitorType type : VisitorType.values()) {
-                    if (annotation.nodes() == type.nodeTypes) {
-                        astVisitors.add(new VisitorInfo(annotation, type, adapt(MethodHandles.publicLookup().unreflect(
+                    if (av.nodes() == type.nodeTypes) {
+                        astVisitors.add(new VisitorInfo(av, type, adapt(MethodHandles.publicLookup().unreflect(
                             m), type.wantedType, databases)));
                     }
                 }
             }
-            if (m.getAnnotation(MethodVisitor.class) != null) {
-                methodVisitors.add(adapt(MethodHandles.publicLookup().unreflect(m), METHOD_VISITOR_TYPE, databases));
+            MethodVisitor mv = m.getAnnotation(MethodVisitor.class);
+            if (mv != null) {
+                (mv.order() == VisitOrder.AFTER ? methodAfterVisitors : methodVisitors).add(adapt(MethodHandles
+                        .publicLookup().unreflect(m), METHOD_VISITOR_TYPE, databases));
             }
-            if (m.getAnnotation(ClassVisitor.class) != null) {
-                classVisitors.add(adapt(MethodHandles.publicLookup().unreflect(m), CLASS_VISITOR_TYPE, databases));
+            ClassVisitor cv = m.getAnnotation(ClassVisitor.class);
+            if (cv != null) {
+                (cv.order() == VisitOrder.AFTER ? classAfterVisitors : classVisitors).add(adapt(MethodHandles
+                        .publicLookup().unreflect(m), CLASS_VISITOR_TYPE, databases));
             }
         }
     }

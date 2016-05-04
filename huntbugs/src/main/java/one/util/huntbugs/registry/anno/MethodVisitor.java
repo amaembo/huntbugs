@@ -40,5 +40,5 @@ import com.strobel.assembler.metadata.TypeDefinition;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface MethodVisitor {
-
+    VisitOrder order() default VisitOrder.BEFORE;
 }

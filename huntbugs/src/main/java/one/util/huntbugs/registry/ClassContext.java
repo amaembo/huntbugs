@@ -86,9 +86,20 @@ public class ClassContext {
                 ctx.addError(new ErrorMessage(detector, type, e));
             }
         }
-        return !detector.methodVisitors.isEmpty() || !detector.astVisitors.isEmpty();
+        return !detector.methodVisitors.isEmpty() || !detector.astVisitors.isEmpty()
+            || !detector.methodAfterVisitors.isEmpty() || !detector.classAfterVisitors.isEmpty();
     }
     
+    void visitAfterClass() {
+        for(MethodHandle mh : detector.classAfterVisitors) {
+            try {
+                detector.bindDatabases(Detector.CLASS_VISITOR_TYPE.parameterCount(), type, mh).invoke(det, this, type);
+            } catch (Throwable e) {
+                ctx.addError(new ErrorMessage(detector, type, e));
+            }
+        }
+    }
+
     public void report(String warning, int priority, WarningAnnotation<?>... annotations) {
         WarningType wt = detector.getWarningType(warning);
         if (wt == null) {

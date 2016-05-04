@@ -227,12 +227,16 @@ public class DetectorRegistry {
                 }
             }
             for (MethodContext mc : mcs.get(true)) {
+                mc.visitAfterMethod();
                 mc.finalizeMethod();
             }
             for (MethodContext mc : mcs.get(false)) {
                 mc.finalizeMethod();
             }
             ma.checkFinally(err -> ctx.addError(new ErrorMessage(null, md, -1, err)));
+        }
+        for(ClassContext cc : ccs) {
+            cc.visitAfterClass();
         }
         ca.checkFinally(err -> ctx.addError(new ErrorMessage(null, type, err)));
 
