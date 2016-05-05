@@ -1,6 +1,8 @@
 HuntBugs 0.0.2
 ===
 
+[![Join the chat at https://gitter.im/amaembo/huntbugs](https://badges.gitter.im/amaembo/huntbugs.svg)](https://gitter.im/amaembo/huntbugs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Maven Central](https://img.shields.io/maven-central/v/one.util/huntbugs.svg)](https://maven-badges.herokuapp.com/maven-central/one.util/huntbugs/)
 [![Build Status](https://travis-ci.org/amaembo/huntbugs.png?branch=master)](https://travis-ci.org/amaembo/huntbugs)
 [![Coverage Status](https://coveralls.io/repos/github/amaembo/huntbugs/badge.svg?branch=master)](https://coveralls.io/github/amaembo/huntbugs?branch=master)
