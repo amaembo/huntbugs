@@ -15,6 +15,9 @@
  */
 package one.util.huntbugs.output;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.io.Writer;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -22,30 +25,36 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
+
 import org.w3c.dom.Document;
 
 /**
  * @author lan
  *
  */
-class XmlReportWriter implements ReportWriter {
+class HtmlReportWriter implements ReportWriter {
+    private static final String XSL_PATH = "huntbugs/report.xsl";
     private final Writer target;
 
-    public XmlReportWriter(Writer target) {
+    public HtmlReportWriter(Writer target) {
         this.target = target;
+
     }
 
     @Override
     public void write(Document dom) {
         try {
-            Transformer transformer = TransformerFactory.newInstance().newTransformer();
-            DOMSource source = new DOMSource(dom);
-
-            StreamResult result = new StreamResult(target);
-            transformer.setOutputProperty(javax.xml.transform.OutputKeys.MEDIA_TYPE, "text/xml");
-            transformer.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes");
-            transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
-            transformer.transform(source, result);
+            try (InputStream is = HtmlReportWriter.class.getClassLoader().getResourceAsStream(XSL_PATH)) {
+                StreamSource xsl = new StreamSource(is);
+                Transformer transformer = TransformerFactory.newInstance().newTransformer(xsl);
+                transformer.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes");
+                transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+                StreamResult result = new StreamResult(target);
+                transformer.transform(new DOMSource(dom), result);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         } catch (TransformerFactoryConfigurationError | TransformerException e) {
             throw new RuntimeException(e);
         }

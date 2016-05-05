@@ -18,7 +18,7 @@ package one.util.huntbugs.maven.plugin;
 
 import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
-import one.util.huntbugs.output.XmlReportWriter;
+import one.util.huntbugs.output.Reports;
 import one.util.huntbugs.repo.AuxRepository;
 import one.util.huntbugs.repo.CompositeRepository;
 import one.util.huntbugs.repo.DirRepository;
@@ -132,7 +132,7 @@ public class HuntBugsMojo extends AbstractMojo {
             Files.createDirectories(path);
             Path xmlFile = path.resolve("report.xml");
             Path htmlFile = path.resolve("report.html");
-            new XmlReportWriter(xmlFile, htmlFile).write(ctx);
+            Reports.write(xmlFile, htmlFile, ctx);
         } catch (Exception e) {
             throw new MojoExecutionException("Failed to run HuntBugs", e);
         }
