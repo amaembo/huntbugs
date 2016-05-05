@@ -289,4 +289,11 @@ public class TestKnownComparison {
         }
     }
 
+    @AssertNoWarning(type = "*")
+    public void testAssert(String type) {
+        int x = 1;
+        assert x > 0 && !type.isEmpty();
+        System.out.println(x+":"+type);
+    }
+
 }

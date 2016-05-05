@@ -414,6 +414,6 @@ public class ValuesFlow {
     
     public static boolean isAssertion(Expression expr) {
         Set<Expression> usages = findUsages(expr);
-        return !usages.isEmpty() && usages.stream().allMatch(ValuesFlow::isAssertionCondition);
+        return !usages.isEmpty() && usages.stream().allMatch(parent -> isAssertionCondition(parent) || isAssertion(parent));
     }
 }

@@ -21,6 +21,7 @@ import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -40,7 +41,7 @@ public class KnownComparison {
     public void visit(Expression expr, NodeChain nc, MethodContext mc) {
         if (expr.getCode().isComparison()) {
             Object result = Nodes.getConstant(expr);
-            if (result instanceof Boolean) {
+            if (result instanceof Boolean && !ValuesFlow.isAssertion(expr)) {
                 Object left = Nodes.getConstant(expr.getArguments().get(0));
                 Object right = Nodes.getConstant(expr.getArguments().get(1));
                 if (left instanceof Number && right instanceof Number) {
