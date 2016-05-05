@@ -1,0 +1,7 @@
+language: java
+install:
+  - cd huntbugs && mvn install -DskipTests=true -Dgpg.skip=true -B -V
+jdk:
+  - oraclejdk8
+after_success:
+  - cd huntbugs && mvn jacoco:report coveralls:report
