@@ -20,7 +20,7 @@ import java.nio.file.Paths;
 
 import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
-import one.util.huntbugs.output.XmlReportWriter;
+import one.util.huntbugs.output.Reports;
 import one.util.huntbugs.repo.Repository;
 
 import org.junit.Assert;
@@ -38,7 +38,7 @@ public class DataTest {
         ctx.reportStats(System.out);
         ctx.reportErrors(System.err);
         ctx.reportWarnings(new PrintStream("target/testWarnings.out"));
-        new XmlReportWriter(Paths.get("target/testWarnings.xml"), Paths.get("target/testWarnings.html")).write(ctx);
+        Reports.write(Paths.get("target/testWarnings.xml"), Paths.get("target/testWarnings.html"), ctx);
         System.out.println("Analyzed "+ctx.getClassesCount()+" classes");
         if(ctx.getErrorCount() > 0)
             Assert.fail("Analysis finished with "+ctx.getErrorCount()+" errors");
