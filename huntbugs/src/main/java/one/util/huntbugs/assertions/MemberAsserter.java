@@ -26,6 +26,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 import one.util.huntbugs.warning.Warning;
 
 import com.strobel.assembler.metadata.MemberReference;
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.annotations.AnnotationParameter;
 import com.strobel.assembler.metadata.annotations.ConstantAnnotationElement;
 import com.strobel.assembler.metadata.annotations.CustomAnnotation;
@@ -64,6 +65,8 @@ public class MemberAsserter {
     
     private static List<AssertionData> analyzeMember(MemberReference md) {
         List<AssertionData> assertions = new ArrayList<>();
+        if(md instanceof MethodDefinition && ((MethodDefinition) md).isSynthetic())
+            return assertions;
         for(CustomAnnotation anno : md.getAnnotations()) {
             if(anno.getAnnotationType().getFullName().equals(AssertWarning.class.getName())) {
                 String type = "";
