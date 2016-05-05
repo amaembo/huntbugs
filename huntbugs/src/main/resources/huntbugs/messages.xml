@@ -906,5 +906,10 @@
       If this class is subclassed, subclasses will synchronize on the class object for the subclass, which isn't likely what was intended.<br>
       Consider synchronizing on concrete class literal instead: <code>synchronized($TYPE:name$.class) {...}</code>.]]></LongDescription>
     </Warning>
+    <Warning Type="UselessEasyMockCall">
+      <Title>Useless call to EasyMock method</Title>
+      <Description>Useless call to $CALLED_METHOD$.</Description>
+      <LongDescription><![CDATA[This code calls EasyMock method $CALLED_METHOD$ with empty argument. Such call will do nothing.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>
