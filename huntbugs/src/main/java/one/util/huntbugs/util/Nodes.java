@@ -292,7 +292,7 @@ public class Nodes {
 	        return false;
 	    }
 	    TryCatchBlock tcb = (TryCatchBlock) node;
-        return tcb.getCatchBlocks().isEmpty() && getSyncObject(tcb) != null;
+        return getSyncObject(tcb) != null;
 	}
 	
 	public static Expression getSyncObject(TryCatchBlock tcb) {

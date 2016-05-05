@@ -140,7 +140,7 @@ public class ValuesFlow {
                     // TODO: support labels
                 } else if (n instanceof TryCatchBlock) {
                     TryCatchBlock tryCatch = (TryCatchBlock) n;
-                    if (wasMonitor && Nodes.isSynchorizedBlock(tryCatch)) {
+                    if (wasMonitor && tryCatch.getCatchBlocks().isEmpty() && Nodes.isSynchorizedBlock(tryCatch)) {
                         process(ctx, tryCatch.getTryBlock());
                         wasMonitor = false;
                         continue;
