@@ -880,5 +880,24 @@
       <LongDescription><![CDATA[This code increments local variable $VARIABLE$ and immediately returns. Updating local variable is useless here as the updated value is never used.
       Probably something else was meant here or increment statement could be removed or replaced with addition.]]></LongDescription>
     </Warning>
+    <Warning Type="CloneableDoesNotImplementClone">
+      <Title>Class implements Cloneable, but does not have clone() method</Title>
+      <Description>Class $TYPE$ implements Cloneable, but does not have clone() method.</Description>
+      <LongDescription><![CDATA[This class implements <code>Cloneable</code> interface, but does not have <code>clone()</code> method. Usually it's a mistake, especially if
+      the class defines fields.]]></LongDescription>
+    </Warning>
+    <Warning Type="CloneableNoSuperCall">
+      <Title>The clone() method does not call super.clone()</Title>
+      <Description>Method $METHOD$ does not call super.clone().</Description>
+      <LongDescription><![CDATA[This non-final class defines a $METHOD$ method that does not call <code>super.clone()</code>. If this class $TYPE$ is extended by a subclass (<code>$TYPE:name$Sub</code>), 
+      and the subclass <code>$TYPE:name$Sub</code> calls <code>super.clone()</code>, 
+      then it is likely that <code>$TYPE:name$Sub</code>'s <code>clone()</code> method will return an object of type $TYPE$, which violates the standard contract for <code>clone()</code>.<br>
+      If all <code>clone()</code> methods call <code>super.clone()</code>, then they are guaranteed to use <code>Object.clone()</code>, which always returns an object of the correct type.]]></LongDescription>
+    </Warning>
+    <Warning Type="NotCloneableHasClone">
+      <Title>Class defines clone() but doesn't implement Cloneable</Title>
+      <Description>Class $TYPE$ defines clone() but doesn't implement Cloneable.</Description>
+      <LongDescription><![CDATA[This class defines a $METHOD$ method but the class doesn't implement <code>Cloneable</code>. This could be confusing for the users of this class.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

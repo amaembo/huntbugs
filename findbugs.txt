@@ -138,6 +138,9 @@ abbrev="Dm" type="DMI_ANNOTATION_IS_NOT_VISIBLE_TO_REFLECTION" category="CORRECT
 abbrev="It" type="IT_NO_SUCH_ELEMENT" category="BAD_PRACTICE" --> IteratorNoThrow
 abbrev="DLS" type="DLS_DEAD_LOCAL_STORE_IN_RETURN" category="STYLE" --> DeadStoreInReturn
 abbrev="DLS" type="DLS_DEAD_LOCAL_INCREMENT_IN_RETURN" category="CORRECTNESS" --> DeadIncrementInReturn
+abbrev="CN" type="CN_IMPLEMENTS_CLONE_BUT_NOT_CLONEABLE" category="BAD_PRACTICE" --> NotCloneableHasClone
+abbrev="CN" type="CN_IDIOM" category="BAD_PRACTICE" --> CloneableDoesNotImplementClone
+abbrev="CN" type="CN_IDIOM_NO_SUPER_CALL" category="BAD_PRACTICE" --> CloneableNoSuperCall
 
 ==== Not reimplemented
 
@@ -161,9 +164,6 @@ abbrev="HSC" type="HSC_HUGE_SHARED_STRING_CONSTANT" category="PERFORMANCE"
 abbrev="DP" type="DP_DO_INSIDE_DO_PRIVILEGED" category="MALICIOUS_CODE"
 abbrev="DP" type="DP_CREATE_CLASSLOADER_INSIDE_DO_PRIVILEGED" category="MALICIOUS_CODE"
 abbrev="CAA" type="CAA_COVARIANT_ARRAY_ELEMENT_STORE" category="CORRECTNESS" experimental="true"
-abbrev="CN" type="CN_IMPLEMENTS_CLONE_BUT_NOT_CLONEABLE" category="BAD_PRACTICE"
-abbrev="CN" type="CN_IDIOM" category="BAD_PRACTICE"
-abbrev="CN" type="CN_IDIOM_NO_SUPER_CALL" category="BAD_PRACTICE"
 abbrev="DE" type="DE_MIGHT_DROP" category="BAD_PRACTICE"
 abbrev="DE" type="DE_MIGHT_IGNORE" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_FUTURE_KEYWORD_USED_AS_IDENTIFIER" category="BAD_PRACTICE"
@@ -272,7 +272,6 @@ abbrev="UuF" type="UUF_UNUSED_FIELD" category="PERFORMANCE"
 abbrev="UrF" type="URF_UNREAD_FIELD" category="PERFORMANCE"
 abbrev="UuF" type="UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD" category="STYLE"
 abbrev="UrF" type="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD" category="STYLE"
-abbrev="QF" type="QF_QUESTIONABLE_FOR_LOOP" category="STYLE"
 abbrev="NP" type="NP_UNWRITTEN_FIELD" category="CORRECTNESS"
 abbrev="NP" type="NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD" category="STYLE"
 abbrev="UwF" type="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" category="STYLE"
@@ -410,7 +409,6 @@ abbrev="XFB" type="XFB_XML_FACTORY_BYPASS" category="STYLE"
 abbrev="USM" type="USM_USELESS_SUBCLASS_METHOD" category="STYLE" experimental="true"
 abbrev="USM" type="USM_USELESS_ABSTRACT_METHOD" category="STYLE" experimental="true"
 abbrev="CI" type="CI_CONFUSED_INHERITANCE" category="STYLE"
-abbrev="QBA" type="QBA_QUESTIONABLE_BOOLEAN_ASSIGNMENT" category="CORRECTNESS" cweid="481"
 abbrev="GC" type="GC_UNCHECKED_TYPE_IN_GENERIC_CALL" category="BAD_PRACTICE"
 abbrev="GC" type="GC_UNRELATED_TYPES" category="CORRECTNESS"
 abbrev="PZ" type="PZ_DONT_REUSE_ENTRY_OBJECTS_IN_ITERATORS" category="BAD_PRACTICE"
@@ -429,8 +427,6 @@ abbrev="TQ" type="TQ_EXPLICIT_UNKNOWN_SOURCE_VALUE_REACHES_NEVER_SINK" category=
 abbrev="TQ" type="TQ_EXPLICIT_UNKNOWN_SOURCE_VALUE_REACHES_ALWAYS_SINK" category="STYLE"
 abbrev="OBL" type="OBL_UNSATISFIED_OBLIGATION" category="EXPERIMENTAL" experimental="true"
 abbrev="OBL" type="OBL_UNSATISFIED_OBLIGATION_EXCEPTION_EDGE" category="EXPERIMENTAL" experimental="true"
-abbrev="FB" type="FB_UNEXPECTED_WARNING" category="CORRECTNESS"
-abbrev="FB" type="FB_MISSING_EXPECTED_WARNING" category="CORRECTNESS"
 abbrev="RV" type="RV_RETURN_VALUE_OF_PUTIFABSENT_IGNORED" category="MT_CORRECTNESS"
 abbrev="LG" type="LG_LOST_LOGGER_DUE_TO_WEAK_REFERENCE" category="EXPERIMENTAL"
 abbrev="NP" type="NP_METHOD_RETURN_RELAXING_ANNOTATION" category="STYLE" 
@@ -438,6 +434,8 @@ abbrev="NP" type="NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION" category="STYLE"
 
 === Dubious
 abbrev="IM" type="IM_MULTIPLYING_RESULT_OF_IREM" category="CORRECTNESS"
+abbrev="QF" type="QF_QUESTIONABLE_FOR_LOOP" category="STYLE"
+abbrev="QBA" type="QBA_QUESTIONABLE_BOOLEAN_ASSIGNMENT" category="CORRECTNESS" cweid="481"
 
 === Junk
 abbrev="SKIPPED" type="SKIPPED_CLASS_TOO_BIG" category="EXPERIMENTAL"
@@ -464,3 +462,5 @@ abbrev="NOISE" type="NOISE_OPERATION" category="NOISE"
 abbrev="AM" type="AM_CREATES_EMPTY_ZIP_FILE_ENTRY" category="BAD_PRACTICE"
 abbrev="AM" type="AM_CREATES_EMPTY_JAR_FILE_ENTRY" category="BAD_PRACTICE"
 abbrev="Dm" type="DMI_SCHEDULED_THREAD_POOL_EXECUTOR_WITH_ZERO_CORE_THREADS" category="CORRECTNESS"
+abbrev="FB" type="FB_UNEXPECTED_WARNING" category="CORRECTNESS"
+abbrev="FB" type="FB_MISSING_EXPECTED_WARNING" category="CORRECTNESS"
