@@ -45,12 +45,9 @@ public class EmptySync {
                         mc.report("EmptySynchronizeBlock", 0, body.get(i));
                     else if(next instanceof TryCatchBlock) {
                         TryCatchBlock tryCatch = (TryCatchBlock)next;
-                        if(tryCatch.getCatchBlocks().isEmpty() && tryCatch.getTryBlock().getBody().isEmpty()) {
-                            Block finallyBlock = tryCatch.getFinallyBlock();
-                            if(finallyBlock.getBody().size() == 1 && Nodes.isOp(finallyBlock.getBody().get(0), AstCode.MonitorExit)) {
-                                // JAVAC scenario: try-catch added
-                                mc.report("EmptySynchronizeBlock", 0, body.get(i));
-                            }
+                        if(Nodes.isSynchorizedBlock(tryCatch) && tryCatch.getTryBlock().getBody().isEmpty()) {
+                            // JAVAC scenario: try-catch added
+                            mc.report("EmptySynchronizeBlock", 0, body.get(i));
                         }
                     }
                 }

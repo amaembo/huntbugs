@@ -291,13 +291,24 @@ public class Nodes {
 	    if(!(node instanceof TryCatchBlock)) {
 	        return false;
 	    }
-	    Block finallyBlock = ((TryCatchBlock)node).getFinallyBlock();
-	    if(finallyBlock == null)
-	        return false;
-	    return finallyBlock.getBody().stream().anyMatch(n -> Nodes.isOp(n, AstCode.MonitorExit));
+	    TryCatchBlock tcb = (TryCatchBlock) node;
+        return tcb.getCatchBlocks().isEmpty() && getSyncObject(tcb) != null;
 	}
 	
-	public static boolean isCompoundAssignment(Node node) {
+	public static Expression getSyncObject(TryCatchBlock tcb) {
+        Block finallyBlock = tcb.getFinallyBlock();
+        if(finallyBlock == null)
+            return null;
+        List<Node> list = finallyBlock.getBody();
+        if(list.size() != 1)
+            return null;
+        Node n = list.get(0);
+        if(!Nodes.isOp(n, AstCode.MonitorExit))
+            return null;
+        return Nodes.getChild((Expression)n, 0);
+    }
+
+    public static boolean isCompoundAssignment(Node node) {
 	    if(!(node instanceof Expression))
 	        return false;
 	    Expression store = (Expression) node;

@@ -141,6 +141,7 @@ abbrev="DLS" type="DLS_DEAD_LOCAL_INCREMENT_IN_RETURN" category="CORRECTNESS" --
 abbrev="CN" type="CN_IMPLEMENTS_CLONE_BUT_NOT_CLONEABLE" category="BAD_PRACTICE" --> NotCloneableHasClone
 abbrev="CN" type="CN_IDIOM" category="BAD_PRACTICE" --> CloneableDoesNotImplementClone
 abbrev="CN" type="CN_IDIOM_NO_SUPER_CALL" category="BAD_PRACTICE" --> CloneableNoSuperCall
+abbrev="WL" type="WL_USING_GETCLASS_RATHER_THAN_CLASS_LITERAL" category="MT_CORRECTNESS" --> SyncOnGetClass
 
 ==== Not reimplemented
 
@@ -208,7 +209,6 @@ abbrev="HE" type="HE_INHERITS_EQUALS_USE_HASHCODE" category="BAD_PRACTICE"
 abbrev="HE" type="HE_EQUALS_NO_HASHCODE" category="BAD_PRACTICE"
 abbrev="Eq" type="EQ_ABSTRACT_SELF" category="BAD_PRACTICE"
 abbrev="Co" type="CO_ABSTRACT_SELF" category="BAD_PRACTICE"
-abbrev="WL" type="WL_USING_GETCLASS_RATHER_THAN_CLASS_LITERAL" category="MT_CORRECTNESS"
 abbrev="MSF" type="MSF_MUTABLE_SERVLET_FIELD" category="MT_CORRECTNESS"
 abbrev="IS" type="IS2_INCONSISTENT_SYNC" category="MT_CORRECTNESS"
 abbrev="MS" type="MS_EXPOSE_REP" category="MALICIOUS_CODE"

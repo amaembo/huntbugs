@@ -85,7 +85,7 @@ public class CloneContract {
                 }) != null;
                 if(!invokesSuperClone) {
                     int priority = 0;
-                    if(!th.hasSubClasses()) {
+                    if(th != null && !th.hasSubClasses()) {
                         priority += 10;
                         if(td.isNonPublic())
                             priority += 10;

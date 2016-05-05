@@ -140,14 +140,10 @@ public class ValuesFlow {
                     // TODO: support labels
                 } else if (n instanceof TryCatchBlock) {
                     TryCatchBlock tryCatch = (TryCatchBlock) n;
-                    if (wasMonitor && tryCatch.getCatchBlocks().isEmpty()) {
-                        Block finallyBlock = tryCatch.getFinallyBlock();
-                        if (finallyBlock != null && finallyBlock.getBody().size() == 1
-                            && Nodes.isOp(finallyBlock.getBody().get(0), AstCode.MonitorExit)) {
-                            process(ctx, tryCatch.getTryBlock());
-                            wasMonitor = false;
-                            continue;
-                        }
+                    if (wasMonitor && Nodes.isSynchorizedBlock(tryCatch)) {
+                        process(ctx, tryCatch.getTryBlock());
+                        wasMonitor = false;
+                        continue;
                     }
                     // TODO: support normal catch/finally
                     valid = false;

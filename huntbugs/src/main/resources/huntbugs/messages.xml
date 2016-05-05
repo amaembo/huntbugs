@@ -899,5 +899,12 @@
       <Description>Class $TYPE$ defines clone() but doesn't implement Cloneable.</Description>
       <LongDescription><![CDATA[This class defines a $METHOD$ method but the class doesn't implement <code>Cloneable</code>. This could be confusing for the users of this class.]]></LongDescription>
     </Warning>
+    <Warning Type="SyncOnGetClass">
+      <Title>Synchronization on getClass() rather than class literal</Title>
+      <Description>Synchronization on $RETURN_VALUE_OF$ rather than class literal.</Description>
+      <LongDescription><![CDATA[This instance method synchronizes like <code>synchronized(this.getClass()) {...}</code>. 
+      If this class is subclassed, subclasses will synchronize on the class object for the subclass, which isn't likely what was intended.<br>
+      Consider synchronizing on concrete class literal instead: <code>synchronized($TYPE:name$.class) {...}</code>.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>
