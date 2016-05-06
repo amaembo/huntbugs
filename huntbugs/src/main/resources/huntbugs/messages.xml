@@ -880,6 +880,12 @@
       <LongDescription><![CDATA[This code increments local variable $VARIABLE$ and immediately returns. Updating local variable is useless here as the updated value is never used.
       Probably something else was meant here or increment statement could be removed or replaced with addition.]]></LongDescription>
     </Warning>
+    <Warning Type="DeadIncrementInAssignment">
+      <Title>Increment result is nullified by assignment</Title>
+      <Description>Useless increment in expression: $EXPRESSION$.</Description>
+      <LongDescription><![CDATA[This code increments local variable $VARIABLE$ and immediately assigns it to the same variable
+      like <code>$EXPRESSION$</code>. This makes the increment completely useless.]]></LongDescription>
+    </Warning>
     <Warning Type="CloneableDoesNotImplementClone">
       <Title>Class implements Cloneable, but does not have clone() method</Title>
       <Description>Class $TYPE$ implements Cloneable, but does not have clone() method.</Description>

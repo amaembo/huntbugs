@@ -21,6 +21,7 @@ import java.util.Set;
 
 
 
+
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.decompiler.ast.AstCode;
@@ -36,6 +37,7 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
+import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author lan
@@ -44,6 +46,7 @@ import one.util.huntbugs.util.Types;
 @WarningDefinition(category="Correctness", name="ParameterOverwritten", maxScore=60)
 @WarningDefinition(category="RedundantCode", name="DeadStoreInReturn", maxScore=50)
 @WarningDefinition(category="RedundantCode", name="DeadIncrementInReturn", maxScore=60)
+@WarningDefinition(category="RedundantCode", name="DeadIncrementInAssignment", maxScore=60)
 public class DeadLocalStore {
     @AstVisitor(nodes=AstNodes.ROOT)
     public void visitBody(Block body, MethodContext mc, MethodDefinition md) {
@@ -78,6 +81,17 @@ public class DeadLocalStore {
                 Expression var = arg.getArguments().get(0);
                 if(var.getOperand() instanceof Variable)
                     mc.report("DeadIncrementInReturn", 0, var);
+            }
+        }
+        if(expr.getCode() == AstCode.Store) {
+            Variable var = (Variable) expr.getOperand();
+            Expression arg = expr.getArguments().get(0);
+            if(arg.getCode() == AstCode.PostIncrement) { // XXX: bug in Procyon? Seems that should be PreIncrement
+                Expression load = arg.getArguments().get(0);
+                if(load.getCode() == AstCode.Load && var.equals(load.getOperand()) && Integer.valueOf(1).equals(arg.getOperand())) {
+                    mc.report("DeadIncrementInAssignment", 0, expr, new WarningAnnotation<>("EXPRESSION", var.getName()
+                        + " = " + var.getName() + "++"));
+                }
             }
         }
     }

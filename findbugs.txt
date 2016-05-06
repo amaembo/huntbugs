@@ -145,6 +145,7 @@ abbrev="WL" type="WL_USING_GETCLASS_RATHER_THAN_CLASS_LITERAL" category="MT_CORR
 abbrev="Dm" type="DMI_VACUOUS_CALL_TO_EASYMOCK_METHOD" category="CORRECTNESS" --> UselessEasyMockCall
 abbrev="RR" type="RR_NOT_CHECKED" category="BAD_PRACTICE" --> ReturnValueOfRead
 abbrev="RR" type="SR_NOT_CHECKED" category="BAD_PRACTICE" --> ReturnValueOfSkip
+abbrev="DLS" type="DLS_OVERWRITTEN_INCREMENT" category="CORRECTNESS" --> DeadIncrementInAssignment
 
 ==== Not reimplemented
 
@@ -397,7 +398,6 @@ abbrev="BC" type="BC_IMPOSSIBLE_DOWNCAST" category="CORRECTNESS" cweid="570"
 abbrev="BC" type="BC_IMPOSSIBLE_INSTANCEOF" category="CORRECTNESS" cweid="570"
 abbrev="BC" type="BC_VACUOUS_INSTANCEOF" category="STYLE" cweid="571"
 abbrev="BC" type="BC_BAD_CAST_TO_ABSTRACT_COLLECTION" category="STYLE"
-abbrev="DLS" type="DLS_OVERWRITTEN_INCREMENT" category="CORRECTNESS"
 abbrev="BSHIFT" type="BSHIFT_WRONG_ADD_PRIORITY" category="CORRECTNESS"
 abbrev="BSHIFT" type="ICAST_QUESTIONABLE_UNSIGNED_RIGHT_SHIFT" category="STYLE"
 abbrev="DMI" type="DMI_HARDCODED_ABSOLUTE_FILENAME" category="STYLE"
