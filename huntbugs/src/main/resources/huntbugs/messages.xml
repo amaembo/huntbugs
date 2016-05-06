@@ -931,5 +931,11 @@
       data that requested and returns the number of bytes or characters which were actually skipped. Without checking the return value it's
       not possible to reliably tell how many bytes or characters were actually skipped.]]></LongDescription>
     </Warning>
+    <Warning Type="NullCheckMethodForConstant">
+      <Title>Null-check method called with constant non-null argument</Title>
+      <Description>$CALLED_METHOD$ called with constant argument.</Description>
+      <LongDescription><![CDATA[This code calls $CALLED_METHOD$ which checks the argument for null.
+      However it's statically known that constant non-null argument is passed, so this check will always succeed.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

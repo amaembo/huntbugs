@@ -23,6 +23,8 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+import org.junit.Assert;
+
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -213,5 +215,21 @@ public class TestBadMethodCalls {
     @AssertWarning(type="CollectionAddedToItself") 
     public void testAddArrayList(ArrayList<Object> c) {
         c.add(c);
+    }
+    
+    @AssertWarning(type="NullCheckMethodForConstant")
+    public void testNullCheckAssert() {
+        Objects.requireNonNull("test");
+    }
+
+    @AssertNoWarning(type="NullCheckMethodForConstant")
+    public void testNullCheckAssertOk() {
+        Objects.requireNonNull(null);
+    }
+
+    @AssertWarning(type="NullCheckMethodForConstant")
+    public void testNullCheckAssert2() {
+        String s = "test";
+        Assert.assertNotNull(s);
     }
 }

@@ -146,8 +146,10 @@ abbrev="Dm" type="DMI_VACUOUS_CALL_TO_EASYMOCK_METHOD" category="CORRECTNESS" --
 abbrev="RR" type="RR_NOT_CHECKED" category="BAD_PRACTICE" --> ReturnValueOfRead
 abbrev="RR" type="SR_NOT_CHECKED" category="BAD_PRACTICE" --> ReturnValueOfSkip
 abbrev="DLS" type="DLS_OVERWRITTEN_INCREMENT" category="CORRECTNESS" --> DeadIncrementInAssignment
+abbrev="DMI" type="DMI_DOH" category="CORRECTNESS" --> NullCheckMethodForConstant
 
 ==== Not reimplemented
+abbrev="DMI" type="DMI_ARGUMENTS_WRONG_ORDER" category="CORRECTNESS"
 
 abbrev="Ru" type="RU_INVOKE_RUN" category="MT_CORRECTNESS" cweid="572"
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"
@@ -319,7 +321,6 @@ abbrev="NP" type="NP_GUARANTEED_DEREF" category="CORRECTNESS"
 abbrev="NP" type="NP_GUARANTEED_DEREF_ON_EXCEPTION_PATH" category="CORRECTNESS"
 abbrev="OS" type="OS_OPEN_STREAM" category="BAD_PRACTICE"
 abbrev="OS" type="OS_OPEN_STREAM_EXCEPTION_PATH" category="BAD_PRACTICE"
-abbrev="DMI" type="DMI_ARGUMENTS_WRONG_ORDER" category="CORRECTNESS"
 abbrev="RCN" type="RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE" category="STYLE"
 abbrev="RCN" type="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE" category="CORRECTNESS"
 abbrev="RCN" type="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE" category="STYLE"
@@ -415,7 +416,6 @@ abbrev="PZ" type="PZ_DONT_REUSE_ENTRY_OBJECTS_IN_ITERATORS" category="BAD_PRACTI
 abbrev="DMI" type="DMI_ENTRY_SETS_MAY_REUSE_ENTRY_OBJECTS" category="BAD_PRACTICE"
 abbrev="DMI" type="DMI_USING_REMOVEALL_TO_CLEAR_COLLECTION" category="BAD_PRACTICE"
 abbrev="DMI" type="DMI_VACUOUS_SELF_COLLECTION_CALL" category="CORRECTNESS"
-abbrev="DMI" type="DMI_DOH" category="CORRECTNESS"
 abbrev="DMI" type="DMI_COLLECTIONS_SHOULD_NOT_CONTAIN_THEMSELVES" category="CORRECTNESS"
 abbrev="TQ" type="TQ_UNKNOWN_VALUE_USED_WHERE_ALWAYS_STRICTLY_REQUIRED" category="CORRECTNESS"
 abbrev="TQ" type="TQ_COMPARING_VALUES_WITH_INCOMPATIBLE_TYPE_QUALIFIERS" category="CORRECTNESS"

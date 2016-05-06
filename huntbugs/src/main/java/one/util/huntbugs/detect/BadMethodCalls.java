@@ -54,6 +54,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "Correctness", name = "ScheduledThreadPoolExecutorChangePoolSize", maxScore = 70)
 @WarningDefinition(category = "Correctness", name = "DateBadMonth", maxScore = 70)
 @WarningDefinition(category = "Correctness", name = "CollectionAddedToItself", maxScore = 65)
+@WarningDefinition(category = "RedundantCode", name = "NullCheckMethodForConstant", maxScore = 65)
 public class BadMethodCalls {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression node, NodeChain nc, MethodContext ctx, MethodDefinition curMethod) {
@@ -181,6 +182,18 @@ public class BadMethodCalls {
         } else if(name.equals("add") && mr.getErasedSignature().equals("(Ljava/lang/Object;)Z") && Types.isCollection(mr.getDeclaringType())) {
             if(Nodes.isEquivalent(Nodes.getChild(node, 0), Nodes.getChild(node, 1))) {
                 ctx.report("CollectionAddedToItself", 0, node);
+            }
+        } else if(node.getCode() == AstCode.InvokeStatic && (typeName.endsWith("/Assert") && name.equals("assertNotNull") ||
+                typeName.equals("com/google/common/base/Preconditions") && name.equals("checkNotNull") ||
+                typeName.equals("java/util/Objects") && name.equals("requireNonNull") ||
+                typeName.equals("com/google/common/base/Strings") && (name.equals("nullToEmpty") || name.equals("emptyToNull") ||
+                        name.equals("isNullOrEmpty")))) {
+            if(node.getArguments().size() == 1) {
+                Expression arg = node.getArguments().get(0);
+                Object constant = Nodes.getConstant(arg);
+                if(constant != null) {
+                    ctx.report("NullCheckMethodForConstant", 0, node, WarningAnnotation.forMember("CALLED_METHOD", mr));
+                }
             }
         }
     }
