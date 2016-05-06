@@ -911,5 +911,19 @@
       <Description>Useless call to $CALLED_METHOD$.</Description>
       <LongDescription><![CDATA[This code calls EasyMock method $CALLED_METHOD$ with empty argument. Such call will do nothing.]]></LongDescription>
     </Warning>
+    <Warning Type="ReturnValueOfRead">
+      <Title>Return value of read() method is not checked</Title>
+      <Description>Return value of $RETURN_VALUE_OF$ is not checked.</Description>
+      <LongDescription><![CDATA[This code calls $RETURN_VALUE_OF$, but does not check its return value. By contract, this method may read less
+      data that requested and returns the number of bytes or characters which were actually read. Without checking the return value it's
+      not possible to reliably tell how many bytes or characters were actually read.]]></LongDescription>
+    </Warning>
+    <Warning Type="ReturnValueOfSkip">
+      <Title>Return value of skip() method is not checked</Title>
+      <Description>Return value of $RETURN_VALUE_OF$ is not checked.</Description>
+      <LongDescription><![CDATA[This code calls $RETURN_VALUE_OF$, but does not check its return value. By contract, this method may skip less
+      data that requested and returns the number of bytes or characters which were actually skipped. Without checking the return value it's
+      not possible to reliably tell how many bytes or characters were actually skipped.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

@@ -143,6 +143,8 @@ abbrev="CN" type="CN_IDIOM" category="BAD_PRACTICE" --> CloneableDoesNotImplemen
 abbrev="CN" type="CN_IDIOM_NO_SUPER_CALL" category="BAD_PRACTICE" --> CloneableNoSuperCall
 abbrev="WL" type="WL_USING_GETCLASS_RATHER_THAN_CLASS_LITERAL" category="MT_CORRECTNESS" --> SyncOnGetClass
 abbrev="Dm" type="DMI_VACUOUS_CALL_TO_EASYMOCK_METHOD" category="CORRECTNESS" --> UselessEasyMockCall
+abbrev="RR" type="RR_NOT_CHECKED" category="BAD_PRACTICE" --> ReturnValueOfRead
+abbrev="RR" type="SR_NOT_CHECKED" category="BAD_PRACTICE" --> ReturnValueOfSkip
 
 ==== Not reimplemented
 
@@ -243,8 +245,6 @@ abbrev="Nm" type="NM_WRONG_PACKAGE_INTENTIONAL" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_CONFUSING" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_METHOD_CONSTRUCTOR_CONFUSION" category="CORRECTNESS"
 abbrev="IA" type="IA_AMBIGUOUS_INVOCATION_OF_INHERITED_OR_OUTER_METHOD" category="STYLE"
-abbrev="RR" type="RR_NOT_CHECKED" category="BAD_PRACTICE"
-abbrev="RR" type="SR_NOT_CHECKED" category="BAD_PRACTICE"
 abbrev="Se" type="SE_READ_RESOLVE_IS_STATIC" category="CORRECTNESS"
 abbrev="Se" type="SE_PRIVATE_READ_RESOLVE_NOT_INHERITED" category="STYLE"
 abbrev="Se" type="SE_TRANSIENT_FIELD_OF_NONSERIALIZABLE_CLASS" category="STYLE"
