@@ -70,7 +70,7 @@ public class CloneContract {
             boolean deprecated = md.isDeprecated();
             if(!isCloneable && !deprecated && !onlyThrows) {
                 int priority = referencesClone(td) ? 0 : 10;
-                if(td.isNonPublic())
+                if(td.isNonPublic() || !md.isPublic())
                     priority += 20;
                 mc.report("NotCloneableHasClone", priority, body);
             }

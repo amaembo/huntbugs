@@ -47,17 +47,17 @@ public class IteratorContract {
     }
 
     @AstVisitor(nodes = AstNodes.EXPRESSIONS, methodName = "hasNext", methodSignature = "()Z")
-    public void visitHasNext(Expression expr, MethodContext mc) {
+    public void visitHasNext(Expression expr, MethodContext mc, TypeDefinition td) {
         if (expr.getCode() == AstCode.InvokeVirtual) {
             MethodReference mr = (MethodReference) expr.getOperand();
             if (mr.getName().equals("next") && mr.getParameters().isEmpty() && Nodes.isThis(Nodes.getChild(expr, 0))) {
-                mc.report("IteratorHasNextCallsNext", 0, expr);
+                mc.report("IteratorHasNextCallsNext", td.isPublic() ? 0 : 30, expr);
             }
         }
     }
 
     @AstVisitor(nodes = AstNodes.ROOT, methodName = "next")
-    public void visitNext(Block body, MethodContext mc, MethodDefinition md) {
+    public void visitNext(Block body, MethodContext mc, MethodDefinition md, TypeDefinition td) {
         if (md.getErasedSignature().startsWith("()")) {
             AtomicBoolean sawCall = new AtomicBoolean();
             Node found = Nodes.find(body, n -> {
@@ -82,7 +82,12 @@ public class IteratorContract {
             });
             if (found != null)
                 return;
-            mc.report("IteratorNoThrow", sawCall.get() ? 30 : 0, body);
+            int priority = 0;
+            if(td.isNonPublic())
+                priority += 20;
+            if(sawCall.get())
+                priority += 30;
+            mc.report("IteratorNoThrow", priority, body);
         }
     }
 }
