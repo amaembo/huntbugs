@@ -55,6 +55,7 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "Correctness", name = "DateBadMonth", maxScore = 70)
 @WarningDefinition(category = "Correctness", name = "CollectionAddedToItself", maxScore = 65)
 @WarningDefinition(category = "RedundantCode", name = "NullCheckMethodForConstant", maxScore = 65)
+@WarningDefinition(category = "Correctness", name = "WrongArgumentOrder", maxScore = 65)
 public class BadMethodCalls {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression node, NodeChain nc, MethodContext ctx, MethodDefinition curMethod) {
@@ -193,6 +194,21 @@ public class BadMethodCalls {
                 Object constant = Nodes.getConstant(arg);
                 if(constant != null) {
                     ctx.report("NullCheckMethodForConstant", 0, node, WarningAnnotation.forMember("CALLED_METHOD", mr));
+                }
+            }
+            if(node.getArguments().size() == 2) {
+                Object stringArg = null, objArg = null;
+                if(mr.getErasedSignature().startsWith("(Ljava/lang/Object;Ljava/lang/String;)")) {
+                    objArg = Nodes.getConstant(node.getArguments().get(0));
+                    stringArg = Nodes.getConstant(node.getArguments().get(1));
+                } else if(mr.getErasedSignature().startsWith("(Ljava/lang/String;Ljava/lang/Object;)")) {
+                    objArg = Nodes.getConstant(node.getArguments().get(1));
+                    stringArg = Nodes.getConstant(node.getArguments().get(0));
+                }
+                if(objArg instanceof String && !(stringArg instanceof String)) {
+                    ctx.report("WrongArgumentOrder", 0, node.getArguments().get(0),
+                        WarningAnnotation.forMember("CALLED_METHOD", mr),
+                        new WarningAnnotation<>("STRING", objArg));
                 }
             }
         }

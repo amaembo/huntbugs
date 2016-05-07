@@ -147,9 +147,9 @@ abbrev="RR" type="RR_NOT_CHECKED" category="BAD_PRACTICE" --> ReturnValueOfRead
 abbrev="RR" type="SR_NOT_CHECKED" category="BAD_PRACTICE" --> ReturnValueOfSkip
 abbrev="DLS" type="DLS_OVERWRITTEN_INCREMENT" category="CORRECTNESS" --> DeadIncrementInAssignment
 abbrev="DMI" type="DMI_DOH" category="CORRECTNESS" --> NullCheckMethodForConstant
+abbrev="DMI" type="DMI_ARGUMENTS_WRONG_ORDER" category="CORRECTNESS" --> WrongArgumentOrder
 
 ==== Not reimplemented
-abbrev="DMI" type="DMI_ARGUMENTS_WRONG_ORDER" category="CORRECTNESS"
 
 abbrev="Ru" type="RU_INVOKE_RUN" category="MT_CORRECTNESS" cweid="572"
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"

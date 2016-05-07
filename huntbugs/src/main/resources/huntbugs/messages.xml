@@ -937,5 +937,12 @@
       <LongDescription><![CDATA[This code calls $CALLED_METHOD$ which checks the argument for null.
       However it's statically known that constant non-null argument is passed, so this check will always succeed.]]></LongDescription>
     </Warning>
+    <Warning Type="WrongArgumentOrder">
+      <Title>Arguments order seems to be wrong</Title>
+      <Description>$CALLED_METHOD$ called with wrong argument order.</Description>
+      <LongDescription><![CDATA[This code calls $CALLED_METHOD$ which checks the argument for null and fails with given message
+      if the check is not satisfied. However it seems that message argument and object argument are mistakenly swapped which
+      makes this check useless.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

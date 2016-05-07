@@ -232,4 +232,24 @@ public class TestBadMethodCalls {
         String s = "test";
         Assert.assertNotNull(s);
     }
+    
+    @AssertWarning(type="WrongArgumentOrder")
+    public void testWrongAssert(String str) {
+        Assert.assertNotNull(str, "String is null");
+    }
+
+    @AssertNoWarning(type="*")
+    public void testCorrectAssert(String str) {
+        Assert.assertNotNull("String is null", str);
+    }
+    
+    @AssertWarning(type="WrongArgumentOrder")
+    public void testWrongPrecondition(String str) {
+        Objects.requireNonNull("String is null", str);
+    }
+    
+    @AssertNoWarning(type="*")
+    public void testCorrectPrecondition(String str) {
+        Objects.requireNonNull(str, "String is null");
+    }
 }
