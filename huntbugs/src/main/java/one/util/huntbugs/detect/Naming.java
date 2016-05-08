@@ -15,13 +15,16 @@
  */
 package one.util.huntbugs.detect;
 
+import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 
 import one.util.huntbugs.registry.ClassContext;
+import one.util.huntbugs.registry.FieldContext;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.ClassVisitor;
+import one.util.huntbugs.registry.anno.FieldVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Types;
@@ -33,6 +36,7 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
  *
  */
 @WarningDefinition(category = "CodeStyle", name = "BadNameOfMethod", maxScore = 30)
+@WarningDefinition(category = "CodeStyle", name = "BadNameOfField", maxScore = 30)
 @WarningDefinition(category = "CodeStyle", name = "BadNameOfClass", maxScore = 30)
 @WarningDefinition(category = "CodeStyle", name = "BadNameOfClassException", maxScore = 40)
 @WarningDefinition(category = "CodeStyle", name = "BadNameOfClassSameAsSuperclass", maxScore = 45)
@@ -96,11 +100,21 @@ public class Naming {
             }
         }
     }
+    
+    @FieldVisitor
+    public void visitField(FieldDefinition fd, FieldContext fc) {
+        if(badFieldName(fd)) {
+            int priority = 0;
+            if(fd.isPrivate())
+                priority += 20;
+            else if(fd.isPackagePrivate())
+                priority += 15;
+            else if(fd.isProtected())
+                priority += 10;
+            fc.report("BadNameOfField", priority);
+        }
+    }
 
-    /**
-     * @param md
-     * @return
-     */
     private MemberInfo getMistakeFix(MethodDefinition md) {
         if(md.getName().equals("hashcode") && md.getSignature().equals("()I")) {
             return new MemberInfo("java/lang/Object", "hashCode", md.getSignature());
@@ -118,6 +132,13 @@ public class Naming {
         return mName.length() >= 2 && Character.isLetter(mName.charAt(0)) && !Character.isLowerCase(mName.charAt(0))
             && Character.isLetter(mName.charAt(1)) && Character.isLowerCase(mName.charAt(1))
             && mName.indexOf('_') == -1;
+    }
+
+    private boolean badFieldName(FieldDefinition fd) {
+        String fieldName = fd.getName();
+        return !fd.isFinal() && Character.isLetter(fieldName.charAt(0)) && !Character.isLowerCase(fieldName.charAt(0))
+                && fieldName.indexOf('_') == -1 && Character.isLetter(fieldName.charAt(1))
+                && Character.isLowerCase(fieldName.charAt(1));
     }
 
 }

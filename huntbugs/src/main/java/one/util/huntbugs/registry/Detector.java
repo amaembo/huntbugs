@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
+import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
@@ -37,6 +38,7 @@ import com.strobel.decompiler.ast.Node;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.ClassVisitor;
+import one.util.huntbugs.registry.anno.FieldVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.VisitOrder;
 import one.util.huntbugs.util.NodeChain;
@@ -49,8 +51,10 @@ import one.util.huntbugs.warning.WarningType;
 public class Detector {
     static final MethodType METHOD_VISITOR_TYPE = MethodType.methodType(boolean.class, Object.class,
         MethodContext.class, MethodDefinition.class, TypeDefinition.class);
-    static final MethodType CLASS_VISITOR_TYPE = MethodType.methodType(boolean.class, Object.class,
-        ClassContext.class, TypeDefinition.class);
+    static final MethodType FIELD_VISITOR_TYPE = MethodType.methodType(void.class, Object.class, FieldContext.class,
+        FieldDefinition.class, TypeDefinition.class);
+    static final MethodType CLASS_VISITOR_TYPE = MethodType.methodType(boolean.class, Object.class, ClassContext.class,
+        TypeDefinition.class);
     private static final MethodHandle ALWAYS_TRUE = MethodHandles.constant(boolean.class, true);
     private static final MethodType NODE_VISITOR_TYPE = MethodType.methodType(boolean.class, Object.class, Node.class,
         NodeChain.class, MethodContext.class, MethodDefinition.class, TypeDefinition.class);
@@ -59,6 +63,7 @@ public class Detector {
     final Map<Class<?>, Function<TypeReference, ?>> dbFetchers = new HashMap<>();
     private final Class<?> clazz;
     final List<VisitorInfo> astVisitors = new ArrayList<>();
+    final List<MethodHandle> fieldVisitors = new ArrayList<>();
     final List<MethodHandle> methodVisitors = new ArrayList<>();
     final List<MethodHandle> methodAfterVisitors = new ArrayList<>();
     final List<MethodHandle> classVisitors = new ArrayList<>();
@@ -151,20 +156,23 @@ public class Detector {
             if (av != null) {
                 for (VisitorType type : VisitorType.values()) {
                     if (av.nodes() == type.nodeTypes) {
-                        astVisitors.add(new VisitorInfo(av, type, adapt(MethodHandles.publicLookup().unreflect(
-                            m), type.wantedType, databases)));
+                        astVisitors.add(new VisitorInfo(av, type, adapt(m, type.wantedType, databases)));
                     }
                 }
             }
             MethodVisitor mv = m.getAnnotation(MethodVisitor.class);
             if (mv != null) {
-                (mv.order() == VisitOrder.AFTER ? methodAfterVisitors : methodVisitors).add(adapt(MethodHandles
-                        .publicLookup().unreflect(m), METHOD_VISITOR_TYPE, databases));
+                (mv.order() == VisitOrder.AFTER ? methodAfterVisitors : methodVisitors).add(adapt(m,
+                    METHOD_VISITOR_TYPE, databases));
+            }
+            FieldVisitor fv = m.getAnnotation(FieldVisitor.class);
+            if (fv != null) {
+                fieldVisitors.add(adapt(m, FIELD_VISITOR_TYPE, databases));
             }
             ClassVisitor cv = m.getAnnotation(ClassVisitor.class);
             if (cv != null) {
-                (cv.order() == VisitOrder.AFTER ? classAfterVisitors : classVisitors).add(adapt(MethodHandles
-                        .publicLookup().unreflect(m), CLASS_VISITOR_TYPE, databases));
+                (cv.order() == VisitOrder.AFTER ? classAfterVisitors : classVisitors).add(adapt(m, CLASS_VISITOR_TYPE,
+                    databases));
             }
         }
     }
@@ -188,7 +196,9 @@ public class Detector {
         return clazz.cast(fn.apply(tr));
     }
 
-    private MethodHandle adapt(MethodHandle mh, MethodType wantedType, DatabaseRegistry databases) {
+    private MethodHandle adapt(Method method, MethodType wantedType, DatabaseRegistry databases)
+            throws IllegalAccessException {
+        MethodHandle mh = MethodHandles.publicLookup().unreflect(method);
         MethodType type = mh.type();
         MethodHandle result = MethodHandles.explicitCastArguments(mh, type.changeParameterType(0, Object.class));
         if (wantedType.returnType() == boolean.class) {

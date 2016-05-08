@@ -26,6 +26,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.MethodBody;
 import com.strobel.assembler.metadata.MethodDefinition;
@@ -190,6 +191,13 @@ public class DetectorRegistry {
         MemberAsserter ca = MemberAsserter.forMember(type);
         ClassContext[] ccs = detectors.stream().map(d -> new ClassContext(ctx, type, d)).peek(
             cc -> cc.setAsserter(ca)).filter(ClassContext::visitClass).toArray(ClassContext[]::new);
+        
+        List<FieldData> fields = new ArrayList<>();
+        
+        for(FieldDefinition fd : type.getDeclaredFields()) {
+            MemberAsserter ma = MemberAsserter.forMember(ca, fd);
+            fields.add(new FieldData(fd, ma));
+        }
 
         for (MethodDefinition md : type.getDeclaredMethods()) {
             if(md.isSynthetic() && md.getName().startsWith("lambda$"))
@@ -234,6 +242,12 @@ public class DetectorRegistry {
                 mc.finalizeMethod();
             }
             ma.checkFinally(err -> ctx.addError(new ErrorMessage(null, md, -1, err)));
+        }
+        for(FieldData fdata : fields) {
+            for(ClassContext cc : ccs) {
+                cc.forField(fdata).visitField();
+            }
+            fdata.ma.checkFinally(err -> ctx.addError(new ErrorMessage(null, fdata.fd, -1, err)));
         }
         for(ClassContext cc : ccs) {
             cc.visitAfterClass();

@@ -35,19 +35,15 @@ import com.strobel.assembler.metadata.TypeDefinition;
  * @author lan
  *
  */
-public class ClassContext {
+public class ClassContext extends ElementContext {
     final TypeDefinition type;
-    final Detector detector;
-    final Context ctx;
     final Object det;
     List<WarningAnnotation<?>> annot;
     private MemberAsserter ca;
 
     ClassContext(Context ctx, TypeDefinition type, Detector detector) {
-        super();
+        super(ctx, detector);
         this.type = type;
-        this.detector = detector;
-        this.ctx = ctx;
         this.det = detector.newInstance();
     }
     
@@ -101,18 +97,9 @@ public class ClassContext {
     }
 
     public void report(String warning, int priority, WarningAnnotation<?>... annotations) {
-        WarningType wt = detector.getWarningType(warning);
-        if (wt == null) {
-            error("Tries to report a warning of non-declared type: " + warning);
+        WarningType wt = resolveWarningType(warning, priority);
+        if(wt == null)
             return;
-        }
-        if (priority < 0) {
-            error("Tries to report a warning " + warning + " with negative priority " + priority);
-            return;
-        }
-        if (wt.getMaxScore() - priority < ctx.getOptions().minScore) {
-            return;
-        }
         List<WarningAnnotation<?>> anno = new ArrayList<>();
         anno.addAll(getTypeSpecificAnnotations());
         anno.addAll(Arrays.asList(annotations));
@@ -121,11 +108,16 @@ public class ClassContext {
         ctx.addWarning(w);
     }
 
+    @Override
     public void error(String message) {
         ctx.addError(new ErrorMessage(detector, type, message));
     }
 
     MethodContext forMethod(MethodData md) {
         return new MethodContext(ctx, this, md);
+    }
+    
+    FieldContext forField(FieldData fd) {
+        return new FieldContext(ctx, this, fd);
     }
 }

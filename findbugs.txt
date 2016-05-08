@@ -148,6 +148,7 @@ abbrev="RR" type="SR_NOT_CHECKED" category="BAD_PRACTICE" --> ReturnValueOfSkip
 abbrev="DLS" type="DLS_OVERWRITTEN_INCREMENT" category="CORRECTNESS" --> DeadIncrementInAssignment
 abbrev="DMI" type="DMI_DOH" category="CORRECTNESS" --> NullCheckMethodForConstant
 abbrev="DMI" type="DMI_ARGUMENTS_WRONG_ORDER" category="CORRECTNESS" --> WrongArgumentOrder
+abbrev="Nm" type="NM_FIELD_NAMING_CONVENTION" category="BAD_PRACTICE" --> BadNameOfField
 
 ==== Not reimplemented
 
@@ -240,7 +241,6 @@ abbrev="MS" type="MS_MUTABLE_COLLECTION_PKGPROTECT" category="MALICIOUS_CODE"
 abbrev="MS" type="MS_CANNOT_BE_FINAL" category="MALICIOUS_CODE"
 abbrev="ME" type="ME_MUTABLE_ENUM_FIELD" category="BAD_PRACTICE"
 abbrev="ME" type="ME_ENUM_FIELD_SETTER" category="BAD_PRACTICE"
-abbrev="Nm" type="NM_FIELD_NAMING_CONVENTION" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_VERY_CONFUSING" category="CORRECTNESS"
 abbrev="Nm" type="NM_VERY_CONFUSING_INTENTIONAL" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_WRONG_PACKAGE" category="CORRECTNESS"

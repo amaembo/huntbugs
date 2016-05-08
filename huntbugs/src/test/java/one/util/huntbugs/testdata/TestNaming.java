@@ -25,6 +25,15 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestNaming {
+    @AssertWarning(type="BadNameOfField")
+    public String Abc;
+
+    @AssertNoWarning(type="BadNameOfField")
+    public String abc;
+    
+    @AssertNoWarning(type="BadNameOfField")
+    public final String Empty = "";
+    
     @AssertNoWarning(type="BadNameOfMethod")
     public void AB() {
         System.out.println();

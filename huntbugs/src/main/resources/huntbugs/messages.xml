@@ -491,6 +491,11 @@
       <Description>Name of the method $METHOD$ violates the convention.</Description>
       <LongDescription><![CDATA[Methods should be named in mixed case (camel-case) with the first letter lowercase and the first letter of each internal word capitalized.]]></LongDescription>
     </Warning>
+    <Warning Type="BadNameOfField">
+      <Title>Field names should start with a lower case letter</Title>
+      <Description>Name of the field $FIELD$ violates the convention.</Description>
+      <LongDescription><![CDATA[Names of fields that are not final should be in mixed case with a lowercase first letter and the first letters of subsequent words capitalized.]]></LongDescription>
+    </Warning>
     <Warning Type="BadNameOfClass">
       <Title>Class names should start with an upper case letter</Title>
       <Description>Name of the class $TYPE$ violates the convention.</Description>

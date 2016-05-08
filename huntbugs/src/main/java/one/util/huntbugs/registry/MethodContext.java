@@ -43,7 +43,7 @@ import com.strobel.decompiler.ast.Variable;
  * @author lan
  *
  */
-public class MethodContext {
+public class MethodContext extends ElementContext {
     static class WarningInfo {
         private final WarningType type;
         private int priority;
@@ -86,21 +86,18 @@ public class MethodContext {
     }
 
     private final MethodData mdata;
-    private final Detector detector;
-    private final Context ctx;
     private final Object det;
     private final ClassContext cc;
     private WarningInfo lastWarning;
     private final List<MethodHandle> astVisitors;
 
-    MethodContext(Context ctx, ClassContext classCtx, MethodData md) {
-        this.cc = classCtx;
+    MethodContext(Context ctx, ClassContext сс, MethodData md) {
+        super(ctx, сс.detector);
+        this.cc = сс;
         this.mdata = md;
-        this.ctx = ctx;
-        this.detector = classCtx.detector;
-        this.det = classCtx.det;
+        this.det = сс.det;
         astVisitors = detector.astVisitors.stream().filter(vi -> vi.isApplicable(md.mainMethod)).map(
-            vi -> vi.bind(classCtx.type)).collect(Collectors.toCollection(ArrayList::new));
+            vi -> vi.bind(сс.type)).collect(Collectors.toCollection(ArrayList::new));
     }
 
     boolean visitMethod() {
@@ -155,18 +152,9 @@ public class MethodContext {
     }
 
     public void report(String warning, int priority, Node node, WarningAnnotation<?>... annotations) {
-        WarningType wt = detector.getWarningType(warning);
-        if (wt == null) {
-            error("Tries to report a warning of non-declared type: " + warning);
+        WarningType wt = resolveWarningType(warning, priority);
+        if(wt == null)
             return;
-        }
-        if (priority < 0) {
-            error("Tries to report a warning " + warning + " with negative priority " + priority);
-            return;
-        }
-        if (wt.getMaxScore() - priority < ctx.getOptions().minScore) {
-            return;
-        }
         List<WarningAnnotation<?>> anno = new ArrayList<>();
         anno.addAll(cc.getTypeSpecificAnnotations());
         anno.addAll(mdata.getMethodSpecificAnnotations());
@@ -217,11 +205,7 @@ public class MethodContext {
         lastWarning = null;
     }
 
-    /**
-     * Report an internal analysis error. Alternatively detector may just throw any exception instead.
-     * 
-     * @param message message to report
-     */
+    @Override
     public void error(String message) {
         ctx.addError(new ErrorMessage(detector, mdata.mainMethod, -1, message));
     }

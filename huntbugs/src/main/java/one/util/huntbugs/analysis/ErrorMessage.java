@@ -20,7 +20,7 @@ import java.io.StringWriter;
 
 import one.util.huntbugs.registry.Detector;
 
-import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.TypeDefinition;
 
 /**
@@ -36,7 +36,7 @@ public class ErrorMessage {
     private final String errorMessage;
     private final String detector;
     
-    public ErrorMessage(Detector detector, MethodDefinition method, int line, Throwable error) {
+    public ErrorMessage(Detector detector, MemberReference method, int line, Throwable error) {
         this(detector == null ? null : detector.toString(), method.getDeclaringType().getFullName(), method
                 .getFullName(), method.getSignature(), line, error);
     }
@@ -49,7 +49,7 @@ public class ErrorMessage {
         this(detector == null ? null : detector.toString(), type.getFullName(), null, null, -1, message);
     }
     
-    public ErrorMessage(Detector detector, MethodDefinition method, int line, String message) {
+    public ErrorMessage(Detector detector, MemberReference method, int line, String message) {
         this(detector == null ? null : detector.toString(), method.getDeclaringType().getFullName(), method
                 .getFullName(), method.getSignature(), line, message);
     }
