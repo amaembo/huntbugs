@@ -44,6 +44,16 @@ public class TestNaming {
         System.out.println();
     }
     
+    @AssertWarning(type="BadNameOfMethodSameAsConstructor", minScore=60)
+    public void TestNaming() {
+        System.out.println();
+    }
+
+    @AssertWarning(type="BadNameOfMethodSameAsConstructor", maxScore=50)
+    public void TestNaming(String s) {
+        throw new UnsupportedOperationException(s);
+    }
+    
     @AssertWarning(type="BadNameOfMethod", minScore=25, maxScore=28)
     protected void Test2() {
         System.out.println();

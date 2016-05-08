@@ -491,6 +491,14 @@
       <Description>Name of the method $METHOD$ violates the convention.</Description>
       <LongDescription><![CDATA[Methods should be named in mixed case (camel-case) with the first letter lowercase and the first letter of each internal word capitalized.]]></LongDescription>
     </Warning>
+    <Warning Type="BadNameOfMethodSameAsConstructor">
+      <Title>Method is named like constructor</Title>
+      <Description>Method $METHOD$ was probably intended to be a constructor.</Description>
+      <LongDescription><![CDATA[This regular method $METHOD$ has the same name as the class it is defined in. 
+      It is likely that this was intended to be a constructor.
+      If it was intended to be a constructor, remove the declaration of a void return value.
+      If you had accidentally defined this method, realized the mistake, defined a proper constructor but can't get rid of this method due to backwards compatibility, deprecate the method.]]></LongDescription>
+    </Warning>
     <Warning Type="BadNameOfField">
       <Title>Field names should start with a lower case letter</Title>
       <Description>Name of the field $FIELD$ violates the convention.</Description>
