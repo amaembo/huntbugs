@@ -39,6 +39,7 @@ import com.strobel.assembler.metadata.ITypeLoader;
 import com.strobel.assembler.metadata.JarTypeLoader;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -87,53 +88,79 @@ public class HuntBugsMojo extends AbstractMojo {
     @Override
     public void execute() throws MojoExecutionException {
         try {
-            Repository repo = new DirRepository(classesDirectory.toPath());
-            if(!quiet) {
-                getLog().info("HuntBugs: +dir "+classesDirectory);
+            Context ctx = new Context(constructRepository(), constructOptions());
+
+            if (!quiet) {
+                addAnalysisProgressListener(ctx);
             }
-            List<ITypeLoader> deps = new ArrayList<>();
-            ArtifactRepository localRepository = session.getLocalRepository();
-            for(Artifact art : project.getDependencyArtifacts()) {
-                if(art.getScope().equals("compile")) {
-                    File f = localRepository.find(art).getFile();
-                    if(f != null) {
-                        Path path = f.toPath();
-                        if(!quiet) {
-                            getLog().info("HuntBugs: +dep "+path);
-                        }
-                        if(Files.isRegularFile(path)) {
-                            deps.add(new JarTypeLoader(new JarFile(path.toFile())));
-                        } else if(Files.isDirectory(path)){
-                            deps.add(new ClasspathTypeLoader(path.toString()));
-                        }
-                    }
-                }
-            }
-            if(!deps.isEmpty())
-                repo = new CompositeRepository(Arrays.asList(repo, new AuxRepository(new CompositeTypeLoader(deps
-                        .toArray(new ITypeLoader[0])))));
-            AnalysisOptions options = new AnalysisOptions();
-            options.minScore = minScore;
-            Context ctx = new Context(repo, options);
-            long[] lastPrint = {0};
-            if(!quiet) {
-                ctx.addListener((stepName, className, count, total) -> {
-                    if (count == total || System.currentTimeMillis()-lastPrint[0] > 2000) {
-                        getLog().info("HuntBugs: " + stepName + " [" + count + "/" + total + "]");
-                        lastPrint[0] = System.currentTimeMillis();
-                    }
-                    return true;
-                });
-            }
+
             ctx.analyzePackage("");
-            getLog().info("HuntBugs: Writing report (" + ctx.getStat("Warnings") + " warnings)");
-            Path path = outputDirectory.toPath();
-            Files.createDirectories(path);
-            Path xmlFile = path.resolve("report.xml");
-            Path htmlFile = path.resolve("report.html");
-            Reports.write(xmlFile, htmlFile, ctx);
+            writeReports(ctx);
         } catch (Exception e) {
             throw new MojoExecutionException("Failed to run HuntBugs", e);
         }
     }
+    
+    private Repository constructRepository() throws IOException {
+        Repository repo = new DirRepository(classesDirectory.toPath());
+        
+        if (!quiet) {
+            getLog().info("HuntBugs: +dir " + classesDirectory);
+        }
+
+        List<ITypeLoader> deps = new ArrayList<>();
+        ArtifactRepository localRepository = session.getLocalRepository();
+
+        for (Artifact art : project.getDependencyArtifacts()) {
+            if (art.getScope().equals("compile")) {
+                File f = localRepository.find(art).getFile();
+                if (f != null) {
+                    Path path = f.toPath();
+                    if (!quiet) {
+                        getLog().info("HuntBugs: +dep " + path);
+                    }
+                    if (Files.isRegularFile(path)) {
+                        deps.add(new JarTypeLoader(new JarFile(path.toFile())));
+                    } else if (Files.isDirectory(path)) {
+                        deps.add(new ClasspathTypeLoader(path.toString()));
+                    }
+                }
+            }
+        }
+        
+        if (deps.isEmpty()) {
+            return repo;
+        }
+        
+        return new CompositeRepository(
+            Arrays.asList(repo, new AuxRepository(new CompositeTypeLoader(deps.toArray(new ITypeLoader[0])))));
+    }
+    
+    private AnalysisOptions constructOptions() {
+        AnalysisOptions options = new AnalysisOptions();
+        options.minScore = minScore;
+        
+        return options;
+    }
+    
+    private void addAnalysisProgressListener(Context ctx) {
+        long[] lastPrint = {0};
+        ctx.addListener((stepName, className, count, total) -> {
+            if (count == total || System.currentTimeMillis() - lastPrint[0] > 2000) {
+                getLog().info("HuntBugs: " + stepName + " [" + count + "/" + total + "]");
+                lastPrint[0] = System.currentTimeMillis();
+            }
+            return true;
+        });
+    }
+    
+    private void writeReports(Context ctx) throws IOException {
+        getLog().info("HuntBugs: Writing report (" + ctx.getStat("Warnings") + " warnings)");
+        Path path = outputDirectory.toPath();
+        Files.createDirectories(path);
+        Path xmlFile = path.resolve("report.xml");
+        Path htmlFile = path.resolve("report.html");
+        Reports.write(xmlFile, htmlFile, ctx);
+    }
+    
 }
