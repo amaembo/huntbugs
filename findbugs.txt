@@ -152,6 +152,7 @@ abbrev="Nm" type="NM_FIELD_NAMING_CONVENTION" category="BAD_PRACTICE" --> BadNam
 abbrev="Nm" type="NM_METHOD_CONSTRUCTOR_CONFUSION" category="CORRECTNESS" --> BadNameOfMethodSameAsConstructor
 
 ==== Not reimplemented
+abbrev="UPM" type="UPM_UNCALLED_PRIVATE_METHOD" category="PERFORMANCE"
 
 abbrev="Ru" type="RU_INVOKE_RUN" category="MT_CORRECTNESS" cweid="572"
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"
@@ -355,7 +356,6 @@ abbrev="LI" type="LI_LAZY_INIT_STATIC" category="MT_CORRECTNESS" cweid="543"
 abbrev="LI" type="LI_LAZY_INIT_UPDATE_STATIC" category="MT_CORRECTNESS" cweid="543"
 abbrev="JLM" type="JLM_JSR166_UTILCONCURRENT_MONITORENTER" category="MT_CORRECTNESS"
 abbrev="JLM" type="JLM_JSR166_LOCK_MONITORENTER" category="MT_CORRECTNESS"
-abbrev="UPM" type="UPM_UNCALLED_PRIVATE_METHOD" category="PERFORMANCE"
 abbrev="UMAC" type="UMAC_UNCALLABLE_METHOD_OF_ANONYMOUS_CLASS" category="CORRECTNESS"
 abbrev="ODR" type="ODR_OPEN_DATABASE_RESOURCE" category="BAD_PRACTICE"
 abbrev="ODR" type="ODR_OPEN_DATABASE_RESOURCE_EXCEPTION_PATH" category="BAD_PRACTICE"

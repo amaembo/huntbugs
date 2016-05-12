@@ -15,8 +15,6 @@
  */
 package one.util.huntbugs.registry;
 
-import one.util.huntbugs.assertions.MemberAsserter;
-
 import com.strobel.assembler.metadata.FieldDefinition;
 
 /**
@@ -25,11 +23,10 @@ import com.strobel.assembler.metadata.FieldDefinition;
  */
 final class FieldData {
     final FieldDefinition fd;
-    final MemberAsserter ma;
 
-    public FieldData(FieldDefinition fd, MemberAsserter ma) {
+    public FieldData(FieldDefinition fd, ClassData cd) {
         this.fd = fd;
-        this.ma = ma;
+        cd.registerAsserter(fd);
     }
 
     @Override

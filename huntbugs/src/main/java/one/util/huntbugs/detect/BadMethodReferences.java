@@ -15,8 +15,6 @@
  */
 package one.util.huntbugs.detect;
 
-import java.util.List;
-
 import com.strobel.assembler.metadata.DynamicCallSite;
 import com.strobel.assembler.metadata.IMethodSignature;
 import com.strobel.assembler.metadata.MethodHandle;
@@ -30,6 +28,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
@@ -42,15 +41,11 @@ public class BadMethodReferences {
     public void visit(Expression expr, MethodContext mc) {
         if(expr.getCode() == AstCode.InvokeDynamic) {
             DynamicCallSite dcs = (DynamicCallSite)expr.getOperand();
-            MethodHandle mh = dcs.getBootstrapMethodHandle();
-            if(mh.getMethod().getDeclaringType().getInternalName().equals("java/lang/invoke/LambdaMetafactory")) {
-                List<Object> args = dcs.getBootstrapArguments();
-                if(args.size() > 1 && args.get(1) instanceof MethodHandle) {
-                    MethodHandle actualHandle = (MethodHandle) args.get(1);
-                    IMethodSignature signature = dcs.getMethodType();
-                    if(signature != null) {
-                        check(actualHandle, signature.getReturnType(), mc, expr);
-                    }
+            MethodHandle actualHandle = Nodes.getMethodHandle(dcs);
+            if(actualHandle != null) {
+                IMethodSignature signature = dcs.getMethodType();
+                if(signature != null) {
+                    check(actualHandle, signature.getReturnType(), mc, expr);
                 }
             }
         }

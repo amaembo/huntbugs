@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 
 import one.util.huntbugs.flow.ValuesFlow;
 
+import com.strobel.assembler.metadata.DynamicCallSite;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodHandle;
 import com.strobel.assembler.metadata.MethodReference;
@@ -433,5 +434,17 @@ public class Nodes {
 
     public static Stream<Expression> stream(Expression expr) {
         return Stream.concat(Stream.of(expr), expr.getArguments().stream().flatMap(Nodes::stream));
+    }
+    
+    public static MethodHandle getMethodHandle(DynamicCallSite dcs) {
+        MethodHandle mh = dcs.getBootstrapMethodHandle();
+        if(mh.getMethod().getDeclaringType().getInternalName().equals("java/lang/invoke/LambdaMetafactory")) {
+            List<Object> args = dcs.getBootstrapArguments();
+            if(args.size() > 1 && args.get(1) instanceof MethodHandle) {
+                MethodHandle actualHandle = (MethodHandle) args.get(1);
+                return actualHandle;
+            }
+        }
+        return null;
     }
 }

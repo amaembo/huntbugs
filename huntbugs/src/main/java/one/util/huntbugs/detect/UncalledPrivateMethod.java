@@ -1,0 +1,125 @@
+/*
+ * Copyright 2015, 2016 Tagir Valeev
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package one.util.huntbugs.detect;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+
+import com.strobel.assembler.metadata.DynamicCallSite;
+import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.MethodHandle;
+import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.TypeDefinition;
+import com.strobel.assembler.metadata.TypeReference;
+import com.strobel.assembler.metadata.annotations.CustomAnnotation;
+import com.strobel.decompiler.ast.Expression;
+
+import one.util.huntbugs.registry.ClassContext;
+import one.util.huntbugs.registry.anno.AssertWarning;
+import one.util.huntbugs.registry.anno.AstNodes;
+import one.util.huntbugs.registry.anno.AstVisitor;
+import one.util.huntbugs.registry.anno.ClassVisitor;
+import one.util.huntbugs.registry.anno.VisitOrder;
+import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
+
+/**
+ * @author shustkost
+ *
+ */
+@WarningDefinition(category="RedundantCode", name="UncalledPrivateMethod", maxScore=40)
+public class UncalledPrivateMethod {
+    private static final Set<String> RESERVED_NAMES = 
+            new HashSet<>(Arrays.asList("writeReplace", "readResolve",
+                "readObject", "readObjectNoData", "writeObject"));
+    
+    private final Map<MemberInfo, Set<MemberInfo>> candidates = new HashMap<>();
+    
+    @ClassVisitor(order=VisitOrder.BEFORE)
+    public boolean beforeType(TypeDefinition td) {
+        for(MethodDefinition md : td.getDeclaredMethods()) {
+            if(md.isPrivate() && !md.isSpecialName() && !md.isSynthetic() 
+                    && !RESERVED_NAMES.contains(md.getName())
+                    && !md.getName().toLowerCase(Locale.ENGLISH).contains("debug")
+                    && !md.getName().toLowerCase(Locale.ENGLISH).contains("trace")
+                    && !hasAnnotation(md)) {
+                candidates.put(new MemberInfo(md), new HashSet<>());
+            }
+        }
+        return !candidates.isEmpty();
+    }
+    
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
+    public boolean visitExpr(Expression expr, MethodDefinition md) {
+        if(expr.getOperand() instanceof MethodReference) {
+            link(md, (MethodReference)expr.getOperand());
+        }
+        if(expr.getOperand() instanceof DynamicCallSite) {
+            MethodHandle mh = Nodes.getMethodHandle((DynamicCallSite) expr.getOperand());
+            if(mh != null) {
+                link(md, mh.getMethod());
+            }
+        }
+        return !candidates.isEmpty();
+    }
+    
+    @ClassVisitor(order=VisitOrder.AFTER)
+    public void afterType(ClassContext cc) {
+        for(MemberInfo mi : candidates.keySet()) {
+            cc.report("UncalledPrivateMethod", 0, new WarningAnnotation<>("METHOD", mi));
+        }
+    }
+
+    private void link(MethodReference from, MethodReference to) {
+        MemberInfo miTo = new MemberInfo(to);
+        if(!candidates.containsKey(miTo))
+            return;
+        MemberInfo miFrom = new MemberInfo(from);
+        Set<MemberInfo> curCandidate = candidates.get(miFrom);
+        if(curCandidate == null) {
+            remove(miTo);
+        } else {
+            curCandidate.add(miTo);
+        }
+    }
+
+    private void remove(MemberInfo mi) {
+        candidates.remove(mi).forEach(this::remove);
+    }
+
+    private static boolean hasAnnotation(MethodDefinition md) {
+        for(CustomAnnotation ca : md.getAnnotations()) {
+            TypeReference annoType = ca.getAnnotationType();
+            if(annoType.getPackageName().equals(AssertWarning.class.getPackage().getName()))
+                continue;
+            if(annoType.getInternalName().equals("java/lang/Deprecated"))
+                continue;
+            if(annoType.getSimpleName().equalsIgnoreCase("nonnull") ||
+                   annoType.getSimpleName().equalsIgnoreCase("notnull") ||
+                   annoType.getSimpleName().equalsIgnoreCase("nullable") ||
+                   annoType.getSimpleName().equalsIgnoreCase("checkfornull"))
+                continue;
+            return true;
+        }
+        return false;
+    }
+}

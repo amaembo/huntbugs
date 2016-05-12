@@ -25,10 +25,12 @@ import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.assertions.MemberAsserter;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 import one.util.huntbugs.warning.WarningType;
 
 import com.strobel.assembler.ir.attributes.SourceAttribute;
 import com.strobel.assembler.ir.attributes.SourceFileAttribute;
+import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.TypeDefinition;
 
 /**
@@ -38,12 +40,13 @@ import com.strobel.assembler.metadata.TypeDefinition;
 public class ClassContext extends ElementContext {
     final TypeDefinition type;
     final Object det;
+    final ClassData cdata;
     List<WarningAnnotation<?>> annot;
-    private MemberAsserter ca;
 
-    ClassContext(Context ctx, TypeDefinition type, Detector detector) {
+    ClassContext(Context ctx, ClassData cdata, Detector detector) {
         super(ctx, detector);
-        this.type = type;
+        this.type = cdata.td;
+        this.cdata = cdata;
         this.det = detector.newInstance();
     }
     
@@ -65,10 +68,6 @@ public class ClassContext extends ElementContext {
             }
         }
         return null;
-    }
-
-    void setAsserter(MemberAsserter ma) {
-        this.ca = ma;
     }
 
     boolean visitClass() {
@@ -104,7 +103,11 @@ public class ClassContext extends ElementContext {
         anno.addAll(getTypeSpecificAnnotations());
         anno.addAll(Arrays.asList(annotations));
         Warning w = new Warning(wt, priority, anno);
-        ca.checkWarning(this::error, w);
+        MemberAsserter ma = cdata.ca;
+        WarningAnnotation<?> methodAnno = w.getAnnotation("METHOD");
+        if(methodAnno != null)
+            ma = cdata.getAsserter((MemberInfo)methodAnno.getValue());
+        ma.checkWarning(this::error, w);
         ctx.addWarning(w);
     }
 
@@ -119,5 +122,9 @@ public class ClassContext extends ElementContext {
     
     FieldContext forField(FieldData fd) {
         return new FieldContext(ctx, this, fd);
+    }
+    
+    MemberAsserter getMemberAsserter(MemberReference mr) {
+        return cdata.getAsserter(mr);
     }
 }

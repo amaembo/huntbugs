@@ -36,7 +36,7 @@ import com.strobel.assembler.metadata.annotations.CustomAnnotation;
  *
  */
 public class MemberAsserter {
-    private static final MemberAsserter EMPTY_ASSERTER = new MemberAsserter(null, null);
+    public static final MemberAsserter EMPTY_ASSERTER = new MemberAsserter(null, null);
     
     private final List<AssertionData> data;
     private final List<AssertionData> finalData;
@@ -119,5 +119,9 @@ public class MemberAsserter {
                 errorConsumer.accept("Warning rule is not satisfied: "+ad);
             }
         }        
+    }
+
+    public boolean isEmpty() {
+        return this == EMPTY_ASSERTER;
     }
 }

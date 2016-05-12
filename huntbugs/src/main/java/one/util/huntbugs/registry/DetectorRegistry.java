@@ -41,7 +41,6 @@ import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
-import one.util.huntbugs.assertions.MemberAsserter;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.repo.Repository;
@@ -188,22 +187,20 @@ public class DetectorRegistry {
 
     public void analyzeClass(TypeDefinition type) {
         ctx.incStat("TotalClasses");
-        MemberAsserter ca = MemberAsserter.forMember(type);
-        ClassContext[] ccs = detectors.stream().map(d -> new ClassContext(ctx, type, d)).peek(
-            cc -> cc.setAsserter(ca)).filter(ClassContext::visitClass).toArray(ClassContext[]::new);
+        ClassData cdata = new ClassData(type);
+        ClassContext[] ccs = detectors.stream().map(d -> new ClassContext(ctx, cdata, d)).filter(
+            ClassContext::visitClass).toArray(ClassContext[]::new);
         
         List<FieldData> fields = new ArrayList<>();
         
         for(FieldDefinition fd : type.getDeclaredFields()) {
-            MemberAsserter ma = MemberAsserter.forMember(ca, fd);
-            fields.add(new FieldData(fd, ma));
+            fields.add(new FieldData(fd, cdata));
         }
 
         for (MethodDefinition md : type.getDeclaredMethods()) {
             if(md.isSynthetic() && md.getName().startsWith("lambda$"))
                 continue;
-            MemberAsserter ma = MemberAsserter.forMember(ca, md);
-            MethodData mdata = new MethodData(md, ma);
+            MethodData mdata = new MethodData(md, cdata);
 
             Map<Boolean, List<MethodContext>> mcs = Stream.of(ccs).map(cc -> cc.forMethod(mdata)).collect(
                 Collectors.partitioningBy(MethodContext::visitMethod));
@@ -212,7 +209,7 @@ public class DetectorRegistry {
             if (body != null) {
                 if (body.getCodeSize() > ctx.getOptions().maxMethodSize) {
                     if (systemDetector != null) {
-                        MethodContext mc = new ClassContext(ctx, type, systemDetector).forMethod(mdata);
+                        MethodContext mc = new ClassContext(ctx, cdata, systemDetector).forMethod(mdata);
                         mc.report(METHOD_TOO_LARGE.getName(), 0, new WarningAnnotation<>("BYTECODE_SIZE", body
                                 .getCodeSize()), new WarningAnnotation<>("LIMIT", ctx.getOptions().maxMethodSize));
                         mc.finalizeMethod();
@@ -241,18 +238,16 @@ public class DetectorRegistry {
             for (MethodContext mc : mcs.get(false)) {
                 mc.finalizeMethod();
             }
-            ma.checkFinally(err -> ctx.addError(new ErrorMessage(null, md, -1, err)));
         }
         for(FieldData fdata : fields) {
             for(ClassContext cc : ccs) {
                 cc.forField(fdata).visitField();
             }
-            fdata.ma.checkFinally(err -> ctx.addError(new ErrorMessage(null, fdata.fd, -1, err)));
         }
         for(ClassContext cc : ccs) {
             cc.visitAfterClass();
         }
-        ca.checkFinally(err -> ctx.addError(new ErrorMessage(null, type, err)));
+        cdata.finish(ctx);
 
         for (TypeDefinition subType : type.getDeclaredTypes()) {
             analyzeClass(subType);

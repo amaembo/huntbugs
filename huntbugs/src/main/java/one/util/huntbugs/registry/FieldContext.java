@@ -58,7 +58,7 @@ public class FieldContext extends ElementContext {
         anno.add(WarningAnnotation.forField(fdata.fd));
         anno.addAll(Arrays.asList(annotations));
         Warning w = new Warning(wt, priority, anno);
-        fdata.ma.checkWarning(this::error, w);
+        cc.getMemberAsserter(fdata.fd).checkWarning(this::error, w);
         ctx.addWarning(w);
     }
 

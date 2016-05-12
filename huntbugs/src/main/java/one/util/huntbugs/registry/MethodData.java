@@ -17,7 +17,7 @@ package one.util.huntbugs.registry;
 
 import java.util.Collections;
 import java.util.List;
-import one.util.huntbugs.assertions.MemberAsserter;
+
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
@@ -42,7 +42,6 @@ import com.strobel.decompiler.languages.java.OffsetToLineNumberConverter;
  */
 final class MethodData {
     final MethodDefinition mainMethod;
-    final MemberAsserter ma;
     List<WarningAnnotation<?>> annot;
     // May differ from mainMethod when inside lambda
     MethodDefinition realMethod;
@@ -51,9 +50,9 @@ final class MethodData {
     private OffsetToLineNumberConverter ltc;
     List<Expression> origParams;
 
-    MethodData(MethodDefinition md, MemberAsserter ma) {
+    MethodData(MethodDefinition md, ClassData cd) {
         this.mainMethod = this.realMethod = md;
-        this.ma = ma;
+        cd.registerAsserter(md);
     }
 
     int getLineNumber(int offset) {

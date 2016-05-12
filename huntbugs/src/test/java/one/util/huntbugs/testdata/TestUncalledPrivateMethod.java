@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package one.util.huntbugs.asserter;
+package one.util.huntbugs.testdata;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
@@ -22,21 +22,28 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  * @author lan
  *
  */
-@AssertWarning(type="BBB")
-@AssertNoWarning(type="RoughConstantValue")
-public class TestAsserter {
-    @AssertWarning(type="CCC")
-    @AssertNoWarning(type="BadNameOfField")
-    int TheField = 123;
+public class TestUncalledPrivateMethod {
+    @interface MyAnno {}
     
-    @AssertWarning(type="AAA")
-    @AssertNoWarning(type="Rough*")
-    public double test() {
-        return 3.1415*TheField;
+    @AssertWarning(type="UncalledPrivateMethod")
+    private void simple() {
+        System.out.println("Uncalled");
     }
-    
+
+    @AssertWarning(type="UncalledPrivateMethod")
+    @Deprecated
+    private void deprecated() {
+        System.out.println("Uncalled");
+    }
+
     @AssertNoWarning(type="UncalledPrivateMethod")
-    private void uncalled() {
+    @MyAnno
+    private void annotated() {
+        System.out.println("Uncalled");
+    }
+
+    @AssertNoWarning(type="UncalledPrivateMethod")
+    void packagePrivate() {
         System.out.println("Uncalled");
     }
 }
