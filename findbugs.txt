@@ -150,9 +150,9 @@ abbrev="DMI" type="DMI_DOH" category="CORRECTNESS" --> NullCheckMethodForConstan
 abbrev="DMI" type="DMI_ARGUMENTS_WRONG_ORDER" category="CORRECTNESS" --> WrongArgumentOrder
 abbrev="Nm" type="NM_FIELD_NAMING_CONVENTION" category="BAD_PRACTICE" --> BadNameOfField
 abbrev="Nm" type="NM_METHOD_CONSTRUCTOR_CONFUSION" category="CORRECTNESS" --> BadNameOfMethodSameAsConstructor
+abbrev="UPM" type="UPM_UNCALLED_PRIVATE_METHOD" category="PERFORMANCE" --> UncalledPrivateMethod, UncalledPrivateMethodChain
 
 ==== Not reimplemented
-abbrev="UPM" type="UPM_UNCALLED_PRIVATE_METHOD" category="PERFORMANCE"
 
 abbrev="Ru" type="RU_INVOKE_RUN" category="MT_CORRECTNESS" cweid="572"
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"

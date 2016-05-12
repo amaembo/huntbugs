@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.util.stream.Stream;
+
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -23,27 +25,54 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestUncalledPrivateMethod {
-    @interface MyAnno {}
-    
-    @AssertWarning(type="UncalledPrivateMethod")
+    @interface MyAnno {
+    }
+
+    @AssertWarning(type = "UncalledPrivateMethod")
     private void simple() {
         System.out.println("Uncalled");
     }
 
-    @AssertWarning(type="UncalledPrivateMethod")
+    @AssertWarning(type = "UncalledPrivateMethod")
     @Deprecated
     private void deprecated() {
         System.out.println("Uncalled");
     }
 
-    @AssertNoWarning(type="UncalledPrivateMethod")
+    @AssertNoWarning(type = "UncalledPrivateMethod")
     @MyAnno
     private void annotated() {
         System.out.println("Uncalled");
     }
 
-    @AssertNoWarning(type="UncalledPrivateMethod")
+    @AssertNoWarning(type = "UncalledPrivateMethod")
     void packagePrivate() {
         System.out.println("Uncalled");
+    }
+
+    @AssertNoWarning(type = "UncalledPrivateMethod")
+    private void called() {
+        System.out.println("Called");
+    }
+
+    @AssertNoWarning(type = "UncalledPrivateMethod")
+    private void methodRef(String s) {
+        System.out.println("Called " + s);
+    }
+
+    public void caller() {
+        called();
+        Stream.of("a").forEach(this::methodRef);
+    }
+    
+    @AssertWarning(type = "UncalledPrivateMethodChain")
+    @AssertNoWarning(type = "UncalledPrivateMethod")
+    private void callA() {
+        callB();
+    }
+    
+    @AssertNoWarning(type = "UncalledPrivateMethod")
+    private void callB() {
+        callA();
     }
 }

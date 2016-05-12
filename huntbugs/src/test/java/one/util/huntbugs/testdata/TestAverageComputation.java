@@ -24,7 +24,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  */
 public class TestAverageComputation {
     @AssertWarning(type = "AverageComputationCouldOverflow")
-    private static int bsearch(int[] a, int low, int high, int key) {
+    static int bsearch(int[] a, int low, int high, int key) {
         while (low <= high) {
             int mid = (low + high) >> 1;
             int midVal = a[mid];
@@ -40,7 +40,7 @@ public class TestAverageComputation {
     }
 
     @AssertWarning(type = "AverageComputationCouldOverflow")
-    private static int bsearch2(int[] a, int low, int high, int key) {
+    static int bsearch2(int[] a, int low, int high, int key) {
         while (low <= high) {
             int mid = (low + high) / 2;
             int midVal = a[mid];
@@ -56,7 +56,7 @@ public class TestAverageComputation {
     }
 
     @AssertNoWarning(type = "AverageComputationCouldOverflow")
-    private static int bsearchOk(int[] a, int low, int high, int key) {
+    static int bsearchOk(int[] a, int low, int high, int key) {
         while (low <= high) {
             int mid = (low + high) >>> 1;
             int midVal = a[mid];

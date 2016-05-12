@@ -16,11 +16,12 @@
 package one.util.huntbugs.detect;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import com.strobel.assembler.metadata.DynamicCallSite;
 import com.strobel.assembler.metadata.MethodDefinition;
@@ -47,12 +48,13 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
  *
  */
 @WarningDefinition(category="RedundantCode", name="UncalledPrivateMethod", maxScore=40)
+@WarningDefinition(category="RedundantCode", name="UncalledPrivateMethodChain", maxScore=45)
 public class UncalledPrivateMethod {
     private static final Set<String> RESERVED_NAMES = 
             new HashSet<>(Arrays.asList("writeReplace", "readResolve",
                 "readObject", "readObjectNoData", "writeObject"));
     
-    private final Map<MemberInfo, Set<MemberInfo>> candidates = new HashMap<>();
+    private final Map<MemberInfo, Set<MemberInfo>> candidates = new LinkedHashMap<>();
     
     @ClassVisitor(order=VisitOrder.BEFORE)
     public boolean beforeType(TypeDefinition td) {
@@ -84,8 +86,29 @@ public class UncalledPrivateMethod {
     
     @ClassVisitor(order=VisitOrder.AFTER)
     public void afterType(ClassContext cc) {
-        for(MemberInfo mi : candidates.keySet()) {
-            cc.report("UncalledPrivateMethod", 0, new WarningAnnotation<>("METHOD", mi));
+        while(!candidates.keySet().isEmpty()) {
+            MemberInfo mi = candidates.keySet().iterator().next();
+            Set<MemberInfo> called = new HashSet<>(candidates.remove(mi));
+            boolean changed = true;
+            while(changed) {
+                changed = false;
+                for(MemberInfo callee : called) {
+                    Set<MemberInfo> called2 = candidates.remove(callee);
+                    if(called2 != null && called.addAll(called2)) {
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+            if(called.isEmpty()) {
+                cc.report("UncalledPrivateMethod", 0, new WarningAnnotation<>("METHOD", mi));
+            } else {
+                cc.report("UncalledPrivateMethodChain", 0, Stream.concat(Stream.of(new WarningAnnotation<>("METHOD", mi)),
+                    called.stream()
+                        .filter(c -> !c.equals(mi))
+                        .map(c -> new WarningAnnotation<>("CALLED_METHOD", c)))
+                        .toArray(WarningAnnotation[]::new));
+            }
         }
     }
 
