@@ -1,5 +1,5 @@
 /*
- * Copyright 2015, 2016 Tagir Valeev
+ * Copyright 2016 HuntBugs contributors
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
 /**
- * @author lan
+ * @author Tagir Valeev
  *
  */
 public class TestNumberConstructor {
