@@ -23,20 +23,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import com.strobel.assembler.ir.Instruction;
 import com.strobel.assembler.metadata.DynamicCallSite;
+import com.strobel.assembler.metadata.MethodBody;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodHandle;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.assembler.metadata.annotations.CustomAnnotation;
-import com.strobel.decompiler.ast.Expression;
 
 import one.util.huntbugs.registry.ClassContext;
 import one.util.huntbugs.registry.anno.AssertWarning;
-import one.util.huntbugs.registry.anno.AstNodes;
-import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.ClassVisitor;
+import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.VisitOrder;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
@@ -70,23 +70,37 @@ public class UncalledPrivateMethod {
         return !candidates.isEmpty();
     }
     
-    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
-    public boolean visitExpr(Expression expr, MethodDefinition md) {
-        if(expr.getOperand() instanceof MethodReference) {
-            link(md, (MethodReference)expr.getOperand());
-        }
-        if(expr.getOperand() instanceof DynamicCallSite) {
-            MethodHandle mh = Nodes.getMethodHandle((DynamicCallSite) expr.getOperand());
-            if(mh != null) {
-                link(md, mh.getMethod());
+    // Cannot use AstVisitor here as it may skip too big methods
+    @MethodVisitor
+    public void visitMethod(MethodDefinition md) {
+        if(candidates.isEmpty())
+            return;
+        MethodBody body = md.getBody();
+        if(body == null)
+            return;
+        for(Instruction inst : body.getInstructions()) {
+            for(int i=0; i<inst.getOperandCount(); i++) {
+                Object operand = inst.getOperand(i);
+                if(operand instanceof MethodReference) {
+                    link(md, (MethodReference)operand);
+                    if(candidates.isEmpty())
+                        return;
+                }
+                if(operand instanceof DynamicCallSite) {
+                    MethodHandle mh = Nodes.getMethodHandle((DynamicCallSite) operand);
+                    if(mh != null) {
+                        link(md, mh.getMethod());
+                        if(candidates.isEmpty())
+                            return;
+                    }
+                }
             }
         }
-        return !candidates.isEmpty();
     }
     
     @ClassVisitor(order=VisitOrder.AFTER)
     public void afterType(ClassContext cc) {
-        while(!candidates.keySet().isEmpty()) {
+        while(!candidates.isEmpty()) {
             MemberInfo mi = candidates.keySet().iterator().next();
             Set<MemberInfo> called = new HashSet<>(candidates.remove(mi));
             boolean changed = true;
@@ -126,7 +140,10 @@ public class UncalledPrivateMethod {
     }
 
     private void remove(MemberInfo mi) {
-        candidates.remove(mi).forEach(this::remove);
+        Set<MemberInfo> called = candidates.remove(mi);
+        if(called != null) {
+            called.forEach(this::remove);
+        }
     }
 
     private static boolean hasAnnotation(MethodDefinition md) {

@@ -161,9 +161,9 @@ public class Naming {
 
     private boolean badFieldName(FieldDefinition fd) {
         String fieldName = fd.getName();
-        return !fd.isFinal() && Character.isLetter(fieldName.charAt(0)) && !Character.isLowerCase(fieldName.charAt(0))
-            && fieldName.indexOf('_') == -1 && Character.isLetter(fieldName.charAt(1))
-            && Character.isLowerCase(fieldName.charAt(1));
+        return !fd.isFinal() && fieldName.length() > 1 && Character.isLetter(fieldName.charAt(0))
+            && !Character.isLowerCase(fieldName.charAt(0)) && fieldName.indexOf('_') == -1
+            && Character.isLetter(fieldName.charAt(1)) && Character.isLowerCase(fieldName.charAt(1));
     }
 
 }
