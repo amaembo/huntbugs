@@ -169,7 +169,7 @@
          <element>BUNDLE</element>
          <limits>
           <limit implementation="org.jacoco.report.check.Limit">
-           <counter>COMPLEXITY</counter>
+           <counter>LINE</counter>
            <value>COVEREDRATIO</value>
            <minimum>0.80</minimum>
           </limit>
