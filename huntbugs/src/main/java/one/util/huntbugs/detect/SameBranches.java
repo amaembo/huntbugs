@@ -35,6 +35,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Equi;
+import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
@@ -59,7 +60,7 @@ public class SameBranches {
     }
     
     @AstVisitor
-    public void visit(Node node, MethodContext mc) {
+    public void visit(Node node, NodeChain nc, MethodContext mc) {
         if (node instanceof Condition) {
             Condition cond = (Condition) node;
             if (Equi.equiBlocks(cond.getTrueBlock(), cond.getFalseBlock())) {
@@ -67,6 +68,10 @@ public class SameBranches {
                     mc.report("EmptyBranch", 0, cond.getCondition());
 
                 } else {
+                    // Work-around procyon bug in string switch reconstruction
+                    if(cond.getTrueBlock().getBody().size() == 1 && Nodes.isOp(cond.getTrueBlock().getBody().get(0), AstCode.LoopOrSwitchBreak)
+                            && nc.getNode() instanceof CaseBlock)
+                        return;
                     mc.report("SameBranchesIf", computePriority(cond.getTrueBlock(), 2), cond.getTrueBlock(), new WarningAnnotation<>("SAME_BRANCH", mc
                             .getLocation(cond.getFalseBlock())));
                 }
