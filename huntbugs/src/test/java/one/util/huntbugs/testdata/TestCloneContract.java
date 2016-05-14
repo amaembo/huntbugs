@@ -25,7 +25,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 public class TestCloneContract {
     @AssertWarning(type="CloneableDoesNotImplementClone")
     public class Clone0 implements Cloneable {
-        
+        // empty
     }
     
     public class Clone1 implements Cloneable {
