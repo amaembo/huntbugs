@@ -36,7 +36,6 @@ import com.strobel.assembler.metadata.annotations.CustomAnnotation;
 import one.util.huntbugs.registry.ClassContext;
 import one.util.huntbugs.registry.anno.AssertWarning;
 import one.util.huntbugs.registry.anno.ClassVisitor;
-import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.VisitOrder;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
@@ -47,8 +46,8 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
  * @author Tagir Valeev
  *
  */
-@WarningDefinition(category="RedundantCode", name="UncalledPrivateMethod", maxScore=40)
-@WarningDefinition(category="RedundantCode", name="UncalledPrivateMethodChain", maxScore=45)
+@WarningDefinition(category="RedundantCode", name="UncalledPrivateMethod", maxScore=45)
+@WarningDefinition(category="RedundantCode", name="UncalledPrivateMethodChain", maxScore=50)
 public class UncalledPrivateMethod {
     private static final Set<String> RESERVED_NAMES = 
             new HashSet<>(Arrays.asList("writeReplace", "readResolve",
@@ -56,10 +55,10 @@ public class UncalledPrivateMethod {
     
     private final Map<MemberInfo, Set<MemberInfo>> candidates = new LinkedHashMap<>();
     
-    @ClassVisitor(order=VisitOrder.BEFORE)
-    public boolean beforeType(TypeDefinition td) {
+    @ClassVisitor(order=VisitOrder.AFTER)
+    public void visitType(TypeDefinition td, ClassContext cc) {
         for(MethodDefinition md : td.getDeclaredMethods()) {
-            if(md.isPrivate() && !md.isSpecialName() && !md.isSynthetic() 
+            if(md.isPrivate() && !md.isSpecialName() 
                     && !RESERVED_NAMES.contains(md.getName())
                     && !md.getName().toLowerCase(Locale.ENGLISH).contains("debug")
                     && !md.getName().toLowerCase(Locale.ENGLISH).contains("trace")
@@ -67,39 +66,31 @@ public class UncalledPrivateMethod {
                 candidates.put(new MemberInfo(md), new HashSet<>());
             }
         }
-        return !candidates.isEmpty();
-    }
-    
-    // Cannot use AstVisitor here as it may skip too big methods
-    @MethodVisitor
-    public void visitMethod(MethodDefinition md) {
-        if(candidates.isEmpty())
-            return;
-        MethodBody body = md.getBody();
-        if(body == null)
-            return;
-        for(Instruction inst : body.getInstructions()) {
-            for(int i=0; i<inst.getOperandCount(); i++) {
-                Object operand = inst.getOperand(i);
-                if(operand instanceof MethodReference) {
-                    link(md, (MethodReference)operand);
-                    if(candidates.isEmpty())
-                        return;
-                }
-                if(operand instanceof DynamicCallSite) {
-                    MethodHandle mh = Nodes.getMethodHandle((DynamicCallSite) operand);
-                    if(mh != null) {
-                        link(md, mh.getMethod());
+        for(MethodDefinition md : td.getDeclaredMethods()) {
+            if(candidates.isEmpty())
+                return;
+            MethodBody body = md.getBody();
+            if(body == null)
+                continue;
+            for(Instruction inst : body.getInstructions()) {
+                for(int i=0; i<inst.getOperandCount(); i++) {
+                    Object operand = inst.getOperand(i);
+                    if(operand instanceof MethodReference) {
+                        link(md, (MethodReference)operand);
                         if(candidates.isEmpty())
                             return;
+                    }
+                    if(operand instanceof DynamicCallSite) {
+                        MethodHandle mh = Nodes.getMethodHandle((DynamicCallSite) operand);
+                        if(mh != null) {
+                            link(md, mh.getMethod());
+                            if(candidates.isEmpty())
+                                return;
+                        }
                     }
                 }
             }
         }
-    }
-    
-    @ClassVisitor(order=VisitOrder.AFTER)
-    public void afterType(ClassContext cc) {
         while(!candidates.isEmpty()) {
             MemberInfo mi = candidates.keySet().iterator().next();
             Set<MemberInfo> called = new HashSet<>(candidates.remove(mi));
@@ -125,7 +116,7 @@ public class UncalledPrivateMethod {
             }
         }
     }
-
+    
     private void link(MethodReference from, MethodReference to) {
         MemberInfo miTo = new MemberInfo(to);
         if(!candidates.containsKey(miTo))

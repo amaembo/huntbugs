@@ -60,9 +60,15 @@ public class TestUncalledPrivateMethod {
         System.out.println("Called " + s);
     }
 
+    @AssertNoWarning(type = "UncalledPrivateMethod")
+    private void lambda(String s) {
+        System.out.println("Called " + s);
+    }
+    
     public void caller() {
         called();
         Stream.of("a").forEach(this::methodRef);
+        Stream.of("b").forEach(b -> this.lambda(b));
     }
     
     @AssertWarning(type = "UncalledPrivateMethodChain")
@@ -74,5 +80,12 @@ public class TestUncalledPrivateMethod {
     @AssertNoWarning(type = "UncalledPrivateMethod")
     private void callB() {
         callA();
+    }
+    
+    @AssertWarning(type = "UncalledPrivateMethodChain")
+    @AssertNoWarning(type = "UncalledPrivateMethod")
+    private void selfLambda() {
+        Runnable r = () -> selfLambda();
+        r.run();
     }
 }
