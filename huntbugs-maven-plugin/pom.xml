@@ -4,7 +4,7 @@
 
   <groupId>one.util</groupId>
   <artifactId>huntbugs-maven-plugin</artifactId>
-  <version>0.0.3-SNAPSHOT</version>
+  <version>0.0.3</version>
   <packaging>maven-plugin</packaging>
 
   <name>huntbugs-maven-plugin Maven Plugin</name>
