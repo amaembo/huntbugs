@@ -44,9 +44,9 @@ import one.util.huntbugs.util.Types;
  * @author Tagir Valeev
  *
  */
-@WarningDefinition(category="BadPractice", name="CloneableDoesNotImplementClone", maxScore=50)
-@WarningDefinition(category="BadPractice", name="CloneableNoSuperCall", maxScore=60)
-@WarningDefinition(category="BadPractice", name="NotCloneableHasClone", maxScore=55)
+@WarningDefinition(category="BadPractice", name="CloneableDoesNotImplementClone", maxScore=40)
+@WarningDefinition(category="BadPractice", name="CloneableNoSuperCall", maxScore=50)
+@WarningDefinition(category="BadPractice", name="NotCloneableHasClone", maxScore=45)
 public class CloneContract {
     private boolean hasClone;
     private boolean implementsCloneable;
@@ -74,7 +74,7 @@ public class CloneContract {
                     priority += 20;
                 mc.report("NotCloneableHasClone", priority, body);
             }
-            if(isCloneable && !md.isFinal()) {
+            if(isCloneable && !md.isFinal() && !onlyThrows) {
                 boolean invokesSuperClone = Nodes.find(body, n -> {
                     if(Nodes.isOp(n, AstCode.InvokeSpecial)) {
                         MethodReference mr = (MethodReference) ((Expression)n).getOperand();

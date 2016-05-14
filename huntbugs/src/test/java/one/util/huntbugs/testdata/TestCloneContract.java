@@ -32,7 +32,7 @@ public class TestCloneContract {
         public int f = 0;
         
         @Override
-        @AssertWarning(type="CloneableNoSuperCall", minScore=55)
+        @AssertWarning(type="CloneableNoSuperCall", minScore=45)
         protected Object clone() throws CloneNotSupportedException {
             return new Clone1();
         }
@@ -40,7 +40,7 @@ public class TestCloneContract {
 
     public class Clone2 extends Clone1 {
         @Override
-        @AssertWarning(type="CloneableNoSuperCall", minScore=45, maxScore=54)
+        @AssertWarning(type="CloneableNoSuperCall", minScore=35, maxScore=44)
         protected Object clone() throws CloneNotSupportedException {
             return new Clone2();
         }
