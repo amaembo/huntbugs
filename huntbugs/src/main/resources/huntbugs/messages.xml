@@ -817,7 +817,7 @@
       <Title>Case conversion is performed with system-default locale</Title>
       <Description>Case conversion method $RETURN_VALUE_OF$ is called with system-default locale.</Description>
       <LongDescription><![CDATA[This code calls $RETURN_VALUE_OF$. The result of this method may vary depending on system-default locale.
-      For example, in Turkish locale <code>"point".toUpperCase()</code> becomes <code>POİNT</code> which is undesired in many cases, especially in server
+      For example, in Turkish locale <code>"point".toUpperCase()</code> becomes <code>PO&#304;NT</code> which is undesired in many cases, especially in server
       environment.<br>
       Consider using the special method $REPLACEMENT$ which accepts a <code>Locale</code> argument. For example, if English case conversion rules are desired, use
       <code>$REPLACEMENT:name$(Locale.ENGLISH)</code>. Even if system-default locale is desired it's better to use <code>$REPLACEMENT:name$(Locale.getDefault())</code>
