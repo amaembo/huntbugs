@@ -162,10 +162,11 @@ public class ValuesFlow {
                     mergeLabels(left);
                     mergeLabels(right);
                 } else if (n instanceof Label) {
-                    if(labelFrames != null)
+                    if(labelFrames != null) {
                         passFrame = Frame.combine(passFrame, labelFrames.remove(n));
-                    if(labelFrames.isEmpty())
-                        labelFrames = null;
+                        if(labelFrames.isEmpty())
+                            labelFrames = null;
+                    }
                 } else if (n instanceof TryCatchBlock) {
                     TryCatchBlock tryCatch = (TryCatchBlock) n;
                     if (wasMonitor && tryCatch.getCatchBlocks().isEmpty() && Nodes.isSynchorizedBlock(tryCatch)) {
