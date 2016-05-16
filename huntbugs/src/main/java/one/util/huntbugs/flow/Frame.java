@@ -345,7 +345,7 @@ class Frame {
         return res == null ? this : new Frame(this, res);
     }
 
-    static Frame merge(Frame left, Frame right) {
+    static Frame combine(Frame left, Frame right) {
         if (left == null || left == right)
             return right;
         if (right == null)

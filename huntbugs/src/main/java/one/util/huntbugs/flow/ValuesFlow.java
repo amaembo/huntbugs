@@ -17,7 +17,9 @@ package one.util.huntbugs.flow;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -73,9 +75,19 @@ public class ValuesFlow {
     static class FrameSet {
         boolean valid = true;
         Frame passFrame, breakFrame, continueFrame;
+        Map<Label, Frame> labelFrames = null;
     
         FrameSet(Frame start) {
             this.passFrame = start;
+        }
+        
+        private void mergeLabels(FrameSet other) {
+            if(labelFrames == null) {
+                labelFrames = other.labelFrames;
+            } else if(other.labelFrames != null) {
+                other.labelFrames.forEach((label, frame) ->
+                    labelFrames.merge(label, frame, Frame::combine));
+            }
         }
     
         void process(Context ctx, Block block) {
@@ -92,7 +104,7 @@ public class ValuesFlow {
                             valid = false;
                             return;
                         }
-                        breakFrame = Frame.merge(breakFrame, passFrame);
+                        breakFrame = Frame.combine(breakFrame, passFrame);
                         passFrame = null;
                         return;
                     case LoopContinue:
@@ -100,7 +112,7 @@ public class ValuesFlow {
                             valid = false;
                             return;
                         }
-                        continueFrame = Frame.merge(continueFrame, passFrame);
+                        continueFrame = Frame.combine(continueFrame, passFrame);
                         passFrame = null;
                         return;
                     case Return:
@@ -109,6 +121,17 @@ public class ValuesFlow {
                         passFrame = null;
                         return;
                     case Goto:
+                        if(expr.getOperand() instanceof Label) {
+                            Label label = (Label)expr.getOperand();
+                            if(expr.getOffset() < label.getOffset()) {
+                                if(labelFrames == null)
+                                    labelFrames = new HashMap<>();
+                                labelFrames.merge(label, passFrame, Frame::combine);
+                            } else {
+                                valid = false; // backward gotos are not supported yet
+                            }
+                        }
+                        return;
                     case Ret:
                         valid = false;
                         return;
@@ -133,11 +156,16 @@ public class ValuesFlow {
                         valid = false;
                         return;
                     }
-                    passFrame = Frame.merge(left.passFrame, right.passFrame);
-                    breakFrame = Frame.merge(breakFrame, Frame.merge(left.breakFrame, right.breakFrame));
-                    continueFrame = Frame.merge(continueFrame, Frame.merge(left.continueFrame, right.continueFrame));
+                    passFrame = Frame.combine(left.passFrame, right.passFrame);
+                    breakFrame = Frame.combine(breakFrame, Frame.combine(left.breakFrame, right.breakFrame));
+                    continueFrame = Frame.combine(continueFrame, Frame.combine(left.continueFrame, right.continueFrame));
+                    mergeLabels(left);
+                    mergeLabels(right);
                 } else if (n instanceof Label) {
-                    // TODO: support labels
+                    if(labelFrames != null)
+                        passFrame = Frame.combine(passFrame, labelFrames.remove(n));
+                    if(labelFrames.isEmpty())
+                        labelFrames = null;
                 } else if (n instanceof TryCatchBlock) {
                     TryCatchBlock tryCatch = (TryCatchBlock) n;
                     if (wasMonitor && tryCatch.getCatchBlocks().isEmpty() && Nodes.isSynchorizedBlock(tryCatch)) {
@@ -154,7 +182,7 @@ public class ValuesFlow {
                     FrameSet switchBody = new FrameSet(passFrame);
                     boolean hasDefault = false;
                     for (CaseBlock caseBlock : switchBlock.getCaseBlocks()) {
-                        switchBody.passFrame = Frame.merge(passFrame, switchBody.passFrame);
+                        switchBody.passFrame = Frame.combine(passFrame, switchBody.passFrame);
                         switchBody.process(ctx, caseBlock);
                         hasDefault |= caseBlock.isDefault();
                     }
@@ -163,10 +191,11 @@ public class ValuesFlow {
                         return;
                     }
                     if(hasDefault)
-                        passFrame = Frame.merge(switchBody.passFrame, switchBody.breakFrame);
+                        passFrame = Frame.combine(switchBody.passFrame, switchBody.breakFrame);
                     else
-                        passFrame = Frame.merge(Frame.merge(passFrame, switchBody.passFrame), switchBody.breakFrame);
-                    continueFrame = Frame.merge(continueFrame, switchBody.continueFrame);
+                        passFrame = Frame.combine(Frame.combine(passFrame, switchBody.passFrame), switchBody.breakFrame);
+                    continueFrame = Frame.combine(continueFrame, switchBody.continueFrame);
+                    mergeLabels(switchBody);
                 } else if (n instanceof Loop) {
                     Loop loop = (Loop) n;
                     ctx.incStat("DivergedLoops.Total");
@@ -182,9 +211,10 @@ public class ValuesFlow {
                                 valid = false;
                                 return;
                             }
-                            loopEnd = Frame.merge(loopBody.breakFrame, loopEnd);
-                            Frame newLoopStart = Frame.merge(loopBody.passFrame, loopBody.continueFrame);
-                            newLoopStart = Frame.merge(loopStart, newLoopStart);
+                            loopEnd = Frame.combine(loopBody.breakFrame, loopEnd);
+                            Frame newLoopStart = Frame.combine(loopBody.passFrame, loopBody.continueFrame);
+                            newLoopStart = Frame.combine(loopStart, newLoopStart);
+                            mergeLabels(loopBody);
                             if(Frame.isEqual(loopStart, newLoopStart))
                                 break;
                             loopStart = newLoopStart;
@@ -211,10 +241,11 @@ public class ValuesFlow {
                                     valid = false;
                                     return;
                                 }
-                                Frame newLoopStart = Frame.merge(loopBody.passFrame, loopBody.continueFrame);
+                                Frame newLoopStart = Frame.combine(loopBody.passFrame, loopBody.continueFrame);
                                 Frame newLoopEnd = newLoopStart == null ? null : newLoopStart.process(loop.getCondition());
-                                newLoopEnd = Frame.merge(loopBody.breakFrame, newLoopEnd);
-                                newLoopEnd = Frame.merge(loopEnd, newLoopEnd);
+                                newLoopEnd = Frame.combine(loopBody.breakFrame, newLoopEnd);
+                                newLoopEnd = Frame.combine(loopEnd, newLoopEnd);
+                                mergeLabels(loopBody);
                                 if(Frame.isEqual(loopEnd, newLoopEnd))
                                     break;
                                 loopEnd = newLoopEnd;
@@ -240,11 +271,12 @@ public class ValuesFlow {
                                     valid = false;
                                     return;
                                 }
-                                Frame beforeCondition = Frame.merge(loopBody.passFrame, loopBody.continueFrame);
+                                Frame beforeCondition = Frame.combine(loopBody.passFrame, loopBody.continueFrame);
                                 Frame newLoopEnd = beforeCondition == null ? null : beforeCondition.process(loop.getCondition());
-                                newLoopEnd = Frame.merge(loopEnd, newLoopEnd);
+                                mergeLabels(loopBody);
+                                newLoopEnd = Frame.combine(loopEnd, newLoopEnd);
                                 loopStart = newLoopEnd;
-                                newLoopEnd = Frame.merge(loopBody.breakFrame, newLoopEnd);
+                                newLoopEnd = Frame.combine(loopBody.breakFrame, newLoopEnd);
                                 if(Frame.isEqual(loopEnd, newLoopEnd))
                                     break;
                                 loopEnd = newLoopEnd;

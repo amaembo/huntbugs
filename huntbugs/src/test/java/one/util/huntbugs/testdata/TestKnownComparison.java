@@ -289,6 +289,25 @@ public class TestKnownComparison {
         }
     }
 
+    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testComplexLoop3(String type) {
+        int x = -1;
+        for (int i = 0; i < 100; i++) {
+            if (type.equals("test")) {
+                System.out.println(2);
+                if (x < 0)
+                    continue;
+            } else if (type.equals("test2")) {
+                x = 0;
+                System.out.println(3);
+                if (x < 0)
+                    x = i;
+                continue;
+            }
+            x = -1;
+        }
+    }
+
     @AssertNoWarning(type = "*")
     public void testAssert(String type) {
         int x = 1;
