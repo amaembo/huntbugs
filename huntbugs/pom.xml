@@ -40,7 +40,7 @@
   <dependency>
    <groupId>org.bitbucket.mstrobel</groupId>
    <artifactId>procyon-compilertools</artifactId>
-   <version>0.5.32</version>
+   <version>0.5.33-SNAPSHOT</version>
   </dependency>
   <dependency>
    <groupId>junit</groupId>
