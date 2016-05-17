@@ -15,10 +15,58 @@
       <body>
         <h1>HuntBugs report</h1>
         <xsl:apply-templates/>
+        <xsl:call-template name="make-scripts"/>
       </body>
     </html>
   </xsl:template>
 
+  <xsl:template name="make-scripts">
+    <script type="text/javascript"><![CDATA[
+        function toggle(e) {
+          if(/ Hidden$/.test(e.className)) {
+            e.className = e.className.substring(0, e.className.length-' Hidden'.length);
+          } else {
+            e.className += ' Hidden';
+          }
+        }
+
+        function updateCount() {
+          var warnings = document.getElementsByClassName("WarningsBody")[0].children;
+          var total = 0, shown = 0;
+          for(var i=0; i<warnings.length; i+=2) {
+            total++;
+            if(!/ Hidden$/.test(warnings[i].className))
+              shown++;
+          }
+          document.getElementsByClassName("WarningCount")[0].innerText = shown+"/"+total;
+        }
+
+        var errorList = document.getElementsByClassName("toggleErrors");
+        if(errorList.length > 0) {
+          errorList[0].addEventListener("click", function() {
+            toggle(document.getElementsByClassName("toggleErrors")[0]);
+            toggle(document.getElementsByClassName("ErrorsBody")[0]);
+          });
+        }
+        
+        var rows = document.getElementsByClassName("WarningRow");
+        for(var i=0; i<rows.length; i++) {
+          var btns = rows[i].getElementsByClassName("hideWarning");
+          if(btns.length == 0)
+            continue;
+          (function(clsName, btn) {
+            btn.addEventListener("click", function() {
+              var toHide = document.getElementsByClassName("Warning-"+clsName);
+              for(var j=0; j<toHide.length; j++) {
+                toggle(toHide[j]);
+              }
+              updateCount();
+            });
+          })(/Warning-(\w+)/.exec(rows[i].className)[1], btns[0]);
+        }
+    ]]></script>
+  </xsl:template>
+  
   <xsl:template name="make-html-header">
     <head>
       <title>
@@ -53,6 +101,7 @@
       table.Warnings, table.Errors {
         border-collapse: collapse;
         margin: 3pt;
+        width: 100%;
       }
       
       table.Warnings, table.Warnings > tbody > tr > td {
@@ -90,13 +139,31 @@
         font-size: 80%;
         color: #444;
       }
+      
+      .toggleErrors, .hideWarning {
+        cursor: pointer;
+        color: #55F;
+        text-decoration: underline;
+      }
+      
+      .ErrorsBody.Hidden, .WarningRow.Hidden {
+        display: none;
+      }
+      
+      .toggleErrors.Hidden:after {
+        content: 'Hide';
+      }
+      
+      .toggleErrors:after {
+        content: 'Show';
+      }
       </style>
     </head>
   </xsl:template>
 
   <xsl:template match="ErrorList">
-    <table class="Errors"><thead><tr><th colspan="2">Errors (<xsl:value-of select="count(Error)"/>)</th></tr></thead>
-      <tbody>
+    <table class="Errors"><thead><tr><th colspan="2">Errors (<xsl:value-of select="count(Error)"/>) [<span class="toggleErrors"></span>]</th></tr></thead>
+      <tbody class="ErrorsBody Hidden">
         <xsl:apply-templates/>
       </tbody>
     </table>
@@ -117,8 +184,8 @@
   </xsl:template>
   
   <xsl:template match="WarningList">
-    <table class="Warnings"><thead><tr><th colspan="2">Warnings (<xsl:value-of select="count(Warning)"/>)</th></tr></thead>
-      <tbody>
+    <table class="Warnings"><thead><tr><th colspan="2">Warnings (<span class="WarningCount"><xsl:value-of select="count(Warning)"/></span>)</th></tr></thead>
+      <tbody class="WarningsBody">
         <xsl:apply-templates/>
       </tbody>
     </table>
@@ -126,8 +193,9 @@
 
   <xsl:template match="Warning">
     <tr>
+        <xsl:attribute name="class">WarningRow Warning-<xsl:value-of select="@Type"/></xsl:attribute>
         <td rowspan="2">
-            <div class="Title"><xsl:value-of select="Title"/><br/><span class="WarningType">(<xsl:value-of select="@Type"/>)</span></div>
+            <div class="Title"><xsl:value-of select="Title"/><br/><span class="WarningType">(<xsl:value-of select="@Type"/> [<span class="hideWarning" title="Hide this type of warnings">x</span>])</span></div>
             <table class="Properties">
             <tr><th>Category:</th><td><xsl:value-of select="@Category"/></td></tr>
             <tr><th>Score:</th><td><xsl:value-of select="@Score"/></td></tr>
@@ -141,6 +209,7 @@
         </td>
     </tr>
     <tr>
+        <xsl:attribute name="class">WarningRow Warning-<xsl:value-of select="@Type"/></xsl:attribute>
         <td>
             <div class="LongDescription"><xsl:value-of select="LongDescription/text()" disable-output-escaping="yes"/></div>
         </td>
