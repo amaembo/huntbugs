@@ -40,9 +40,8 @@ public class NonShortCircuit {
                 return;
             Expression left = node.getArguments().get(0);
             Expression right = node.getArguments().get(1);
-            String operation = Nodes.getOperation(node.getCode());
-            WarningAnnotation<String> op = WarningAnnotation.forOperation(node);
-            WarningAnnotation<String> repl = Roles.REPLACEMENT_STRING.create(operation+operation);
+            WarningAnnotation<String> op = Roles.OPERATION.create(node);
+            WarningAnnotation<String> repl = Roles.REPLACEMENT_STRING.create(op.getValue()+op.getValue());
             if(left.getInferredType().getSimpleType() == JvmType.Boolean &&
                     right.getInferredType().getSimpleType() == JvmType.Boolean) {
                 if(left.getCode() == AstCode.InstanceOf || Nodes.isNullCheck(left))

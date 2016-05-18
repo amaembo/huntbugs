@@ -24,7 +24,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
 
 /**
  * @author Tagir Valeev
@@ -39,7 +39,7 @@ public class SelfComputation {
             || expr.getCode() == AstCode.Sub || expr.getCode() == AstCode.Div || expr.getCode() == AstCode.Rem) {
             if (expr.getArguments().size() == 2
                 && Nodes.isEquivalent(expr.getArguments().get(0), expr.getArguments().get(1))) {
-                mc.report("SelfComputation", 0, expr.getArguments().get(0), WarningAnnotation.forOperation(expr));
+                mc.report("SelfComputation", 0, expr.getArguments().get(0), Roles.OPERATION.create(expr));
             }
         }
         if (expr.getCode().isComparison()) {
@@ -48,7 +48,7 @@ public class SelfComputation {
                 JvmType type = expr.getArguments().get(0).getInferredType().getSimpleType();
                 if ((expr.getCode() != AstCode.CmpEq && expr.getCode() != AstCode.CmpNe)
                     || (type != JvmType.Double && type != JvmType.Float))
-                    mc.report("SelfComparison", 0, expr.getArguments().get(0), WarningAnnotation.forOperation(expr));
+                    mc.report("SelfComparison", 0, expr.getArguments().get(0), Roles.OPERATION.create(expr.getCode()));
             }
         }
     }

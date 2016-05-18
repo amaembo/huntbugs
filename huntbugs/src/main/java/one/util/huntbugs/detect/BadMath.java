@@ -75,7 +75,7 @@ public class BadMath {
                 Nodes.ifBinaryWithConst(expr, (child, constant) -> {
                     if (constant instanceof Number && ((Number) constant).longValue() == 0 && !Nodes
                             .isCompoundAssignment(nc.getNode())) {
-                        mc.report("UselessOrWithZero", 0, child, WarningAnnotation.forOperation(expr));
+                        mc.report("UselessOrWithZero", 0, child, Roles.OPERATION.create(expr));
                     }
                 });
             }
@@ -140,8 +140,8 @@ public class BadMath {
             if (constant instanceof Integer) {
                 int bits = (int) constant;
                 if (bits < 0 || bits > 63 || (bits > 31 && exprType == JvmType.Integer)) {
-                    mc.report("BitShiftInvalidAmount", 0, expr, Roles.NUMBER.create(bits), WarningAnnotation
-                            .forOperation(expr), Roles.MAX_VALUE.create(exprType == JvmType.Integer ? 31 : 63));
+                    mc.report("BitShiftInvalidAmount", 0, expr, Roles.NUMBER.create(bits), Roles.OPERATION.create(expr),
+                        Roles.MAX_VALUE.create(exprType == JvmType.Integer ? 31 : 63));
                 }
             }
         }

@@ -119,7 +119,7 @@ public final class Reports {
         List<Element> anotherLocations = new ArrayList<>();
         List<Element> attributes = new ArrayList<>();
         w.annotations().forEach(anno -> {
-            switch (anno.getRole()) {
+            switch (anno.getRole().toString()) {
             case "TYPE":
                 classElement.setAttribute("Name", ((TypeInfo) anno.getValue()).getTypeName());
                 break;
@@ -174,7 +174,7 @@ public final class Reports {
                     attribute.appendChild(doc.createTextNode(formatter.formatValue(anno.getValue(),
                         Formatter.FORMAT_PLAIN)));
                 }
-                attribute.setAttribute("Role", anno.getRole());
+                attribute.setAttribute("Role", anno.getRole().toString());
                 attributes.add(attribute);
             }
         });

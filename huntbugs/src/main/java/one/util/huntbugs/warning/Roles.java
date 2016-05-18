@@ -19,6 +19,7 @@ import one.util.huntbugs.warning.Role.Count;
 import one.util.huntbugs.warning.Role.LocationRole;
 import one.util.huntbugs.warning.Role.MemberRole;
 import one.util.huntbugs.warning.Role.NumberRole;
+import one.util.huntbugs.warning.Role.OperationRole;
 import one.util.huntbugs.warning.Role.StringRole;
 import one.util.huntbugs.warning.Role.TypeRole;
 
@@ -90,7 +91,7 @@ public final class Roles {
     /**
      * Operation related to the warning like "<" or "+" or "||"
      */
-    public static final StringRole OPERATION = new StringRole("OPERATION");
+    public static final OperationRole OPERATION = new OperationRole("OPERATION");
     /**
      * Regular expression associated with the warning
      */

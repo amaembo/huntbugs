@@ -31,7 +31,7 @@ import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Role.LocationRole;
 import one.util.huntbugs.warning.Role.NumberRole;
 import one.util.huntbugs.warning.Role.StringRole;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
 
 /**
  * @author Tagir Valeev
@@ -56,11 +56,11 @@ public class KnownComparison {
                     Node deadCode = getDeadCode(expr, nc, (boolean) result);
                     if (deadCode == null) {
                         mc.report("ResultOfComparisonIsStaticallyKnown", 0, expr, LEFT_OPERAND.create((Number) left),
-                            RIGHT_OPERAND.create((Number) right), WarningAnnotation.forOperation(expr), RESULT.create(
-                                result.toString()));
+                            RIGHT_OPERAND.create((Number) right), Roles.OPERATION.create(expr), RESULT.create(result
+                                    .toString()));
                     } else {
                         mc.report("ResultOfComparisonIsStaticallyKnownDeadCode", 0, expr, LEFT_OPERAND.create(
-                            (Number) left), RIGHT_OPERAND.create((Number) right), WarningAnnotation.forOperation(expr),
+                            (Number) left), RIGHT_OPERAND.create((Number) right), Roles.OPERATION.create(expr),
                             DEAD_CODE_LOCATION.create(mc, deadCode), RESULT.create(result.toString()));
                     }
                 }

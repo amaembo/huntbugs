@@ -50,7 +50,7 @@ public class Warning {
     
     public <T> T getAnnotation(Role<T> role) {
         for(WarningAnnotation<?> anno : annotations) {
-            if(anno.getRole().equals(role.toString()))
+            if(anno.getRole().equals(role))
                 return role.getType().cast(anno.getValue());
         }
         return null;
@@ -58,7 +58,7 @@ public class Warning {
     
     public WarningAnnotation<?> getAnnotation(String name) {
         for(WarningAnnotation<?> anno : annotations) {
-            if(anno.getRole().equals(name))
+            if(anno.getRole().toString().equals(name))
                 return anno;
         }
         return null;

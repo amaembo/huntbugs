@@ -17,11 +17,8 @@ package one.util.huntbugs.warning;
 
 import java.util.Objects;
 
-import one.util.huntbugs.util.Nodes;
 import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.TypeReference;
-import com.strobel.decompiler.ast.AstCode;
-import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Variable;
 
 /**
@@ -29,16 +26,16 @@ import com.strobel.decompiler.ast.Variable;
  *
  */
 public class WarningAnnotation<T> {
-    private final String role;
+    private final Role<T> role;
     private final T value;
 
-    WarningAnnotation(String role, T value) {
+    WarningAnnotation(Role<T> role, T value) {
         super();
-        this.role = role;
-        this.value = value;
+        this.role = Objects.requireNonNull(role);
+        this.value = Objects.requireNonNull(value);
     }
 
-    public String getRole() {
+    public Role<T> getRole() {
         return role;
     }
 
@@ -249,13 +246,5 @@ public class WarningAnnotation<T> {
 
     public static WarningAnnotation<String> forVariable(Variable var) {
         return Roles.VARIABLE.create(var.getName());
-    }
-
-    public static WarningAnnotation<String> forOperation(Expression expr) {
-        return Roles.OPERATION.create(Nodes.getOperation(expr.getCode()));
-    }
-
-    public static WarningAnnotation<String> forOperation(AstCode code) {
-        return Roles.OPERATION.create(Nodes.getOperation(code));
     }
 }

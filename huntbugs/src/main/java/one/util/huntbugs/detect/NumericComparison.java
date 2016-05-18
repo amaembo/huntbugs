@@ -158,7 +158,7 @@ public class NumericComparison {
             int priority = 0;
             if (realRange.minValue == constant || realRange.maxValue == constant)
                 priority += 15;
-            mc.report("ComparisonWithOutOfRangeValue", priority, expr, WarningAnnotation.forOperation(code),
+            mc.report("ComparisonWithOutOfRangeValue", priority, expr, Roles.OPERATION.create(code),
                 Roles.NUMBER.create(constant), Roles.MIN_VALUE.create(realRange.minValue), Roles.MAX_VALUE.create(
                     realRange.maxValue), RESULT.create(result.toString()));
         }
@@ -190,7 +190,7 @@ public class NumericComparison {
                 }
             }
             if(getExpressionRange(type.getSimpleType(), remInput).minValue < 0) {
-                mc.report("CheckForOddnessFailsForNegative", 0, arg, WarningAnnotation.forOperation(code),
+                mc.report("CheckForOddnessFailsForNegative", 0, arg, Roles.OPERATION.create(code),
                     Roles.REPLACEMENT_STRING.create(code == AstCode.CmpEq ? "!=" : "=="));
             }
         }

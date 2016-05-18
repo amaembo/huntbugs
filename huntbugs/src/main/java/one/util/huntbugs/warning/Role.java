@@ -19,9 +19,12 @@ import java.util.Objects;
 
 import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.TypeReference;
+import com.strobel.decompiler.ast.AstCode;
+import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
+import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 import one.util.huntbugs.warning.WarningAnnotation.TypeInfo;
@@ -61,13 +64,28 @@ public class Role<T> {
         return type;
     }
 
-    public WarningAnnotation<T> create(T value) {
-        return new WarningAnnotation<>(name, value);
+    @Override
+    public int hashCode() {
+        return name.hashCode() * 31 + type.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null || getClass() != obj.getClass())
+            return false;
+        Role<?> other = (Role<?>) obj;
+        return Objects.equals(name, other.name) && Objects.equals(type, other.type);
     }
 
     @Override
     public String toString() {
         return name;
+    }
+
+    public WarningAnnotation<T> create(T value) {
+        return new WarningAnnotation<>(this, value);
     }
 
     public static class MemberRole extends Role<MemberInfo> {
@@ -157,6 +175,24 @@ public class Role<T> {
         
         public static LocationRole forName(String name) {
             return new LocationRole(name);
+        }
+    }
+    
+    public static class OperationRole extends StringRole {
+        public OperationRole(String name, Count count) {
+            super(name, count);
+        }
+
+        public OperationRole(String name) {
+            super(name);
+        }
+        
+        public WarningAnnotation<String> create(AstCode code) {
+            return create(Nodes.getOperation(code));
+        }
+        
+        public WarningAnnotation<String> create(Expression expr) {
+            return create(Nodes.getOperation(expr.getCode()));
         }
     }
 }
