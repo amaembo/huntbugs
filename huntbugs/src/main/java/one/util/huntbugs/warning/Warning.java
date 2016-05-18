@@ -19,6 +19,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import one.util.huntbugs.warning.WarningAnnotation.TypeInfo;
+
 /**
  * @author Tagir Valeev
  *
@@ -42,8 +44,16 @@ public class Warning {
     }
     
     public String getClassName() {
-        WarningAnnotation<?> anno = getAnnotation("TYPE");
-        return anno == null ? "(Unknown)" : anno.getValue().toString();
+        TypeInfo ti = getAnnotation(Roles.TYPE);
+        return ti == null ? "(Unknown)" : ti.toString();
+    }
+    
+    public <T> T getAnnotation(Role<T> role) {
+        for(WarningAnnotation<?> anno : annotations) {
+            if(anno.getRole().equals(role.toString()))
+                return role.getType().cast(anno.getValue());
+        }
+        return null;
     }
     
     public WarningAnnotation<?> getAnnotation(String name) {

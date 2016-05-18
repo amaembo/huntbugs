@@ -105,9 +105,9 @@ public class ClassContext extends ElementContext {
         anno.addAll(Arrays.asList(annotations));
         Warning w = new Warning(wt, priority, anno);
         MemberAsserter ma = cdata.ca;
-        WarningAnnotation<?> methodAnno = w.getAnnotation("METHOD");
-        if(methodAnno != null)
-            ma = cdata.getAsserter((MemberInfo)methodAnno.getValue());
+        MemberInfo mi = w.getAnnotation(Roles.METHOD);
+        if(mi != null)
+            ma = cdata.getAsserter(mi);
         ma.checkWarning(this::error, w);
         ctx.addWarning(w);
     }
