@@ -16,6 +16,8 @@
 package one.util.huntbugs.flow;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -29,6 +31,7 @@ import java.util.function.UnaryOperator;
 
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
@@ -44,6 +47,7 @@ import com.strobel.decompiler.ast.Variable;
 class Frame {
     private final Map<Variable, Expression> sources;
     private final MethodDefinition md;
+    private final Map<MemberInfo, Expression> fieldValues;
     final Map<ParameterDefinition, Expression> initial;
     static final AstCode PHI_TYPE = AstCode.Wrap;
     static final AstCode UPDATE_TYPE = AstCode.Nop;
@@ -58,14 +62,23 @@ class Frame {
 
     Frame(MethodDefinition md) {
         this.sources = new IdentityHashMap<>();
+        this.fieldValues = Collections.emptyMap();
         this.md = md;
         this.initial = new IdentityHashMap<>();
         for(ParameterDefinition pd : md.getParameters()) {
-            Expression pde = new Expression(AstCode.Load, pd, 0);
-            pde.setExpectedType(pd.getParameterType());
-            pde.setInferredType(pd.getParameterType());
-            initial.put(pd, pde);
+            putInitial(pd);
         }
+        ParameterDefinition thisParam = md.getBody().getThisParameter();
+        if(thisParam != null) {
+            putInitial(thisParam);
+        }
+    }
+
+    private void putInitial(ParameterDefinition thisParam) {
+        Expression pde = new Expression(AstCode.Load, thisParam, 0);
+        pde.setExpectedType(thisParam.getParameterType());
+        pde.setInferredType(thisParam.getParameterType());
+        initial.put(thisParam, pde);
     }
 
     Frame processChildren(Expression expr) {
@@ -267,31 +280,56 @@ class Frame {
             if (Methods.isSideEffectFree(mr))
                 return target;
             return target.replaceAll(src -> src.getCode() == AstCode.GetField || src.getCode() == AstCode.GetStatic
-                || src.getCode() == AstCode.LoadElement ? makeUpdatedNode(src) : src);
+                || src.getCode() == AstCode.LoadElement ? makeUpdatedNode(src) : src).deleteFields();
         }
         case StoreElement: {
             return target.replaceAll(src -> src.getCode() == AstCode.LoadElement ? makeUpdatedNode(src) : src);
         }
         case GetStatic: {
-            FieldDefinition fd = ((FieldReference) expr.getOperand()).resolve();
+            FieldReference fr = ((FieldReference) expr.getOperand());
+            FieldDefinition fd = fr.resolve();
             if (fd != null && fd.isEnumConstant()) {
                 storeValue(expr, new EnumConstant(fd.getDeclaringType().getInternalName(), fd.getName()));
+            } else {
+                Expression source = fieldValues.get(new MemberInfo(fr));
+                if (source != null) {
+                    expr.putUserData(ValuesFlow.SOURCE_KEY, source);
+                    link(expr, source);
+                    Object val = source.getUserData(ValuesFlow.VALUE_KEY);
+                    storeValue(expr, val);
+                }
+            }
+            return target;
+        }
+        case GetField: {
+            FieldReference fr = ((FieldReference) expr.getOperand());
+            if(!md.isStatic() && Nodes.isThis(Nodes.getChild(expr, 0))) {
+                Expression source = fieldValues.get(new MemberInfo(fr));
+                if (source != null) {
+                    expr.putUserData(ValuesFlow.SOURCE_KEY, source);
+                    link(expr, source);
+                    Object val = source.getUserData(ValuesFlow.VALUE_KEY);
+                    storeValue(expr, val);
+                }
             }
             return target;
         }
         case PutField: {
             FieldReference fr = ((FieldReference) expr.getOperand());
+            if(!md.isStatic() && Nodes.isThis(Nodes.getChild(expr, 0))) {
+                target = target.replaceField(fr, Nodes.getChild(expr, 1));
+            }
             return target.replaceAll(src -> src.getCode() == AstCode.GetField
                 && fr.isEquivalentTo((FieldReference) src.getOperand()) ? makeUpdatedNode(src) : src);
         }
         case PutStatic: {
             FieldReference fr = ((FieldReference) expr.getOperand());
-            return target.replaceAll(src -> src.getCode() == AstCode.GetStatic
-                && fr.isEquivalentTo((FieldReference) src.getOperand()) ? makeUpdatedNode(src) : src);
+            return target.replaceField(fr, Nodes.getChild(expr, 0)).replaceAll(src -> src
+                    .getCode() == AstCode.GetStatic && fr.isEquivalentTo((FieldReference) src.getOperand())
+                            ? makeUpdatedNode(src) : src);
         }
-        default: {
+        default:
             return target;
-        }
         }
     }
 
@@ -347,15 +385,40 @@ class Frame {
     }
 
     Frame merge(Frame other) {
+        Map<Variable, Expression> res = mergeSources(other);
+        Map<MemberInfo, Expression> resFields = mergeFields(other);
+        if(resFields == null && res == null)
+            return this;
+        if(resFields == null)
+            resFields = fieldValues;
+        if(res == null)
+            res = sources;
+        return new Frame(this, res, resFields);
+    }
+
+    private Map<MemberInfo, Expression> mergeFields(Frame other) {
+        Map<MemberInfo, Expression> resFields = null;
+        for (Entry<MemberInfo, Expression> e : fieldValues.entrySet()) {
+            Expression left = e.getValue();
+            Expression right = other.fieldValues.get(e.getKey());
+            Expression phi = left == null || right == null ? null : makePhiNode(left, right);
+            if (phi == left)
+                continue;
+            if (resFields == null)
+                resFields = new HashMap<>(fieldValues);
+            resFields.put(e.getKey(), phi);
+        }
+        if(resFields == null)
+            return null;
+        resFields.values().removeIf(Objects::isNull);
+        return resFields.isEmpty() ? Collections.emptyMap() : resFields;
+    }
+
+    private Map<Variable, Expression> mergeSources(Frame other) {
         Map<Variable, Expression> res = null;
         for (Entry<Variable, Expression> e : sources.entrySet()) {
             Expression left = e.getValue();
             Expression right = other.get(e.getKey());
-            if (right == null || right == left)
-                continue;
-            if (left != null && left.getCode() == AstCode.LdC && right.getCode() == AstCode.LdC
-                && Objects.equals(left.getOperand(), right.getOperand()))
-                continue;
             Expression phi = makePhiNode(left, right);
             if (phi == left)
                 continue;
@@ -370,7 +433,7 @@ class Frame {
                 res.put(e.getKey(), makePhiNode(e.getValue(), initial.get(e.getKey().getOriginalParameter())));
             }
         }
-        return res == null ? this : new Frame(this, res);
+        return res;
     }
 
     static Frame combine(Frame left, Frame right) {
@@ -413,12 +476,21 @@ class Frame {
             if(!isEqual(e.getValue(), r.get(e.getKey())))
                 return false;
         }
+        Map<MemberInfo, Expression> lf = left.fieldValues;
+        Map<MemberInfo, Expression> rf = right.fieldValues;
+        if(lf.size() != rf.size())
+            return false;
+        for(Entry<MemberInfo, Expression> e : lf.entrySet()) {
+            if(!isEqual(e.getValue(), rf.get(e.getKey())))
+                return false;
+        }
         return true;
     }
 
-    private Frame(Frame parent, Map<Variable, Expression> sources) {
+    private Frame(Frame parent, Map<Variable, Expression> sources, Map<MemberInfo, Expression> fields) {
         this.md = parent.md;
         this.initial = parent.initial;
+        this.fieldValues = fields;
         this.sources = sources;
     }
 
@@ -427,9 +499,30 @@ class Frame {
         if (expression != replacement) {
             Map<Variable, Expression> res = new IdentityHashMap<>(sources);
             res.put(var, replacement);
-            return new Frame(this, res);
+            return new Frame(this, res, this.fieldValues);
         }
         return this;
+    }
+    
+    private Frame replaceField(FieldReference fr, Expression replacement) {
+        MemberInfo mi = new MemberInfo(fr);
+        if(fieldValues.isEmpty()) {
+            return new Frame(this, this.sources, Collections.singletonMap(mi, replacement));
+        }
+        Expression expression = fieldValues.get(mi);
+        if (expression != replacement) {
+            if(expression != null && fieldValues.size() == 1) {
+                return new Frame(this, this.sources, Collections.singletonMap(mi, replacement));
+            }
+            Map<MemberInfo, Expression> res = new HashMap<>(fieldValues);
+            res.put(mi, replacement);
+            return new Frame(this, this.sources, res);
+        }
+        return this;
+    }
+    
+    private Frame deleteFields() {
+        return fieldValues.isEmpty() ? this : new Frame(this, this.sources, Collections.emptyMap());
     }
 
     private Frame replaceAll(UnaryOperator<Expression> op) {
@@ -442,7 +535,7 @@ class Frame {
                 res.put(e.getKey(), expr);
             }
         }
-        return res == null ? this : new Frame(this, res);
+        return res == null ? this : new Frame(this, res, this.fieldValues);
     }
 
     private <A, B> Frame processBinaryOp(Expression expr, Class<A> leftType, Class<B> rightType, BiFunction<A, B, ?> op) {
@@ -711,7 +804,10 @@ class Frame {
     private Expression makePhiNode(Expression left, Expression right) {
         if (left == null)
             return right;
-        if (right == null)
+        if (right == null || left == right)
+            return left;
+        if (left.getCode() == AstCode.LdC && right.getCode() == AstCode.LdC && Objects.equals(left.getOperand(), right
+                .getOperand()))
             return left;
         if (left.getCode() == UPDATE_TYPE) {
             Expression leftContent = left.getArguments().get(0);

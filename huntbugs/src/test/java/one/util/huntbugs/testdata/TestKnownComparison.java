@@ -24,6 +24,9 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestKnownComparison {
+    private static Integer val = 0; 
+    private Integer f = 0; 
+    
     @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testAnd(int x) {
         int a = 2;
@@ -325,4 +328,58 @@ public class TestKnownComparison {
         System.out.println(x+":"+type);
     }
 
+    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    public static void testStaticField() {
+        val = 3;
+        if(val > 3) {
+            System.out.println("Never");
+        }
+    }
+
+    @AssertNoWarning(type = "*")
+    public static void testStaticFieldOk() {
+        val = 2;
+        testStaticField();
+        if(val > 2) {
+            System.out.println("Never");
+        }
+    }
+    
+    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testInstanceField() {
+        f = 3;
+        if(f > 3) {
+            System.out.println("Never");
+        }
+    }
+    
+    @AssertNoWarning(type = "*")
+    public void testInstanceFieldOk() {
+        f = 2;
+        testInstanceField();
+        if(f > 2) {
+            System.out.println("Never");
+        }
+    }
+    
+    @AssertNoWarning(type = "*")
+    public void testInstanceFieldOk2(boolean b) {
+        f = 2;
+        int x = 0;
+        if(b) x = f++;
+        if(f > 2) {
+            System.out.println("Never");
+        }
+        System.out.println(x);
+    }
+    
+    @AssertNoWarning(type = "*")
+    public void testInstanceFieldOk3(int x) {
+        if(x > 0)
+            f = 2;
+        if(f > 2) {
+            System.out.println("Never");
+        }
+        System.out.println(x);
+    }
 }

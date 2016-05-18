@@ -401,9 +401,15 @@ public class Nodes {
     }
 
     public static boolean isThis(Expression self) {
-        if (self.getCode() == AstCode.Load && self.getOperand() instanceof Variable) {
+        if (self.getCode() != AstCode.Load)
+            return false;
+        if (self.getOperand() instanceof Variable) {
             VariableDefinition origVar = ((Variable) self.getOperand()).getOriginalVariable();
             return origVar != null && origVar.getSlot() == 0;
+        }
+        if (self.getOperand() instanceof ParameterDefinition) {
+            ParameterDefinition pd = (ParameterDefinition) self.getOperand();
+            return pd.getSlot() == 0;
         }
         return false;
     }
