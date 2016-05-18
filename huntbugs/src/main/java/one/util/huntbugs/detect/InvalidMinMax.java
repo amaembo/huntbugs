@@ -24,7 +24,8 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.NumberRole;
+import one.util.huntbugs.warning.Role.StringRole;
 
 /**
  * @author Tagir Valeev
@@ -32,7 +33,12 @@ import one.util.huntbugs.warning.WarningAnnotation;
  */
 @WarningDefinition(category = "Correctness", name = "InvalidMinMax", maxScore = 80)
 public class InvalidMinMax {
-	private static final int NONE = 0;
+    private static final NumberRole OUTER_NUMBER = NumberRole.forName("OUTER_NUMBER");
+    private static final NumberRole INNER_NUMBER = NumberRole.forName("INNER_NUMBER");
+    private static final StringRole OUTER_FUNC = StringRole.forName("OUTER_FUNC");
+    private static final StringRole INNER_FUNC = StringRole.forName("INNER_FUNC");
+
+    private static final int NONE = 0;
 	private static final int MIN = -1;
 	private static final int MAX = 1;
 
@@ -85,11 +91,8 @@ public class InvalidMinMax {
 		int cmp = ((Comparable<Object>) outerConst).compareTo(innerConst)
 				* outer;
 		if (cmp > 0)
-			mc.report("InvalidMinMax", 0, expr, new WarningAnnotation<>(
-					"OUTER_NUMBER", outerConst), new WarningAnnotation<>(
-					"OUTER_FUNC", outer == MAX ? "max" : "min"),
-					new WarningAnnotation<>("INNER_NUMBER", innerConst),
-					new WarningAnnotation<>("INNER_FUNC", outer == MAX ? "min"
-							: "max"));
+            mc.report("InvalidMinMax", 0, expr, OUTER_NUMBER.create((Number) outerConst), OUTER_FUNC.create(outer == MAX
+                    ? "max" : "min"), INNER_NUMBER.create((Number) innerConst), INNER_FUNC.create(outer == MAX ? "min"
+                            : "max"));
 	}
 }

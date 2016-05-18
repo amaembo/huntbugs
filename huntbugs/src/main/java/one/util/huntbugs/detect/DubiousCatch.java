@@ -27,7 +27,7 @@ import com.strobel.decompiler.ast.Node;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
 
 /**
  * @author Tagir Valeev
@@ -53,7 +53,7 @@ public class DubiousCatch {
             for(TypeReference type : exceptions) {
                 String warningType = EXCEPTION_TO_WARNING.get(type.getInternalName());
                 if(warningType != null) {
-                    mc.report(warningType, 0, node, WarningAnnotation.forType("EXCEPTION", type));
+                    mc.report(warningType, 0, node, Roles.EXCEPTION.create(type));
                 }
             }
         }

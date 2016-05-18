@@ -55,23 +55,6 @@ public class ValuesFlow {
     static final Key<Object> VALUE_KEY = Key.create("hb.value");
     static final Key<Set<Expression>> BACK_LINKS_KEY = Key.create("hb.backlinks");
     
-    static <T> T reduce(Expression input, Function<Expression, T> mapper, BinaryOperator<T> reducer) {
-        Expression source = getSource(input);
-        if (source.getCode() != Frame.PHI_TYPE)
-            return mapper.apply(source);
-        boolean first = true;
-        T result = null;
-        for (Expression child : source.getArguments()) {
-            if (first) {
-                result = reduce(child, mapper, reducer);
-                first = false;
-            } else {
-                result = reducer.apply(result, reduce(child, mapper, reducer));
-            }
-        }
-        return result;
-    }
-
     static class FrameSet {
         boolean valid = true;
         Frame passFrame, breakFrame, continueFrame;
@@ -352,6 +335,23 @@ public class ValuesFlow {
             }
         }
         return null;
+    }
+
+    public static <T> T reduce(Expression input, Function<Expression, T> mapper, BinaryOperator<T> reducer) {
+        Expression source = getSource(input);
+        if (source.getCode() != Frame.PHI_TYPE)
+            return mapper.apply(source);
+        boolean first = true;
+        T result = null;
+        for (Expression child : source.getArguments()) {
+            if (first) {
+                result = reduce(child, mapper, reducer);
+                first = false;
+            } else {
+                result = reducer.apply(result, reduce(child, mapper, reducer));
+            }
+        }
+        return result;
     }
 
     public static TypeReference reduceType(Expression input) {

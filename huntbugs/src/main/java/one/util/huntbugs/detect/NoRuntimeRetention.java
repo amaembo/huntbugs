@@ -29,27 +29,28 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.TypeRole;
 
 /**
  * @author Tagir Valeev
  *
  */
-@WarningDefinition(category="Correctness", name="AnnotationNoRuntimeRetention", maxScore=75)
+@WarningDefinition(category = "Correctness", name = "AnnotationNoRuntimeRetention", maxScore = 75)
 public class NoRuntimeRetention {
-    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
+    private static final TypeRole ANNOTATION = TypeRole.forName("ANNOTATION");
+
+    @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc, DeclaredAnnotations da) {
-        if(expr.getCode() == AstCode.InvokeVirtual && expr.getArguments().size() == 2) {
+        if (expr.getCode() == AstCode.InvokeVirtual && expr.getArguments().size() == 2) {
             MethodReference mr = (MethodReference) expr.getOperand();
             if ((mr.getDeclaringType().getInternalName().startsWith("java/lang/reflect/") || mr.getDeclaringType()
-                    .getInternalName().equals("java/lang/Class"))
-                && mr.getName().contains("Annotation")) {
+                    .getInternalName().equals("java/lang/Class")) && mr.getName().contains("Annotation")) {
                 Object constant = Nodes.getConstant(expr.getArguments().get(1));
-                if(constant instanceof TypeReference) {
-                    TypeReference tr = (TypeReference)constant;
+                if (constant instanceof TypeReference) {
+                    TypeReference tr = (TypeReference) constant;
                     DeclaredAnnotation annot = da.get(tr);
-                    if(annot != null && annot.getPolicy() != RetentionPolicy.RUNTIME) {
-                        mc.report("AnnotationNoRuntimeRetention", 0, expr, WarningAnnotation.forType("ANNOTATION", tr));
+                    if (annot != null && annot.getPolicy() != RetentionPolicy.RUNTIME) {
+                        mc.report("AnnotationNoRuntimeRetention", 0, expr, ANNOTATION.create(tr));
                     }
                 }
             }

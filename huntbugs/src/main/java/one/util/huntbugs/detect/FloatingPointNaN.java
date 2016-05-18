@@ -21,7 +21,8 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
+import one.util.huntbugs.warning.Role.StringRole;
 
 /**
  * @author Tagir Valeev
@@ -29,17 +30,19 @@ import one.util.huntbugs.warning.WarningAnnotation;
  */
 @WarningDefinition(category="Correctness", name="FloatCompareToNaN", maxScore = 90)
 public class FloatingPointNaN {
+    private static final StringRole USED_TYPE = StringRole.forName("USED_TYPE");
+    
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression node, MethodContext ctx) {
         if(node.getCode().isComparison()) {
             Nodes.ifBinaryWithConst(node, (arg, constant) -> {
                 if(constant instanceof Float && Float.isNaN((float) constant)) {
                     ctx.report("FloatCompareToNaN", 0, arg, 
-                        WarningAnnotation.forMember("REPLACEMENT", "java/lang/Float", "isNaN", "(F)Z"),
-                        new WarningAnnotation<>("USED_TYPE", "float"));
+                        Roles.REPLACEMENT_METHOD.create("java/lang/Float", "isNaN", "(F)Z"),
+                        USED_TYPE.create("float"));
                 } else if(constant instanceof Double && Double.isNaN((double) constant)) {
-                    ctx.report("FloatCompareToNaN", 0, arg, WarningAnnotation.forMember("REPLACEMENT", "java/lang/Double", "isNaN", "(D)Z"),
-                        new WarningAnnotation<>("USED_TYPE", "double"));
+                    ctx.report("FloatCompareToNaN", 0, arg, Roles.REPLACEMENT_METHOD.create("java/lang/Double", "isNaN", "(D)Z"),
+                        USED_TYPE.create("double"));
                 }
             });
         }

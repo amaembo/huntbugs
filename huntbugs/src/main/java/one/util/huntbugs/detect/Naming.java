@@ -33,7 +33,7 @@ import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 /**
@@ -62,13 +62,11 @@ public class Naming {
         }
         TypeReference superClass = td.getBaseType();
         if (superClass != null && superClass.getSimpleName().equals(name)) {
-            cc.report("BadNameOfClassSameAsSuperclass", td.isPublic() ? 0 : 15, WarningAnnotation.forType("SUPERCLASS",
-                superClass));
+            cc.report("BadNameOfClassSameAsSuperclass", td.isPublic() ? 0 : 15, Roles.SUPERCLASS.create(superClass));
         }
         for (TypeReference iface : td.getExplicitInterfaces()) {
             if (iface.getSimpleName().equals(name)) {
-                cc.report("BadNameOfClassSameAsInterface", td.isPublic() ? 0 : 15, WarningAnnotation.forType(
-                    "INTERFACE", iface));
+                cc.report("BadNameOfClassSameAsInterface", td.isPublic() ? 0 : 15, Roles.INTERFACE.create(iface));
             }
         }
     }
@@ -103,8 +101,7 @@ public class Naming {
         if (!md.isStatic() && md.isPublic()) {
             MemberInfo mi = getMistakeFix(md);
             if (mi != null) {
-                mc.report("BadNameOfMethodMistake", md.isDeprecated() ? 20 : 0, new WarningAnnotation<>("REPLACEMENT",
-                        mi));
+                mc.report("BadNameOfMethodMistake", md.isDeprecated() ? 20 : 0, Roles.REPLACEMENT_METHOD.create(mi));
             }
         }
     }

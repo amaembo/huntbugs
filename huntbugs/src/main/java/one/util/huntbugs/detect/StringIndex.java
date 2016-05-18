@@ -26,7 +26,8 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
+import one.util.huntbugs.warning.Role.NumberRole;
 
 /**
  * @author Tagir Valeev
@@ -36,6 +37,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "RedundantCode", name = "StringIndexIsLessThanZero", maxScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "StringIndexIsGreaterThanAllowed", maxScore = 60)
 public class StringIndex {
+    private static final NumberRole INDEX = NumberRole.forName("INDEX");
+
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression node, NodeChain nc, MethodContext ctx, MethodDefinition curMethod) {
         if (Nodes.isInvoke(node) && node.getCode() != AstCode.InvokeDynamic) {
@@ -43,14 +46,15 @@ public class StringIndex {
         }
     }
 
-    private void check(Expression node, MethodReference mr, NodeChain nc, MethodContext mc, MethodDefinition curMethod) {
+    private void check(Expression node, MethodReference mr, NodeChain nc, MethodContext mc,
+            MethodDefinition curMethod) {
         String typeName = mr.getDeclaringType().getInternalName();
         String name = mr.getName();
         String signature = mr.getSignature();
         boolean isString = typeName.equals("java/lang/String");
         if (isString) {
             Object val = Nodes.getConstant(node.getArguments().get(0));
-            String str = val instanceof String ? (String)val : null;
+            String str = val instanceof String ? (String) val : null;
             int strLen = str == null ? Integer.MAX_VALUE : str.length();
             if (name.equals("substring") || name.equals("subSequence")) {
                 Object idxObj = Nodes.getConstant(node.getArguments().get(1));
@@ -71,7 +75,7 @@ public class StringIndex {
                         checkRange(node, len, idx, mc);
                     }
                 }
-            } else if((name.equals("charAt") || name.equals("codePointAt")) && signature.startsWith("(I)")) {
+            } else if ((name.equals("charAt") || name.equals("codePointAt")) && signature.startsWith("(I)")) {
                 Object idx = Nodes.getConstant(node.getArguments().get(1));
                 if (idx instanceof Integer) {
                     int i = (int) idx;
@@ -82,10 +86,10 @@ public class StringIndex {
     }
 
     private void checkRange(Expression expr, int maxValue, int val, MethodContext mc) {
-        if(val < 0) {
-            mc.report("StringIndexIsLessThanZero", 0, expr, new WarningAnnotation<>("INDEX", val));
-        } else if(val > maxValue) {
-            mc.report("StringIndexIsGreaterThanAllowed", 0, expr, new WarningAnnotation<>("INDEX", val), new WarningAnnotation<>("MAX_VAL", maxValue));
+        if (val < 0) {
+            mc.report("StringIndexIsLessThanZero", 0, expr, INDEX.create(val));
+        } else if (val > maxValue) {
+            mc.report("StringIndexIsGreaterThanAllowed", 0, expr, INDEX.create(val), Roles.MAX_VALUE.create(maxValue));
         }
     }
 }

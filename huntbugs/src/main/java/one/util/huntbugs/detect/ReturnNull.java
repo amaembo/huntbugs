@@ -29,7 +29,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.TypeRole;
 
 /**
  * @author Tagir Valeev
@@ -39,6 +39,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "BadPractice", name = "BooleanReturnNull", maxScore = 50)
 @WarningDefinition(category = "BadPractice", name = "ArrayReturnNull", maxScore = 40)
 public class ReturnNull {
+    private static final TypeRole RETURN_TYPE = TypeRole.forName("RETURN_TYPE");
+
     private static final Map<String, String> TYPE_TO_WARNING = new HashMap<>();
 
     static {
@@ -67,8 +69,8 @@ public class ReturnNull {
                         priority = 20;
                     else if (md.isProtected() || md != curMethod)
                         priority = 10;
-                    mc.report(warningType, priority, expr.getArguments().get(0), WarningAnnotation.forType(
-                        "RETURN_TYPE", md.getReturnType()));
+                    mc.report(warningType, priority, expr.getArguments().get(0), RETURN_TYPE.create(md
+                            .getReturnType()));
                 }
             }
         }

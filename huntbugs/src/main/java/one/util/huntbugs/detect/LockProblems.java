@@ -28,7 +28,8 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Types;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
+import one.util.huntbugs.warning.Role.TypeRole;
 
 /**
  * @author Tagir Valeev
@@ -36,6 +37,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
  */
 @WarningDefinition(category = "Multithreading", name = "IncorrectConcurrentMethod", maxScore = 70)
 public class LockProblems {
+    private static final TypeRole TARGET = TypeRole.forName("TARGET");
+
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
         if (expr.getCode() != AstCode.InvokeVirtual)
@@ -52,7 +55,7 @@ public class LockProblems {
             return;
         MethodDefinition replacement = findReplacement(name, target);
         if(replacement != null) {
-            mc.report("IncorrectConcurrentMethod", 0, expr, WarningAnnotation.forType("TARGET", target), WarningAnnotation.forMember("REPLACEMENT", replacement));
+            mc.report("IncorrectConcurrentMethod", 0, expr, TARGET.create(target), Roles.REPLACEMENT_METHOD.create(replacement));
         }
     }
 

@@ -26,7 +26,8 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
+import one.util.huntbugs.warning.Role.TypeRole;
 
 /**
  * @author Tagir Valeev
@@ -34,6 +35,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
  */
 @WarningDefinition(category = "Correctness", name = "ImpossibleToArrayDowncast", maxScore = 65)
 public class ToArrayDowncast {
+    private static final TypeRole TARGET_ELEMENT_TYPE = TypeRole.forName("TARGET_ELEMENT_TYPE");
+
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
         if (expr.getCode() != AstCode.CheckCast)
@@ -50,7 +53,7 @@ public class ToArrayDowncast {
         Expression target = Nodes.getChild(arg, 0);
         if (!Types.isInstance(target.getInferredType(), "java/util/Collection"))
             return;
-        mc.report("ImpossibleToArrayDowncast", 0, target, WarningAnnotation.forType("TARGET_TYPE", targetType),
-            WarningAnnotation.forType("TARGET_ELEMENT_TYPE", targetType.getElementType()));
+        mc.report("ImpossibleToArrayDowncast", 0, target, Roles.TARGET_TYPE.create(targetType),
+            TARGET_ELEMENT_TYPE.create(targetType.getElementType()));
     }
 }

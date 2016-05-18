@@ -48,7 +48,7 @@ import one.util.huntbugs.repo.RepositoryVisitor;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Messages.Message;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.NumberRole;
 import one.util.huntbugs.warning.WarningType;
 
 /**
@@ -57,6 +57,8 @@ import one.util.huntbugs.warning.WarningType;
  */
 public class DetectorRegistry {
     private static final WarningType METHOD_TOO_LARGE = new WarningType("System", "MethodTooLarge", 30);
+    private static final NumberRole BYTECODE_SIZE = NumberRole.forName("BYTECODE_SIZE");
+    private static final NumberRole LIMIT = NumberRole.forName("LIMIT");
 
     static final String DETECTORS_PACKAGE = "one.util.huntbugs.detect";
 
@@ -210,8 +212,8 @@ public class DetectorRegistry {
                 if (body.getCodeSize() > ctx.getOptions().maxMethodSize) {
                     if (systemDetector != null) {
                         MethodContext mc = new ClassContext(ctx, cdata, systemDetector).forMethod(mdata);
-                        mc.report(METHOD_TOO_LARGE.getName(), 0, new WarningAnnotation<>("BYTECODE_SIZE", body
-                                .getCodeSize()), new WarningAnnotation<>("LIMIT", ctx.getOptions().maxMethodSize));
+                        mc.report(METHOD_TOO_LARGE.getName(), 0, BYTECODE_SIZE.create(body.getCodeSize()), LIMIT.create(
+                            ctx.getOptions().maxMethodSize));
                         mc.finalizeMethod();
                     }
                 } else if (!mcs.get(true).isEmpty()) {

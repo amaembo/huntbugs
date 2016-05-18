@@ -25,7 +25,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.TypeRole;
 
 /**
  * @author Tagir Valeev
@@ -35,6 +35,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category="Multithreading", name="SynchronizationOnBoxedNumber", maxScore=65)
 @WarningDefinition(category="Multithreading", name="SynchronizationOnUnsharedBoxed", maxScore=40)
 public class BadMonitorObject {
+    private static final TypeRole MONITOR_TYPE = TypeRole.forName("MONITOR_TYPE");
+    
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
         if(expr.getCode() == AstCode.MonitorEnter) {
@@ -49,7 +51,7 @@ public class BadMonitorObject {
                 } else {
                     warningType = "SynchronizationOnBoxedNumber";
                 }
-                mc.report(warningType, 0, arg, WarningAnnotation.forType("MONITOR_TYPE", type));
+                mc.report(warningType, 0, arg, MONITOR_TYPE.create(type));
             }
         }
     }

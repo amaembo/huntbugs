@@ -31,7 +31,9 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.StringRole;
 
 /**
  * @author Tagir Valeev
@@ -41,6 +43,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "RedundantCode", name = "SwitchBranchUnreachable", maxScore = 65)
 @WarningDefinition(category = "BadPractice", name = "CheckForOddnessFailsForNegative", maxScore = 40)
 public class NumericComparison {
+    private static final StringRole RESULT = StringRole.forName("RESULT");
+    
     class LongRange {
         final long minValue, maxValue;
         final boolean invert;
@@ -155,8 +159,8 @@ public class NumericComparison {
             if (realRange.minValue == constant || realRange.maxValue == constant)
                 priority += 15;
             mc.report("ComparisonWithOutOfRangeValue", priority, expr, WarningAnnotation.forOperation(code),
-                WarningAnnotation.forNumber(constant), new WarningAnnotation<>("MIN_VALUE", realRange.minValue),
-                new WarningAnnotation<>("MAX_VALUE", realRange.maxValue), new WarningAnnotation<>("RESULT", result));
+                Roles.NUMBER.create(constant), Roles.MIN_VALUE.create(realRange.minValue), Roles.MAX_VALUE.create(
+                    realRange.maxValue), RESULT.create(result.toString()));
         }
         else if(node instanceof Switch) {
             Switch switchNode = (Switch)node;
@@ -167,11 +171,11 @@ public class NumericComparison {
                     realRange.maxValue >= Integer.MAX_VALUE)
                 return;
             for(CaseBlock block : switchNode.getCaseBlocks()) {
-                block.getValues().stream().filter(val -> new LongRange(AstCode.CmpEq, val).isTrueEmpty(realRange)).findFirst()
-                    .ifPresent(val -> {
-                        mc.report("SwitchBranchUnreachable", 0, block, WarningAnnotation.forNumber(val), new WarningAnnotation<>("MIN_VALUE", realRange.minValue),
-                            new WarningAnnotation<>("MAX_VALUE", realRange.maxValue));
-                    });
+                block.getValues().stream().filter(val -> new LongRange(AstCode.CmpEq, val).isTrueEmpty(realRange))
+                        .findFirst().ifPresent(val -> {
+                            mc.report("SwitchBranchUnreachable", 0, block, Roles.NUMBER.create(val), Roles.MIN_VALUE
+                                    .create(realRange.minValue), Roles.MAX_VALUE.create(realRange.maxValue));
+                        });
             }
         }
     }
@@ -187,7 +191,7 @@ public class NumericComparison {
             }
             if(getExpressionRange(type.getSimpleType(), remInput).minValue < 0) {
                 mc.report("CheckForOddnessFailsForNegative", 0, arg, WarningAnnotation.forOperation(code),
-                    new WarningAnnotation<>("REPLACEMENT", code == AstCode.CmpEq ? "!=" : "=="));
+                    Roles.REPLACEMENT_STRING.create(code == AstCode.CmpEq ? "!=" : "=="));
             }
         }
     }

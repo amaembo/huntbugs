@@ -25,7 +25,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Types;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.TypeRole;
 
 /**
  * @author Tagir Valeev
@@ -34,20 +34,24 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "RedundantCode", name = "UnnecessaryInstanceOf", maxScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "UnnecessaryInstanceOfInferred", maxScore = 70)
 public class UnnecessaryInstanceOf {
-    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
+    private static final TypeRole INSTANCEOF_TYPE = TypeRole.forName("INSTANCEOF_TYPE");
+    private static final TypeRole INFERRED_TYPE = TypeRole.forName("INFERRED_TYPE");
+    private static final TypeRole ACTUAL_TYPE = TypeRole.forName("ACTUAL_TYPE");
+
+    @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression node, MethodContext mc) {
-        if(node.getCode() == AstCode.InstanceOf) {
-            TypeReference typeRef = (TypeReference)node.getOperand();
+        if (node.getCode() == AstCode.InstanceOf) {
+            TypeReference typeRef = (TypeReference) node.getOperand();
             Expression expr = node.getArguments().get(0);
             TypeReference exprType = Types.getExpressionType(expr);
-			if(Types.isInstance(exprType, typeRef)) {
-                mc.report("UnnecessaryInstanceOf", 0, expr, WarningAnnotation.forType("INSTANCEOF_TYPE", typeRef), 
-                    WarningAnnotation.forType("ACTUAL_TYPE", exprType));
+            if (Types.isInstance(exprType, typeRef)) {
+                mc.report("UnnecessaryInstanceOf", 0, expr, INSTANCEOF_TYPE.create(typeRef), ACTUAL_TYPE.create(
+                    exprType));
             } else {
                 TypeReference inferredType = ValuesFlow.reduceType(expr);
-                if(typeRef != null && Types.isInstance(inferredType, typeRef)) {
-                    mc.report("UnnecessaryInstanceOfInferred", 0, expr, WarningAnnotation.forType("INSTANCEOF_TYPE", typeRef),
-                        WarningAnnotation.forType("ACTUAL_TYPE", exprType), WarningAnnotation.forType("INFERRED_TYPE", inferredType));
+                if (typeRef != null && Types.isInstance(inferredType, typeRef)) {
+                    mc.report("UnnecessaryInstanceOfInferred", 0, expr, INSTANCEOF_TYPE.create(typeRef), ACTUAL_TYPE
+                            .create(exprType), INFERRED_TYPE.create(inferredType));
                 }
             }
         }

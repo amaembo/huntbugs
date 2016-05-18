@@ -32,7 +32,10 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.LocationRole;
+import one.util.huntbugs.warning.Role.TypeRole;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
 
 /**
@@ -43,6 +46,9 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
 @WarningDefinition(category = "Performance", name = "BoxedForUnboxing", maxScore = 30)
 @WarningDefinition(category = "Performance", name = "UnboxedForBoxing", maxScore = 45)
 public class UnnecessaryBoxing {
+    private static final LocationRole BOXED_AT = LocationRole.forName("BOXED_AT");
+    private static final TypeRole BOXED_TYPE = TypeRole.forName("BOXED_TYPE");
+    
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
         if (Nodes.isUnboxing(expr)) {
@@ -52,9 +58,9 @@ public class UnnecessaryBoxing {
                 TypeReference type = ((MethodReference) expr.getOperand()).getDeclaringType();
                 List<WarningAnnotation<?>> annotations = usages.stream().filter(
                     e -> isBoxing(e) && e.getInferredType().isEquivalentTo(arg.getInferredType())).map(
-                    e -> WarningAnnotation.forLocation("BOXED_AT", mc.getLocation(e))).collect(Collectors.toList());
+                    e -> BOXED_AT.create(mc, e)).collect(Collectors.toList());
                 if (annotations.size() == usages.size()) {
-                    annotations.add(WarningAnnotation.forType("BOXED_TYPE", type));
+                    annotations.add(BOXED_TYPE.create(type));
                     JvmType simpleType = expr.getInferredType().getSimpleType();
                     mc.report("UnboxedForBoxing", simpleType == JvmType.Boolean || simpleType == JvmType.Byte ? 15 : 0,
                         arg, annotations.toArray(new WarningAnnotation<?>[0]));
@@ -70,14 +76,14 @@ public class UnnecessaryBoxing {
                         Collectors.partitioningBy(Nodes::isUnboxing));
                     if (!map.get(true).isEmpty()) {
                         List<WarningAnnotation<?>> annotations = getUsedLocations(arg, mc, map.get(true));
-                        annotations.add(WarningAnnotation.forType("BOXED_TYPE", type));
+                        annotations.add(BOXED_TYPE.create(type));
                         mc.report("BoxedForUnboxing", 0, arg, annotations.toArray(new WarningAnnotation<?>[0]));
                     }
                     if (!map.get(false).isEmpty()) {
                         List<WarningAnnotation<?>> annotations = getUsedLocations(arg, mc, map.get(false));
-                        annotations.add(WarningAnnotation.forType("BOXED_TYPE", type));
-                        annotations.add(WarningAnnotation.forMember("REPLACEMENT", "java/lang/String", "valueOf", "("
-                            + arg.getInferredType().getInternalName() + ")Ljava/lang/String;"));
+                        annotations.add(BOXED_TYPE.create(type));
+                        annotations.add(Roles.REPLACEMENT_METHOD.create("java/lang/String", "valueOf", "(" + arg
+                                .getInferredType().getInternalName() + ")Ljava/lang/String;"));
                         mc.report("BoxedForToString", 0, arg, annotations.toArray(new WarningAnnotation<?>[0]));
                     }
                 }
@@ -89,7 +95,7 @@ public class UnnecessaryBoxing {
         Location curLoc = mc.getLocation(arg);
         List<WarningAnnotation<?>> annotations = list.stream().map(mc::getLocation).filter(
             loc -> loc.getSourceLine() != curLoc.getSourceLine() && loc.getSourceLine() != -1).map(
-            loc -> WarningAnnotation.forLocation("USED_AT", loc)).collect(Collectors.toList());
+            loc -> Roles.USED_AT.create(loc)).collect(Collectors.toList());
         return annotations;
     }
 

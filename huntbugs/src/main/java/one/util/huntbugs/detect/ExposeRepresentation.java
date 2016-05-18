@@ -32,7 +32,7 @@ import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.TypeRole;
 
 /**
  * @author Tagir Valeev
@@ -41,6 +41,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "MaliciousCode", name = "ExposeMutableFieldViaParameter", maxScore = 45)
 @WarningDefinition(category = "MaliciousCode", name = "ExposeMutableStaticFieldViaParameter", maxScore = 55)
 public class ExposeRepresentation {
+    private static final TypeRole FIELD_TYPE = TypeRole.forName("FIELD_TYPE");
+
     @ClassVisitor
     public boolean checkClass(TypeDefinition td) {
         return td.isPublic();
@@ -94,6 +96,6 @@ public class ExposeRepresentation {
             priority += 10;
         if (md.isVarArgs() && pd.getPosition() == md.getParameters().size() - 1)
             priority += 10;
-        mc.report(type, priority, expr, WarningAnnotation.forType("FIELD_TYPE", fd.getFieldType()));
+        mc.report(type, priority, expr, FIELD_TYPE.create(fd.getFieldType()));
     }
 }

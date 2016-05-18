@@ -29,7 +29,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
 
 /**
  * @author Tagir Valeev
@@ -55,7 +55,7 @@ public class BadMethodReferences {
         if(functionalInterface.getInternalName().equals("java/util/Comparator") && handle.getHandleType() == MethodHandleType.InvokeStatic) {
             MethodReference mr = handle.getMethod();
             if((mr.getName().equals("min") || mr.getName().equals("max")) && mr.getDeclaringType().getPackageName().equals("java.lang")) {
-                mc.report("MaxMinMethodReferenceForComparator", 0, expr, WarningAnnotation.forMember("METHOD_REFERENCE", mr));
+                mc.report("MaxMinMethodReferenceForComparator", 0, expr, Roles.METHOD_REFERENCE.create(mr));
             }
         }
     }

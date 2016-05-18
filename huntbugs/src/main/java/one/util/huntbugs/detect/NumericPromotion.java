@@ -32,6 +32,9 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.Role.LocationRole;
+import one.util.huntbugs.warning.Role.StringRole;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
 
@@ -43,6 +46,10 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
 @WarningDefinition(category = "Correctness", name = "IntegerDivisionPromotedToFloat", maxScore = 65)
 @WarningDefinition(category = "Correctness", name = "IntegerPromotionInCeilOrRound", maxScore = 65)
 public class NumericPromotion {
+    private static final StringRole SOURCE_TYPE = StringRole.forName("SOURCE_TYPE");
+    private static final StringRole TARGET_TYPE = StringRole.forName("TARGET_TYPE");
+    private static final LocationRole DIVISION_AT = LocationRole.forName("DIVISION_AT");
+    
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md) {
         if (expr.getCode() == AstCode.I2L) {
@@ -65,11 +72,10 @@ public class NumericPromotion {
                             priority += 20;
                         } else
                             priority += 10;
-                        mc.report("IntegerMultiplicationPromotedToLong", priority, expr, WarningAnnotation
-                                .forNumber(res));
+                        mc.report("IntegerMultiplicationPromotedToLong", priority, expr, Roles.NUMBER.create(res));
                     }
                 } catch (ArithmeticException e) {
-                    mc.report("IntegerMultiplicationPromotedToLong", priority, expr, WarningAnnotation.forNumber(res));
+                    mc.report("IntegerMultiplicationPromotedToLong", priority, expr, Roles.NUMBER.create(res));
                 }
             }
         }
@@ -79,8 +85,8 @@ public class NumericPromotion {
                 MethodReference mr = (MethodReference) ((Expression) nc.getNode()).getOperand();
                 if (mr.getDeclaringType().getInternalName().equals("java/lang/Math")
                     && (mr.getName().equals("ceil") || mr.getName().equals("round"))) {
-                    mc.report("IntegerPromotionInCeilOrRound", 0, nc.getNode(), new WarningAnnotation<>("SOURCE_TYPE",
-                            getSourceType(expr)), new WarningAnnotation<>("TARGET_TYPE", getTargetType(expr)));
+                    mc.report("IntegerPromotionInCeilOrRound", 0, nc.getNode(), SOURCE_TYPE.create(getSourceType(expr)), 
+                        TARGET_TYPE.create(getTargetType(expr)));
                     return;
                 }
             }
@@ -110,14 +116,14 @@ public class NumericPromotion {
                     }
                 }
                 List<WarningAnnotation<?>> anno = new ArrayList<>();
-                anno.add(new WarningAnnotation<>("SOURCE_TYPE", getSourceType(expr)));
-                anno.add(new WarningAnnotation<>("TARGET_TYPE", getTargetType(expr)));
+                anno.add(SOURCE_TYPE.create(getSourceType(expr)));
+                anno.add(TARGET_TYPE.create(getTargetType(expr)));
                 Location divLoc = mc.getLocation(arg);
                 if(divLoc.getSourceLine() != mc.getLocation(expr).getSourceLine())
-                    anno.add(WarningAnnotation.forLocation("DIVISION_AT", divLoc));
+                    anno.add(DIVISION_AT.create(divLoc));
                 Object op = expr.getArguments().get(0).getOperand();
                 if(op instanceof Variable) {
-                    anno.add(new WarningAnnotation<>("VARIABLE", ((Variable)op).getName()));
+                    anno.add(WarningAnnotation.forVariable((Variable)op));
                 }
                 mc.report("IntegerDivisionPromotedToFloat", priority, expr, anno.toArray(new WarningAnnotation[0]));
             }

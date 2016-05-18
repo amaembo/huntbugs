@@ -1,0 +1,126 @@
+/*
+ * Copyright 2016 HuntBugs contributors
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package one.util.huntbugs.warning;
+
+import one.util.huntbugs.warning.Role.Count;
+import one.util.huntbugs.warning.Role.LocationRole;
+import one.util.huntbugs.warning.Role.MemberRole;
+import one.util.huntbugs.warning.Role.NumberRole;
+import one.util.huntbugs.warning.Role.StringRole;
+import one.util.huntbugs.warning.Role.TypeRole;
+
+/**
+ * @author lan
+ *
+ */
+public final class Roles {
+    /**
+     * Class descriptor associated with the warning
+     */
+    public static final TypeRole TYPE = new TypeRole("TYPE", Count.ONE);
+    /**
+     * Source file name (like "Test.java")
+     */
+    public static final StringRole FILE = new StringRole("FILE", Count.ZERO_ONE);
+    /**
+     * Method associated with the warning (where warning appears)
+     */
+    public static final MemberRole METHOD = new MemberRole("METHOD", Count.ZERO_ONE);
+    /**
+     * Field descriptor associated with the warning
+     */
+    public static final MemberRole FIELD = new MemberRole("FIELD", Count.ZERO_ONE);
+    /**
+     * Source code location where warning appears
+     */
+    public static final LocationRole LOCATION = new LocationRole("LOCATION", Count.ZERO_ONE);
+    /**
+     * Location where expression is used
+     */
+    public static final LocationRole USED_AT = new LocationRole("USED_AT", Count.ZERO_ONE);
+    /**
+     * Another location where the same warning appears (within the same method)
+     */
+    public static final LocationRole ANOTHER_INSTANCE = new LocationRole("ANOTHER_INSTANCE");
+    /**
+     * Method which return value is associated with the warning
+     */
+    public static final MemberRole RETURN_VALUE_OF = new MemberRole("RETURN_VALUE_OF", Count.ZERO_ONE);
+    /**
+     * Called method which is associated with the warning
+     */
+    public static final MemberRole CALLED_METHOD = new MemberRole("CALLED_METHOD", Count.ZERO_ONE);
+    /**
+     * Method reference which is associated with the warning
+     */
+    public static final MemberRole METHOD_REFERENCE = new MemberRole("METHOD_REFERENCE", Count.ZERO_ONE);
+    /**
+     * Method which should be called instead
+     */
+    public static final MemberRole REPLACEMENT_METHOD = new MemberRole("REPLACEMENT", Count.ZERO_ONE);
+    /**
+     * Replacement expression or operator
+     */
+    public static final StringRole REPLACEMENT_STRING = new StringRole("REPLACEMENT", Count.ZERO_ONE);
+    /**
+     * Local variable (or parameter) name associated with the warning
+     */
+    public static final StringRole VARIABLE = new StringRole("VARIABLE");
+    /**
+     * Any string associated with the warning
+     */
+    public static final StringRole STRING = new StringRole("STRING");
+    /**
+     * Any number associated with the warning
+     */
+    public static final NumberRole NUMBER = new NumberRole("NUMBER");
+    /**
+     * Operation related to the warning like "<" or "+" or "||"
+     */
+    public static final StringRole OPERATION = new StringRole("OPERATION");
+    /**
+     * Regular expression associated with the warning
+     */
+    public static final StringRole REGEXP = new StringRole("REGEXP");
+    /**
+     * Minimal allowed value associated with warning 
+     */
+    public static final NumberRole MIN_VALUE = new NumberRole("MIN_VALUE", Count.ZERO_ONE);
+    /**
+     * Maximal allowed value associated with warning 
+     */
+    public static final NumberRole MAX_VALUE = new NumberRole("MAX_VALUE", Count.ZERO_ONE);
+    /**
+     * Expression target type associated with warning
+     */
+    public static final TypeRole TARGET_TYPE = new TypeRole("TARGET_TYPE", Count.ZERO_ONE);
+    /**
+     * Type of Exception associated with the warning
+     */
+    public static final TypeRole EXCEPTION = new TypeRole("EXCEPTION");
+    /**
+     * Interface type associated with the warning
+     */
+    public static final TypeRole INTERFACE = TypeRole.forName("INTERFACE");
+    /**
+     * Superclass type associated with the warning
+     */
+    public static final TypeRole SUPERCLASS = TypeRole.forName("SUPERCLASS");
+
+    private Roles() {
+        
+    }
+}

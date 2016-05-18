@@ -18,10 +18,7 @@ package one.util.huntbugs.warning;
 import java.util.Objects;
 
 import one.util.huntbugs.util.Nodes;
-
-import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MemberReference;
-import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
@@ -35,7 +32,7 @@ public class WarningAnnotation<T> {
     private final String role;
     private final T value;
 
-    public WarningAnnotation(String role, T value) {
+    WarningAnnotation(String role, T value) {
         super();
         this.role = role;
         this.value = value;
@@ -77,6 +74,10 @@ public class WarningAnnotation<T> {
 
         public String getTypeName() {
             return typeName;
+        }
+        
+        public String getJavaName() {
+            return typeName.replace('/', '.');
         }
 
         public String getSimpleName() {
@@ -139,24 +140,28 @@ public class WarningAnnotation<T> {
     }
 
     public static class MemberInfo {
-        private final String typeName;
+        private final TypeInfo type;
         private final String name;
         private final String signature;
 
         public MemberInfo(String typeName, String name, String signature) {
-            this.typeName = Objects.requireNonNull(typeName);
+            this.type = new TypeInfo(Objects.requireNonNull(typeName));
             this.name = Objects.requireNonNull(name);
             this.signature = Objects.requireNonNull(signature);
         }
 
         public MemberInfo(MemberReference mr) {
-            this.typeName = mr.getDeclaringType().getInternalName();
+            this.type = new TypeInfo(mr.getDeclaringType().getInternalName());
             this.name = mr.getName();
             this.signature = mr.getErasedSignature();
         }
 
         public String getTypeName() {
-            return typeName;
+            return type.getTypeName();
+        }
+        
+        public TypeInfo getType() {
+            return type;
         }
 
         public String getName() {
@@ -175,15 +180,15 @@ public class WarningAnnotation<T> {
         public String toString() {
             if (isMethod()) {
                 if (name.equals("<init>"))
-                    return "new " + typeName + signature;
-                return typeName + "." + name + signature;
+                    return "new " + type.getTypeName() + signature;
+                return type.getTypeName() + "." + name + signature;
             }
-            return typeName + "." + name + ":" + signature;
+            return type.getTypeName() + "." + name + ":" + signature;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(name, typeName, signature);
+            return Objects.hash(name, type, signature);
         }
 
         @Override
@@ -193,7 +198,7 @@ public class WarningAnnotation<T> {
             if (obj == null || getClass() != obj.getClass())
                 return false;
             MemberInfo other = (MemberInfo) obj;
-            return name.equals(other.name) && signature.equals(other.signature) && typeName.equals(other.typeName);
+            return name.equals(other.name) && signature.equals(other.signature) && type.equals(other.type);
         }
     }
 
@@ -242,72 +247,15 @@ public class WarningAnnotation<T> {
         return getRole() + ": " + getValue();
     }
 
-    public static WarningAnnotation<TypeInfo> forType(TypeReference type) {
-        return forType("TYPE", type);
-    }
-
-    public static WarningAnnotation<TypeInfo> forType(String role, TypeReference type) {
-        return new WarningAnnotation<>(role, new TypeInfo(type));
-    }
-
-    public static WarningAnnotation<MemberInfo> forMethod(MethodReference method) {
-        return new WarningAnnotation<>("METHOD", new MemberInfo(method));
-    }
-
-    public static WarningAnnotation<MemberInfo> forReturnValue(MethodReference method) {
-        return new WarningAnnotation<>("RETURN_VALUE_OF", new MemberInfo(method));
-    }
-
-    public static WarningAnnotation<MemberInfo> forField(FieldReference field) {
-        return new WarningAnnotation<>("FIELD", new MemberInfo(field));
-    }
-
     public static WarningAnnotation<String> forVariable(Variable var) {
-        return new WarningAnnotation<>("VARIABLE", var.getName());
-    }
-
-    public static WarningAnnotation<Number> forNumber(Number number) {
-        return new WarningAnnotation<>("NUMBER", number);
-    }
-
-    public static WarningAnnotation<MemberInfo> forMember(String role, String internalTypeName, String name,
-            String signature) {
-        return new WarningAnnotation<>(role, new MemberInfo(internalTypeName, name, signature));
-    }
-
-    public static WarningAnnotation<MemberInfo> forMember(String role, MemberReference mr) {
-        return new WarningAnnotation<>(role, new MemberInfo(mr));
-    }
-
-    public static WarningAnnotation<Location> forLocation(int offset, int line) {
-        return forLocation(new Location(offset, line));
-    }
-
-    public static WarningAnnotation<Location> forLocation(Location loc) {
-        return forLocation("LOCATION", loc);
-    }
-
-    public static WarningAnnotation<Location> forLocation(String role, Location loc) {
-        return new WarningAnnotation<>(role, loc);
-    }
-
-    public static WarningAnnotation<Location> forAnotherInstance(Location loc) {
-        return forLocation("ANOTHER_INSTANCE", loc);
-    }
-
-    public static WarningAnnotation<String> forSourceFile(String file) {
-        return new WarningAnnotation<>("FILE", file);
-    }
-
-    public static WarningAnnotation<String> forString(String str) {
-        return new WarningAnnotation<>("STRING", str);
+        return Roles.VARIABLE.create(var.getName());
     }
 
     public static WarningAnnotation<String> forOperation(Expression expr) {
-        return new WarningAnnotation<>("OPERATION", Nodes.getOperation(expr.getCode()));
+        return Roles.OPERATION.create(Nodes.getOperation(expr.getCode()));
     }
 
     public static WarningAnnotation<String> forOperation(AstCode code) {
-        return new WarningAnnotation<>("OPERATION", Nodes.getOperation(code));
+        return Roles.OPERATION.create(Nodes.getOperation(code));
     }
 }

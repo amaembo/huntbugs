@@ -27,7 +27,9 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.TypeRole;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 /**
@@ -38,6 +40,8 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 @WarningDefinition(category = "Correctness", name = "RandomDoubleToInt", maxScore = 80)
 @WarningDefinition(category = "Correctness", name = "RandomUsedOnlyOnce", maxScore = 80)
 public class RandomUsage {
+    private static final TypeRole RANDOM_TYPE = TypeRole.forName("RANDOM_TYPE");
+
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression node, MethodContext ctx) {
         if (node.getCode() == AstCode.D2I) {
@@ -56,8 +60,8 @@ public class RandomUsage {
                         if (type.equals("java/lang/Math")) {
                             priority = 20;
                         }
-                        ctx.report("RandomNextIntViaNextDouble", priority, node, WarningAnnotation.forMember(
-                            "CALLED_METHOD", mr), getReplacement(type));
+                        ctx.report("RandomNextIntViaNextDouble", priority, node, Roles.CALLED_METHOD.create(mr),
+                            getReplacement(type));
                     });
             }
         }
@@ -65,13 +69,13 @@ public class RandomUsage {
             MethodReference mr = (MethodReference) node.getArguments().get(0).getOperand();
             TypeReference type = mr.getDeclaringType();
             if (Types.isRandomClass(type) && !type.getInternalName().equals("java/security/SecureRandom")) {
-                ctx.report("RandomUsedOnlyOnce", 0, node, WarningAnnotation.forType("RANDOM_TYPE", type));
+                ctx.report("RandomUsedOnlyOnce", 0, node, RANDOM_TYPE.create(type));
             }
         }
     }
 
     private WarningAnnotation<MemberInfo> getReplacement(String type) {
-        return WarningAnnotation.forMember("REPLACEMENT", type.equals("java/lang/Math") ? "java/util/Random" : type,
+        return Roles.REPLACEMENT_METHOD.create(type.equals("java/lang/Math") ? "java/util/Random" : type,
             "nextInt", "(I)I");
     }
 

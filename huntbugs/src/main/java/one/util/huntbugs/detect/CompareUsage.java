@@ -16,6 +16,7 @@
 package one.util.huntbugs.detect;
 
 import com.strobel.assembler.metadata.JvmType;
+import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
@@ -27,6 +28,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
@@ -41,8 +43,8 @@ public class CompareUsage {
         if (expr.getCode() == AstCode.Neg) {
             Expression child = ValuesFlow.findFirst(Nodes.getChild(expr, 0), this::isCompare);
             if (child != null) {
-                mc.report("NegatingComparatorResult", 0, expr, WarningAnnotation.forMember("CALLED_METHOD",
-                    (MethodReference) child.getOperand()));
+                mc.report("NegatingComparatorResult", 0, expr, Roles.CALLED_METHOD.create((MethodReference) child
+                        .getOperand()));
             }
         }
         if (expr.getCode() == AstCode.CmpEq || expr.getCode() == AstCode.CmpNe) {
@@ -50,9 +52,8 @@ public class CompareUsage {
                 if (constant instanceof Integer && (int) constant != 0) {
                     Expression child = ValuesFlow.findFirst(ValuesFlow.getSource(arg), this::isCompare);
                     if (child != null) {
-                        mc.report("ComparingComparatorResultWithNumber", 0, expr, WarningAnnotation.forMember(
-                            "CALLED_METHOD", (MethodReference) child.getOperand()), WarningAnnotation
-                                .forNumber((Number) constant));
+                        mc.report("ComparingComparatorResultWithNumber", 0, expr, Roles.CALLED_METHOD.create(
+                            (MemberReference) child.getOperand()), Roles.NUMBER.create((Number) constant));
                     }
                 }
             });

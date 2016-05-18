@@ -20,6 +20,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.core.StringUtilities;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
@@ -31,7 +32,7 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Equi;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.StringRole;
 
 /**
  * @author Tagir Valeev
@@ -40,6 +41,9 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "Correctness", name = "AndEqualsAlwaysFalse", maxScore = 70)
 @WarningDefinition(category = "Correctness", name = "OrNotEqualsAlwaysTrue", maxScore = 60)
 public class ExclusiveConditions {
+    private static final StringRole CONST1 = StringRole.forName("CONST1");
+    private static final StringRole CONST2 = StringRole.forName("CONST2");
+
     Set<Expression> reported;
 
     @MethodVisitor
@@ -101,8 +105,8 @@ public class ExclusiveConditions {
                     if (Equi.equiExpressions(arg, arg2) && !Objects.equals(constant, constant2)) {
                         // non-short-circuit logic is intended
                         if (reported.add(arg) & reported.add(arg2)) {
-                            mc.report("AndEqualsAlwaysFalse", 0, arg, new WarningAnnotation<>("CONST1", constant),
-                                new WarningAnnotation<>("CONST2", constant2));
+                            mc.report("AndEqualsAlwaysFalse", 0, arg, CONST1.create(formatConstant(constant)), CONST2
+                                    .create(formatConstant(constant2)));
                         }
                     }
                 });
@@ -121,8 +125,8 @@ public class ExclusiveConditions {
                     if (Equi.equiExpressions(arg, arg2) && !Objects.equals(constant, constant2)) {
                         // non-short-circuit logic is intended
                         if (reported.add(arg) & reported.add(arg2)) {
-                            mc.report("OrNotEqualsAlwaysTrue", 0, arg, new WarningAnnotation<>("CONST1", constant),
-                                new WarningAnnotation<>("CONST2", constant2));
+                            mc.report("OrNotEqualsAlwaysTrue", 0, arg, CONST1.create(formatConstant(constant)), CONST2
+                                    .create(formatConstant(constant2)));
                         }
                     }
                 });
@@ -132,5 +136,12 @@ public class ExclusiveConditions {
                 checkNonEqual(equality, other.getArguments().get(1), mc);
             }
         });
+    }
+
+    String formatConstant(Object constant) {
+        if(constant instanceof String) {
+            return StringUtilities.escape((String)constant, true);
+        }
+        return String.valueOf(constant);
     }
 }

@@ -39,6 +39,7 @@ import one.util.huntbugs.registry.anno.ClassVisitor;
 import one.util.huntbugs.registry.anno.VisitOrder;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
@@ -106,12 +107,12 @@ public class UncalledPrivateMethod {
                 }
             }
             if(called.isEmpty()) {
-                cc.report("UncalledPrivateMethod", 0, new WarningAnnotation<>("METHOD", mi));
+                cc.report("UncalledPrivateMethod", 0, Roles.METHOD.create(mi));
             } else {
-                cc.report("UncalledPrivateMethodChain", 0, Stream.concat(Stream.of(new WarningAnnotation<>("METHOD", mi)),
+                cc.report("UncalledPrivateMethodChain", 0, Stream.concat(Stream.of(Roles.METHOD.create(mi)),
                     called.stream()
                         .filter(c -> !c.equals(mi))
-                        .map(c -> new WarningAnnotation<>("CALLED_METHOD", c)))
+                        .map(Roles.CALLED_METHOD::create))
                         .toArray(WarningAnnotation[]::new));
             }
         }

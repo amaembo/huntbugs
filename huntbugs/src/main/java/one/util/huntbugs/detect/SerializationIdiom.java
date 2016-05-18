@@ -23,7 +23,7 @@ import one.util.huntbugs.registry.ClassContext;
 import one.util.huntbugs.registry.anno.ClassVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Types;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.TypeRole;
 
 /**
  * @author Tagir Valeev
@@ -31,6 +31,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
  */
 @WarningDefinition(category="Serialization", name="ComparatorIsNotSerializable", maxScore=50)
 public class SerializationIdiom {
+    private static final TypeRole SHOULD_IMPLEMENT = TypeRole.forName("SHOULD_IMPLEMENT");
+    
     @ClassVisitor
     public void visitClass(TypeDefinition td, ClassContext cc) {
         if(Types.isInstance(td, "java/util/Comparator") && !td.isAnonymous() && !td.isLocalClass()
@@ -48,8 +50,7 @@ public class SerializationIdiom {
                         break;
                 }
             }
-            cc.report("ComparatorIsNotSerializable", priority, new WarningAnnotation<>("SHOULD_IMPLEMENT",
-                    new WarningAnnotation.TypeInfo("java/io/Serializable")));
+            cc.report("ComparatorIsNotSerializable", priority, SHOULD_IMPLEMENT.create("java/io/Serializable"));
         }
     }
 }

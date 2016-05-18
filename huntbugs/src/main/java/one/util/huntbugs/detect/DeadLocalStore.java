@@ -37,7 +37,7 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.StringRole;
 
 /**
  * @author Tagir Valeev
@@ -48,6 +48,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category="RedundantCode", name="DeadIncrementInReturn", maxScore=60)
 @WarningDefinition(category="RedundantCode", name="DeadIncrementInAssignment", maxScore=60)
 public class DeadLocalStore {
+    private static final StringRole EXPRESSION = StringRole.forName("EXPRESSION");
+    
     @AstVisitor(nodes=AstNodes.ROOT)
     public void visitBody(Block body, MethodContext mc, MethodDefinition md) {
         if(!mc.isAnnotated())
@@ -89,8 +91,8 @@ public class DeadLocalStore {
             if(arg.getCode() == AstCode.PostIncrement) { // XXX: bug in Procyon? Seems that should be PreIncrement
                 Expression load = arg.getArguments().get(0);
                 if(load.getCode() == AstCode.Load && var.equals(load.getOperand()) && Integer.valueOf(1).equals(arg.getOperand())) {
-                    mc.report("DeadIncrementInAssignment", 0, expr, new WarningAnnotation<>("EXPRESSION", var.getName()
-                        + " = " + var.getName() + "++"));
+                    mc.report("DeadIncrementInAssignment", 0, expr, EXPRESSION.create(var.getName() + " = " + var
+                            .getName() + "++"));
                 }
             }
         }

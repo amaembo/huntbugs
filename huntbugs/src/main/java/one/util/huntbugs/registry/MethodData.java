@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 
 import one.util.huntbugs.util.NodeChain;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
 
@@ -62,7 +63,7 @@ final class MethodData {
 
     List<WarningAnnotation<?>> getMethodSpecificAnnotations() {
         if (annot == null) {
-            annot = Collections.singletonList(WarningAnnotation.forMethod(mainMethod));
+            annot = Collections.singletonList(Roles.METHOD.create(mainMethod));
         }
         return annot;
     }

@@ -29,7 +29,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
 
 /**
  * @author Tagir Valeev
@@ -52,22 +52,21 @@ public class FinalizerContract {
         }
         if (superfinalizer != null) {
             if (body.getBody().isEmpty())
-                mc.report("FinalizeNullifiesSuper", 0, body, WarningAnnotation.forType("SUPER_TYPE", superfinalizer
+                mc.report("FinalizeNullifiesSuper", 0, body, Roles.SUPERCLASS.create(superfinalizer
                         .getDeclaringType()));
             else {
                 if (body.getBody().size() == 1) {
                     Node child = body.getBody().get(0);
                     if (isSuperCall(child)) {
                         if (!md.isFinal()) {
-                            mc.report("FinalizeUselessSuper", 0, child, WarningAnnotation.forType("SUPER_TYPE",
-                                superfinalizer.getDeclaringType()));
+                            mc.report("FinalizeUselessSuper", 0, child, Roles.SUPERCLASS.create(superfinalizer
+                                    .getDeclaringType()));
                             return;
                         }
                     }
                 }
-                if(Nodes.find(body, this::isSuperCall) == null) {
-                    mc.report("FinalizeNoSuperCall", 0, WarningAnnotation.forType("SUPER_TYPE", superfinalizer
-                            .getDeclaringType()));
+                if (Nodes.find(body, this::isSuperCall) == null) {
+                    mc.report("FinalizeNoSuperCall", 0, Roles.SUPERCLASS.create(superfinalizer.getDeclaringType()));
                 }
             }
         } else {
@@ -88,13 +87,14 @@ public class FinalizerContract {
     }
 
     private boolean isSuperCall(Node child) {
-        return Nodes.isOp(child, AstCode.InvokeSpecial)
-            && isFinalizer((MethodReference) (((Expression) child).getOperand()));
+        return Nodes.isOp(child, AstCode.InvokeSpecial) && isFinalizer((MethodReference) (((Expression) child)
+                .getOperand()));
     }
 
     @AstVisitor
     public void visit(Node node, MethodContext mc, MethodDefinition md) {
-        if (Nodes.isOp(node, AstCode.InvokeVirtual) && isFinalizer((MethodReference) ((Expression) node).getOperand())) {
+        if (Nodes.isOp(node, AstCode.InvokeVirtual) && isFinalizer((MethodReference) ((Expression) node)
+                .getOperand())) {
             mc.report("FinalizeInvocation", isFinalizer(md) ? 10 : 0, node);
         }
     }

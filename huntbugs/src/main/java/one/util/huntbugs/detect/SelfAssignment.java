@@ -29,6 +29,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
@@ -86,7 +87,7 @@ public class SelfAssignment {
                     Variable v = (Variable)ref.getOperand();
                     for(FieldDefinition fd : td.getDeclaredFields()) {
                         if(fd.getName().equals(v.getName())) {
-                            mc.report("SelfAssignmentLocalInsteadOfField", 0, expr, WarningAnnotation.forField(fd));
+                            mc.report("SelfAssignmentLocalInsteadOfField", 0, expr, Roles.FIELD.create(fd));
                             return;
                         }
                     }

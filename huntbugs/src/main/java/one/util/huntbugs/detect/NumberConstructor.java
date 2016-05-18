@@ -24,6 +24,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
@@ -40,9 +41,9 @@ public class NumberConstructor {
             MethodReference ctor = (MethodReference) expr.getOperand();
             if (ctor.getDeclaringType().getPackageName().equals("java.lang")) {
                 String simpleName = ctor.getDeclaringType().getSimpleName();
-                WarningAnnotation<MemberInfo> replacement = WarningAnnotation.forMember("REPLACEMENT", ctor
-                        .getDeclaringType().getInternalName(), "valueOf", ctor.getSignature().replaceFirst("V$",
-                    "L" + ctor.getDeclaringType().getInternalName() + ";"));
+                WarningAnnotation<MemberInfo> replacement = Roles.REPLACEMENT_METHOD.create(ctor.getDeclaringType()
+                        .getInternalName(), "valueOf", ctor.getSignature().replaceFirst("V$", "L" + ctor
+                                .getDeclaringType().getInternalName() + ";"));
                 if (simpleName.equals("Boolean")) {
                     ctx.report("BooleanConstructor", 0, expr, replacement);
                 } else if (simpleName.equals("Integer") || simpleName.equals("Long") || simpleName.equals("Short")
@@ -55,11 +56,11 @@ public class NumberConstructor {
                             priority = 0;
                         else
                             priority = simpleName.equals("Integer") ? 15 : 35;
-                        ctx.report("NumberConstructor", priority, expr, WarningAnnotation.forNumber((Number) val),
-                            replacement, WarningAnnotation.forType("TARGET_TYPE", ctor.getDeclaringType()));
+                        ctx.report("NumberConstructor", priority, expr, Roles.NUMBER.create((Number) val), replacement,
+                            Roles.TARGET_TYPE.create(ctor.getDeclaringType()));
                     } else {
-                        ctx.report("NumberConstructor", 5, expr, replacement, WarningAnnotation.forType("TARGET_TYPE",
-                            ctor.getDeclaringType()));
+                        ctx.report("NumberConstructor", 5, expr, replacement, Roles.TARGET_TYPE.create(ctor
+                                .getDeclaringType()));
                     }
                 }
             }

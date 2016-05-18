@@ -25,6 +25,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
 
 @WarningDefinition(category = "CodeStyle", name = "NonShortCircuit", maxScore = 50)
@@ -41,7 +42,7 @@ public class NonShortCircuit {
             Expression right = node.getArguments().get(1);
             String operation = Nodes.getOperation(node.getCode());
             WarningAnnotation<String> op = WarningAnnotation.forOperation(node);
-            WarningAnnotation<String> repl = new WarningAnnotation<>("REPLACEMENT", operation+operation);
+            WarningAnnotation<String> repl = Roles.REPLACEMENT_STRING.create(operation+operation);
             if(left.getInferredType().getSimpleType() == JvmType.Boolean &&
                     right.getInferredType().getSimpleType() == JvmType.Boolean) {
                 if(left.getCode() == AstCode.InstanceOf || Nodes.isNullCheck(left))

@@ -22,6 +22,7 @@ import java.util.List;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningType;
@@ -55,7 +56,7 @@ public class FieldContext extends ElementContext {
             return;
         List<WarningAnnotation<?>> anno = new ArrayList<>();
         anno.addAll(cc.getTypeSpecificAnnotations());
-        anno.add(WarningAnnotation.forField(fdata.fd));
+        anno.add(Roles.FIELD.create(fdata.fd));
         anno.addAll(Arrays.asList(annotations));
         Warning w = new Warning(wt, priority, anno);
         cc.getMemberAsserter(fdata.fd).checkWarning(this::error, w);

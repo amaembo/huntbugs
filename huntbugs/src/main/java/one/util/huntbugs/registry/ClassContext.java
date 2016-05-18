@@ -23,6 +23,7 @@ import java.util.List;
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.assertions.MemberAsserter;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
@@ -53,10 +54,10 @@ public class ClassContext extends ElementContext {
     List<WarningAnnotation<?>> getTypeSpecificAnnotations() {
         if(annot == null) {
             annot = new ArrayList<>();
-            annot.add(WarningAnnotation.forType(type));
+            annot.add(Roles.TYPE.create(type));
             String sourceFile = getSourceFile();
             if(sourceFile != null)
-                annot.add(WarningAnnotation.forSourceFile(sourceFile));
+                annot.add(Roles.FILE.create(sourceFile));
         }
         return annot;
     }

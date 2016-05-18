@@ -36,7 +36,8 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
+import one.util.huntbugs.warning.Role.MemberRole;
 
 /**
  * @author Tagir Valeev
@@ -49,6 +50,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category = "BadPractice", name = "EqualsSelf", maxScore = 50)
 @WarningDefinition(category = "BadPractice", name = "EqualsEnum", maxScore = 60)
 public class EqualsContract {
+    private static final MemberRole NORMAL_EQUALS = MemberRole.forName("NORMAL_EQUALS");
+    
     @ClassVisitor
     public void visitClass(TypeDefinition td, ClassContext cc) {
         MethodDefinition equalsSelf = null;
@@ -68,16 +71,15 @@ public class EqualsContract {
             }
         }
         if (equalsObject == null && equalsSelf == null && equalsOther != null) {
-            cc.report("EqualsOther", getPriority(td) + getPriority(equalsOther), WarningAnnotation
-                    .forMethod(equalsOther), WarningAnnotation.forMember("NORMAL_EQUALS", "java/lang/Object", "equals",
+            cc.report("EqualsOther", getPriority(td) + getPriority(equalsOther), Roles.METHOD.create(equalsOther), NORMAL_EQUALS.create("java/lang/Object", "equals",
                 "(Ljava/lang/Object;)Z"));
         } else if (equalsObject == null && equalsSelf != null) {
             if(Types.isInstance(td, "java/lang/Enum"))
-                cc.report("EqualsEnum", getPriority(td) + getPriority(equalsSelf), WarningAnnotation.forMethod(equalsSelf),
-                    WarningAnnotation.forMember("NORMAL_EQUALS", "java/lang/Enum", "equals", "(Ljava/lang/Object;)Z"));
+                cc.report("EqualsEnum", getPriority(td) + getPriority(equalsSelf), Roles.METHOD.create(equalsSelf),
+                    NORMAL_EQUALS.create("java/lang/Enum", "equals", "(Ljava/lang/Object;)Z"));
             else
-                cc.report("EqualsSelf", getPriority(td) + getPriority(equalsSelf), WarningAnnotation.forMethod(equalsSelf),
-                    WarningAnnotation.forMember("NORMAL_EQUALS", "java/lang/Object", "equals", "(Ljava/lang/Object;)Z"));
+                cc.report("EqualsSelf", getPriority(td) + getPriority(equalsSelf), Roles.METHOD.create(equalsSelf),
+                    NORMAL_EQUALS.create("java/lang/Object", "equals", "(Ljava/lang/Object;)Z"));
         }
     }
 

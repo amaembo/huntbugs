@@ -27,7 +27,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.MemberRole;
 
 /**
  * @author Tagir Valeev
@@ -35,6 +35,9 @@ import one.util.huntbugs.warning.WarningAnnotation;
  */
 @WarningDefinition(category = "Multithreading", name = "NonAtomicOperationOnConcurrentMap", maxScore = 70)
 public class AtomicConcurrent {
+    private static final MemberRole FIRST_METHOD = MemberRole.forName("FIRST_METHOD"); 
+    private static final MemberRole SECOND_METHOD = MemberRole.forName("SECOND_METHOD"); 
+    
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, NodeChain nc, MethodContext mc) {
         if (expr.getCode() == AstCode.InvokeVirtual) {
@@ -70,9 +73,8 @@ public class AtomicConcurrent {
                     }
                 }
                 if (prevCall != null) {
-                    mc.report("NonAtomicOperationOnConcurrentMap", priority, self, WarningAnnotation.forMember(
-                        "FIRST_METHOD", (MemberReference) prevCall.getOperand()), WarningAnnotation.forMember(
-                        "SECOND_METHOD", mr));
+                    mc.report("NonAtomicOperationOnConcurrentMap", priority, self, FIRST_METHOD.create(
+                        (MemberReference) prevCall.getOperand()), SECOND_METHOD.create(mr));
                     return;
                 }
             }

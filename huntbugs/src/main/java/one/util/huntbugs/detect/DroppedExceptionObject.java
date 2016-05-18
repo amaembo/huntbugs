@@ -26,7 +26,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Types;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
 
 /**
  * @author Tagir Valeev
@@ -42,7 +42,7 @@ public class DroppedExceptionObject {
             if(Types.isInstance(mr.getDeclaringType(), "java/lang/Throwable") ||
                     Types.isInstance(mr.getDeclaringType(), "java/lang/Exception")) {
                 if(nc.getNode() instanceof Block) {
-                    mc.report("DroppedException", 0, expr, WarningAnnotation.forType("EXCEPTION", mr.getDeclaringType()));
+                    mc.report("DroppedException", 0, expr, Roles.EXCEPTION.create(mr.getDeclaringType()));
                 }
             }
         }

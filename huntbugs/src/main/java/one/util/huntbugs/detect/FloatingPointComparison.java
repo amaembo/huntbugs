@@ -32,6 +32,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
@@ -62,7 +63,7 @@ public class FloatingPointComparison {
             priority += 20;
         Number n = left instanceof Number ? (Number) left : right instanceof Number ? (Number) right : null;
         if(n != null)
-            ctx.report("FloatComparison", priority, node, WarningAnnotation.forNumber(n));
+            ctx.report("FloatComparison", priority, node, Roles.NUMBER.create(n));
         else
             ctx.report("FloatComparison", priority, node);
     }

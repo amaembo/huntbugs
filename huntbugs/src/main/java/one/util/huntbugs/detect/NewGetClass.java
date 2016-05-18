@@ -24,7 +24,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Methods;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.TypeRole;
 
 /**
  * @author Tagir Valeev
@@ -32,12 +32,14 @@ import one.util.huntbugs.warning.WarningAnnotation;
  */
 @WarningDefinition(category="Performance", name="NewForGetClass", maxScore=50)
 public class NewGetClass {
+    private static final TypeRole OBJECT_TYPE = TypeRole.forName("OBJECT_TYPE");
+
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression node, MethodContext ctx) {
         if(node.getCode() == AstCode.InvokeVirtual) {
             MethodReference ref = (MethodReference) node.getOperand();
             if (Methods.isGetClass(ref) && node.getArguments().get(0).getCode() == AstCode.InitObject) {
-                ctx.report("NewForGetClass", 0, node, WarningAnnotation.forType("OBJECT_TYPE", ref.getDeclaringType()));
+                ctx.report("NewForGetClass", 0, node, OBJECT_TYPE.create(ref.getDeclaringType()));
             }
         }
     }

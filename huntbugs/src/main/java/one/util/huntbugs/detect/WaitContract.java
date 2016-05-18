@@ -33,7 +33,7 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
 
 /**
  * @author Tagir Valeev
@@ -69,7 +69,7 @@ public class WaitContract {
                 }
                 if (!sawLoop || !sawCondition) {
                     mc.report(sawCondition ? "WaitNotInLoop" : "WaitUnconditional", mr.getSignature().equals("()V") ? 0
-                            : 15, expr.getArguments().get(0), WarningAnnotation.forMember("CALLED_METHOD", mr));
+                            : 15, expr.getArguments().get(0), Roles.CALLED_METHOD.create(mr));
                 }
             }
             if((mr.getName().equals("notify") || mr.getName().equals("notifyAll")) && mr.getSignature().equals("()V")) {
@@ -80,7 +80,7 @@ public class WaitContract {
                         && parents.getParent() != null
                         && Nodes.isSynchorizedBlock(parents.getParent().getNode())
                         && !parents.getParent().getParent().isSynchronized()) {
-                        mc.report("NotifyNaked", 0, expr.getArguments().get(0), WarningAnnotation.forMember("CALLED_METHOD", mr));
+                        mc.report("NotifyNaked", 0, expr.getArguments().get(0), Roles.CALLED_METHOD.create(mr));
                     }
                 }
             }

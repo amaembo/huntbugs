@@ -22,7 +22,7 @@ import one.util.huntbugs.registry.ClassContext;
 import one.util.huntbugs.registry.anno.ClassVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Types;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
 
 /**
  * @author Tagir Valeev
@@ -40,7 +40,7 @@ public class RedundantInterfaces {
                 continue;
             }
             if(Types.isInstance(baseType, tr)) {
-                cc.report("RedundantInterface", td.isPublic() ? 0 : 10, WarningAnnotation.forType("INTERFACE", tr));
+                cc.report("RedundantInterface", td.isPublic() ? 0 : 10, Roles.INTERFACE.create(tr));
             }
         }
     }

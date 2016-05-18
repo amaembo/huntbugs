@@ -25,7 +25,8 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.LocationRole;
+import one.util.huntbugs.warning.Role.TypeRole;
 
 /**
  * @author Tagir Valeev
@@ -33,6 +34,9 @@ import one.util.huntbugs.warning.WarningAnnotation;
  */
 @WarningDefinition(category = "Correctness", name = "AppendObjectOutputStream", maxScore = 65)
 public class AppendObjectOutputStream {
+    private static final LocationRole STREAM_CREATED_AT = LocationRole.forName("STREAM_CREATED_AT");
+    private static final TypeRole OOS_TYPE = TypeRole.forName("OOS_TYPE");
+    
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
         if (expr.getCode() != AstCode.InitObject)
@@ -46,8 +50,8 @@ public class AppendObjectOutputStream {
             outStream = Nodes.getChild(outStream, 0);
         Expression target = ValuesFlow.findFirst(outStream, AppendObjectOutputStream::isAppendOutput);
         if (target != null) {
-            mc.report("AppendObjectOutputStream", 0, expr, WarningAnnotation.forLocation("STREAM_CREATED_AT", mc
-                    .getLocation(target)), WarningAnnotation.forType("OOS_TYPE", ctor.getDeclaringType()));
+            mc.report("AppendObjectOutputStream", 0, expr, STREAM_CREATED_AT.create(mc, target), OOS_TYPE.create(ctor
+                    .getDeclaringType()));
         }
     }
 

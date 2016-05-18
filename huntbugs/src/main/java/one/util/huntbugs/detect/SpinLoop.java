@@ -27,6 +27,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
@@ -62,7 +63,7 @@ public class SpinLoop {
         if (Nodes.isFieldRead(expr)) {
             FieldDefinition fd = ((FieldReference) expr.getOperand()).resolve();
             if (fd != null && !Flags.testAny(fd.getFlags(), Flags.VOLATILE)) {
-                mc.report("SpinLoopOnField", 0, expr, WarningAnnotation.forField(fd));
+                mc.report("SpinLoopOnField", 0, expr, Roles.FIELD.create(fd));
             }
         }
     }

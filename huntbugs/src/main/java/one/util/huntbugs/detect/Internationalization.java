@@ -28,7 +28,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 /**
@@ -83,8 +83,8 @@ public class Internationalization {
             MethodReference mr = (MethodReference) expr.getOperand();
             if(mr.getDeclaringType().getInternalName().equals("java/lang/String") && mr.getSignature().equals("()Ljava/lang/String;")
                     && (mr.getName().equals("toUpperCase") || mr.getName().equals("toLowerCase"))) {
-                mc.report("ConvertCaseWithDefaultLocale", 0, expr, WarningAnnotation.forMember("REPLACEMENT", mr.getDeclaringType().getInternalName(),
-                    mr.getName(), "(Ljava/util/Locale;)Ljava/lang/String;"));
+                mc.report("ConvertCaseWithDefaultLocale", 0, expr, Roles.REPLACEMENT_METHOD.create(mr.getDeclaringType()
+                        .getInternalName(), mr.getName(), "(Ljava/util/Locale;)Ljava/lang/String;"));
             } else {
                 MemberInfo mi = new MemberInfo(mr);
                 if(defEncodingMethods.containsKey(mi)) {
@@ -101,7 +101,7 @@ public class Internationalization {
                     MemberInfo replacement = defEncodingMethods.get(mi);
                     if(replacement != null) {
                         mc.report("MethodReliesOnDefaultEncoding", replacement.getSignature().contains("Charset") ? 0
-                                : 3, expr, new WarningAnnotation<>("REPLACEMENT", replacement));
+                                : 3, expr, Roles.REPLACEMENT_METHOD.create(replacement));
                     } else {
                         mc.report("MethodReliesOnDefaultEncoding", 10, expr);
                     }

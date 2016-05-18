@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.flow.ValuesFlow;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
@@ -79,8 +80,8 @@ public class MethodContext extends ElementContext {
 
         Warning build() {
             if (bestLocation != null)
-                annotations.add(WarningAnnotation.forLocation(bestLocation));
-            locations.stream().map(WarningAnnotation::forAnotherInstance).forEach(annotations::add);
+                annotations.add(Roles.LOCATION.create(bestLocation));
+            locations.stream().map(Roles.ANOTHER_INSTANCE::create).forEach(annotations::add);
             return new Warning(type, priority, annotations);
         }
     }
@@ -167,14 +168,14 @@ public class MethodContext extends ElementContext {
                 operand = ValuesFlow.getSource(expr).getOperand();
             }
             if (operand instanceof FieldReference) {
-                anno.add(WarningAnnotation.forField((FieldReference) operand));
+                anno.add(Roles.FIELD.create((FieldReference) operand));
             }
             if (operand instanceof MethodReference) {
                 MethodReference mr = (MethodReference) operand;
                 if (!mr.getReturnType().isVoid() || expr.getCode() == AstCode.InitObject)
-                    anno.add(WarningAnnotation.forReturnValue(mr));
+                    anno.add(Roles.RETURN_VALUE_OF.create(mr));
                 else
-                    anno.add(WarningAnnotation.forMember("CALLED_METHOD", mr));
+                    anno.add(Roles.CALLED_METHOD.create(mr));
             }
         }
         anno.addAll(Arrays.asList(annotations));

@@ -22,9 +22,9 @@ import java.util.Arrays;
 import one.util.huntbugs.warning.Formatter;
 import one.util.huntbugs.warning.Messages;
 import one.util.huntbugs.warning.Warning;
-import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningType;
 import one.util.huntbugs.warning.Messages.Message;
+import one.util.huntbugs.warning.Roles;
 
 import org.junit.Test;
 
@@ -45,7 +45,8 @@ public class MessagesTest {
     public void testFormatter() {
         Formatter f = new Formatter();
         WarningType type = new WarningType("BadPractice", "RoughConstantValue", 60);
-        Warning w = new Warning(type, 0, Arrays.asList(WarningAnnotation.forNumber(3.1415), new WarningAnnotation<>("REPLACEMENT", "Math.PI")));
+        Warning w = new Warning(type, 0, Arrays.asList(Roles.NUMBER.create(3.1415), Roles.REPLACEMENT_STRING.create(
+            "Math.PI")));
         assertEquals("Rough value of known constant is used", f.getTitle(w));
         assertEquals("Constant 3.1415 should be replaced with Math.PI", f.getDescription(w));
     }

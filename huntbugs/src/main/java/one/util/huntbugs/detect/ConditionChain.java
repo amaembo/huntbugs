@@ -28,36 +28,38 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Role.LocationRole;
 
 /**
  * @author Tagir Valeev
  *
  */
-@WarningDefinition(category="RedundantCode", name="SameConditions", maxScore=50)
-@WarningDefinition(category="RedundantCode", name="SameConditionsExcluding", maxScore=70)
+@WarningDefinition(category = "RedundantCode", name = "SameConditions", maxScore = 50)
+@WarningDefinition(category = "RedundantCode", name = "SameConditionsExcluding", maxScore = 70)
 public class ConditionChain {
+    private static final LocationRole SAME_CONDITION = LocationRole.forName("SAME_CONDITION");
+
     @AstVisitor
     public void visit(Node node, MethodContext mc, MethodDefinition md) {
-        if(node instanceof Condition) {
-            Condition cond = (Condition)node;
+        if (node instanceof Condition) {
+            Condition cond = (Condition) node;
             Expression expr = cond.getCondition();
             check(expr, cond.getTrueBlock(), mc, false);
             check(expr, cond.getFalseBlock(), mc, true);
         }
-        if(node instanceof Expression) {
-            Expression expr = (Expression)node;
-            if(expr.getCode() == AstCode.LogicalAnd || expr.getCode() == AstCode.LogicalOr) {
+        if (node instanceof Expression) {
+            Expression expr = (Expression) node;
+            if (expr.getCode() == AstCode.LogicalAnd || expr.getCode() == AstCode.LogicalOr) {
                 check(expr.getArguments().get(0), expr.getArguments().get(1), expr.getCode(), mc);
             }
         }
     }
 
     private void check(Expression left, Expression right, AstCode condCode, MethodContext mc) {
-        if(Nodes.isEquivalent(left, right)) {
-            mc.report("SameConditions", 0, left, new WarningAnnotation<>("SAME_CONDITION", mc.getLocation(right)));
-        } else if(left.getCode() == condCode && Nodes.isSideEffectFree(right)) {
-            if(Nodes.isSideEffectFree(left))
+        if (Nodes.isEquivalent(left, right)) {
+            mc.report("SameConditions", 0, left, SAME_CONDITION.create(mc, right));
+        } else if (left.getCode() == condCode && Nodes.isSideEffectFree(right)) {
+            if (Nodes.isSideEffectFree(left))
                 check(left.getArguments().get(0), right, condCode, mc);
             check(left.getArguments().get(1), right, condCode, mc);
         }
@@ -65,30 +67,31 @@ public class ConditionChain {
 
     private void check(Expression expr, Block block, MethodContext mc, boolean excluding) {
         List<Node> body = block.getBody();
-        if(body.isEmpty())
+        if (body.isEmpty())
             return;
         Node node = body.get(0);
-        if(node instanceof Condition) {
+        if (node instanceof Condition) {
             Condition condNode = (Condition) node;
             Expression condition = condNode.getCondition();
-            if(Nodes.isEquivalent(expr, condition)) {
+            if (Nodes.isEquivalent(expr, condition)) {
                 int priority = 0;
-                if(Nodes.isEmptyOrBreak(condNode.getTrueBlock())) {
+                if (Nodes.isEmptyOrBreak(condNode.getTrueBlock())) {
                     excluding = !excluding;
                     priority = 10;
                 }
-                mc.report(excluding ? "SameConditionsExcluding" : "SameConditions", priority, expr, new WarningAnnotation<>("SAME_CONDITION", mc.getLocation(condition)));
+                mc.report(excluding ? "SameConditionsExcluding" : "SameConditions", priority, expr, SAME_CONDITION
+                        .create(mc, condition));
                 return;
             }
-            if(expr.getCode() == AstCode.LogicalAnd && !excluding && Nodes.isSideEffectFree(expr)) {
+            if (expr.getCode() == AstCode.LogicalAnd && !excluding && Nodes.isSideEffectFree(expr)) {
                 check(expr.getArguments().get(0), block, mc, excluding);
                 check(expr.getArguments().get(1), block, mc, excluding);
             }
-            if(expr.getCode() == AstCode.LogicalOr && excluding && Nodes.isSideEffectFree(expr)) {
+            if (expr.getCode() == AstCode.LogicalOr && excluding && Nodes.isSideEffectFree(expr)) {
                 check(expr.getArguments().get(0), block, mc, excluding);
                 check(expr.getArguments().get(1), block, mc, excluding);
             }
-            if(Nodes.isSideEffectFree(condition)) {
+            if (Nodes.isSideEffectFree(condition)) {
                 check(expr, condNode.getTrueBlock(), mc, excluding);
                 check(expr, condNode.getFalseBlock(), mc, excluding);
             }

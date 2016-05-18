@@ -31,8 +31,8 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Warning;
-import one.util.huntbugs.warning.WarningAnnotation;
 
 @WarningDefinition(category="BadPractice", name="RoughConstantValue", maxScore=60)
 public class RoughConstant {
@@ -128,8 +128,8 @@ public class RoughConstant {
                         else if(children > 1)
                             priority += 5;
                     }
-                    ctx.report("RoughConstantValue", priority, expr, WarningAnnotation.forNumber(constValue),
-                        new WarningAnnotation<>("REPLACEMENT", badConstant.replacement));
+                    ctx.report("RoughConstantValue", priority, expr, Roles.NUMBER.create(constValue),
+                        Roles.REPLACEMENT_STRING.create(badConstant.replacement));
                 }
             }
         }

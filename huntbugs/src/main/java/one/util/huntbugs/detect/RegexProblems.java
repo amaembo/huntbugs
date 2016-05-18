@@ -30,7 +30,8 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.Roles;
+import one.util.huntbugs.warning.Role.StringRole;
 
 /**
  * @author Tagir Valeev
@@ -40,6 +41,8 @@ import one.util.huntbugs.warning.WarningAnnotation;
 @WarningDefinition(category="Correctness", name="RegexFileSeparator", maxScore=70)
 @WarningDefinition(category="Correctness", name="RegexBadSyntax", maxScore=80)
 public class RegexProblems {
+    private static final StringRole ERROR_MESSAGE = StringRole.forName("ERROR_MESSAGE");
+    
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
         if(expr.getCode() == AstCode.InvokeStatic || expr.getCode() == AstCode.InvokeVirtual) {
@@ -68,14 +71,14 @@ public class RegexProblems {
         }
         String regex = (String)regexObj;
         if(regex.equals("|")) {
-            mc.report("RegexUnintended", 0, regexExpr, new WarningAnnotation<>("REGEXP", regex));
+            mc.report("RegexUnintended", 0, regexExpr, Roles.REGEXP.create(regex));
         } else if(regex.equals(".")) {
             if(replacementObj instanceof String) {
                 String replacement = (String) replacementObj;
                 if(Arrays.asList("x", "-", "*", " ", "\\*").contains(replacement.toLowerCase(Locale.ENGLISH)))
                     return;
             }
-            mc.report("RegexUnintended", 10, regexExpr, new WarningAnnotation<>("REGEXP", regex));
+            mc.report("RegexUnintended", 10, regexExpr, Roles.REGEXP.create(regex));
         }
     }
 
@@ -101,8 +104,7 @@ public class RegexProblems {
         try {
             Pattern.compile(regex, flags);
         } catch (PatternSyntaxException e) {
-            mc.report("RegexBadSyntax", 0, regexExpr, new WarningAnnotation<>("REGEXP", regex),
-                new WarningAnnotation<>("ERROR_MESSAGE", e.getMessage()));
+            mc.report("RegexBadSyntax", 0, regexExpr, Roles.REGEXP.create(regex), ERROR_MESSAGE.create(e.getMessage()));
         }
     }
 }
