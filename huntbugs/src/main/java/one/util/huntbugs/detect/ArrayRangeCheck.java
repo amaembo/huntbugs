@@ -100,7 +100,7 @@ public class ArrayRangeCheck {
 
     // Returns max possible length of the expression producing an array
     private static long getMaxLength(Expression expression) {
-        return ValuesFlow.reduce(expression, expr -> {
+        return ValuesFlow.<Long>reduce(expression, expr -> {
             switch (expr.getCode()) {
             case InitArray:
                 return (long) expr.getArguments().size();
