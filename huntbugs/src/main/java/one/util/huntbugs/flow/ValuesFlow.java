@@ -339,6 +339,9 @@ public class ValuesFlow {
 
     public static <T> T reduce(Expression input, Function<Expression, T> mapper, BinaryOperator<T> reducer) {
         Expression source = getSource(input);
+        if (source.getCode() == AstCode.TernaryOp) {
+            return reducer.apply(reduce(source.getArguments().get(1), mapper, reducer), reduce(source.getArguments().get(2), mapper, reducer));
+        }
         if (source.getCode() != Frame.PHI_TYPE)
             return mapper.apply(source);
         boolean first = true;

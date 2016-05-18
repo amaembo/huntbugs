@@ -151,6 +151,9 @@ abbrev="DMI" type="DMI_ARGUMENTS_WRONG_ORDER" category="CORRECTNESS" --> WrongAr
 abbrev="Nm" type="NM_FIELD_NAMING_CONVENTION" category="BAD_PRACTICE" --> BadNameOfField
 abbrev="Nm" type="NM_METHOD_CONSTRUCTOR_CONFUSION" category="CORRECTNESS" --> BadNameOfMethodSameAsConstructor
 abbrev="UPM" type="UPM_UNCALLED_PRIVATE_METHOD" category="PERFORMANCE" --> UncalledPrivateMethod, UncalledPrivateMethodChain
+abbrev="RANGE" type="RANGE_ARRAY_INDEX" category="CORRECTNESS" --> ArrayIndexOutOfRange, ArrayIndexNegative
+abbrev="RANGE" type="RANGE_ARRAY_OFFSET" category="CORRECTNESS" --> ArrayOffsetOutOfRange, ArrayIndexNegative
+abbrev="RANGE" type="RANGE_ARRAY_LENGTH" category="CORRECTNESS" --> ArrayLengthOutOfRange, ArrayIndexNegative
 
 ==== Not reimplemented
 
@@ -292,9 +295,6 @@ abbrev="UC" type="UC_USELESS_VOID_METHOD" category="STYLE"
 abbrev="UC" type="UC_USELESS_CONDITION" category="STYLE"
 abbrev="UC" type="UC_USELESS_OBJECT" category="STYLE"
 abbrev="UC" type="UC_USELESS_OBJECT_STACK" category="STYLE"
-abbrev="RANGE" type="RANGE_ARRAY_INDEX" category="CORRECTNESS"
-abbrev="RANGE" type="RANGE_ARRAY_OFFSET" category="CORRECTNESS"
-abbrev="RANGE" type="RANGE_ARRAY_LENGTH" category="CORRECTNESS"
 abbrev="RV" type="RV_RETURN_VALUE_IGNORED" category="CORRECTNESS"
 abbrev="RV" type="RV_RETURN_VALUE_IGNORED_INFERRED" category="STYLE"
 abbrev="RV" type="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT" category="STYLE"

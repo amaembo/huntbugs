@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.util;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 import com.strobel.assembler.metadata.MethodDefinition;
@@ -23,6 +24,7 @@ import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.CatchBlock;
 import com.strobel.decompiler.ast.Lambda;
 import com.strobel.decompiler.ast.Node;
+import com.strobel.decompiler.ast.TryCatchBlock;
 
 /**
  * @author Tagir Valeev
@@ -66,6 +68,25 @@ public class NodeChain {
             if(Nodes.isSynchorizedBlock(chain.getNode()))
                 return true;
             chain = chain.getParent();
+        }
+        return false;
+    }
+    
+    public boolean isInTry(String... wantedExceptions) {
+        NodeChain nc = this;
+        while(nc != null) {
+            if(nc.getNode() instanceof Block && nc.getParent() != null && nc.getParent().getNode() instanceof TryCatchBlock) {
+                TryCatchBlock tcb = (TryCatchBlock) nc.getParent().getNode();
+                for(CatchBlock catchBlock : tcb.getCatchBlocks()) {
+                    TypeReference exType = catchBlock.getExceptionType();
+                    if(exType != null && Arrays.stream(wantedExceptions).anyMatch(exType.getInternalName()::equals))
+                        return true;
+                    if(catchBlock.getCaughtTypes().stream().anyMatch(t -> 
+                        Arrays.stream(wantedExceptions).anyMatch(t.getInternalName()::equals)))
+                        return true;
+                }
+            }
+            nc = nc.getParent();
         }
         return false;
     }

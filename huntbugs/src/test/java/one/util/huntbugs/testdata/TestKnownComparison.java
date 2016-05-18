@@ -34,6 +34,16 @@ public class TestKnownComparison {
     }
 
     @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testArrayLength(boolean x) {
+        int[] a = {1, 2, 3};
+        int[] b = {4, 5, 6};
+        int[] c = x ? a : b;
+        if (c.length > 5) {
+            System.out.println("Never ever!");
+        }
+    }
+    
+    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testAnd2(int x) {
         int a = 2;
         int b = 3;

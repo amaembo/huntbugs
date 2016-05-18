@@ -100,6 +100,9 @@ class Frame {
             storeValue(expr, expr.getOperand());
             return target;
         }
+        case ArrayLength:
+            storeValue(expr, getArrayLength(expr.getArguments().get(0)));
+            return target;
         case CmpEq:
             return processCmpEq(expr, target);
         case CmpNe:
@@ -290,6 +293,31 @@ class Frame {
             return target;
         }
         }
+    }
+
+    private Integer getArrayLength(Expression expression) {
+        return ValuesFlow.reduce(expression, e -> {
+            switch(e.getCode()) {
+            case InvokeVirtual: {
+                MethodReference mr = (MethodReference) e.getOperand();
+                if (mr.getName().equals("clone") && mr.getErasedSignature().startsWith("()")) {
+                    return getArrayLength(Nodes.getChild(e, 0));
+                }
+                return null;
+            }
+            case CheckCast:
+                return getArrayLength(Nodes.getChild(e, 0));
+            case InitArray:
+                return e.getArguments().size();
+            case NewArray:
+                Object constant = ValuesFlow.getValue(e.getArguments().get(0));
+                if(constant instanceof Integer)
+                    return (Integer)constant;
+                return null;
+            default:
+                return null;
+            }
+        }, (a, b) -> Objects.equals(a, b) ? a : null);
     }
 
     private static void link(Expression target, Expression source) {

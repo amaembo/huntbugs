@@ -972,5 +972,29 @@
       If it's designed to be called via reflection or via method handles API, 
       it's a good practice to annotate it by some annotation which will explicitly signal that the method is necessary.]]></LongDescription>
     </Warning>
+    <Warning Type="ArrayIndexNegative">
+      <Title>Negative array index or length used</Title>
+      <Description>Negative array index or length used: $NUMBER$.</Description>
+      <LongDescription><![CDATA[This code uses $NUMBER$ to specify array index, offset or length. This would result
+      	in <code>IndexOutOfBoundsException</code> exception in runtime.]]></LongDescription>
+    </Warning>
+    <Warning Type="ArrayIndexOutOfRange">
+      <Title>Array index is out of bounds</Title>
+      <Description>Used array index $NUMBER$ exceeds or equals to possible array length $MAX_LENGTH$.</Description>
+      <LongDescription><![CDATA[This code uses $NUMBER$ to specify array index. However it's statically known that given array
+        length do not exceed $MAX_LENGTH$. This would result in <code>ArrayIndexOutOfBoundsException</code> in runtime.]]></LongDescription>
+    </Warning>
+    <Warning Type="ArrayOffsetOutOfRange">
+      <Title>Array offset is out of bounds</Title>
+      <Description>Used array offset $NUMBER$ exceeds possible array length $MAX_LENGTH$.</Description>
+      <LongDescription><![CDATA[This code uses $NUMBER$ to specify array offset. However it's statically known that given array
+        length do not exceed $MAX_LENGTH$. This would result in <code>IndexOutOfBoundsException</code> in runtime.]]></LongDescription>
+    </Warning>
+    <Warning Type="ArrayLengthOutOfRange">
+      <Title>Array length is out of bounds</Title>
+      <Description>Specified array length $NUMBER$ exceeds maximal possible value $MAX_LENGTH$.</Description>
+      <LongDescription><![CDATA[This code specifies length = $NUMBER$, but it's statically known that given array
+        length should not exceed $MAX_LENGTH$. This would result in <code>IndexOutOfBoundsException</code> in runtime.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

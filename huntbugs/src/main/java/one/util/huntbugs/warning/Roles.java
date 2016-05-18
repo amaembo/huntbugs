@@ -24,8 +24,12 @@ import one.util.huntbugs.warning.Role.StringRole;
 import one.util.huntbugs.warning.Role.TypeRole;
 
 /**
- * @author lan
- *
+ * Predefined warning annotation roles.
+ * 
+ * You may also create custom role using {@code forName} static methods in corresponding {@link Role} subclass,
+ * e.g. {@code StringRole.forName("CUSTOM_STRING")}.
+ * 
+ * @author Tagir Valeev
  */
 public final class Roles {
     /**
