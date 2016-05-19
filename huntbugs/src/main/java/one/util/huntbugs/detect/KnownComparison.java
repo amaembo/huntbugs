@@ -58,7 +58,7 @@ public class KnownComparison {
                         mc.report("ResultOfComparisonIsStaticallyKnown", 0, expr, LEFT_OPERAND.create((Number) left),
                             RIGHT_OPERAND.create((Number) right), Roles.OPERATION.create(expr), RESULT.create(result
                                     .toString()));
-                    } else {
+                    } else if(!Nodes.isThrow(deadCode)) {
                         mc.report("ResultOfComparisonIsStaticallyKnownDeadCode", 0, expr, LEFT_OPERAND.create(
                             (Number) left), RIGHT_OPERAND.create((Number) right), Roles.OPERATION.create(expr),
                             DEAD_CODE_LOCATION.create(mc, deadCode), RESULT.create(result.toString()));

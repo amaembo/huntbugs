@@ -44,66 +44,66 @@ import com.strobel.decompiler.ast.Variable;
  */
 public class Nodes {
     public static boolean isOp(Node node, AstCode op) {
-        return node instanceof Expression && ((Expression)node).getCode() == op;
+        return node instanceof Expression && ((Expression) node).getCode() == op;
     }
-    
+
     public static boolean isInvoke(Node node) {
-        if(!(node instanceof Expression))
+        if (!(node instanceof Expression))
             return false;
-        AstCode code = ((Expression)node).getCode();
+        AstCode code = ((Expression) node).getCode();
         return code == AstCode.InvokeDynamic || code == AstCode.InvokeStatic || code == AstCode.InvokeSpecial
-                || code == AstCode.InvokeVirtual || code == AstCode.InvokeInterface;
+            || code == AstCode.InvokeVirtual || code == AstCode.InvokeInterface;
     }
-    
+
     public static boolean isNullCheck(Node node) {
-        if(!isOp(node, AstCode.CmpEq) && !isOp(node, AstCode.CmpNe))
+        if (!isOp(node, AstCode.CmpEq) && !isOp(node, AstCode.CmpNe))
             return false;
-        List<Expression> args = ((Expression)node).getArguments();
+        List<Expression> args = ((Expression) node).getArguments();
         return args.get(0).getCode() == AstCode.AConstNull ^ args.get(1).getCode() == AstCode.AConstNull;
     }
-    
+
     public static boolean isFieldRead(Node node) {
         return isOp(node, AstCode.GetStatic) || isOp(node, AstCode.GetField);
     }
-    
+
     public static Node getChild(Node node, int i) {
-        if(node instanceof Expression) {
-            return ValuesFlow.getSource(((Expression)node).getArguments().get(i));
+        if (node instanceof Expression) {
+            return ValuesFlow.getSource(((Expression) node).getArguments().get(i));
         }
         return node.getChildren().get(i);
     }
-    
+
     public static Expression getChild(Expression node, int i) {
         return ValuesFlow.getSource(node.getArguments().get(i));
     }
-    
+
     public static Object getConstant(Node node) {
-        if(!(node instanceof Expression))
+        if (!(node instanceof Expression))
             return null;
-		Expression expr = (Expression) node;
-		if(expr.getCode() == AstCode.LdC)
-		    return expr.getOperand();
+        Expression expr = (Expression) node;
+        if (expr.getCode() == AstCode.LdC)
+            return expr.getOperand();
         return ValuesFlow.getValue(expr);
     }
 
     public static void ifBinaryWithConst(Expression expr, BiConsumer<Expression, Object> consumer) {
-        if(expr.getArguments().size() == 2) {
+        if (expr.getArguments().size() == 2) {
             Expression left = expr.getArguments().get(0);
             Expression right = expr.getArguments().get(1);
             Object constant = getConstant(left);
-            if(constant != null) {
+            if (constant != null) {
                 consumer.accept(right, constant);
             } else {
                 constant = getConstant(right);
-                if(constant != null) {
+                if (constant != null) {
                     consumer.accept(left, constant);
                 }
             }
         }
     }
-    
+
     public static boolean isComparison(Node node) {
-        if(!(node instanceof Expression) || node.getChildren().size() != 2)
+        if (!(node instanceof Expression) || node.getChildren().size() != 2)
             return false;
         switch (((Expression) node).getCode()) {
         case CmpEq:
@@ -119,7 +119,7 @@ public class Nodes {
     }
 
     public static boolean isBinaryMath(Node node) {
-        if(!(node instanceof Expression) || node.getChildren().size() != 2)
+        if (!(node instanceof Expression) || node.getChildren().size() != 2)
             return false;
         switch (((Expression) node).getCode()) {
         case Add:
@@ -138,126 +138,127 @@ public class Nodes {
             return false;
         }
     }
-    
+
     public static boolean isBoxing(Node node) {
-        if(!isOp(node, AstCode.InvokeStatic))
+        if (!isOp(node, AstCode.InvokeStatic))
             return false;
-        MethodReference ref = (MethodReference)((Expression)node).getOperand();
-        if(!ref.getName().equals("valueOf"))
+        MethodReference ref = (MethodReference) ((Expression) node).getOperand();
+        if (!ref.getName().equals("valueOf"))
             return false;
         TypeReference type = ref.getDeclaringType();
-        if(type.getInternalName().equals("java/lang/Double") && ref.getSignature().equals("(D)Ljava/lang/Double;"))
+        if (type.getInternalName().equals("java/lang/Double") && ref.getSignature().equals("(D)Ljava/lang/Double;"))
             return true;
-        if(type.getInternalName().equals("java/lang/Integer") && ref.getSignature().equals("(I)Ljava/lang/Integer;"))
+        if (type.getInternalName().equals("java/lang/Integer") && ref.getSignature().equals("(I)Ljava/lang/Integer;"))
             return true;
-        if(type.getInternalName().equals("java/lang/Long") && ref.getSignature().equals("(J)Ljava/lang/Long;"))
+        if (type.getInternalName().equals("java/lang/Long") && ref.getSignature().equals("(J)Ljava/lang/Long;"))
             return true;
-        if(type.getInternalName().equals("java/lang/Boolean") && ref.getSignature().equals("(Z)Ljava/lang/Boolean;"))
+        if (type.getInternalName().equals("java/lang/Boolean") && ref.getSignature().equals("(Z)Ljava/lang/Boolean;"))
             return true;
-        if(type.getInternalName().equals("java/lang/Short") && ref.getSignature().equals("(S)Ljava/lang/Short;"))
+        if (type.getInternalName().equals("java/lang/Short") && ref.getSignature().equals("(S)Ljava/lang/Short;"))
             return true;
-        if(type.getInternalName().equals("java/lang/Character") && ref.getSignature().equals("(C)Ljava/lang/Character;"))
+        if (type.getInternalName().equals("java/lang/Character") && ref.getSignature().equals(
+            "(C)Ljava/lang/Character;"))
             return true;
-        if(type.getInternalName().equals("java/lang/Float") && ref.getSignature().equals("(F)Ljava/lang/Float;"))
+        if (type.getInternalName().equals("java/lang/Float") && ref.getSignature().equals("(F)Ljava/lang/Float;"))
             return true;
-        if(type.getInternalName().equals("java/lang/Byte") && ref.getSignature().equals("(B)Ljava/lang/Byte;"))
+        if (type.getInternalName().equals("java/lang/Byte") && ref.getSignature().equals("(B)Ljava/lang/Byte;"))
             return true;
         return false;
     }
 
     public static boolean isUnboxing(Node node) {
-        if(!isOp(node, AstCode.InvokeVirtual))
+        if (!isOp(node, AstCode.InvokeVirtual))
             return false;
-        MethodReference ref = (MethodReference)((Expression)node).getOperand();
+        MethodReference ref = (MethodReference) ((Expression) node).getOperand();
         TypeReference type = ref.getDeclaringType();
-        if(type.getInternalName().equals("java/lang/Double") && ref.getName().equals("doubleValue"))
+        if (type.getInternalName().equals("java/lang/Double") && ref.getName().equals("doubleValue"))
             return true;
-        if(type.getInternalName().equals("java/lang/Integer") && ref.getName().equals("intValue"))
+        if (type.getInternalName().equals("java/lang/Integer") && ref.getName().equals("intValue"))
             return true;
-        if(type.getInternalName().equals("java/lang/Long") && ref.getName().equals("longValue"))
+        if (type.getInternalName().equals("java/lang/Long") && ref.getName().equals("longValue"))
             return true;
-        if(type.getInternalName().equals("java/lang/Boolean") && ref.getName().equals("booleanValue"))
+        if (type.getInternalName().equals("java/lang/Boolean") && ref.getName().equals("booleanValue"))
             return true;
-        if(type.getInternalName().equals("java/lang/Short") && ref.getName().equals("shortValue"))
+        if (type.getInternalName().equals("java/lang/Short") && ref.getName().equals("shortValue"))
             return true;
-        if(type.getInternalName().equals("java/lang/Character") && ref.getName().equals("charValue"))
+        if (type.getInternalName().equals("java/lang/Character") && ref.getName().equals("charValue"))
             return true;
-        if(type.getInternalName().equals("java/lang/Float") && ref.getName().equals("floatValue"))
+        if (type.getInternalName().equals("java/lang/Float") && ref.getName().equals("floatValue"))
             return true;
-        if(type.getInternalName().equals("java/lang/Byte") && ref.getName().equals("byteValue"))
+        if (type.getInternalName().equals("java/lang/Byte") && ref.getName().equals("byteValue"))
             return true;
         return false;
     }
-    
+
     public static Expression getThis(Expression node) {
-        if(node.getCode() == AstCode.GetField || node.getCode() == AstCode.PutField)
+        if (node.getCode() == AstCode.GetField || node.getCode() == AstCode.PutField)
             return node.getArguments().get(0);
-        if(node.getCode() == AstCode.GetStatic || node.getCode() == AstCode.PutStatic)
+        if (node.getCode() == AstCode.GetStatic || node.getCode() == AstCode.PutStatic)
             return null;
-        throw new IllegalArgumentException(node+": expected field operation");
+        throw new IllegalArgumentException(node + ": expected field operation");
     }
 
     public static boolean isEquivalent(Node expr1, Node expr2) {
-        if(expr1 == expr2)
+        if (expr1 == expr2)
             return true;
-        if(expr1 == null)
+        if (expr1 == null)
             return expr2 == null;
-        if(expr1 instanceof Expression && expr2 instanceof Expression)
+        if (expr1 instanceof Expression && expr2 instanceof Expression)
             return Equi.equiExpressions((Expression) expr1, (Expression) expr2) && isSideEffectFree(expr1);
         return false;
     }
-    
+
     public static boolean isSideEffectFreeMethod(Node node) {
-        if(!(node instanceof Expression))
+        if (!(node instanceof Expression))
             return false;
-        Object operand = ((Expression)node).getOperand();
-        if(!(operand instanceof MethodReference))
+        Object operand = ((Expression) node).getOperand();
+        if (!(operand instanceof MethodReference))
             return false;
         MethodReference mr = (MethodReference) operand;
         return Methods.isSideEffectFree(mr);
     }
 
     public static boolean isSideEffectFree(Node node) {
-	    if(node == null)
-	        return true;
-	    if(!(node instanceof Expression))
-	        return false;
-	    Expression expr = (Expression)node;
-		switch(expr.getCode()) {
-	    case PreIncrement:
-	    case PostIncrement:
-	    case InvokeDynamic:
-	    case Store:
-	    case StoreElement:
-	    case CompoundAssignment:
-	    case PutField:
-	    case PutStatic:
-	    case NewArray:
-	    case InitArray:
-	    case InitObject:
-	        return false;
-	    case InvokeSpecial:
-	    case InvokeStatic:
-	    case InvokeVirtual:
-	    case InvokeInterface:
-	        if(!Methods.isSideEffectFree((MethodReference) expr.getOperand()))
-	            return false;
-	    default:
-	        for(Expression child : expr.getArguments()) {
-	            if(!isSideEffectFree(child))
-	                return false;
-	        }
-	    }
-		return true;
-	}
+        if (node == null)
+            return true;
+        if (!(node instanceof Expression))
+            return false;
+        Expression expr = (Expression) node;
+        switch (expr.getCode()) {
+        case PreIncrement:
+        case PostIncrement:
+        case InvokeDynamic:
+        case Store:
+        case StoreElement:
+        case CompoundAssignment:
+        case PutField:
+        case PutStatic:
+        case NewArray:
+        case InitArray:
+        case InitObject:
+            return false;
+        case InvokeSpecial:
+        case InvokeStatic:
+        case InvokeVirtual:
+        case InvokeInterface:
+            if (!Methods.isSideEffectFree((MethodReference) expr.getOperand()))
+                return false;
+        default:
+            for (Expression child : expr.getArguments()) {
+                if (!isSideEffectFree(child))
+                    return false;
+            }
+        }
+        return true;
+    }
 
     public static boolean isPure(Node node) {
-        if(node == null)
+        if (node == null)
             return true;
-        if(!(node instanceof Expression))
+        if (!(node instanceof Expression))
             return false;
-        Expression expr = (Expression)node;
-        switch(expr.getCode()) {
+        Expression expr = (Expression) node;
+        switch (expr.getCode()) {
         case PreIncrement:
         case PostIncrement:
         case InvokeDynamic:
@@ -277,124 +278,141 @@ public class Nodes {
         case InvokeStatic:
         case InvokeVirtual:
         case InvokeInterface:
-            if(!Methods.isPure((MethodReference) expr.getOperand()))
+            if (!Methods.isPure((MethodReference) expr.getOperand()))
                 return false;
         default:
-            for(Expression child : expr.getArguments()) {
-                if(!isPure(child))
+            for (Expression child : expr.getArguments()) {
+                if (!isPure(child))
                     return false;
             }
         }
         return true;
     }
-	
-	public static boolean isSynchorizedBlock(Node node) {
-	    if(!(node instanceof TryCatchBlock)) {
-	        return false;
-	    }
-	    TryCatchBlock tcb = (TryCatchBlock) node;
+
+    public static boolean isSynchorizedBlock(Node node) {
+        if (!(node instanceof TryCatchBlock)) {
+            return false;
+        }
+        TryCatchBlock tcb = (TryCatchBlock) node;
         return getSyncObject(tcb) != null;
-	}
-	
-	public static Expression getSyncObject(TryCatchBlock tcb) {
+    }
+
+    public static Expression getSyncObject(TryCatchBlock tcb) {
         Block finallyBlock = tcb.getFinallyBlock();
-        if(finallyBlock == null)
+        if (finallyBlock == null)
             return null;
         List<Node> list = finallyBlock.getBody();
-        if(list.size() != 1)
+        if (list.size() != 1)
             return null;
         Node n = list.get(0);
-        if(!Nodes.isOp(n, AstCode.MonitorExit))
+        if (!Nodes.isOp(n, AstCode.MonitorExit))
             return null;
-        return Nodes.getChild((Expression)n, 0);
+        return Nodes.getChild((Expression) n, 0);
     }
 
     public static boolean isCompoundAssignment(Node node) {
-	    if(!(node instanceof Expression))
-	        return false;
-	    Expression store = (Expression) node;
-	    if(store.getCode() != AstCode.Store)
-	        return false;
-	    Expression expr = store.getArguments().get(0);
-	    if(!isBinaryMath(expr))
-	        return false;
-	    Expression load = expr.getArguments().get(0);
-	    return load.getCode() == AstCode.Load && Objects.equals(load.getOperand(), store.getOperand());
-	}
-	
-	public static Node find(Node node, Predicate<Node> predicate) {
-	    if(predicate.test(node))
-	        return node;
-	    for(Node child : node.getChildren()) {
-	        Node result = find(child, predicate);
-	        if(result != null)
-	            return result;
-	    }
-	    return null;
-	}
+        if (!(node instanceof Expression))
+            return false;
+        Expression store = (Expression) node;
+        if (store.getCode() != AstCode.Store)
+            return false;
+        Expression expr = store.getArguments().get(0);
+        if (!isBinaryMath(expr))
+            return false;
+        Expression load = expr.getArguments().get(0);
+        return load.getCode() == AstCode.Load && Objects.equals(load.getOperand(), store.getOperand());
+    }
 
-	public static Expression findExpression(Expression node, Predicate<Expression> predicate) {
-	    if(predicate.test(node))
-	        return node;
-	    for(Expression child : node.getArguments()) {
-	        Expression result = findExpression(child, predicate);
-	        if(result != null)
-	            return result;
-	    }
-	    return null;
-	}
-	
-	public static Expression findExpressionWithSources(Expression node, Predicate<Expression> predicate) {
-	    if(predicate.test(node))
-	        return node;
-	    for(Expression child : node.getArguments()) {
-	        Expression result = findExpressionWithSources(child, predicate);
-	        if(result != null)
-	            return result;
-	    }
-	    Expression source = ValuesFlow.getSource(node);
-	    if(source != node) {
-	        Expression result = findExpressionWithSources(source, predicate);
-	        if(result != null)
-	            return result;
-	    }
-	    return null;
-	}
-	
+    public static Node find(Node node, Predicate<Node> predicate) {
+        if (predicate.test(node))
+            return node;
+        for (Node child : node.getChildren()) {
+            Node result = find(child, predicate);
+            if (result != null)
+                return result;
+        }
+        return null;
+    }
+
+    public static Expression findExpression(Expression node, Predicate<Expression> predicate) {
+        if (predicate.test(node))
+            return node;
+        for (Expression child : node.getArguments()) {
+            Expression result = findExpression(child, predicate);
+            if (result != null)
+                return result;
+        }
+        return null;
+    }
+
+    public static Expression findExpressionWithSources(Expression node, Predicate<Expression> predicate) {
+        if (predicate.test(node))
+            return node;
+        for (Expression child : node.getArguments()) {
+            Expression result = findExpressionWithSources(child, predicate);
+            if (result != null)
+                return result;
+        }
+        Expression source = ValuesFlow.getSource(node);
+        if (source != node) {
+            Expression result = findExpressionWithSources(source, predicate);
+            if (result != null)
+                return result;
+        }
+        return null;
+    }
+
     public static boolean isEmptyOrBreak(Block block) {
         List<Node> body = block.getBody();
         if (body.isEmpty())
             return true;
-        if(body.size() > 1)
+        if (body.size() > 1)
             return false;
         Node node = body.get(0);
-        if(isOp(node, AstCode.LoopOrSwitchBreak) || isOp(node, AstCode.Return) || isOp(node, AstCode.LoopContinue)) {
-            Expression expr = (Expression)node;
-            if(expr.getOperand() == null && expr.getArguments().size() == 0)
+        if (isOp(node, AstCode.LoopOrSwitchBreak) || isOp(node, AstCode.Return) || isOp(node, AstCode.LoopContinue)) {
+            Expression expr = (Expression) node;
+            if (expr.getOperand() == null && expr.getArguments().size() == 0)
                 return true;
         }
         return false;
     }
 
     public static String getOperation(AstCode code) {
-        switch(code) {
-        case CmpEq: return "==";
-        case CmpNe: return "!=";
-        case CmpLe: return "<=";
-        case CmpLt: return "<";
-        case CmpGe: return ">=";
-        case CmpGt: return ">";
-        case And: return "&";
-        case Or: return "|";
-        case Xor: return "^";
-        case Sub: return "-";
-        case Div: return "/";
-        case Rem: return "%";
-        case LogicalAnd: return "&&";
-        case LogicalOr: return "||";
-        case Shl: return "<<";
-        case Shr: return ">>";
-        case UShr: return ">>>";
+        switch (code) {
+        case CmpEq:
+            return "==";
+        case CmpNe:
+            return "!=";
+        case CmpLe:
+            return "<=";
+        case CmpLt:
+            return "<";
+        case CmpGe:
+            return ">=";
+        case CmpGt:
+            return ">";
+        case And:
+            return "&";
+        case Or:
+            return "|";
+        case Xor:
+            return "^";
+        case Sub:
+            return "-";
+        case Div:
+            return "/";
+        case Rem:
+            return "%";
+        case LogicalAnd:
+            return "&&";
+        case LogicalOr:
+            return "||";
+        case Shl:
+            return "<<";
+        case Shr:
+            return ">>";
+        case UShr:
+            return ">>>";
         default:
             return code.getName();
         }
@@ -416,14 +434,14 @@ public class Nodes {
 
     public static boolean isParameter(Expression self) {
         if (self.getCode() == AstCode.Load) {
-            if(self.getOperand() instanceof ParameterDefinition)
+            if (self.getOperand() instanceof ParameterDefinition)
                 return true;
-            if(self.getOperand() instanceof Variable && ((Variable)self.getOperand()).getOriginalParameter() != null)
+            if (self.getOperand() instanceof Variable && ((Variable) self.getOperand()).getOriginalParameter() != null)
                 return true;
         }
         return false;
     }
-    
+
     public static MethodDefinition getLambdaMethod(Lambda l) {
         Object arg = l.getCallSite().getBootstrapArguments().get(1);
         if (arg instanceof MethodHandle) {
@@ -431,7 +449,7 @@ public class Nodes {
             if (lm != null)
                 return lm;
         }
-        throw new InternalError("Unable to determine original method for lambda "+l);
+        throw new InternalError("Unable to determine original method for lambda " + l);
     }
 
     public static int estimateCodeSize(Node node) {
@@ -441,16 +459,27 @@ public class Nodes {
     public static Stream<Expression> stream(Expression expr) {
         return Stream.concat(Stream.of(expr), expr.getArguments().stream().flatMap(Nodes::stream));
     }
-    
+
     public static MethodHandle getMethodHandle(DynamicCallSite dcs) {
         MethodHandle mh = dcs.getBootstrapMethodHandle();
-        if(mh.getMethod().getDeclaringType().getInternalName().equals("java/lang/invoke/LambdaMetafactory")) {
+        if (mh.getMethod().getDeclaringType().getInternalName().equals("java/lang/invoke/LambdaMetafactory")) {
             List<Object> args = dcs.getBootstrapArguments();
-            if(args.size() > 1 && args.get(1) instanceof MethodHandle) {
+            if (args.size() > 1 && args.get(1) instanceof MethodHandle) {
                 MethodHandle actualHandle = (MethodHandle) args.get(1);
                 return actualHandle;
             }
         }
         return null;
+    }
+
+    public static boolean isThrow(Node node) {
+        if (Nodes.isOp(node, AstCode.AThrow))
+            return true;
+        if (node instanceof Block) {
+            List<Node> list = ((Block) node).getBody();
+            if (list.size() == 1)
+                return isThrow(list.get(0));
+        }
+        return false;
     }
 }
