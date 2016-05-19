@@ -60,11 +60,18 @@ public class StaticFieldFromInstanceMethod {
                 priority += 15;
             if(Nodes.getChild(expr, 0).getCode() == AstCode.AConstNull)
                 priority += 5;
+            
             String name = fr.getName().toLowerCase(Locale.ENGLISH);
-            if(name.contains("debug") || name.contains("verbose") && fr.getFieldType().getSimpleType() == JvmType.Boolean)
+            if (fr.getFieldType().getSimpleType() == JvmType.Boolean) {
                 priority += 10;
-            if((md.getName().equals("start") || md.getName().equals("stop")) && md.getErasedSignature().equals("(Lorg/osgi/framework/BundleContext;)V")
-                    && Types.isInstance(td, "org/osgi/framework/BundleActivator")) {
+                if (name.contains("verbose"))
+                    priority += 5;
+            }
+            if (name.contains("debug"))
+                priority += 15;
+            if ((md.getName().equals("start") || md.getName().equals("stop")) && md.getErasedSignature().equals(
+                "(Lorg/osgi/framework/BundleContext;)V") && Types.isInstance(td,
+                    "org/osgi/framework/BundleActivator")) {
                 priority += 30;
             }
             mc.report("StaticFieldFromInstanceMethod", priority, expr);
