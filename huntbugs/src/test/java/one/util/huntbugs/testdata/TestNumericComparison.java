@@ -36,6 +36,24 @@ public class TestNumericComparison {
         }
     }
 
+    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    public void testInt(boolean b) {
+        int x = b ? 1 : 2;
+        if(x > 2) {
+            System.out.println("Never!");
+        }
+    }
+    
+    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    public void testIntPhi(boolean b) {
+        int x = 1;
+        if (b)
+            x = 2;
+        if(x > 2) {
+            System.out.println("Never!");
+        }
+    }
+    
     @AssertNoWarning(type="ComparisonWithOutOfRangeValue")
     public void testCharOk(char c) {
         int r = c - 'a';
@@ -115,14 +133,58 @@ public class TestNumericComparison {
         }
     }
 
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
-    public void testBitOp(int input) {
-        int result = input & 0xFF0;
+    @AssertNoWarning(type="ComparisonWithOutOfRangeValue")
+    public void testBitOpOk(int input) {
+        int result = input & 0x1FFF0;
         if(result > 0xFFFF) {
             System.out.println("Never!");
         }
     }
 
+    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    public void testBitOp(int input) {
+        int result = 0xFF0 & input;
+        if(result > 0xFFFF) {
+            System.out.println("Never!");
+        }
+    }
+    
+    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    public void testBitOpPhi(int input, boolean b) {
+        int mask = b ? 0xFF : 0x1F0;
+        int result = mask & input;
+        if(result > 0x1FF) {
+            System.out.println("Never!");
+        }
+    }
+
+    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    public void testBitOpPhi2(int input, boolean b) {
+        int mask = b ? 0xFF : 0x1F0;
+        int result = mask & input;
+        if(result < 0) {
+            System.out.println("Never!");
+        }
+    }
+
+    @AssertNoWarning(type="ComparisonWithOutOfRangeValue")
+    public void testBitOpPhiOk(int input, boolean b) {
+        int mask = b ? 0xF0 : 0x1FF;
+        int result = mask & input;
+        if(result >= 0x1FF) {
+            System.out.println("Never!");
+        }
+    }
+    
+    @AssertNoWarning(type="ComparisonWithOutOfRangeValue")
+    public void testBitOpPhiOk2(int input, boolean b) {
+        int mask = b ? 0xF0 : -1;
+        int result = mask & input;
+        if(result == Integer.MIN_VALUE) {
+            System.out.println("Never!");
+        }
+    }
+    
     @AssertWarning(type="ComparisonWithOutOfRangeValue")
     public void testRem(int input) {
         int result = input % 3;
@@ -139,6 +201,15 @@ public class TestNumericComparison {
         }
     }
 
+    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    public void testRemPhi(List<String> list, boolean b) {
+        int x = b ? 3 : 5;
+        int result = list.size() % x;
+        if(result > 5) {
+            System.out.println("Never!");
+        }
+    }
+    
     @AssertNoWarning(type="ComparisonWithOutOfRangeValue")
     public void testShrOk(int input) {
         int result = input >> 10;

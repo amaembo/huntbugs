@@ -32,7 +32,6 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
-import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.Role.StringRole;
 
 /**
@@ -45,7 +44,7 @@ import one.util.huntbugs.warning.Role.StringRole;
 public class NumericComparison {
     private static final StringRole RESULT = StringRole.forName("RESULT");
     
-    class LongRange {
+    static class LongRange {
         final long minValue, maxValue;
         final boolean invert;
 
@@ -78,6 +77,20 @@ public class NumericComparison {
                 throw new InternalError("Unexpected code: " + code);
             }
             this.invert = invert;
+        }
+        
+        LongRange absInt() {
+            if(minValue <= Integer.MIN_VALUE || minValue >= 0)
+                return this;
+            if(maxValue <= 0)
+                return new LongRange(-maxValue, -minValue);
+            return new LongRange(0, Math.max(-minValue, maxValue));
+        }
+        
+        LongRange union(LongRange other) {
+            if(invert || other.invert)
+                throw new IllegalStateException();
+            return new LongRange(Math.min(minValue, other.minValue), Math.max(maxValue, other.maxValue));
         }
 
         LongRange(long min, long max) {
@@ -196,7 +209,17 @@ public class NumericComparison {
         }
     }
 
-    private LongRange getExpressionRange(JvmType type, Expression arg) {
+    private static LongRange getExpressionRange(JvmType type, Expression arg) {
+        return ValuesFlow.reduce(arg, e -> getExpressionRange0(type, e), (r1, r2) -> 
+            r1 == null || r2 == null ? null : r1.union(r2));
+    }
+
+    private static LongRange getExpressionRange0(JvmType type, Expression arg) {
+        Object constant = Nodes.getConstant(arg);
+        if(constant instanceof Integer || constant instanceof Long) {
+            long val = ((Number)constant).longValue();
+            return new LongRange(val, val);
+        }
         switch (type) {
         case Integer:
             return intRange(arg);
@@ -215,31 +238,28 @@ public class NumericComparison {
         }
     }
 
-    private LongRange intRange(Expression arg) {
+    private static LongRange intRange(Expression arg) {
         switch (arg.getCode()) {
         case ArrayLength:
             return new LongRange(0, Integer.MAX_VALUE);
         case And: {
-            Object constant = Nodes.getConstant(arg.getArguments().get(1));
-            if (constant instanceof Integer) {
-                int andOp = (int) constant;
-                if (andOp > 0) {
-                    return new LongRange(0, (Integer.highestOneBit(andOp) << 1) - 1);
-                }
-            }
+            LongRange r1 = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 0));
+            LongRange r2 = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 1));
+            int maxBit1 = r1.minValue < 0 ? 0x80000000 : Integer.highestOneBit((int) r1.maxValue);
+            int maxBit2 = r2.minValue < 0 ? 0x80000000 : Integer.highestOneBit((int) r2.maxValue);
+            int totalMax = ((maxBit1 << 1) - 1) & ((maxBit2 << 1) - 1);
+            if(totalMax >= 0)
+                return new LongRange(0, totalMax);
             break;
         }
         case Rem: {
-            Object constant = Nodes.getConstant(arg.getArguments().get(1));
-            if (constant instanceof Integer) {
-                int remOp = (int) constant;
-                if (remOp != 0 && remOp != Integer.MIN_VALUE) {
-                    if(intRange(arg.getArguments().get(0)).minValue >= 0)
-                        return new LongRange(0, Math.abs(remOp) - 1);
-                    return new LongRange(1 - Math.abs(remOp), Math.abs(remOp) - 1);
-                }
-            }
-            break;
+            LongRange remRange = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 1)).absInt();
+            if(remRange.minValue < 0 || remRange.maxValue == 0)
+                break;
+            LongRange divRange = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 0));
+            if(divRange.minValue >= 0)
+                return new LongRange(0, remRange.maxValue-1);
+            return new LongRange(1 - remRange.maxValue, remRange.maxValue - 1);
         }
         case Shr: {
             Object constant = Nodes.getConstant(arg.getArguments().get(1));
