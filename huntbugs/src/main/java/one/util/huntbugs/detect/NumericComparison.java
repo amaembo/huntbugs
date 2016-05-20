@@ -224,13 +224,13 @@ public class NumericComparison {
 
     private static LongRange getExpressionRange(JvmType type, Expression arg, Set<Expression> visited) {
         return ValuesFlow.reduce(arg, e -> {
+            if (!visited.add(e))
+                return getTypeRange(type);
             Object constant = Nodes.getConstant(e);
             if (constant instanceof Integer || constant instanceof Long) {
                 long val = ((Number) constant).longValue();
                 return new LongRange(val, val);
             }
-            if (!visited.add(e))
-                return getTypeRange(type);
             if (type == JvmType.Integer)
                 return intRange(e, visited);
             if (e.getCode() == AstCode.I2L)
