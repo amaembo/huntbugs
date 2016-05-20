@@ -29,7 +29,6 @@ import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Role.NumberRole;
 import one.util.huntbugs.warning.Roles;
-import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author Tagir Valeev
@@ -100,9 +99,9 @@ public class BadMath {
                     if (isIntegral(mask)) {
                         if (mask instanceof Integer && ((Integer) mask) < 0 || mask instanceof Long
                             && ((Long) mask) < 0) {
-                            mc.report("BitCheckGreaterNegative", 0, flags, Roles.NUMBER.create((Number) mask));
+                            mc.report("BitCheckGreaterNegative", 0, expr, Roles.NUMBER.create((Number) mask));
                         } else {
-                            mc.report("BitCheckGreater", 0, flags, Roles.NUMBER.create((Number) mask));
+                            mc.report("BitCheckGreater", 0, expr, Roles.NUMBER.create((Number) mask));
                         }
                     }
                 });
