@@ -15,6 +15,9 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.strobel.assembler.metadata.JvmType;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
@@ -42,6 +45,12 @@ import one.util.huntbugs.warning.Role.StringRole;
 @WarningDefinition(category = "RedundantCode", name = "SwitchBranchUnreachable", maxScore = 65)
 @WarningDefinition(category = "BadPractice", name = "CheckForOddnessFailsForNegative", maxScore = 40)
 public class NumericComparison {
+    private static final LongRange SHORT_RANGE = new LongRange(Short.MIN_VALUE, Short.MAX_VALUE);
+    private static final LongRange CHAR_RANGE = new LongRange(Character.MIN_VALUE, Character.MAX_VALUE);
+    private static final LongRange LONG_RANGE = new LongRange(Long.MIN_VALUE, Long.MAX_VALUE);
+    private static final LongRange BYTE_RANGE = new LongRange(Byte.MIN_VALUE, Byte.MAX_VALUE);
+    private static final LongRange INT_RANGE = new LongRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
+    
     private static final StringRole RESULT = StringRole.forName("RESULT");
     
     static class LongRange {
@@ -208,43 +217,52 @@ public class NumericComparison {
             }
         }
     }
-
+    
     private static LongRange getExpressionRange(JvmType type, Expression arg) {
-        return ValuesFlow.reduce(arg, e -> getExpressionRange0(type, e), (r1, r2) -> 
-            r1 == null || r2 == null ? null : r1.union(r2));
+        return getExpressionRange(type, arg, new HashSet<>());
     }
 
-    private static LongRange getExpressionRange0(JvmType type, Expression arg) {
-        Object constant = Nodes.getConstant(arg);
-        if(constant instanceof Integer || constant instanceof Long) {
-            long val = ((Number)constant).longValue();
-            return new LongRange(val, val);
-        }
+    private static LongRange getExpressionRange(JvmType type, Expression arg, Set<Expression> visited) {
+        return ValuesFlow.reduce(arg, e -> {
+            Object constant = Nodes.getConstant(e);
+            if (constant instanceof Integer || constant instanceof Long) {
+                long val = ((Number) constant).longValue();
+                return new LongRange(val, val);
+            }
+            if (!visited.add(e))
+                return getTypeRange(type);
+            if (type == JvmType.Integer)
+                return intRange(e, visited);
+            if (e.getCode() == AstCode.I2L)
+                return intRange(Nodes.getChild(e, 0), visited);
+            return getTypeRange(type);
+        }, (r1, r2) -> r1 == null || r2 == null ? null : r1.union(r2), r -> r == getTypeRange(type));
+    }
+    
+    private static LongRange getTypeRange(JvmType type) {
         switch (type) {
         case Integer:
-            return intRange(arg);
+            return INT_RANGE;
         case Byte:
-            return new LongRange(Byte.MIN_VALUE, Byte.MAX_VALUE);
+            return BYTE_RANGE;
         case Long:
-            if (arg.getCode() == AstCode.I2L)
-                return intRange(Nodes.getChild(arg, 0));
-            return new LongRange(Long.MIN_VALUE, Long.MAX_VALUE);
+            return LONG_RANGE;
         case Character:
-            return new LongRange(Character.MIN_VALUE, Character.MAX_VALUE);
+            return CHAR_RANGE;
         case Short:
-            return new LongRange(Short.MIN_VALUE, Short.MAX_VALUE);
+            return SHORT_RANGE;
         default:
             return null;
         }
     }
 
-    private static LongRange intRange(Expression arg) {
+    private static LongRange intRange(Expression arg, Set<Expression> visited) {
         switch (arg.getCode()) {
         case ArrayLength:
             return new LongRange(0, Integer.MAX_VALUE);
         case And: {
-            LongRange r1 = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 0));
-            LongRange r2 = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 1));
+            LongRange r1 = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 0), visited);
+            LongRange r2 = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 1), visited);
             int maxBit1 = r1.minValue < 0 ? 0x80000000 : Integer.highestOneBit((int) r1.maxValue);
             int maxBit2 = r2.minValue < 0 ? 0x80000000 : Integer.highestOneBit((int) r2.maxValue);
             int totalMax = ((maxBit1 << 1) - 1) & ((maxBit2 << 1) - 1);
@@ -253,10 +271,10 @@ public class NumericComparison {
             break;
         }
         case Rem: {
-            LongRange remRange = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 1)).absInt();
+            LongRange remRange = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 1), visited).absInt();
             if(remRange.minValue < 0 || remRange.maxValue == 0)
                 break;
-            LongRange divRange = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 0));
+            LongRange divRange = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 0), visited);
             if(divRange.minValue >= 0)
                 return new LongRange(0, remRange.maxValue-1);
             return new LongRange(1 - remRange.maxValue, remRange.maxValue - 1);
@@ -293,14 +311,14 @@ public class NumericComparison {
                 }
             }
             if (mr.getDeclaringType().getInternalName().equals("java/lang/Byte") && mr.getName().endsWith("Value")) {
-                return new LongRange(Byte.MIN_VALUE, Byte.MAX_VALUE);
+                return BYTE_RANGE;
             }
             if (mr.getDeclaringType().getInternalName().equals("java/lang/Short") && mr.getName().endsWith("Value")) {
-                return new LongRange(Short.MIN_VALUE, Short.MAX_VALUE);
+                return SHORT_RANGE;
             }
             break;
         default:
         }
-        return new LongRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
+        return INT_RANGE;
     }
 }

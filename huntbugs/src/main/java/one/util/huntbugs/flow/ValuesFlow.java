@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -338,10 +339,15 @@ public class ValuesFlow {
         return null;
     }
 
-    public static <T> T reduce(Expression input, Function<Expression, T> mapper, BinaryOperator<T> reducer) {
+    public static <T> T reduce(Expression input, Function<Expression, T> mapper, BinaryOperator<T> reducer,
+            Predicate<T> pred) {
         Expression source = getSource(input);
         if (source.getCode() == AstCode.TernaryOp) {
-            return reducer.apply(reduce(source.getArguments().get(1), mapper, reducer), reduce(source.getArguments().get(2), mapper, reducer));
+            T left = reduce(source.getArguments().get(1), mapper, reducer, pred);
+            if(pred.test(left))
+                return left;
+            T right = reduce(source.getArguments().get(2), mapper, reducer, pred);
+            return reducer.apply(left, right);
         }
         if (source.getCode() != Frame.PHI_TYPE)
             return mapper.apply(source);
@@ -349,11 +355,13 @@ public class ValuesFlow {
         T result = null;
         for (Expression child : source.getArguments()) {
             if (first) {
-                result = reduce(child, mapper, reducer);
+                result = reduce(child, mapper, reducer, pred);
                 first = false;
             } else {
-                result = reducer.apply(result, reduce(child, mapper, reducer));
+                result = reducer.apply(result, reduce(child, mapper, reducer, pred));
             }
+            if(pred.test(result))
+                return result;
         }
         return result;
     }
@@ -371,7 +379,7 @@ public class ValuesFlow {
                     return chain1.get(i);
             }
             return null;
-        });
+        }, Objects::isNull);
     }
 
     public static Expression getSource(Expression input) {

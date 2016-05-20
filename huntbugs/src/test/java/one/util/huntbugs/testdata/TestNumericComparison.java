@@ -150,6 +150,14 @@ public class TestNumericComparison {
     }
     
     @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    public void testBitOpSelf(int input) {
+        input &= 0xFF0;
+        if(input > 0xFFFF) {
+            System.out.println("Never!");
+        }
+    }
+    
+    @AssertWarning(type="ComparisonWithOutOfRangeValue")
     public void testBitOpPhi(int input, boolean b) {
         int mask = b ? 0xFF : 0x1F0;
         int result = mask & input;
@@ -254,5 +262,18 @@ public class TestNumericComparison {
         if(list.size() % 2 == 1) {
             System.out.println("odd");
         }
+    }
+
+    @AssertNoWarning(type="*")
+    public int countMembers(int[] bits) {
+        int count = 0;
+        for (int i = 0; i < bits.length; i++) {
+            int x = bits[i];
+            while (x != 0) {
+                count++;
+                x &= (x - 1);
+            }
+        }
+        return count;
     }
 }

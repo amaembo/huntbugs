@@ -355,7 +355,7 @@ class Frame {
             default:
                 return null;
             }
-        }, (a, b) -> Objects.equals(a, b) ? a : null);
+        }, (a, b) -> Objects.equals(a, b) ? a : null, Objects::isNull);
     }
 
     private static void link(Expression target, Expression source) {

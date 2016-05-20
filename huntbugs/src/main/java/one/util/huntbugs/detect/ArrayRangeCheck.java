@@ -123,6 +123,6 @@ public class ArrayRangeCheck {
                 break;
             }
             return IMPOSSIBLE_ARRAY_LENGTH;
-        }, Math::max);
+        }, Math::max, len -> len == IMPOSSIBLE_ARRAY_LENGTH);
     }
 }
