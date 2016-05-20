@@ -58,7 +58,8 @@ public class FloatingPointComparison {
         int priority = tweakPriority(args.get(0)) + tweakPriority(args.get(1));
         if(ValuesFlow.anyMatch(leftArg, rightArg::equals) || ValuesFlow.anyMatch(rightArg, leftArg::equals))
             priority += 20;
-        if(md.getName().toLowerCase(Locale.ENGLISH).contains("equal"))
+        String lcName = md.getName().toLowerCase(Locale.ENGLISH);
+        if (lcName.contains("equal") || lcName.contains("compare"))
             priority += 20;
         Number n = left instanceof Number ? (Number) left : right instanceof Number ? (Number) right : null;
         if(n != null)
