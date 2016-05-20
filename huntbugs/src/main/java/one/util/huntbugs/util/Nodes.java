@@ -482,4 +482,12 @@ public class Nodes {
         }
         return false;
     }
+    
+    public static boolean isToFloatingPointConversion(Node node) {
+        if(!(node instanceof Expression))
+            return false;
+        Expression expr = (Expression) node;
+        return expr.getCode() == AstCode.I2F || expr.getCode() == AstCode.I2D || expr.getCode() == AstCode.L2F
+                || expr.getCode() == AstCode.L2D;
+    }
 }

@@ -47,6 +47,12 @@ public class TestFloatComparison {
             System.out.println("Equals");
     }
     
+    @AssertNoWarning(type="*")
+    void testRound(double a) {
+        if(a == (int)a)
+            System.out.println("Round");
+    }
+    
     @AssertNoWarning(type="FloatComparison")
     void testDouble(double a) {
         if(a == 0)

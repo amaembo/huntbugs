@@ -68,6 +68,23 @@ public class TestNumericPromotion {
         return val * 100 * 10 / total / 10.0;
     }
     
+    @AssertWarning(type = "IntegerDivisionPromotedToFloat", maxScore = 50, minScore = 40)
+    public double byTen(int val) {
+        return val / 10;
+    }
+    
+    @AssertNoWarning(type = "*")
+    public String format(int length) {
+        return String.valueOf((length / 100) / 10.0);
+    }
+    
+    @AssertNoWarning(type = "IntegerDivisionPromotedToFloat")
+    public double check(int val) {
+        int res = val / 3;
+        System.out.println(res);
+        return res * 3.0;
+    }
+    
     @AssertWarning(type = "IntegerDivisionPromotedToFloat")
     public double divideByTwo(double x, double y) {
         double res = (int)(x - y)/2;

@@ -79,8 +79,7 @@ public class NumericPromotion {
                 }
             }
         }
-        if (expr.getCode() == AstCode.I2F || expr.getCode() == AstCode.I2D || expr.getCode() == AstCode.L2F
-            || expr.getCode() == AstCode.L2D) {
+        if (Nodes.isToFloatingPointConversion(expr)) {
             if (Nodes.isOp(nc.getNode(), AstCode.InvokeStatic)) {
                 MethodReference mr = (MethodReference) ((Expression) nc.getNode()).getOperand();
                 if (mr.getDeclaringType().getInternalName().equals("java/lang/Math")
@@ -92,26 +91,39 @@ public class NumericPromotion {
             }
             Expression arg = ValuesFlow.getSource(expr.getArguments().get(0));
             if (arg.getCode() == AstCode.Div) {
+                if(!ValuesFlow.findTransitiveUsages(arg, true).allMatch(Nodes::isToFloatingPointConversion))
+                    return;
                 Object constant = Nodes.getConstant(arg.getArguments().get(1));
                 int priority = 0;
+                boolean isPowerOfTen = false;
                 if (constant instanceof Number) {
                     long val = Math.abs(((Number) constant).longValue());
                     if (val >= 2 && val <= 4)
                         priority += 10;
+                    else if(isPowerOfTen(val)) {
+                        isPowerOfTen = true;
+                        priority += 15;
+                    }
                 }
-                Expression divident = arg.getArguments().get(0);
-                if (divident.getCode() == AstCode.Mul) {
-                    BigInteger multiplier = getMultiplicationConstant(divident);
-                    if (Nodes.isOp(nc.getNode(), AstCode.Div)) {
-                        Expression parent = (Expression) nc.getNode();
-                        if (parent.getArguments().get(0) == expr) {
+                if (Nodes.isOp(nc.getNode(), AstCode.Div)) {
+                    Expression parent = (Expression) nc.getNode();
+                    if (parent.getArguments().get(0) == expr) {
+                        Object divisor = Nodes.getConstant(parent.getArguments().get(1));
+                        if (divisor instanceof Number) {
+                            long divisorVal = ((Number) divisor).longValue();
+                            if(isPowerOfTen(divisorVal)) {
+                                // some rounding like ((double)a/10)/10;
+                                priority += isPowerOfTen ? 50 : 10;
+                            }
                             // Lower priority for scenarios like
                             // ((a*1000)/b)/10.0
-                            Object divisor = Nodes.getConstant(parent.getArguments().get(1));
-                            if (divisor instanceof Number
-                                && (multiplier.equals(BigInteger.valueOf(((Number) divisor).longValue() * 100)) || multiplier
-                                        .equals(BigInteger.valueOf(((Number) divisor).longValue()))))
+                            Expression divident = arg.getArguments().get(0);
+                            if (divident.getCode() == AstCode.Mul) {
+                                BigInteger multiplier = getMultiplicationConstant(divident);
+                                if ((multiplier.equals(BigInteger.valueOf(divisorVal * 100)) || multiplier
+                                        .equals(BigInteger.valueOf(divisorVal))))
                                 priority += 100;
+                            }
                         }
                     }
                 }
@@ -131,6 +143,12 @@ public class NumericPromotion {
                 mc.report("IntegerDivisionPromotedToFloat", priority, expr, anno.toArray(new WarningAnnotation[0]));
             }
         }
+    }
+
+    private boolean isPowerOfTen(long divisorVal) {
+        return divisorVal == 10 || divisorVal == 100 || divisorVal == 1000 || divisorVal == 10000
+            || divisorVal == 100000 || divisorVal == 1000000 || divisorVal == 10000000 || divisorVal == 100000000
+            || divisorVal == 1000000000;
     }
 
     private static String getSourceType(Expression expr) {

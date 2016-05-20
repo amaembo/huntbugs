@@ -95,7 +95,11 @@ public class FloatingPointComparison {
                 return method.getDeclaringType().getInternalName().equals("java/lang/Math") ? 50 : 35;
             }
         }
-        if (expr.getCode() == AstCode.I2F || expr.getCode() == AstCode.L2F || expr.getCode() == AstCode.I2D || expr.getCode() == AstCode.L2D) {
+        if (Nodes.isToFloatingPointConversion(expr)) {
+            Expression arg = expr.getArguments().get(0);
+            // check like if ((int)d == d)
+            if(arg.getCode() == AstCode.D2I || arg.getCode() == AstCode.D2L || arg.getCode() == AstCode.F2I || arg.getCode() == AstCode.F2L)
+                return 40;
             return 20;
         }
         return 0;
