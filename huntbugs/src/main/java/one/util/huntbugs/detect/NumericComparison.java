@@ -125,10 +125,8 @@ public class NumericComparison {
     public void visit(Node node, MethodContext mc) {
         if (Nodes.isComparison(node)) {
             Expression expr = (Expression) node;
-            TypeReference type = expr.getArguments().get(0).getInferredType();
-            if (type == null)
-                return;
-            if (!type.getSimpleType().isIntegral())
+            JvmType jvmType = promote(getIntegralType(expr.getArguments().get(0)), getIntegralType(expr.getArguments().get(1)));
+            if (jvmType == null)
                 return;
             AstCode code = expr.getCode();
             Expression arg;
@@ -163,10 +161,10 @@ public class NumericComparison {
                 arg = Nodes.getChild(expr, 0);
             }
             
-            checkRem2Eq1(mc, type, code, arg, constant);
+            checkRem2Eq1(mc, jvmType, code, arg, constant);
             
             LongRange cmpRange = new LongRange(code, constant);
-            LongRange realRange = getExpressionRange(type.getSimpleType(), arg);
+            LongRange realRange = getExpressionRange(jvmType, arg);
             if(realRange == null)
                 return;
             Boolean result = null;
@@ -202,7 +200,45 @@ public class NumericComparison {
         }
     }
 
-    private void checkRem2Eq1(MethodContext mc, TypeReference type, AstCode code, Expression arg, long constant) {
+    private static JvmType promote(JvmType t1, JvmType t2) {
+        if(t1 == t2)
+            return t1;
+        if(t1 == null || t2 == null)
+            return null;
+        if(t1 == JvmType.Long || t2 == JvmType.Long)
+            return JvmType.Long;
+        if(t1 == JvmType.Integer || t2 == JvmType.Integer)
+            return JvmType.Integer;
+        return t1;
+    }
+
+    private JvmType getIntegralType(Expression expression) {
+        TypeReference type = expression.getInferredType();
+        if(type == null)
+            return null;
+        JvmType jvmType = type.getSimpleType();
+        if(!jvmType.isIntegral())
+            return null;
+        if(jvmType == JvmType.Integer || jvmType == JvmType.Long)
+            return jvmType;
+        // Fix procyon type inference
+        switch(expression.getCode()) {
+        case Add:
+        case Sub:
+        case Div:
+        case Rem:
+        case Mul:
+        case Shr:
+        case Shl:
+        case UShr:
+        case Neg:
+            return JvmType.Integer;
+        default:
+            return jvmType;
+        }
+    }
+
+    private void checkRem2Eq1(MethodContext mc, JvmType jvmType, AstCode code, Expression arg, long constant) {
         if(constant == 1 && (code == AstCode.CmpEq || code == AstCode.CmpNe) && arg.getCode() == AstCode.Rem && Integer.valueOf(2).equals(Nodes.getConstant(arg.getArguments().get(1)))) {
             Expression remInput = Nodes.getChild(arg, 0);
             if(remInput.getCode() == AstCode.InvokeStatic) {
@@ -211,7 +247,7 @@ public class NumericComparison {
                     return;
                 }
             }
-            if(getExpressionRange(type.getSimpleType(), remInput).minValue < 0) {
+            if(getExpressionRange(jvmType, remInput).minValue < 0) {
                 mc.report("CheckForOddnessFailsForNegative", 0, arg, Roles.OPERATION.create(code),
                     Roles.REPLACEMENT_STRING.create(code == AstCode.CmpEq ? "!=" : "=="));
             }

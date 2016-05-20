@@ -26,6 +26,13 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestNumericComparison {
+    @AssertNoWarning(type="*")
+    public void testByte(byte b) {
+        if(b + 1 > Byte.MAX_VALUE) {
+            System.out.println("possible?");
+        }
+    }
+    
     @AssertWarning(type="ComparisonWithOutOfRangeValue")
     public void testChar(char c) {
         if(c < 0) {
