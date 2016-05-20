@@ -115,6 +115,9 @@ public class NumericPromotion {
                         }
                     }
                 }
+                if (ValuesFlow.findTransitiveUsages(expr, true).allMatch(Nodes::isComparison)) {
+                    priority += 15;
+                }
                 List<WarningAnnotation<?>> anno = new ArrayList<>();
                 anno.add(SOURCE_TYPE.create(getSourceType(expr)));
                 anno.add(TARGET_TYPE.create(getTargetType(expr)));

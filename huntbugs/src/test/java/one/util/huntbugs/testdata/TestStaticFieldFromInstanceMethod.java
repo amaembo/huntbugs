@@ -25,6 +25,8 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 public class TestStaticFieldFromInstanceMethod {
     private static int val;
     private static boolean VERBOSE;
+    private static boolean loggingSwitchedOff;
+    private static int debugLevel = 0;
     static Object data;
     
     @AssertWarning(type="StaticFieldFromInstanceMethod", minScore=55)
@@ -62,9 +64,26 @@ public class TestStaticFieldFromInstanceMethod {
         data = null;
     }
     
-    @AssertWarning(type="StaticFieldFromInstanceMethod", minScore=45, maxScore=45)
+    @AssertWarning(type="StaticFieldFromInstanceMethod", minScore=40, maxScore=40)
     public void setVerbose(boolean v) {
         VERBOSE = v;
+    }
+
+    @AssertWarning(type="StaticFieldFromInstanceMethod", minScore=45, maxScore=45)
+    public void log(String message) {
+        if(loggingSwitchedOff)
+            return;
+        try {
+            Class.forName("my.super.Logger").getMethod("log", String.class).invoke(null, message);
+        }
+        catch(Exception ex) {
+            loggingSwitchedOff = true;
+        }
+    }
+    
+    @AssertWarning(type="StaticFieldFromInstanceMethod", minScore=40, maxScore=40)
+    public void setDebugLevel(int level) {
+        debugLevel = level;
     }
     
     @AssertNoWarning(type="StaticFieldFromInstanceMethod")

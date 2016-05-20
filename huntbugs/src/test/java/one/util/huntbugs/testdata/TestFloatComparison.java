@@ -29,6 +29,12 @@ public class TestFloatComparison {
             System.out.println("Equals");
     }
 
+    @AssertWarning(type="FloatComparison", minScore = 5, maxScore = 20)
+    void testFloatInt(float a, int b) {
+        if(a == b)
+            System.out.println("Equals");
+    }
+    
     @AssertNoWarning(type="FloatComparison")
     void testFloat(float a) {
         if(a == 0)

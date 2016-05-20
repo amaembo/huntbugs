@@ -33,7 +33,6 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Roles;
-import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author Tagir Valeev
@@ -95,6 +94,9 @@ public class FloatingPointComparison {
             if(method.getName().equals("floor") || method.getName().equals("round") || method.getName().equals("rint")) {
                 return method.getDeclaringType().getInternalName().equals("java/lang/Math") ? 50 : 35;
             }
+        }
+        if (expr.getCode() == AstCode.I2F || expr.getCode() == AstCode.L2F || expr.getCode() == AstCode.I2D || expr.getCode() == AstCode.L2D) {
+            return 20;
         }
         return 0;
     }
