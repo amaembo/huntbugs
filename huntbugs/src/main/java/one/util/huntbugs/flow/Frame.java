@@ -29,6 +29,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
+import one.util.huntbugs.util.Maps;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
@@ -36,7 +37,6 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.JvmType;
-import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.assembler.metadata.TypeReference;
@@ -46,7 +46,7 @@ import com.strobel.decompiler.ast.Variable;
 
 class Frame {
     private final Map<Variable, Expression> sources;
-    private final MethodDefinition md;
+    private final FrameContext fc;
     private final Map<MemberInfo, Expression> fieldValues;
     final Map<ParameterDefinition, Expression> initial;
     static final AstCode PHI_TYPE = AstCode.Wrap;
@@ -60,15 +60,15 @@ class Frame {
         return initial.get(var.getOriginalParameter());
     }
 
-    Frame(MethodDefinition md) {
+    Frame(FrameContext fc) {
         this.sources = new IdentityHashMap<>();
-        this.fieldValues = Collections.emptyMap();
-        this.md = md;
+        this.fieldValues = fc.getInitialFields();
+        this.fc = fc;
         this.initial = new IdentityHashMap<>();
-        for(ParameterDefinition pd : md.getParameters()) {
+        for(ParameterDefinition pd : fc.md.getParameters()) {
             putInitial(pd);
         }
-        ParameterDefinition thisParam = md.getBody().getThisParameter();
+        ParameterDefinition thisParam = fc.md.getBody().getThisParameter();
         if(thisParam != null) {
             putInitial(thisParam);
         }
@@ -280,10 +280,10 @@ class Frame {
             if (Methods.isSideEffectFree(mr))
                 return target;
             return target.replaceAll(src -> src.getCode() == AstCode.GetField || src.getCode() == AstCode.GetStatic
-                || src.getCode() == AstCode.LoadElement ? makeUpdatedNode(src) : src).deleteFields();
+                || src.getCode() == AstCode.LoadElement ? fc.makeUpdatedNode(src) : src).deleteFields();
         }
         case StoreElement: {
-            return target.replaceAll(src -> src.getCode() == AstCode.LoadElement ? makeUpdatedNode(src) : src);
+            return target.replaceAll(src -> src.getCode() == AstCode.LoadElement ? fc.makeUpdatedNode(src) : src);
         }
         case GetStatic: {
             FieldReference fr = ((FieldReference) expr.getOperand());
@@ -303,7 +303,7 @@ class Frame {
         }
         case GetField: {
             FieldReference fr = ((FieldReference) expr.getOperand());
-            if(!md.isStatic() && Nodes.isThis(Nodes.getChild(expr, 0))) {
+            if(fc.isThis(Nodes.getChild(expr, 0))) {
                 Expression source = fieldValues.get(new MemberInfo(fr));
                 if (source != null) {
                     expr.putUserData(ValuesFlow.SOURCE_KEY, source);
@@ -316,17 +316,17 @@ class Frame {
         }
         case PutField: {
             FieldReference fr = ((FieldReference) expr.getOperand());
-            if(!md.isStatic() && Nodes.isThis(Nodes.getChild(expr, 0))) {
+            if(fc.isThis(Nodes.getChild(expr, 0))) {
                 target = target.replaceField(fr, Nodes.getChild(expr, 1));
             }
             return target.replaceAll(src -> src.getCode() == AstCode.GetField
-                && fr.isEquivalentTo((FieldReference) src.getOperand()) ? makeUpdatedNode(src) : src);
+                && fr.isEquivalentTo((FieldReference) src.getOperand()) ? fc.makeUpdatedNode(src) : src);
         }
         case PutStatic: {
             FieldReference fr = ((FieldReference) expr.getOperand());
             return target.replaceField(fr, Nodes.getChild(expr, 0)).replaceAll(src -> src
                     .getCode() == AstCode.GetStatic && fr.isEquivalentTo((FieldReference) src.getOperand())
-                            ? makeUpdatedNode(src) : src);
+                            ? fc.makeUpdatedNode(src) : src);
         }
         default:
             return target;
@@ -411,7 +411,7 @@ class Frame {
         if(resFields == null)
             return null;
         resFields.values().removeIf(Objects::isNull);
-        return resFields.isEmpty() ? Collections.emptyMap() : resFields;
+        return Maps.compactify(resFields);
     }
 
     private Map<Variable, Expression> mergeSources(Frame other) {
@@ -488,7 +488,7 @@ class Frame {
     }
 
     private Frame(Frame parent, Map<Variable, Expression> sources, Map<MemberInfo, Expression> fields) {
-        this.md = parent.md;
+        this.fc = parent.fc;
         this.initial = parent.initial;
         this.fieldValues = fields;
         this.sources = sources;
@@ -522,7 +522,17 @@ class Frame {
     }
     
     private Frame deleteFields() {
-        return fieldValues.isEmpty() ? this : new Frame(this, this.sources, Collections.emptyMap());
+        if(fieldValues.isEmpty())
+            return this;
+        Map<MemberInfo, Expression> res = new HashMap<>();
+        fieldValues.forEach((mi, expr) -> {
+            if(expr.getCode() == UPDATE_TYPE || fc.cf.isKnownFinal(mi)) {
+                res.put(mi, expr);
+            } else {
+                res.put(mi, fc.makeUpdatedNode(expr));
+            }
+        });
+        return new Frame(this, this.sources, Maps.compactify(res));
     }
 
     private Frame replaceAll(UnaryOperator<Expression> op) {
@@ -632,6 +642,9 @@ class Frame {
 
     private Frame processRem(Expression expr, Frame target) {
         switch (getType(expr)) {
+        case Byte:
+        case Short:
+        case Character:
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a % b);
         case Long:
@@ -647,6 +660,9 @@ class Frame {
 
     private Frame processDiv(Expression expr, Frame target) {
         switch (getType(expr)) {
+        case Byte:
+        case Short:
+        case Character:
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a / b);
         case Long:
@@ -662,6 +678,9 @@ class Frame {
 
     private Frame processMul(Expression expr, Frame target) {
         switch (getType(expr)) {
+        case Byte:
+        case Short:
+        case Character:
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a * b);
         case Long:
@@ -677,6 +696,9 @@ class Frame {
 
     private Frame processSub(Expression expr, Frame target) {
         switch (getType(expr)) {
+        case Byte:
+        case Short:
+        case Character:
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a - b);
         case Long:
@@ -692,6 +714,9 @@ class Frame {
 
     private Frame processAdd(Expression expr, Frame target) {
         switch (getType(expr)) {
+        case Byte:
+        case Short:
+        case Character:
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, Integer::sum);
         case Long:
@@ -707,6 +732,9 @@ class Frame {
 
     private Frame processCmpGe(Expression expr, Frame target) {
         switch (getType(expr.getArguments().get(0))) {
+        case Byte:
+        case Short:
+        case Character:
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() >= b.intValue());
         case Long:
@@ -723,6 +751,9 @@ class Frame {
 
     private Frame processCmpGt(Expression expr, Frame target) {
         switch (getType(expr.getArguments().get(0))) {
+        case Byte:
+        case Short:
+        case Character:
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() > b.intValue());
         case Long:
@@ -739,6 +770,9 @@ class Frame {
 
     private Frame processCmpLe(Expression expr, Frame target) {
         switch (getType(expr.getArguments().get(0))) {
+        case Byte:
+        case Short:
+        case Character:
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() <= b.intValue());
         case Long:
@@ -755,6 +789,9 @@ class Frame {
 
     private Frame processCmpLt(Expression expr, Frame target) {
         switch (getType(expr.getArguments().get(0))) {
+        case Byte:
+        case Short:
+        case Character:
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() < b.intValue());
         case Long:
@@ -771,6 +808,9 @@ class Frame {
 
     private Frame processCmpNe(Expression expr, Frame target) {
         switch (getType(expr.getArguments().get(0))) {
+        case Byte:
+        case Short:
+        case Character:
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() != b.intValue());
         case Long:
@@ -787,6 +827,9 @@ class Frame {
 
     private Frame processCmpEq(Expression expr, Frame target) {
         switch (getType(expr.getArguments().get(0))) {
+        case Byte:
+        case Short:
+        case Character:
         case Integer:
             return target.processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a.intValue() == b.intValue());
         case Long:
@@ -845,9 +888,5 @@ class Frame {
                 storeValue(phi, UNKNOWN_VALUE);
         }
         return phi;
-    }
-
-    private static Expression makeUpdatedNode(Expression src) {
-        return new Expression(UPDATE_TYPE, null, src.getOffset(), src);
     }
 }

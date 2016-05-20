@@ -316,18 +316,19 @@ public class ValuesFlow {
                 initBackLinks(child, lambdas);
     }
 
-    public static List<Expression> annotate(Context ctx, MethodDefinition md, Block method) {
+    public static List<Expression> annotate(Context ctx, MethodDefinition md, ClassFields cf, Block method) {
         ctx.incStat("ValuesFlow.Total");
         List<Lambda> lambdas = new ArrayList<>();
         initBackLinks(method, lambdas);
-        Frame origFrame = new Frame(md);
+        FrameContext fc = new FrameContext(md, cf);
+        Frame origFrame = new Frame(fc);
         List<Expression> origParams = new ArrayList<>(origFrame.initial.values());
         FrameSet fs = new FrameSet(origFrame);
         fs.process(ctx, method);
         if (fs.valid) {
             boolean valid = true;
             for(Lambda lambda : lambdas) {
-                valid &= annotate(ctx, Nodes.getLambdaMethod(lambda), lambda.getBody()) != null;
+                valid &= annotate(ctx, Nodes.getLambdaMethod(lambda), cf, lambda.getBody()) != null;
             }
             if (valid) {
                 ctx.incStat("ValuesFlow");

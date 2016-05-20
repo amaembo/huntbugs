@@ -41,6 +41,7 @@ import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
+import one.util.huntbugs.flow.ClassFields;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.repo.Repository;
@@ -198,6 +199,8 @@ public class DetectorRegistry {
         for(FieldDefinition fd : type.getDeclaredFields()) {
             fields.add(new FieldData(fd, cdata));
         }
+        
+        ClassFields cf = new ClassFields(type);
 
         for (MethodDefinition md : type.getDeclaredMethods()) {
             if(md.isSynthetic() && md.getName().startsWith("lambda$"))
@@ -225,7 +228,7 @@ public class DetectorRegistry {
                     try {
                         methodAst.getBody().addAll(AstBuilder.build(body, true, context));
                         AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
-                        mdata.origParams = ValuesFlow.annotate(ctx, md, methodAst);
+                        mdata.origParams = ValuesFlow.annotate(ctx, md, cf, methodAst);
                     } catch (Throwable t) {
                         ctx.addError(new ErrorMessage(null, type.getFullName(), md.getFullName(), md.getSignature(),
                                 -1, t));

@@ -25,7 +25,26 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  */
 public class TestKnownComparison {
     private static Integer val = 0; 
-    private Integer f = 0; 
+    private Integer f = 0;
+    private final int finalField;
+    private char ch;
+    
+    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    public TestKnownComparison() {
+        finalField = 10;
+        testInstanceFieldOk2(true);
+        if(finalField != 10) {
+            System.out.println("Never!");
+        }
+    }
+    
+    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    public TestKnownComparison(boolean b) {
+        if(ch + 1 == 5) {
+            System.out.println("Never! "+b);
+        }
+        finalField = 15;
+    }
     
     @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testAnd(int x) {
@@ -381,5 +400,19 @@ public class TestKnownComparison {
             System.out.println("Never");
         }
         System.out.println(x);
+    }
+    
+    @AssertNoWarning(type="*")
+    public void testFieldLoop() {
+        f = 0;
+        while(f < 10) {
+            if(Math.random() > 0.5) {
+                f++;
+                System.out.println(f);
+            } else {
+                f = 1;
+                System.out.println(f+"!");
+            }
+        }
     }
 }
