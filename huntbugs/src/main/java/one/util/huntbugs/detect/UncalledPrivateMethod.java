@@ -133,6 +133,7 @@ public class UncalledPrivateMethod {
 
     private void remove(MemberInfo mi) {
         Set<MemberInfo> called = candidates.remove(mi);
+        candidates.values().forEach(set -> set.remove(mi));
         if(called != null) {
             called.forEach(this::remove);
         }
