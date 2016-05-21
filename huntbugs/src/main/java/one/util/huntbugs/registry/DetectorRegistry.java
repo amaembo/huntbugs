@@ -19,6 +19,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -201,8 +202,12 @@ public class DetectorRegistry {
         }
         
         ClassFields cf = new ClassFields(type);
+        List<MethodDefinition> declMethods = new ArrayList<>(type.getDeclaredMethods());
+        declMethods.sort(Comparator.comparingInt(md ->
+                md.isTypeInitializer() ? 0 :
+                    md.isConstructor() ? 1 : 2));
 
-        for (MethodDefinition md : type.getDeclaredMethods()) {
+        for (MethodDefinition md : declMethods) {
             if(md.isSynthetic() && md.getName().startsWith("lambda$"))
                 continue;
             MethodData mdata = new MethodData(md, cdata);

@@ -21,6 +21,7 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
+import com.strobel.decompiler.ast.Expression;
 
 /**
  * @author lan
@@ -28,6 +29,7 @@ import com.strobel.assembler.metadata.TypeDefinition;
  */
 public class ClassFields {
     Map<MemberInfo, FieldDefinition> fields = new HashMap<>();
+    Map<MemberInfo, Expression> values = new HashMap<>();
 
     public ClassFields(TypeDefinition td) {
         for (FieldDefinition fd : td.getDeclaredFields()) {
@@ -38,5 +40,24 @@ public class ClassFields {
     public boolean isKnownFinal(MemberInfo field) {
         FieldDefinition fd = fields.get(field);
         return fd != null && fd.isFinal();
+    }
+
+    void mergeFinalFields(Frame frame) {
+        frame.fieldValues.forEach((mi, expr) -> {
+            FieldDefinition fd = fields.get(mi);
+            if(fd != null && !fd.isStatic() && fd.isFinal()) {
+                // TODO: better merging
+                values.merge(mi, expr, Frame::makePhiNode);
+            }
+        });
+    }
+
+    void setStaticFinalFields(Frame frame) {
+        frame.fieldValues.forEach((mi, expr) -> {
+            FieldDefinition fd = fields.get(mi);
+            if(fd != null && fd.isStatic() && fd.isFinal()) {
+                values.put(mi, expr);
+            }
+        });
     }
 }

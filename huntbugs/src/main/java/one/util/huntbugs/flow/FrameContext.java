@@ -59,12 +59,20 @@ class FrameContext {
             cf.fields.forEach((mi, fd) -> {
                 if(!fd.isStatic())
                     map.put(mi, getInitialExpression(fd.getFieldType().getSimpleType()));
+                else {
+                    Expression expr = cf.values.get(mi);
+                    if(expr != null)
+                        map.put(mi, expr);
+                }
             });
         } else if(md.isTypeInitializer()) {
             cf.fields.forEach((mi, fd) -> {
                 if(fd.isStatic())
-                    map.put(mi, getInitialExpression(fd.getFieldType().getSimpleType()));
+                    map.put(mi, fd.getConstantValue() != null ? constant(fd.getConstantValue())
+                            : getInitialExpression(fd.getFieldType().getSimpleType()));
             });
+        } else {
+            map.putAll(cf.values);
         }
         return Maps.compactify(map);
     }
@@ -100,5 +108,13 @@ class FrameContext {
 
     Expression makeUpdatedNode(Expression src) {
         return updatedNodes.computeIfAbsent(src, s -> new Expression(Frame.UPDATE_TYPE, null, s.getOffset(), s));
+    }
+
+    public void makeFieldsFrom(Frame frame) {
+        if(md.isTypeInitializer()) {
+            cf.setStaticFinalFields(frame);
+        } else if(md.isConstructor()) {
+            cf.mergeFinalFields(frame);
+        }
     }
 }

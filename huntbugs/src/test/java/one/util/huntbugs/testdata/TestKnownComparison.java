@@ -30,6 +30,13 @@ public class TestKnownComparison {
     private char ch;
     
     @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testFinalField() {
+        if(finalField > 15) {
+            System.out.println("Never!");
+        }
+    }
+    
+    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
     public TestKnownComparison() {
         finalField = 10;
         testInstanceFieldOk2(true);
@@ -43,7 +50,7 @@ public class TestKnownComparison {
         if(ch + 1 == 5) {
             System.out.println("Never! "+b);
         }
-        finalField = 15;
+        finalField = 10;
     }
     
     @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
@@ -412,6 +419,18 @@ public class TestKnownComparison {
             } else {
                 f = 1;
                 System.out.println(f+"!");
+            }
+        }
+    }
+    
+    @AssertWarning(type="ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertNoWarning(type="ResultOfComparisonIsStaticallyKnown")
+    static class TestInitial {
+        static long x = 2;
+        
+        static {
+            if(x < 1) {
+                System.out.println("Cannot be");
             }
         }
     }

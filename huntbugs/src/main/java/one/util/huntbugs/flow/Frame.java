@@ -47,7 +47,7 @@ import com.strobel.decompiler.ast.Variable;
 class Frame {
     private final Map<Variable, Expression> sources;
     private final FrameContext fc;
-    private final Map<MemberInfo, Expression> fieldValues;
+    final Map<MemberInfo, Expression> fieldValues;
     final Map<ParameterDefinition, Expression> initial;
     static final AstCode PHI_TYPE = AstCode.Wrap;
     static final AstCode UPDATE_TYPE = AstCode.Nop;
@@ -374,7 +374,7 @@ class Frame {
         set.add(target);
     }
 
-    private void storeValue(Expression expr, Object val) {
+    private static void storeValue(Expression expr, Object val) {
         Object curValue = expr.getUserData(ValuesFlow.VALUE_KEY);
         if (Objects.equals(val, curValue) || curValue == UNKNOWN_VALUE)
             return;
@@ -844,7 +844,7 @@ class Frame {
         return target;
     }
 
-    private Expression makePhiNode(Expression left, Expression right) {
+    static Expression makePhiNode(Expression left, Expression right) {
         if (left == null)
             return right;
         if (right == null || left == right)

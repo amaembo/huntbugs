@@ -58,7 +58,7 @@ public class ValuesFlow {
     
     static class FrameSet {
         boolean valid = true;
-        Frame passFrame, breakFrame, continueFrame;
+        Frame passFrame, breakFrame, continueFrame, returnFrame;
         Map<Label, Frame> labelFrames = null;
     
         FrameSet(Frame start) {
@@ -72,6 +72,7 @@ public class ValuesFlow {
                 other.labelFrames.forEach((label, frame) ->
                     labelFrames.merge(label, frame, Frame::combine));
             }
+            returnFrame = Frame.combine(returnFrame, other.returnFrame);
         }
     
         void process(Context ctx, Block block) {
@@ -100,6 +101,9 @@ public class ValuesFlow {
                         passFrame = null;
                         return;
                     case Return:
+                        returnFrame = passFrame.processChildren(expr);
+                        passFrame = null;
+                        return;
                     case AThrow:
                         passFrame.processChildren(expr);
                         passFrame = null;
@@ -326,6 +330,8 @@ public class ValuesFlow {
         List<Expression> origParams = new ArrayList<>(origFrame.initial.values());
         FrameSet fs = new FrameSet(origFrame);
         fs.process(ctx, method);
+        Frame exitFrame = Frame.combine(fs.returnFrame, fs.passFrame);
+        fc.makeFieldsFrom(exitFrame);
         if (fs.valid) {
             boolean valid = true;
             for(Lambda lambda : lambdas) {
