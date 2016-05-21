@@ -43,6 +43,8 @@ public class ClassFields {
     }
 
     void mergeFinalFields(Frame frame) {
+        if(frame == null)
+            return;
         frame.fieldValues.forEach((mi, expr) -> {
             FieldDefinition fd = fields.get(mi);
             if(fd != null && !fd.isStatic() && fd.isFinal()) {
@@ -53,6 +55,8 @@ public class ClassFields {
     }
 
     void setStaticFinalFields(Frame frame) {
+        if(frame == null)
+            return;
         frame.fieldValues.forEach((mi, expr) -> {
             FieldDefinition fd = fields.get(mi);
             if(fd != null && fd.isStatic() && fd.isFinal()) {

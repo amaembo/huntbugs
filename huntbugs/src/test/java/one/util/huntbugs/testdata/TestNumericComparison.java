@@ -44,6 +44,13 @@ public class TestNumericComparison {
     }
 
     @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    public void testShort(short s) {
+        if(s == 0xFEF0) {
+            System.out.println("Never!");
+        }
+    }
+    
+    @AssertWarning(type="ComparisonWithOutOfRangeValue")
     public void testInt(boolean b) {
         int x = b ? 1 : 2;
         if(x > 2) {

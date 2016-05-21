@@ -77,11 +77,12 @@ public class Nodes {
         return ValuesFlow.getSource(node.getArguments().get(i));
     }
 
-    public static Expression getChildNoPhi(Expression node, int i) {
+    public static Expression getChildNoSpecial(Expression node, int i) {
         Expression arg = node.getArguments().get(i);
-        if(ValuesFlow.hasPhiSource(arg))
+        Expression src = ValuesFlow.getSource(arg);
+        if(ValuesFlow.isSpecial(src))
             return arg;
-        return ValuesFlow.getSource(arg);
+        return src;
     }
 
     public static Object getConstant(Node node) {

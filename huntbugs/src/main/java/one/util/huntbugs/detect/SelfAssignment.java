@@ -49,8 +49,8 @@ public class SelfAssignment {
                 if(getField.getCode() == AstCode.GetField) {
                     FieldReference frGet = (FieldReference) getField.getOperand();
                     if(frPut.equals(frGet.resolve())) {
-                        Node selfPut = Nodes.getChildNoPhi(expr, 0);
-                        Node selfGet = Nodes.getChildNoPhi(getField, 0);
+                        Node selfPut = Nodes.getChildNoSpecial(expr, 0);
+                        Node selfGet = Nodes.getChildNoSpecial(getField, 0);
                         if(Nodes.isEquivalent(selfGet, selfPut)) {
                             mc.report("SelfAssignmentField", 0, expr);
                         }
@@ -71,10 +71,10 @@ public class SelfAssignment {
         } else if(expr.getCode() == AstCode.StoreElement) {
             Expression sourceRef = Nodes.getChild(expr, 2);
             if(sourceRef.getCode() == AstCode.LoadElement) {
-                Expression storeArrayRef = Nodes.getChildNoPhi(expr, 0);
-                Expression storeIndexRef = Nodes.getChildNoPhi(expr, 1);
-                Expression loadArrayRef = Nodes.getChildNoPhi(sourceRef, 0);
-                Expression loadIndexRef = Nodes.getChildNoPhi(sourceRef, 1);
+                Expression storeArrayRef = Nodes.getChildNoSpecial(expr, 0);
+                Expression storeIndexRef = Nodes.getChildNoSpecial(expr, 1);
+                Expression loadArrayRef = Nodes.getChildNoSpecial(sourceRef, 0);
+                Expression loadIndexRef = Nodes.getChildNoSpecial(sourceRef, 1);
                 if(Nodes.isEquivalent(storeArrayRef, loadArrayRef) && Nodes.isEquivalent(storeIndexRef, loadIndexRef)) {
                     mc.report("SelfAssignmentArrayElement", 0, expr);
                 }

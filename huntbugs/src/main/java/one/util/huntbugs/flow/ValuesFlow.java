@@ -468,7 +468,7 @@ public class ValuesFlow {
         return !usages.isEmpty() && usages.stream().allMatch(parent -> isAssertionCondition(parent) || isAssertion(parent));
     }
     
-    public static boolean isPhi(Expression expr) {
-        return expr.getCode() == Frame.PHI_TYPE;
+    public static boolean isSpecial(Expression expr) {
+        return expr.getCode() == Frame.PHI_TYPE || expr.getCode() == Frame.UPDATE_TYPE;
     }
 }

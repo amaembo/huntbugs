@@ -125,9 +125,7 @@ public class NumericComparison {
     public void visit(Node node, MethodContext mc) {
         if (Nodes.isComparison(node)) {
             Expression expr = (Expression) node;
-            JvmType jvmType = promote(getIntegralType(expr.getArguments().get(0)), getIntegralType(expr.getArguments().get(1)));
-            if (jvmType == null)
-                return;
+            JvmType jvmType;
             AstCode code = expr.getCode();
             Expression arg;
             Object left = Nodes.getConstant(expr.getArguments().get(0));
@@ -139,6 +137,7 @@ public class NumericComparison {
                 }
                 constant = ((Number) left).longValue();
                 arg = Nodes.getChild(expr, 1);
+                jvmType = getIntegralType(expr.getArguments().get(1));
                 switch (code) {
                 case CmpGe:
                     code = AstCode.CmpLe;
@@ -159,7 +158,10 @@ public class NumericComparison {
                     return;
                 constant = ((Number) right).longValue();
                 arg = Nodes.getChild(expr, 0);
+                jvmType = getIntegralType(expr.getArguments().get(0));
             }
+            if(jvmType == null)
+                return;
             
             checkRem2Eq1(mc, jvmType, code, arg, constant);
             
@@ -198,18 +200,6 @@ public class NumericComparison {
                         });
             }
         }
-    }
-
-    private static JvmType promote(JvmType t1, JvmType t2) {
-        if(t1 == t2)
-            return t1;
-        if(t1 == null || t2 == null)
-            return null;
-        if(t1 == JvmType.Long || t2 == JvmType.Long)
-            return JvmType.Long;
-        if(t1 == JvmType.Integer || t2 == JvmType.Integer)
-            return JvmType.Integer;
-        return t1;
     }
 
     private JvmType getIntegralType(Expression expression) {
