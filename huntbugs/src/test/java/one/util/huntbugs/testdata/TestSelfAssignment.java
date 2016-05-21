@@ -168,5 +168,30 @@ public class TestSelfAssignment {
     void testLocal(Object f) {
         f = (Object)f; // cast to prevent error in Eclipse
     }
-    
+
+    public static class HeapNode {
+        public HeapNode[] myChildren;
+        public String myEdge;
+    }
+
+    @AssertNoWarning(type="*")
+    void heapify(HeapNode node) {
+        while (true) {
+            HeapNode min = node;
+            for (int i = 0; i < 2; i++) {
+                HeapNode child = node.myChildren[i];
+                if (child != null && child.myEdge.length() < min.myEdge.length()) {
+                    min = child;
+                }
+            }
+            if (min != node) {
+                String t = min.myEdge;
+                min.myEdge = node.myEdge;
+                node.myEdge = t;
+                node = min;
+            } else {
+                break;
+            }
+        }
+    }
 }

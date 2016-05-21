@@ -77,6 +77,13 @@ public class Nodes {
         return ValuesFlow.getSource(node.getArguments().get(i));
     }
 
+    public static Expression getChildNoPhi(Expression node, int i) {
+        Expression arg = node.getArguments().get(i);
+        if(ValuesFlow.hasPhiSource(arg))
+            return arg;
+        return ValuesFlow.getSource(arg);
+    }
+
     public static Object getConstant(Node node) {
         if (!(node instanceof Expression))
             return null;

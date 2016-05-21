@@ -30,7 +30,6 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Roles;
-import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author Tagir Valeev
@@ -50,8 +49,8 @@ public class SelfAssignment {
                 if(getField.getCode() == AstCode.GetField) {
                     FieldReference frGet = (FieldReference) getField.getOperand();
                     if(frPut.equals(frGet.resolve())) {
-                        Node selfPut = Nodes.getChild(expr, 0);
-                        Node selfGet = Nodes.getChild(getField, 0);
+                        Node selfPut = Nodes.getChildNoPhi(expr, 0);
+                        Node selfGet = Nodes.getChildNoPhi(getField, 0);
                         if(Nodes.isEquivalent(selfGet, selfPut)) {
                             mc.report("SelfAssignmentField", 0, expr);
                         }
@@ -72,10 +71,10 @@ public class SelfAssignment {
         } else if(expr.getCode() == AstCode.StoreElement) {
             Expression sourceRef = Nodes.getChild(expr, 2);
             if(sourceRef.getCode() == AstCode.LoadElement) {
-                Expression storeArrayRef = Nodes.getChild(expr, 0);
-                Expression storeIndexRef = Nodes.getChild(expr, 1);
-                Expression loadArrayRef = Nodes.getChild(sourceRef, 0);
-                Expression loadIndexRef = Nodes.getChild(sourceRef, 1);
+                Expression storeArrayRef = Nodes.getChildNoPhi(expr, 0);
+                Expression storeIndexRef = Nodes.getChildNoPhi(expr, 1);
+                Expression loadArrayRef = Nodes.getChildNoPhi(sourceRef, 0);
+                Expression loadIndexRef = Nodes.getChildNoPhi(sourceRef, 1);
                 if(Nodes.isEquivalent(storeArrayRef, loadArrayRef) && Nodes.isEquivalent(storeIndexRef, loadIndexRef)) {
                     mc.report("SelfAssignmentArrayElement", 0, expr);
                 }

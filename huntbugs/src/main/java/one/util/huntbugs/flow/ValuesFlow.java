@@ -461,4 +461,8 @@ public class ValuesFlow {
         Set<Expression> usages = findUsages(expr);
         return !usages.isEmpty() && usages.stream().allMatch(parent -> isAssertionCondition(parent) || isAssertion(parent));
     }
+    
+    public static boolean isPhi(Expression expr) {
+        return expr.getCode() == Frame.PHI_TYPE;
+    }
 }
