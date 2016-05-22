@@ -51,9 +51,8 @@ final class MethodData {
     private OffsetToLineNumberConverter ltc;
     List<Expression> origParams;
 
-    MethodData(MethodDefinition md, ClassData cd) {
+    MethodData(MethodDefinition md) {
         this.mainMethod = this.realMethod = md;
-        cd.registerAsserter(md);
     }
 
     int getLineNumber(int offset) {

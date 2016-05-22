@@ -399,6 +399,22 @@
       <LongDescription><![CDATA[This code calls $CALLED_METHOD$ method. This is unnecessary as it just returns the original string.
       Simply use the original string.]]></LongDescription>
     </Warning>
+    <Warning Type="HashCodeNoEquals">
+      <Title>Class defines hashCode() but not equals()</Title>
+      <Description>The class $TYPE$ defines hashCode() but not equals().</Description>
+      <LongDescription><![CDATA[This class defines a $METHOD$ method but not an <code>equals()</code> method.
+      Instead, the $SUPER_METHOD$ defined in superclass will be used.
+      Therefore, the class may violate the invariant that equal objects must have equal hashcodes.]]></LongDescription>
+    </Warning>
+    <Warning Type="HashCodeObjectEquals">
+      <Title>Class defines hashCode() and uses Object.equals()</Title>
+      <Description>The class $TYPE$ defines hashCode() and uses Object.equals().</Description>
+      <LongDescription><![CDATA[This class defines a $METHOD$ method but inherits its <code>equals()</code> method 
+      from <code>java.lang.Object</code> (which defines equality by comparing object references).
+      Although this will probably satisfy the contract that equal objects must have equal hashcodes, 
+      it is probably not what was intended by overriding the <code>hashCode()</code> method.
+      Overriding hashCode() implies that the object's identity is based on criteria more complicated than simple reference equality.]]></LongDescription>
+    </Warning>
     <Warning Type="EqualsReturnsFalse">
       <Title>The equals() method always returns false</Title>
       <Description>The $METHOD$ method always returns false.</Description>

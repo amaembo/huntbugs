@@ -71,6 +71,16 @@ class FrameContext {
                     map.put(mi, fd.getConstantValue() != null ? constant(fd.getConstantValue())
                             : getInitialExpression(fd.getFieldType().getSimpleType()));
             });
+        } else if((md.getName().equals("readResolve") || md.getName().equals("readObjectNoData"))
+                && md.getSignature().startsWith("()") ||
+                md.getName().equals("readObject") && md.getSignature().equals("(Ljava/io/ObjectInputStream;)V")){
+            cf.fields.forEach((mi, fd) -> {
+                if(fd.isStatic()) {
+                    Expression expr = cf.values.get(mi);
+                    if(expr != null)
+                        map.put(mi, expr);
+                }
+            });
         } else {
             map.putAll(cf.values);
         }

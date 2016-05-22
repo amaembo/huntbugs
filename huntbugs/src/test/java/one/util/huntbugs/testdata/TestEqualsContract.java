@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.util.ArrayList;
+
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -87,6 +89,30 @@ public class TestEqualsContract {
 	public static class EqualsOk {
 	    public boolean equals(EqualsOk other, int check) {
 	        return other != this && check > 2;
+	    }
+	}
+	
+	public static class HashCodeObject {
+	    @Override
+        @AssertWarning(type="HashCodeObjectEquals")
+	    public int hashCode() {
+	        return 42;
+	    }
+	}
+	
+	public static class HashCodeList extends ArrayList<String> {
+        private static final long serialVersionUID = 1L;
+        
+        String myField;
+	    
+        public HashCodeList(String myField) {
+            this.myField = myField;
+        }
+
+        @Override
+        @AssertWarning(type="HashCodeNoEquals")
+	    public int hashCode() {
+	        return super.hashCode()*31+myField.hashCode();
 	    }
 	}
 }

@@ -24,9 +24,8 @@ import com.strobel.assembler.metadata.FieldDefinition;
 final class FieldData {
     final FieldDefinition fd;
 
-    public FieldData(FieldDefinition fd, ClassData cd) {
+    public FieldData(FieldDefinition fd) {
         this.fd = fd;
-        cd.registerAsserter(fd);
     }
 
     @Override

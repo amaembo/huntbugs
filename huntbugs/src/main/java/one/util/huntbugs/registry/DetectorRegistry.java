@@ -27,7 +27,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.MethodBody;
 import com.strobel.assembler.metadata.MethodDefinition;
@@ -191,26 +190,26 @@ public class DetectorRegistry {
 
     public void analyzeClass(TypeDefinition type) {
         ctx.incStat("TotalClasses");
+        
         ClassData cdata = new ClassData(type);
-        ClassContext[] ccs = detectors.stream().map(d -> new ClassContext(ctx, cdata, d)).filter(
-            ClassContext::visitClass).toArray(ClassContext[]::new);
-        
-        List<FieldData> fields = new ArrayList<>();
-        
-        for(FieldDefinition fd : type.getDeclaredFields()) {
-            fields.add(new FieldData(fd, cdata));
-        }
-        
         ClassFields cf = new ClassFields(type);
+        
         List<MethodDefinition> declMethods = new ArrayList<>(type.getDeclaredMethods());
         declMethods.sort(Comparator.comparingInt(md ->
                 md.isTypeInitializer() ? 0 :
                     md.isConstructor() ? 1 : 2));
+        List<FieldData> fields = type.getDeclaredFields().stream().map(FieldData::new).collect(Collectors.toList());
 
+        type.getDeclaredMethods().forEach(cdata::registerAsserter);
+        type.getDeclaredFields().forEach(cdata::registerAsserter);
+
+        ClassContext[] ccs = detectors.stream().map(d -> new ClassContext(ctx, cdata, d)).filter(
+            ClassContext::visitClass).toArray(ClassContext[]::new);
+        
         for (MethodDefinition md : declMethods) {
             if(md.isSynthetic() && md.getName().startsWith("lambda$"))
                 continue;
-            MethodData mdata = new MethodData(md, cdata);
+            MethodData mdata = new MethodData(md);
 
             Map<Boolean, List<MethodContext>> mcs = Stream.of(ccs).map(cc -> cc.forMethod(mdata)).collect(
                 Collectors.partitioningBy(MethodContext::visitMethod));

@@ -20,6 +20,8 @@ import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 
+import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
+
 /**
  * @author Tagir Valeev
  *
@@ -33,19 +35,20 @@ public class Methods {
         return mr.getName().equals("getClass") && mr.getErasedSignature().equals("()Ljava/lang/Class;");
     }
     
-    public static MethodDefinition findSuperMethod(MethodDefinition md) {
-        return findSuperMethod(md.getDeclaringType(), md);
+    public static MethodDefinition findSuperMethod(MethodReference md) {
+        TypeDefinition td = md.getDeclaringType().resolve();
+        return td == null ? null : findSuperMethod(td, new MemberInfo(md));
     }
     
-    private static MethodDefinition findSuperMethod(TypeDefinition type, MethodDefinition md) {
+    public static MethodDefinition findSuperMethod(TypeDefinition type, MemberInfo mi) {
         TypeReference superType = type.getBaseType();
         if(superType != null) {
             TypeDefinition superTd = superType.resolve();
             if(superTd != null) {
-                MethodDefinition result = findMethod(superTd, md);
+                MethodDefinition result = findMethod(superTd, mi);
                 if(result != null)
                     return result;
-                result = findSuperMethod(superTd, md);
+                result = findSuperMethod(superTd, mi);
                 if(result != null)
                     return result;
             }
@@ -53,10 +56,10 @@ public class Methods {
         for(TypeReference iface : type.getExplicitInterfaces()) {
             TypeDefinition ifaceTd = iface.resolve();
             if(ifaceTd != null) {
-                MethodDefinition result = findMethod(ifaceTd, md);
+                MethodDefinition result = findMethod(ifaceTd, mi);
                 if(result != null)
                     return result;
-                result = findSuperMethod(ifaceTd, md);
+                result = findSuperMethod(ifaceTd, mi);
                 if(result != null)
                     return result;
             }
@@ -64,13 +67,13 @@ public class Methods {
         return null; 
     }
 
-    private static MethodDefinition findMethod(TypeDefinition td, MethodDefinition md) {
+    private static MethodDefinition findMethod(TypeDefinition td, MemberInfo mi) {
         if(td == null)
             return null;
         for(MethodDefinition decl : td.getDeclaredMethods()) {
-            if(decl.getName().equals(md.getName())) {
+            if(decl.getName().equals(mi.getName())) {
                 String sig1 = decl.getErasedSignature();
-                String sig2 = md.getErasedSignature();
+                String sig2 = mi.getSignature();
                 if(sig1 == sig2)
                     return decl;
                 if(sig1.substring(0, sig1.indexOf(')')).equals(sig2.substring(0, sig2.indexOf(')'))))

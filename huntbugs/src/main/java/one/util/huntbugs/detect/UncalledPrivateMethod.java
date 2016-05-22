@@ -36,7 +36,6 @@ import com.strobel.assembler.metadata.annotations.CustomAnnotation;
 import one.util.huntbugs.registry.ClassContext;
 import one.util.huntbugs.registry.anno.AssertWarning;
 import one.util.huntbugs.registry.anno.ClassVisitor;
-import one.util.huntbugs.registry.anno.VisitOrder;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Roles;
@@ -56,7 +55,7 @@ public class UncalledPrivateMethod {
     
     private final Map<MemberInfo, Set<MemberInfo>> candidates = new LinkedHashMap<>();
     
-    @ClassVisitor(order=VisitOrder.AFTER)
+    @ClassVisitor
     public void visitType(TypeDefinition td, ClassContext cc) {
         for(MethodDefinition md : td.getDeclaredMethods()) {
             if(md.isPrivate() && !md.isSpecialName() 

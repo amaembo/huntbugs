@@ -37,6 +37,7 @@ import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
+import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 import one.util.huntbugs.warning.Role.MemberRole;
 
 /**
@@ -49,6 +50,8 @@ import one.util.huntbugs.warning.Role.MemberRole;
 @WarningDefinition(category = "BadPractice", name = "EqualsOther", maxScore = 40)
 @WarningDefinition(category = "BadPractice", name = "EqualsSelf", maxScore = 50)
 @WarningDefinition(category = "BadPractice", name = "EqualsEnum", maxScore = 60)
+@WarningDefinition(category = "BadPractice", name = "HashCodeObjectEquals", maxScore = 40)
+@WarningDefinition(category = "BadPractice", name = "HashCodeNoEquals", maxScore = 50)
 public class EqualsContract {
     private static final MemberRole NORMAL_EQUALS = MemberRole.forName("NORMAL_EQUALS");
     
@@ -57,6 +60,9 @@ public class EqualsContract {
         MethodDefinition equalsSelf = null;
         MethodDefinition equalsObject = null;
         MethodDefinition equalsOther = null;
+        MethodDefinition hashCode = null;
+        MethodDefinition superEquals = null;
+        MethodDefinition superHashCode = null;
         for (MethodDefinition md : td.getDeclaredMethods()) {
             if (!md.isStatic() && md.getName().equals("equals") && md.getReturnType().getSimpleType() == JvmType.Boolean
                 && md.getParameters().size() == 1) {
@@ -68,6 +74,22 @@ public class EqualsContract {
                 } else if (!type.isPrimitive()) {
                     equalsOther = md;
                 }
+            }
+            if (!md.isStatic() && md.getName().equals("hashCode") && md.getSignature().equals("()I")) {
+                hashCode = md;
+            }
+        }
+        if (equalsObject == null) {
+            superEquals = Methods.findSuperMethod(td, new MemberInfo(td.getInternalName(), "equals", "(Ljava/lang/Object;)Z"));
+        }
+        if (hashCode == null) {
+            superHashCode = Methods.findSuperMethod(td, new MemberInfo(td.getInternalName(), "hashCode", "()I"));
+        }
+        if (hashCode != null && !hashCode.isAbstract() && equalsObject == null && equalsSelf == null) {
+            if(superEquals == null || Types.isObject(superEquals.getDeclaringType())) {
+                cc.report("HashCodeObjectEquals", 0, Roles.METHOD.create(hashCode));
+            } else if(!superEquals.isFinal()) {
+                cc.report("HashCodeNoEquals", 0, Roles.METHOD.create(hashCode), Roles.SUPER_METHOD.create(superEquals));
             }
         }
         if (equalsObject == null && equalsSelf == null && equalsOther != null) {
@@ -144,7 +166,7 @@ public class EqualsContract {
     private static boolean isClassGetName(Expression expr) {
         if (expr.getCode() == AstCode.InvokeVirtual) {
             MethodReference mr = (MethodReference) expr.getOperand();
-            if (mr.getName().equals("getName") && mr.getDeclaringType().getInternalName().equals("java/lang/Class"))
+            if (mr.getName().equals("getName") && Types.is(mr.getDeclaringType(), Class.class))
                 return true;
         }
         return false;

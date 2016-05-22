@@ -77,6 +77,10 @@ public final class Roles {
      */
     public static final MemberRole REPLACEMENT_METHOD = new MemberRole("REPLACEMENT", Count.ZERO_ONE);
     /**
+     * Super-class method associated with the warning
+     */
+    public static final MemberRole SUPER_METHOD = new MemberRole("SUPER_METHOD", Count.ZERO_ONE);
+    /**
      * Replacement expression or operator
      */
     public static final StringRole REPLACEMENT_STRING = new StringRole("REPLACEMENT", Count.ZERO_ONE);
