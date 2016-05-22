@@ -121,14 +121,14 @@ public class Context {
     }
 
     private boolean preparingClasses(Set<String> classes) {
-        MetadataSystem ms = new MetadataSystem(loader);
+        MetadataSystem ms = createMetadataSystem();
         Set<String> auxClasses = new TreeSet<>();
         int count = 0;
         for (String className : classes) {
             if (!fireEvent("Reading classes", className, count, classes.size()))
                 return false;
             if(++count % 1000 == 0) {
-                ms = new MetadataSystem(loader);
+                ms = createMetadataSystem();
             }
             TypeDefinition type;
             try {
@@ -150,13 +150,13 @@ public class Context {
         }
         if (!fireEvent("Reading classes", null, classes.size(), classes.size()))
             return false;
-        ms = new MetadataSystem(loader);
+        ms = createMetadataSystem();
         count = 0;
         for (String className : auxClasses) {
             if (!fireEvent("Reading dep classes", className, count, auxClasses.size()))
                 return false;
             if(++count % 1000 == 0) {
-                ms = new MetadataSystem(loader);
+                ms = createMetadataSystem();
             }
             TypeDefinition type;
             try {
@@ -171,6 +171,24 @@ public class Context {
         return fireEvent("Reading dep classes", null, auxClasses.size(), auxClasses.size());
     }
 
+    MetadataSystem createMetadataSystem() {
+        return new MetadataSystem(loader) {
+            @Override
+            protected TypeDefinition resolveType(String descriptor, boolean mightBePrimitive) {
+                if(missingClasses.contains(descriptor)) {
+                    return null;
+                }
+                try {
+                    return super.resolveType(descriptor, mightBePrimitive);
+                } catch (Throwable t) {
+                    addError(new ErrorMessage(null, descriptor, null, null, -1, t));
+                    missingClasses.add(descriptor);
+                    return null;
+                }
+            }
+        };
+    }
+
     private TypeDefinition lookUp(MetadataSystem ms, String className) {
         TypeReference tr = ms.lookupType(className);
         if(tr == null) {
@@ -181,11 +199,11 @@ public class Context {
     }
 
     private void analyzingClasses(Set<String> classes) {
-        MetadataSystem ms = new MetadataSystem(loader);
+        MetadataSystem ms = createMetadataSystem();
         classesCount.set(0);
         for (String className : classes) {
             if(classesCount.get() % 1000 == 0)
-                ms = new MetadataSystem(loader);
+                ms = createMetadataSystem();
             if (!fireEvent("Analyzing classes", className, classesCount.get(), classes.size()))
                 return;
             analyzeClass(ms, className);
