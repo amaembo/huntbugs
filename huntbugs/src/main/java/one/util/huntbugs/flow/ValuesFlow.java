@@ -330,9 +330,9 @@ public class ValuesFlow {
         List<Expression> origParams = new ArrayList<>(origFrame.initial.values());
         FrameSet fs = new FrameSet(origFrame);
         fs.process(ctx, method);
-        Frame exitFrame = Frame.combine(fs.returnFrame, fs.passFrame);
-        fc.makeFieldsFrom(exitFrame);
         if (fs.valid) {
+            Frame exitFrame = Frame.combine(fs.returnFrame, fs.passFrame);
+            fc.makeFieldsFrom(exitFrame);
             boolean valid = true;
             for(Lambda lambda : lambdas) {
                 valid &= annotate(ctx, Nodes.getLambdaMethod(lambda), cf, lambda.getBody()) != null;
