@@ -415,6 +415,26 @@
       it is probably not what was intended by overriding the <code>hashCode()</code> method.
       Overriding hashCode() implies that the object's identity is based on criteria more complicated than simple reference equality.]]></LongDescription>
     </Warning>
+    <Warning Type="EqualsNoHashCode">
+      <Title>Class defines equals() but not hashCode()</Title>
+      <Description>The class $TYPE$ defines equals() but not hashCode().</Description>
+      <LongDescription><![CDATA[This class defines a $METHOD$ method but not a <code>hashCode()</code> method.
+      Instead, the $SUPER_METHOD$ defined in superclass will be used.
+      Therefore, the class may violate the invariant that equal objects must have equal hashcodes.]]></LongDescription>
+    </Warning>
+    <Warning Type="EqualsObjectHashCode">
+      <Title>Class defines equals() and uses Object.hashCode()</Title>
+      <Description>The class $TYPE$ defines equals() and uses Object.hashCode().</Description>
+      <LongDescription><![CDATA[This class defines a $METHOD$ method but inherits its <code>hashCode()</code> method 
+      from <code>java.lang.Object</code> (which returns the identity hash code, an arbitrary value assigned to the object by the VM).
+      Therefore, the class is very likely to violate the invariant that equal objects must have equal hashcodes.
+      If you don't think instances of this class will ever be inserted into a <code>HashMap/HashSet</code>, the recommended hashCode implementation to use is:
+      
+<pre>public int hashCode() {
+   assert false : "hashCode not designed";
+   return 42; // any arbitrary constant will do
+}</pre>]]></LongDescription>
+    </Warning>
     <Warning Type="EqualsReturnsFalse">
       <Title>The equals() method always returns false</Title>
       <Description>The $METHOD$ method always returns false.</Description>

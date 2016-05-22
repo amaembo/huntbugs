@@ -156,6 +156,8 @@ abbrev="RANGE" type="RANGE_ARRAY_OFFSET" category="CORRECTNESS" --> ArrayOffsetO
 abbrev="RANGE" type="RANGE_ARRAY_LENGTH" category="CORRECTNESS" --> ArrayLengthOutOfRange, ArrayIndexNegative
 abbrev="HE" type="HE_HASHCODE_USE_OBJECT_EQUALS" category="BAD_PRACTICE" --> HashCodeObjectEquals
 abbrev="HE" type="HE_HASHCODE_NO_EQUALS" category="BAD_PRACTICE" --> HashCodeNoEquals
+abbrev="HE" type="HE_EQUALS_USE_HASHCODE" category="BAD_PRACTICE" --> EqualsObjectHashCode
+abbrev="HE" type="HE_EQUALS_NO_HASHCODE" category="BAD_PRACTICE" --> EqualsNoHashCode
 
 ==== Not reimplemented
 
@@ -215,9 +217,7 @@ abbrev="ES" type="ES_COMPARING_PARAMETER_STRING_WITH_EQ" category="BAD_PRACTICE"
 abbrev="HE" type="HE_SIGNATURE_DECLARES_HASHING_OF_UNHASHABLE_CLASS" category="CORRECTNESS"
 abbrev="HE" type="HE_USE_OF_UNHASHABLE_CLASS" category="CORRECTNESS"
 abbrev="Eq" type="EQ_COMPARETO_USE_OBJECT_EQUALS" category="BAD_PRACTICE"
-abbrev="HE" type="HE_EQUALS_USE_HASHCODE" category="BAD_PRACTICE"
 abbrev="HE" type="HE_INHERITS_EQUALS_USE_HASHCODE" category="BAD_PRACTICE"
-abbrev="HE" type="HE_EQUALS_NO_HASHCODE" category="BAD_PRACTICE"
 abbrev="Eq" type="EQ_ABSTRACT_SELF" category="BAD_PRACTICE"
 abbrev="Co" type="CO_ABSTRACT_SELF" category="BAD_PRACTICE"
 abbrev="MSF" type="MSF_MUTABLE_SERVLET_FIELD" category="MT_CORRECTNESS"

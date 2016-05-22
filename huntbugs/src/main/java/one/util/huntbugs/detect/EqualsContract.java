@@ -17,6 +17,7 @@ package one.util.huntbugs.detect;
 
 import java.util.List;
 
+import com.strobel.assembler.metadata.Flags;
 import com.strobel.assembler.metadata.JvmType;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
@@ -32,6 +33,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.ClassVisitor;
+import one.util.huntbugs.registry.anno.VisitOrder;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
@@ -50,12 +52,34 @@ import one.util.huntbugs.warning.Role.MemberRole;
 @WarningDefinition(category = "BadPractice", name = "EqualsOther", maxScore = 40)
 @WarningDefinition(category = "BadPractice", name = "EqualsSelf", maxScore = 50)
 @WarningDefinition(category = "BadPractice", name = "EqualsEnum", maxScore = 60)
-@WarningDefinition(category = "BadPractice", name = "HashCodeObjectEquals", maxScore = 40)
-@WarningDefinition(category = "BadPractice", name = "HashCodeNoEquals", maxScore = 50)
+@WarningDefinition(category = "BadPractice", name = "HashCodeObjectEquals", maxScore = 45)
+@WarningDefinition(category = "BadPractice", name = "HashCodeNoEquals", maxScore = 55)
+@WarningDefinition(category = "BadPractice", name = "EqualsObjectHashCode", maxScore = 45)
+@WarningDefinition(category = "BadPractice", name = "EqualsNoHashCode", maxScore = 55)
 public class EqualsContract {
     private static final MemberRole NORMAL_EQUALS = MemberRole.forName("NORMAL_EQUALS");
     
-    @ClassVisitor
+    boolean alwaysFalse = false;
+    
+    @AstVisitor(nodes = AstNodes.ROOT, methodName = "equals", methodSignature = "(Ljava/lang/Object;)Z")
+    public void visitMethod(Block body, MethodContext mc, MethodDefinition md, TypeDefinition td) {
+        List<Node> list = body.getBody();
+        if (list.size() == 1) {
+            Node node = list.get(0);
+            if (Nodes.isOp(node, AstCode.Return)) {
+                Object constant = Nodes.getConstant(Nodes.getChild(node, 0));
+                int priority = getPriority(td);
+                if (((Integer) 1).equals(constant))
+                    mc.report("EqualsReturnsTrue", priority, node);
+                else if (((Integer) 0).equals(constant)) {
+                    mc.report("EqualsReturnsFalse", priority, node);
+                    alwaysFalse = true;
+                }
+            }
+        }
+    }
+
+    @ClassVisitor(order=VisitOrder.AFTER)
     public void visitClass(TypeDefinition td, ClassContext cc) {
         MethodDefinition equalsSelf = null;
         MethodDefinition equalsObject = null;
@@ -63,6 +87,7 @@ public class EqualsContract {
         MethodDefinition hashCode = null;
         MethodDefinition superEquals = null;
         MethodDefinition superHashCode = null;
+        int basePriority = td.isPrivate() || td.isPackagePrivate() ? 20 : 0;
         for (MethodDefinition md : td.getDeclaredMethods()) {
             if (!md.isStatic() && md.getName().equals("equals") && md.getReturnType().getSimpleType() == JvmType.Boolean
                 && md.getParameters().size() == 1) {
@@ -75,7 +100,7 @@ public class EqualsContract {
                     equalsOther = md;
                 }
             }
-            if (!md.isStatic() && md.getName().equals("hashCode") && md.getSignature().equals("()I")) {
+            if (!md.isStatic() && !md.isBridgeMethod() && md.getName().equals("hashCode") && md.getSignature().equals("()I")) {
                 hashCode = md;
             }
         }
@@ -87,9 +112,26 @@ public class EqualsContract {
         }
         if (hashCode != null && !hashCode.isAbstract() && equalsObject == null && equalsSelf == null) {
             if(superEquals == null || Types.isObject(superEquals.getDeclaringType())) {
-                cc.report("HashCodeObjectEquals", 0, Roles.METHOD.create(hashCode));
+                cc.report("HashCodeObjectEquals", basePriority, Roles.METHOD.create(hashCode));
             } else if(!superEquals.isFinal()) {
-                cc.report("HashCodeNoEquals", 0, Roles.METHOD.create(hashCode), Roles.SUPER_METHOD.create(superEquals));
+                cc.report("HashCodeNoEquals", basePriority, Roles.METHOD.create(hashCode), Roles.SUPER_METHOD.create(superEquals));
+            }
+        }
+        if (hashCode == null && equalsObject != null && !alwaysFalse) {
+            if(superHashCode == null || Types.isObject(superHashCode.getDeclaringType())) {
+                int priority = basePriority;
+                if(Flags.testAny(td.getFlags(), Flags.ABSTRACT)) {
+                    priority += 10;
+                }
+                cc.report("EqualsObjectHashCode", priority, Roles.METHOD.create(equalsObject));
+            } else if(!superHashCode.getDeclaringType().getInternalName().startsWith("java/util/Abstract")) {
+                int priority = basePriority;
+                if(Flags.testAny(td.getFlags(), Flags.ABSTRACT)) {
+                    priority += 10;
+                }
+                if(td.getDeclaredFields().isEmpty())
+                    priority += 10;
+                cc.report("EqualsNoHashCode", priority, Roles.METHOD.create(equalsObject), Roles.SUPER_METHOD.create(superHashCode));
             }
         }
         if (equalsObject == null && equalsSelf == null && equalsOther != null) {
@@ -102,22 +144,6 @@ public class EqualsContract {
             else
                 cc.report("EqualsSelf", getPriority(td) + getPriority(equalsSelf), Roles.METHOD.create(equalsSelf),
                     NORMAL_EQUALS.create("java/lang/Object", "equals", "(Ljava/lang/Object;)Z"));
-        }
-    }
-
-    @AstVisitor(nodes = AstNodes.ROOT, methodName = "equals", methodSignature = "(Ljava/lang/Object;)Z")
-    public void visitMethod(Block body, MethodContext mc, MethodDefinition md, TypeDefinition td) {
-        List<Node> list = body.getBody();
-        if (list.size() == 1) {
-            Node node = list.get(0);
-            if (Nodes.isOp(node, AstCode.Return)) {
-                Object constant = Nodes.getConstant(Nodes.getChild(node, 0));
-                int priority = getPriority(td);
-                if (((Integer) 1).equals(constant))
-                    mc.report("EqualsReturnsTrue", priority, node);
-                else if (((Integer) 0).equals(constant))
-                    mc.report("EqualsReturnsFalse", priority, node);
-            }
         }
     }
 

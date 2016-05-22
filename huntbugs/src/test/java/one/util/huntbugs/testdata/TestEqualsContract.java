@@ -26,93 +26,180 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  */
 public class TestEqualsContract {
 
-	@Override
-	@AssertWarning(type="EqualsReturnsFalse", minScore = 40)
-	public boolean equals(Object obj) {
-		return false;
-	}
-	
-	static class NonPublic {
-	    @Override
-	    @AssertWarning(type="EqualsReturnsTrue", maxScore = 30)
-	    public boolean equals(Object obj) {
-	        return true;
-	    }
-	}
-	
-	public static final class Final {
-	    @Override
-	    @AssertWarning(type="EqualsReturnsFalse", minScore = 35, maxScore = 45)
-	    public boolean equals(Object obj) {
-	        return false;
-	    }
-	}
+    @Override
+    @AssertWarning(type = "EqualsReturnsFalse", minScore = 40)
+    public boolean equals(Object obj) {
+        return false;
+    }
 
-	public static final class ClassName {
-	    public int i;
-	    
-	    @Override
-	    @AssertWarning(type="EqualsClassNames")
-	    public boolean equals(Object obj) {
-	        if(!"one.util.huntbugs.testdata.TestEqualsContract.ClassName".equals(obj.getClass().getName()))
-	            return false;
-	        ClassName other = (ClassName)obj;
-	        return i == other.i;
-	    }
-	}
-	
-	@AssertWarning(type="EqualsOther")
-	public static class OtherEquals {
-	    public boolean equals(TestEqualsContract other) {
-	        return other != null;
-	    }
-	}
-	
-	@AssertWarning(type="EqualsSelf")
-	public static class SelfEquals {
-	    public boolean equals(SelfEquals other) {
-	        return other == this;
-	    }
-	}
-	
-	@AssertWarning(type="EqualsEnum")
-	@AssertNoWarning(type="EqualsSelf")
-	public static enum EnumEquals {
-	    A,B,C;
-	    
-	    public boolean equals(EnumEquals other) {
-	        return other == this;
-	    }
-	}
-	
-	@AssertNoWarning(type="*")
-	public static class EqualsOk {
-	    public boolean equals(EqualsOk other, int check) {
-	        return other != this && check > 2;
-	    }
-	}
-	
-	public static class HashCodeObject {
-	    @Override
-        @AssertWarning(type="HashCodeObjectEquals")
-	    public int hashCode() {
-	        return 42;
-	    }
-	}
-	
-	public static class HashCodeList extends ArrayList<String> {
+    static class NonPublic {
+        @Override
+        @AssertWarning(type = "EqualsReturnsTrue", maxScore = 30)
+        public boolean equals(Object obj) {
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            return 42;
+        }
+    }
+
+    public static class SubClass2 extends NonPublic {
+        int f;
+
+        @Override
+        @AssertWarning(type = "EqualsNoHashCode")
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (!super.equals(obj) || getClass() != obj.getClass())
+                return false;
+            SubClass other = (SubClass) obj;
+            return f == other.f;
+        }
+    }
+
+    public static final class Final {
+        @Override
+        @AssertWarning(type = "EqualsReturnsFalse", minScore = 35, maxScore = 45)
+        @AssertNoWarning(type = "EqualsObjectHashCode")
+        public boolean equals(Object obj) {
+            return false;
+        }
+    }
+
+    public static final class ClassName {
+        public int i;
+
+        @Override
+        @AssertWarning(type = "EqualsClassNames")
+        public boolean equals(Object obj) {
+            if (!"one.util.huntbugs.testdata.TestEqualsContract.ClassName".equals(obj.getClass().getName()))
+                return false;
+            ClassName other = (ClassName) obj;
+            return i == other.i;
+        }
+    }
+
+    @AssertWarning(type = "EqualsOther")
+    public static class OtherEquals {
+        public boolean equals(TestEqualsContract other) {
+            return other != null;
+        }
+    }
+
+    @AssertWarning(type = "EqualsSelf")
+    public static class SelfEquals {
+        public boolean equals(SelfEquals other) {
+            return other == this;
+        }
+
+        @Override
+        public int hashCode() {
+            return 42;
+        }
+    }
+
+    public static class SubClass extends SelfEquals {
+        int f;
+
+        @Override
+        @AssertWarning(type = "EqualsNoHashCode")
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (!super.equals(obj) || getClass() != obj.getClass())
+                return false;
+            SubClass other = (SubClass) obj;
+            return f == other.f;
+        }
+    }
+
+    @AssertWarning(type = "EqualsEnum")
+    @AssertNoWarning(type = "EqualsSelf")
+    public static enum EnumEquals {
+        A, B, C;
+
+        public boolean equals(EnumEquals other) {
+            return other == this;
+        }
+    }
+
+    @AssertNoWarning(type = "*")
+    public static class EqualsOk {
+        public boolean equals(EqualsOk other, int check) {
+            return other != this && check > 2;
+        }
+    }
+
+    public static class HashCodeObject {
+        @Override
+        @AssertWarning(type = "HashCodeObjectEquals")
+        public int hashCode() {
+            return 42;
+        }
+    }
+
+    public static class HashCodeList extends ArrayList<String> {
         private static final long serialVersionUID = 1L;
-        
+
         String myField;
-	    
+
         public HashCodeList(String myField) {
             this.myField = myField;
         }
 
         @Override
-        @AssertWarning(type="HashCodeNoEquals")
-	    public int hashCode() {
-	        return super.hashCode()*31+myField.hashCode();
-	    }
-	}
+        @AssertWarning(type = "HashCodeNoEquals")
+        public int hashCode() {
+            return super.hashCode() * 31 + myField.hashCode();
+        }
+    }
+
+    public static class EqualsObject {
+        public int f;
+
+        @Override
+        @AssertWarning(type = "EqualsObjectHashCode", maxScore = 48, minScore = 43)
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null || getClass() != obj.getClass())
+                return false;
+            EqualsObject other = (EqualsObject) obj;
+            return f == other.f;
+        }
+    }
+
+    static class EqualsObject2 {
+        public int f;
+
+        @Override
+        @AssertWarning(type = "EqualsObjectHashCode", maxScore = 32, minScore = 22)
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null || getClass() != obj.getClass())
+                return false;
+            EqualsObject other = (EqualsObject) obj;
+            return f == other.f;
+        }
+    }
+
+    @AssertNoWarning(type = "Equals*")
+    public static class EqualsList extends ArrayList<String> {
+        private static final long serialVersionUID = 1L;
+        public int f;
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (!super.equals(obj) || getClass() != obj.getClass())
+                return false;
+            EqualsList other = (EqualsList) obj;
+            return f == other.f;
+        }
+    }
 }

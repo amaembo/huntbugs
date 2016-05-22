@@ -61,6 +61,7 @@ public class ErrorMessage {
         this.descriptor = descriptor;
         this.line = line;
         this.error = error;
+        error.printStackTrace();
         this.errorMessage = null;
     }
     
