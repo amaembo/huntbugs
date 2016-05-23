@@ -88,7 +88,7 @@ public class InfiniteRecursion {
             return md.isConstructor();
         case InvokeVirtual:
         case InvokeInterface:
-            return !md.isStatic();
+            return !md.isStatic() && Nodes.isThis(expr.getArguments().get(0));
         default:
             return false;
         }
