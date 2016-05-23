@@ -124,7 +124,8 @@ public class EqualsContract {
                     priority += 10;
                 }
                 cc.report("EqualsObjectHashCode", priority, Roles.METHOD.create(equalsObject));
-            } else if(!superHashCode.getDeclaringType().getInternalName().startsWith("java/util/Abstract")) {
+            } else if(!superHashCode.getDeclaringType().getInternalName().startsWith("java/util/Abstract") &&
+                    !Methods.isThrower(superHashCode)) {
                 int priority = basePriority;
                 if(Flags.testAny(td.getFlags(), Flags.ABSTRACT)) {
                     priority += 10;

@@ -15,6 +15,9 @@
  */
 package one.util.huntbugs.util;
 
+import com.strobel.assembler.ir.Instruction;
+import com.strobel.assembler.ir.OpCode;
+import com.strobel.assembler.metadata.MethodBody;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeDefinition;
@@ -138,6 +141,20 @@ public class Methods {
             return true;
         if(tr.getInternalName().equals("java/util/Optional"))
             return mr.getName().equals("get") || mr.getName().equals("orElse") || mr.getName().equals("isPresent");
+        return false;
+    }
+
+    public static boolean isThrower(MethodDefinition md) {
+        MethodBody body = md.getBody();
+        if(body == null)
+            return false;
+        for(Instruction inst : body.getInstructions()) {
+            if(inst.hasLabel() || inst.getOpCode() == OpCode.RETURN || inst.getOpCode() == OpCode.ARETURN)
+                return false;
+            if(inst.getOpCode() == OpCode.ATHROW)
+                return true;
+        }
+        // Actually should not go here for valid bytecode
         return false;
     }
 }
