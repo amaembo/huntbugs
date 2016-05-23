@@ -25,6 +25,7 @@ import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
+import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
@@ -58,16 +59,18 @@ import one.util.huntbugs.warning.Role.MemberRole;
 @WarningDefinition(category = "BadPractice", name = "EqualsNoHashCode", maxScore = 55)
 public class EqualsContract {
     private static final MemberRole NORMAL_EQUALS = MemberRole.forName("NORMAL_EQUALS");
-    
+
     boolean alwaysFalse = false;
-    
+    boolean instanceCheckingEquals = false;
+
     @AstVisitor(nodes = AstNodes.ROOT, methodName = "equals", methodSignature = "(Ljava/lang/Object;)Z")
-    public void visitMethod(Block body, MethodContext mc, MethodDefinition md, TypeDefinition td) {
+    public void visitMethod(Block body, MethodContext mc, TypeDefinition td) {
         List<Node> list = body.getBody();
         if (list.size() == 1) {
             Node node = list.get(0);
             if (Nodes.isOp(node, AstCode.Return)) {
-                Object constant = Nodes.getConstant(Nodes.getChild(node, 0));
+                Expression retVal = ((Expression) node).getArguments().get(0);
+                Object constant = Nodes.getConstant(retVal);
                 int priority = getPriority(td);
                 if (((Integer) 1).equals(constant))
                     mc.report("EqualsReturnsTrue", priority, node);
@@ -75,11 +78,44 @@ public class EqualsContract {
                     mc.report("EqualsReturnsFalse", priority, node);
                     alwaysFalse = true;
                 }
+                // Check the following pattern:
+                // public boolean equals(Object x) {
+                //     return x instanceof XYZ && super.equals(x);
+                // }
+                if (retVal.getCode() == AstCode.LogicalAnd) {
+                    Expression left = retVal.getArguments().get(0);
+                    Expression right = retVal.getArguments().get(1);
+                    if (left.getCode() == AstCode.InstanceOf && right.getCode() == AstCode.InvokeSpecial
+                        && Methods.isEqualsMethod((MethodReference) right.getOperand())) {
+                        instanceCheckingEquals = true;
+                    }
+                }
+            }
+        }
+        if (list.size() == 2) {
+            // Check the following pattern:
+            // public boolean equals(Object x) {
+            //     if(!(x instanceof XYZ)) return false;
+            //     return super.equals(x);
+            // }
+            Node node1 = list.get(0);
+            Node node2 = list.get(1);
+            if (node1 instanceof Condition) {
+                Expression cond = ((Condition) node1).getCondition();
+                if (cond.getCode() == AstCode.LogicalNot && cond.getArguments().get(0).getCode() == AstCode.InstanceOf) {
+                    if (Nodes.isOp(node2, AstCode.Return)) {
+                        Expression child = ((Expression) node2).getArguments().get(0);
+                        if (child.getCode() == AstCode.InvokeSpecial
+                            && Methods.isEqualsMethod((MethodReference) child.getOperand())) {
+                            instanceCheckingEquals = true;
+                        }
+                    }
+                }
             }
         }
     }
 
-    @ClassVisitor(order=VisitOrder.AFTER)
+    @ClassVisitor(order = VisitOrder.AFTER)
     public void visitClass(TypeDefinition td, ClassContext cc) {
         MethodDefinition equalsSelf = null;
         MethodDefinition equalsObject = null;
@@ -89,8 +125,8 @@ public class EqualsContract {
         MethodDefinition superHashCode = null;
         int basePriority = td.isPrivate() || td.isPackagePrivate() ? 20 : 0;
         for (MethodDefinition md : td.getDeclaredMethods()) {
-            if (!md.isStatic() && md.getName().equals("equals") && md.getReturnType().getSimpleType() == JvmType.Boolean
-                && md.getParameters().size() == 1) {
+            if (!md.isStatic() && md.getName().equals("equals")
+                && md.getReturnType().getSimpleType() == JvmType.Boolean && md.getParameters().size() == 1) {
                 TypeReference type = md.getParameters().get(0).getParameterType();
                 if (Types.isObject(type)) {
                     equalsObject = md;
@@ -100,46 +136,50 @@ public class EqualsContract {
                     equalsOther = md;
                 }
             }
-            if (!md.isStatic() && !md.isBridgeMethod() && md.getName().equals("hashCode") && md.getSignature().equals("()I")) {
+            if (!md.isStatic() && !md.isBridgeMethod() && md.getName().equals("hashCode")
+                && md.getSignature().equals("()I")) {
                 hashCode = md;
             }
         }
         if (equalsObject == null) {
-            superEquals = Methods.findSuperMethod(td, new MemberInfo(td.getInternalName(), "equals", "(Ljava/lang/Object;)Z"));
+            superEquals = Methods.findSuperMethod(td, new MemberInfo(td.getInternalName(), "equals",
+                    "(Ljava/lang/Object;)Z"));
         }
         if (hashCode == null) {
             superHashCode = Methods.findSuperMethod(td, new MemberInfo(td.getInternalName(), "hashCode", "()I"));
         }
         if (hashCode != null && !hashCode.isAbstract() && equalsObject == null && equalsSelf == null) {
-            if(superEquals == null || Types.isObject(superEquals.getDeclaringType())) {
+            if (superEquals == null || Types.isObject(superEquals.getDeclaringType())) {
                 cc.report("HashCodeObjectEquals", basePriority, Roles.METHOD.create(hashCode));
-            } else if(!superEquals.isFinal()) {
-                cc.report("HashCodeNoEquals", basePriority, Roles.METHOD.create(hashCode), Roles.SUPER_METHOD.create(superEquals));
+            } else if (!superEquals.isFinal()) {
+                cc.report("HashCodeNoEquals", basePriority, Roles.METHOD.create(hashCode), Roles.SUPER_METHOD
+                        .create(superEquals));
             }
         }
-        if (hashCode == null && equalsObject != null && !alwaysFalse) {
-            if(superHashCode == null || Types.isObject(superHashCode.getDeclaringType())) {
+        if (hashCode == null && equalsObject != null && !alwaysFalse && !instanceCheckingEquals) {
+            if (superHashCode == null || Types.isObject(superHashCode.getDeclaringType())) {
                 int priority = basePriority;
-                if(Flags.testAny(td.getFlags(), Flags.ABSTRACT)) {
+                if (Flags.testAny(td.getFlags(), Flags.ABSTRACT)) {
                     priority += 10;
                 }
                 cc.report("EqualsObjectHashCode", priority, Roles.METHOD.create(equalsObject));
-            } else if(!superHashCode.getDeclaringType().getInternalName().startsWith("java/util/Abstract") &&
-                    !Methods.isThrower(superHashCode)) {
+            } else if (!superHashCode.getDeclaringType().getInternalName().startsWith("java/util/Abstract")
+                && !Methods.isThrower(superHashCode)) {
                 int priority = basePriority;
-                if(Flags.testAny(td.getFlags(), Flags.ABSTRACT)) {
+                if (Flags.testAny(td.getFlags(), Flags.ABSTRACT)) {
                     priority += 10;
                 }
-                if(td.getDeclaredFields().isEmpty())
+                if (td.getDeclaredFields().isEmpty())
                     priority += 10;
-                cc.report("EqualsNoHashCode", priority, Roles.METHOD.create(equalsObject), Roles.SUPER_METHOD.create(superHashCode));
+                cc.report("EqualsNoHashCode", priority, Roles.METHOD.create(equalsObject), Roles.SUPER_METHOD
+                        .create(superHashCode));
             }
         }
         if (equalsObject == null && equalsSelf == null && equalsOther != null) {
-            cc.report("EqualsOther", getPriority(td) + getPriority(equalsOther), Roles.METHOD.create(equalsOther), NORMAL_EQUALS.create("java/lang/Object", "equals",
-                "(Ljava/lang/Object;)Z"));
+            cc.report("EqualsOther", getPriority(td) + getPriority(equalsOther), Roles.METHOD.create(equalsOther),
+                NORMAL_EQUALS.create("java/lang/Object", "equals", "(Ljava/lang/Object;)Z"));
         } else if (equalsObject == null && equalsSelf != null) {
-            if(Types.isInstance(td, "java/lang/Enum"))
+            if (Types.isInstance(td, "java/lang/Enum"))
                 cc.report("EqualsEnum", getPriority(td) + getPriority(equalsSelf), Roles.METHOD.create(equalsSelf),
                     NORMAL_EQUALS.create("java/lang/Enum", "equals", "(Ljava/lang/Object;)Z"));
             else

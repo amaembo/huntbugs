@@ -116,6 +116,24 @@ public class TestEqualsContract {
         }
     }
 
+    public static class SubClassNoFields extends SelfEquals {
+        @Override
+        @AssertNoWarning(type = "EqualsNoHashCode")
+        public boolean equals(Object obj) {
+            return obj instanceof SubClassNoFields && super.equals(obj);
+        }
+    }
+    
+    public static class SubClassNoFields2 extends SelfEquals {
+        @Override
+        @AssertNoWarning(type = "EqualsNoHashCode")
+        public boolean equals(Object obj) {
+            if(!(obj instanceof SubClassNoFields2))
+                return false;
+            return super.equals(obj);
+        }
+    }
+    
     @AssertWarning(type = "EqualsEnum")
     @AssertNoWarning(type = "EqualsSelf")
     public static enum EnumEquals {
