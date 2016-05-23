@@ -159,6 +159,29 @@ public class TestBadMath {
         return x ^ arg;
     }
     
+    int flags;
+    
+    @AssertNoWarning(type="UselessOrWithZero")
+    public TestBadMath(int x) {
+        flags |= x;
+    }
+    
+    static long sFlags, sFlags2;
+    
+    @AssertNoWarning(type="UselessOrWithZero")
+    public static void setFlags(int x) {
+        sFlags = 0;
+        if(x > 5)
+            sFlags = sFlags | x;
+    }
+    
+    @AssertWarning(type="UselessOrWithZero")
+    public static void setFlags2(int x) {
+        sFlags = 0;
+        if(x > 5)
+            sFlags2 = sFlags | x;
+    }
+    
     @AssertWarning(type="UselessAndWithMinusOne")
     public int testAndFFFF(int x) {
         return x & 0xFFFFFFFF;

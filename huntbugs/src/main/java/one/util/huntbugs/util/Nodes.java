@@ -24,6 +24,8 @@ import java.util.stream.Stream;
 import one.util.huntbugs.flow.ValuesFlow;
 
 import com.strobel.assembler.metadata.DynamicCallSite;
+import com.strobel.assembler.metadata.FieldReference;
+import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodHandle;
 import com.strobel.assembler.metadata.MethodReference;
@@ -322,13 +324,34 @@ public class Nodes {
         if (!(node instanceof Expression))
             return false;
         Expression store = (Expression) node;
-        if (store.getCode() != AstCode.Store)
+        switch (store.getCode()) {
+        case Store: {
+            Expression expr = store.getArguments().get(0);
+            if (!isBinaryMath(expr))
+                return false;
+            Expression load = expr.getArguments().get(0);
+            return load.getCode() == AstCode.Load && Objects.equals(load.getOperand(), store.getOperand());
+        }
+        case PutField: {
+            Expression expr = store.getArguments().get(1);
+            if (!isBinaryMath(expr))
+                return false;
+            Expression load = expr.getArguments().get(0);
+            return load.getCode() == AstCode.GetField
+                && ((FieldReference) load.getOperand()).isEquivalentTo((MemberReference) store.getOperand())
+                && Equi.equiExpressions(store.getArguments().get(0), load.getArguments().get(0));
+        }
+        case PutStatic: {
+            Expression expr = store.getArguments().get(0);
+            if (!isBinaryMath(expr))
+                return false;
+            Expression load = expr.getArguments().get(0);
+            return load.getCode() == AstCode.GetStatic
+                && ((FieldReference) load.getOperand()).isEquivalentTo((MemberReference) store.getOperand());
+        }
+        default:
             return false;
-        Expression expr = store.getArguments().get(0);
-        if (!isBinaryMath(expr))
-            return false;
-        Expression load = expr.getArguments().get(0);
-        return load.getCode() == AstCode.Load && Objects.equals(load.getOperand(), store.getOperand());
+        }
     }
 
     public static Node find(Node node, Predicate<Node> predicate) {
