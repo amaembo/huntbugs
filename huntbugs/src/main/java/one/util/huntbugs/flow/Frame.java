@@ -29,6 +29,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
+import one.util.huntbugs.flow.ValuesFlow.ThrowTargets;
 import one.util.huntbugs.util.Maps;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
@@ -37,14 +38,38 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.JvmType;
+import com.strobel.assembler.metadata.MetadataSystem;
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.ParameterDefinition;
+import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Variable;
 
 class Frame {
+    static final TypeDefinition runtimeException;
+    static final TypeDefinition nullPointerException;
+    static final TypeDefinition arrayIndexOutOfBoundsException;
+    static final TypeDefinition arrayStoreException;
+    static final TypeDefinition outOfMemoryError;
+    static final TypeDefinition linkageError;
+    static final TypeDefinition error;
+    static final TypeDefinition exception;
+    
+    static {
+        MetadataSystem ms = MetadataSystem.instance();
+        exception = ms.lookupType("java/lang/Exception").resolve();
+        runtimeException = ms.lookupType("java/lang/RuntimeException").resolve();
+        nullPointerException = ms.lookupType("java/lang/NullPointerException").resolve();
+        arrayIndexOutOfBoundsException = ms.lookupType("java/lang/ArrayIndexOutOfBoundsException").resolve();
+        arrayStoreException = ms.lookupType("java/lang/ArrayStoreException").resolve();
+        outOfMemoryError = ms.lookupType("java/lang/OutOfMemoryError").resolve();
+        linkageError = ms.lookupType("java/lang/LinkageError").resolve();
+        error = ms.lookupType("java/lang/Error").resolve();
+    }
+    
     private final Map<Variable, Expression> sources;
     private final FrameContext fc;
     final Map<MemberInfo, Expression> fieldValues;
@@ -81,25 +106,25 @@ class Frame {
         initial.put(thisParam, pde);
     }
 
-    Frame processChildren(Expression expr) {
+    Frame processChildren(Expression expr, ThrowTargets targets) {
         Frame result = this;
         for (Expression child : expr.getArguments()) {
-            result = result.process(child);
+            result = result.process(child, targets);
         }
         return result;
     }
 
-    Frame process(Expression expr) {
+    Frame process(Expression expr, ThrowTargets targets) {
         if (expr.getCode() == AstCode.TernaryOp) {
             Expression cond = expr.getArguments().get(0);
             Expression left = expr.getArguments().get(1);
             Expression right = expr.getArguments().get(2);
-            Frame target = process(cond);
-            Frame leftFrame = target.process(left);
-            Frame rightFrame = target.process(right);
+            Frame target = process(cond, targets);
+            Frame leftFrame = target.process(left, targets);
+            Frame rightFrame = target.process(right, targets);
             return leftFrame.merge(rightFrame);
         }
-        Frame target = processChildren(expr);
+        Frame target = processChildren(expr, targets);
         switch (expr.getCode()) {
         case Store: {
             Variable var = ((Variable) expr.getOperand());
@@ -114,6 +139,7 @@ class Frame {
             return target;
         }
         case ArrayLength:
+            targets.merge(nullPointerException, target);
             storeValue(expr, getArrayLength(expr.getArguments().get(0)));
             return target;
         case CmpEq:
@@ -271,22 +297,54 @@ class Frame {
             }
             return target;
         }
+        case Bind:
+            targets.merge(error, target);
+            targets.merge(runtimeException, target);
+            return target;
+        case InitObject:
         case InvokeInterface:
         case InvokeSpecial:
         case InvokeStatic:
         case InvokeVirtual: {
             MethodReference mr = (MethodReference) expr.getOperand();
+            if(!targets.isEmpty()) {
+                targets.merge(error, target);
+                targets.merge(runtimeException, target);
+                MethodDefinition md = mr.resolve();
+                if(md != null) {
+                    for(TypeReference thrownType : md.getThrownTypes()) {
+                        targets.merge(thrownType, target);
+                    }
+                } else {
+                    targets.merge(exception, target);
+                }
+            }
             target.processKnownMethods(expr, mr);
             if (Methods.isSideEffectFree(mr))
                 return target;
             return target.replaceAll(src -> src.getCode() == AstCode.GetField || src.getCode() == AstCode.GetStatic
                 || src.getCode() == AstCode.LoadElement ? fc.makeUpdatedNode(src) : src).deleteFields();
         }
+        case LoadElement:
+            targets.merge(arrayIndexOutOfBoundsException, target);
+            targets.merge(nullPointerException, target);
+            return target;
         case StoreElement: {
+            targets.merge(arrayIndexOutOfBoundsException, target);
+            targets.merge(arrayStoreException, target);
+            targets.merge(nullPointerException, target);
             return target.replaceAll(src -> src.getCode() == AstCode.LoadElement ? fc.makeUpdatedNode(src) : src);
         }
+        case __New:
+        case NewArray:
+        case InitArray:
+        case MultiANewArray:
+            targets.merge(outOfMemoryError, target);
+            return target;
         case GetStatic: {
             FieldReference fr = ((FieldReference) expr.getOperand());
+            if(!fr.getDeclaringType().isEquivalentTo(fc.md.getDeclaringType()))
+                targets.merge(linkageError, target);
             FieldDefinition fd = fr.resolve();
             if (fd != null && fd.isEnumConstant()) {
                 storeValue(expr, new EnumConstant(fd.getDeclaringType().getInternalName(), fd.getName()));
@@ -311,6 +369,9 @@ class Frame {
                     Object val = source.getUserData(ValuesFlow.VALUE_KEY);
                     storeValue(expr, val);
                 }
+            } else {
+                targets.merge(nullPointerException, target);
+                targets.merge(linkageError, target);
             }
             return target;
         }
@@ -318,12 +379,17 @@ class Frame {
             FieldReference fr = ((FieldReference) expr.getOperand());
             if(fc.isThis(Nodes.getChild(expr, 0))) {
                 target = target.replaceField(fr, Nodes.getChild(expr, 1));
+            } else {
+                targets.merge(nullPointerException, target);
+                targets.merge(linkageError, target);
             }
             return target.replaceAll(src -> src.getCode() == AstCode.GetField
                 && fr.isEquivalentTo((FieldReference) src.getOperand()) ? fc.makeUpdatedNode(src) : src);
         }
         case PutStatic: {
             FieldReference fr = ((FieldReference) expr.getOperand());
+            if(!fr.getDeclaringType().isEquivalentTo(fc.md.getDeclaringType()))
+                targets.merge(linkageError, target);
             return target.replaceField(fr, Nodes.getChild(expr, 0)).replaceAll(src -> src
                     .getCode() == AstCode.GetStatic && fr.isEquivalentTo((FieldReference) src.getOperand())
                             ? fc.makeUpdatedNode(src) : src);

@@ -434,4 +434,21 @@ public class TestKnownComparison {
             }
         }
     }
+    
+    @AssertWarning(type="ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testAioobe(int[] x, int y) {
+        int a = 0;
+        try {
+            a = x[y];
+            if(a > 0) {
+                a = 0;
+            }
+        }
+        catch(IndexOutOfBoundsException ex) {
+            if(a > 0) {
+                a = 0;
+            }
+        }
+        System.out.println(a);
+    }
 }

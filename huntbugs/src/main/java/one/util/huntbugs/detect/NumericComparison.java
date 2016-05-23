@@ -327,8 +327,13 @@ public class NumericComparison {
             }
             break;
         }
+        case InvokeStatic:
+        case InvokeSpecial: {
+            MethodReference mr = (MethodReference) arg.getOperand();
+            return getTypeRange(mr.getReturnType().getSimpleType());
+        }
         case InvokeVirtual:
-        case InvokeInterface:
+        case InvokeInterface: {
             MethodReference mr = (MethodReference) arg.getOperand();
             if (mr.getName().equals("size") && mr.getSignature().equals("()I")) {
                 if (Types.isInstance(mr.getDeclaringType(), "java/util/Collection")
@@ -336,13 +341,15 @@ public class NumericComparison {
                     return new LongRange(0, Integer.MAX_VALUE);
                 }
             }
-            if (mr.getDeclaringType().getInternalName().equals("java/lang/Byte") && mr.getName().endsWith("Value")) {
-                return BYTE_RANGE;
+            if (mr.getName().equals("nextInt") && mr.getSignature().equals("(I)I") &&
+                    Types.isRandomClass(mr.getDeclaringType())) {
+                LongRange argRange = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 1), visited);
+                if(argRange.maxValue > 0) {
+                    return new LongRange(0, argRange.maxValue - 1);
+                }
             }
-            if (mr.getDeclaringType().getInternalName().equals("java/lang/Short") && mr.getName().endsWith("Value")) {
-                return SHORT_RANGE;
-            }
-            break;
+            return getTypeRange(mr.getReturnType().getSimpleType());
+        }
         default:
         }
         return INT_RANGE;

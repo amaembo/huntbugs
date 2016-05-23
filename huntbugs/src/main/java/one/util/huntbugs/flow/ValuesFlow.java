@@ -18,8 +18,10 @@ package one.util.huntbugs.flow;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BinaryOperator;
@@ -38,6 +40,7 @@ import com.strobel.componentmodel.Key;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.CaseBlock;
+import com.strobel.decompiler.ast.CatchBlock;
 import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Label;
@@ -56,13 +59,63 @@ public class ValuesFlow {
     static final Key<Object> VALUE_KEY = Key.create("hb.value");
     static final Key<Set<Expression>> BACK_LINKS_KEY = Key.create("hb.backlinks");
     
+    static final ThrowTargets EMPTY_TARGETS = new ThrowTargets(null, Collections.emptySet());
+    
+    static class ThrowTargets {
+        final ThrowTargets parent;
+        final Map<TypeReference, Frame> targets;
+        
+        public ThrowTargets(ThrowTargets parent, Set<TypeReference> exceptions) {
+            this.parent = parent;
+            if(exceptions.isEmpty())
+                targets = Collections.emptyMap();
+            else {
+                targets = new HashMap<>();
+                exceptions.forEach(e -> targets.put(e, null));
+            }
+        }
+        
+        public void merge(TypeReference exception, Frame frame) {
+            if(!targets.isEmpty()) {
+                for(Entry<TypeReference, Frame> entry : targets.entrySet()) {
+                    if(Types.isInstance(exception, entry.getKey())) {
+                        entry.setValue(Frame.combine(entry.getValue(), frame));
+                        return;
+                    } else if(Types.isInstance(entry.getKey(), exception)) {
+                        entry.setValue(Frame.combine(entry.getValue(), frame));
+                    }
+                }
+            }
+            if(parent != null) {
+                parent.merge(exception, frame);
+            }
+        }
+
+        public boolean isEmpty() {
+            return parent == null && targets.isEmpty();
+        }
+
+        public Frame getEntryFrame(CatchBlock catchBlock) {
+            Frame frame = null;
+            for(TypeReference tr : catchBlock.getCaughtTypes()) {
+                frame = Frame.combine(frame, targets.get(tr));
+            }
+            if(catchBlock.getExceptionType() != null) {
+                frame = Frame.combine(frame, targets.get(catchBlock.getExceptionType()));
+            }
+            return frame;
+        }
+    }
+    
     static class FrameSet {
         boolean valid = true;
         Frame passFrame, breakFrame, continueFrame, returnFrame;
+        ThrowTargets targets;
         Map<Label, Frame> labelFrames = null;
     
-        FrameSet(Frame start) {
+        FrameSet(Frame start, ThrowTargets targets) {
             this.passFrame = start;
+            this.targets = targets;
         }
         
         private void mergeLabels(FrameSet other) {
@@ -101,11 +154,12 @@ public class ValuesFlow {
                         passFrame = null;
                         return;
                     case Return:
-                        returnFrame = passFrame.processChildren(expr);
+                        returnFrame = passFrame.processChildren(expr, targets);
                         passFrame = null;
                         return;
                     case AThrow:
-                        passFrame.processChildren(expr);
+                        passFrame.processChildren(expr, targets);
+                        targets.merge(expr.getInferredType(), passFrame);
                         passFrame = null;
                         return;
                     case Goto:
@@ -124,7 +178,7 @@ public class ValuesFlow {
                         valid = false;
                         return;
                     case MonitorEnter:
-                        passFrame = passFrame.process(expr);
+                        passFrame = passFrame.process(expr, targets);
                         wasMonitor = true;
                         continue;
                     default:
@@ -132,13 +186,13 @@ public class ValuesFlow {
                     if(passFrame == null) {
                         throw new IllegalStateException(expr.toString());
                     }
-                    passFrame = passFrame.process(expr);
+                    passFrame = passFrame.process(expr, targets);
                 } else if (n instanceof Condition) {
                     Condition cond = (Condition) n;
-                    passFrame = passFrame.process(cond.getCondition());
-                    FrameSet left = new FrameSet(passFrame);
+                    passFrame = passFrame.process(cond.getCondition(), targets);
+                    FrameSet left = new FrameSet(passFrame, targets);
                     left.process(ctx, cond.getTrueBlock());
-                    FrameSet right = new FrameSet(passFrame);
+                    FrameSet right = new FrameSet(passFrame, targets);
                     right.process(ctx, cond.getFalseBlock());
                     if (!left.valid || !right.valid) {
                         valid = false;
@@ -162,13 +216,48 @@ public class ValuesFlow {
                         wasMonitor = false;
                         continue;
                     }
+                    if (tryCatch.getFinallyBlock() == null) {
+                        Set<TypeReference> exceptions = new HashSet<>();
+                        for(CatchBlock catchBlock : tryCatch.getCatchBlocks()) {
+                            exceptions.addAll(catchBlock.getCaughtTypes());
+                            exceptions.add(catchBlock.getExceptionType());
+                        }
+                        exceptions.remove(null);
+                        ThrowTargets tryTargets = new ThrowTargets(targets, exceptions);
+                        FrameSet trySet = new FrameSet(passFrame, tryTargets);
+                        trySet.process(ctx, tryCatch.getTryBlock());
+                        if(!trySet.valid) {
+                            valid = false;
+                            return;
+                        }
+                        passFrame = Frame.combine(passFrame, trySet.passFrame);
+                        breakFrame = Frame.combine(breakFrame, trySet.breakFrame);
+                        continueFrame = Frame.combine(continueFrame, trySet.continueFrame);
+                        mergeLabels(trySet);
+                        for(CatchBlock catchBlock : tryCatch.getCatchBlocks()) {
+                            Frame entryFrame = tryTargets.getEntryFrame(catchBlock);
+                            if(entryFrame == null)
+                                continue;
+                            FrameSet catchSet = new FrameSet(entryFrame, targets);
+                            catchSet.process(ctx, catchBlock);
+                            if(!catchSet.valid) {
+                                valid = false;
+                                return;
+                            }
+                            passFrame = Frame.combine(passFrame, catchSet.passFrame);
+                            breakFrame = Frame.combine(breakFrame, catchSet.breakFrame);
+                            continueFrame = Frame.combine(continueFrame, catchSet.continueFrame);
+                            mergeLabels(catchSet);
+                        }
+                        continue;
+                    }
                     // TODO: support normal catch/finally
                     valid = false;
                     return;
                 } else if (n instanceof Switch) {
                     Switch switchBlock = (Switch) n;
-                    passFrame = passFrame.process(switchBlock.getCondition());
-                    FrameSet switchBody = new FrameSet(passFrame);
+                    passFrame = passFrame.process(switchBlock.getCondition(), targets);
+                    FrameSet switchBody = new FrameSet(passFrame, targets);
                     boolean hasDefault = false;
                     for (CaseBlock caseBlock : switchBlock.getCaseBlocks()) {
                         switchBody.passFrame = Frame.combine(passFrame, switchBody.passFrame);
@@ -193,7 +282,7 @@ public class ValuesFlow {
                         Frame loopStart = passFrame;
                         int iter = 0;
                         while(true) {
-                            FrameSet loopBody = new FrameSet(loopStart);
+                            FrameSet loopBody = new FrameSet(loopStart, targets);
                             loopBody.process(ctx, loop.getBody());
                             if(!loopBody.valid) {
                                 cleanUn(loop);
@@ -220,10 +309,10 @@ public class ValuesFlow {
                     } else {
                         switch(loop.getLoopType()) {
                         case PreCondition: {
-                            Frame loopEnd = passFrame.process(loop.getCondition());
+                            Frame loopEnd = passFrame.process(loop.getCondition(), targets);
                             int iter = 0;
                             while(true) {
-                                FrameSet loopBody = new FrameSet(loopEnd);
+                                FrameSet loopBody = new FrameSet(loopEnd, targets);
                                 loopBody.process(ctx, loop.getBody());
                                 if(!loopBody.valid) {
                                     cleanUn(loop);
@@ -231,7 +320,7 @@ public class ValuesFlow {
                                     return;
                                 }
                                 Frame newLoopStart = Frame.combine(loopBody.passFrame, loopBody.continueFrame);
-                                Frame newLoopEnd = newLoopStart == null ? null : newLoopStart.process(loop.getCondition());
+                                Frame newLoopEnd = newLoopStart == null ? null : newLoopStart.process(loop.getCondition(), targets);
                                 newLoopEnd = Frame.combine(loopBody.breakFrame, newLoopEnd);
                                 newLoopEnd = Frame.combine(loopEnd, newLoopEnd);
                                 mergeLabels(loopBody);
@@ -253,7 +342,7 @@ public class ValuesFlow {
                             Frame loopStart = passFrame;
                             int iter = 0;
                             while(true) {
-                                FrameSet loopBody = new FrameSet(loopStart);
+                                FrameSet loopBody = new FrameSet(loopStart, targets);
                                 loopBody.process(ctx, loop.getBody());
                                 if(!loopBody.valid) {
                                     cleanUn(loop);
@@ -261,7 +350,7 @@ public class ValuesFlow {
                                     return;
                                 }
                                 Frame beforeCondition = Frame.combine(loopBody.passFrame, loopBody.continueFrame);
-                                Frame newLoopEnd = beforeCondition == null ? null : beforeCondition.process(loop.getCondition());
+                                Frame newLoopEnd = beforeCondition == null ? null : beforeCondition.process(loop.getCondition(), targets);
                                 mergeLabels(loopBody);
                                 newLoopEnd = Frame.combine(loopEnd, newLoopEnd);
                                 loopStart = newLoopEnd;
@@ -328,7 +417,7 @@ public class ValuesFlow {
         FrameContext fc = new FrameContext(md, cf);
         Frame origFrame = new Frame(fc);
         List<Expression> origParams = new ArrayList<>(origFrame.initial.values());
-        FrameSet fs = new FrameSet(origFrame);
+        FrameSet fs = new FrameSet(origFrame, EMPTY_TARGETS);
         fs.process(ctx, method);
         if (fs.valid) {
             Frame exitFrame = Frame.combine(fs.returnFrame, fs.passFrame);

@@ -17,6 +17,7 @@ package one.util.huntbugs.testdata;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
@@ -289,5 +290,26 @@ public class TestNumericComparison {
             }
         }
         return count;
+    }
+    
+    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    public void checkRandom(Random r) {
+        if(r.nextInt(10) > 15) {
+            System.out.println("Never");
+        }
+    }
+    
+    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    public void checkWithCatch(String s) {
+        int x;
+        try {
+            x = Byte.parseByte(s);
+        }
+        catch(NumberFormatException ex) {
+            x = 130;
+        }
+        if(x > 140) {
+            System.out.println("Never!");
+        }
     }
 }
