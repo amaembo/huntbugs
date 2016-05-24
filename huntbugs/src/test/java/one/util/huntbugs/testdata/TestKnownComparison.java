@@ -451,4 +451,22 @@ public class TestKnownComparison {
         }
         System.out.println(a);
     }
+
+    // procyon bug
+//    @AssertNoWarning(type="*")
+//    public int testRetries(Scanner sc) {
+//        int cnt = 0;
+//        while(true) {
+//            try {
+//                return sc.nextInt();
+//            }
+//            catch(InputMismatchException ime) {
+//                if(cnt < 20) {
+//                    cnt++;
+//                } else {
+//                    throw ime;
+//                }
+//            }
+//        }
+//    }
 }

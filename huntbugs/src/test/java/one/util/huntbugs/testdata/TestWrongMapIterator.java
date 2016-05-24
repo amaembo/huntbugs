@@ -41,6 +41,16 @@ public class TestWrongMapIterator {
         }
     }
 
+    @AssertWarning(type="WrongMapIteratorValues")
+    public void testValues(Map<String, String> m) {
+        Iterator<String> it = m.keySet().iterator();
+        while (it.hasNext()) {
+            String name = it.next();
+            String value = m.get(name);
+            System.out.println("Value = " + value);
+        }
+    }
+    
     @AssertWarning(type="WrongMapIterator")
     public void test2(int a, int b, int c, int d, Map<String, String> m) {
         Iterator<String> it = m.keySet().iterator();

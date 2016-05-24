@@ -478,9 +478,16 @@
       <Title>Inefficient use of keySet() iterator instead of entrySet() iterator</Title>
       <Description>Inefficient use of keySet() iterator instead of entrySet() iterator in $METHOD$.</Description>
       <LongDescription><![CDATA[This method accesses the value of a <code>Map</code> entry, using a key that was retrieved from a <code>keySet()</code> iterator. 
-      It is more efficient to use an iterator on the <code>entrySet()</code> of the map, to avoid the <code>Map.get(key)</code> lookup.<br>
+      It is more efficient to use an iterator on the $REPLACEMENT$ of the map, to avoid the <code>Map.get(key)</code> lookup.<br>
       In Java-8 you may also consider using <code>Map.forEach()</code> method.
       ]]></LongDescription>
+    </Warning>
+    <Warning Type="WrongMapIteratorValues">
+      <Title>Inefficient use of keySet() iterator instead of values() iterator</Title>
+      <Description>Inefficient use of keySet() iterator instead of values() iterator in $METHOD$.</Description>
+      <LongDescription><![CDATA[This method accesses the <code>Map</code> values, using a key that was retrieved from a <code>keySet()</code> iterator.
+      It's detected that map key is not used for any purpose other than getting map value. It would be shorter and more efficient to iterate
+      over $REPLACEMENT$ instead.]]></LongDescription>
     </Warning>
     <Warning Type="ExposeMutableStaticFieldViaParameter">
       <Title>Internal static state exposure by storing a mutable object into a static field</Title>

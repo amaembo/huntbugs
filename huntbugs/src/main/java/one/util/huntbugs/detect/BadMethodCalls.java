@@ -147,14 +147,14 @@ public class BadMethodCalls {
             ctx.report("URLBlockingMethod", 0, node);
         } else if (isToStringCall(typeName, name, signature)) {
             Expression lastArg = Nodes.getChild(node, node.getArguments().size() - 1);
-            TypeReference type = lastArg.getInferredType();
+            TypeReference type = ValuesFlow.reduceType(lastArg);
             if (type != null && type.isArray()) {
                 ctx.report("ArrayToString", 0, lastArg);
             }
         } else if (name.equals("hashCode") && signature.equals("()I") || typeName.equals("java/util/Objects") && name
                 .equals("hashCode") && signature.equals("(Ljava/lang/Object;)I")) {
             Expression arg = Nodes.getChild(node, 0);
-            TypeReference type = arg.getInferredType();
+            TypeReference type = ValuesFlow.reduceType(arg);
             if (type != null && type.isArray()) {
                 ctx.report("ArrayHashCode", 0, arg);
             }
@@ -163,7 +163,7 @@ public class BadMethodCalls {
             Expression arg = node.getArguments().get(0);
             if (arg.getCode() == AstCode.InitArray) {
                 for (Expression child : arg.getArguments()) {
-                    TypeReference type = ValuesFlow.getSource(child).getInferredType();
+                    TypeReference type = ValuesFlow.reduceType(ValuesFlow.getSource(child));
                     if (type != null && type.isArray()) {
                         ctx.report("ArrayHashCode", 0, arg);
                     }

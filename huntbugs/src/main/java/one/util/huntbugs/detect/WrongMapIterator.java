@@ -15,24 +15,29 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
+import one.util.huntbugs.warning.Roles;
 
 /**
  * @author Tagir Valeev
  *
  */
-@WarningDefinition(category = "Performance", name = "WrongMapIterator", maxScore = 50)
+@WarningDefinition(category = "Performance", name = "WrongMapIterator", maxScore = 48)
+@WarningDefinition(category = "Performance", name = "WrongMapIteratorValues", maxScore = 55)
 public class WrongMapIterator {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
@@ -59,7 +64,29 @@ public class WrongMapIterator {
             return;
         if (!Nodes.isEquivalent(mapArg, Nodes.getChildNoSpecial(keySet, 0)))
             return;
-        mc.report("WrongMapIterator", 0, expr);
+        if(mc.isAnnotated() && usedForGetOnly(key, mapArg)) {
+            mc.report("WrongMapIteratorValues", 0, expr, Roles.REPLACEMENT_METHOD.create("java/util/Map", "values", "()Ljava/util/Collection;"));
+        } else {
+            mc.report("WrongMapIterator", 0, expr, Roles.REPLACEMENT_METHOD.create("java/util/Map", "entrySet", "()Ljava/util/Set;"));
+        }
+    }
+    
+    private static boolean usedForGetOnly(Expression key, Expression mapArg) {
+        HashSet<Expression> usages = ValuesFlow.findTransitiveUsages(key, true).collect(Collectors.toCollection(HashSet::new));
+        while(!usages.isEmpty()) {
+            Expression usage = usages.iterator().next();
+            usages.remove(usage);
+            if(usage.getCode() == AstCode.CheckCast || Nodes.isBoxing(usage) || Nodes.isUnboxing(usage)) {
+                ValuesFlow.findTransitiveUsages(usage, true).forEach(usages::add);
+            } else {
+                MethodReference getMr = getCalledMethod(usage);
+                if (getMr == null || !getMr.getName().equals("get"))
+                    return false;
+                if(!Nodes.isEquivalent(Nodes.getChildNoSpecial(usage, 0), mapArg))
+                    return false;
+            }
+        }
+        return true;
     }
 
     private static MethodReference getCalledMethod(Expression expr) {

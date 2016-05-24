@@ -252,4 +252,20 @@ public class TestBadMethodCalls {
     public void testCorrectPrecondition(String str) {
         Objects.requireNonNull(str, "String is null");
     }
+
+    private final int[] state = new int[10];
+    
+    public TestBadMethodCalls() {
+    }
+
+    // Two constructors are necessary to test merging of state initialization
+    public TestBadMethodCalls(int x) {
+        System.out.println(x);
+    }
+    
+    @Override
+    @AssertWarning(type="ArrayHashCode")
+    public int hashCode() {
+        return state.hashCode();
+    }
 }
