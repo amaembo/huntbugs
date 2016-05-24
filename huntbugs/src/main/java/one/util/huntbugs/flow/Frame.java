@@ -376,6 +376,8 @@ class Frame {
                     link(expr, source);
                     Object val = source.getUserData(ValuesFlow.VALUE_KEY);
                     storeValue(expr, val);
+                } else {
+                    storeValue(expr, UNKNOWN_VALUE);
                 }
             }
             return target;
@@ -389,6 +391,8 @@ class Frame {
                     link(expr, source);
                     Object val = source.getUserData(ValuesFlow.VALUE_KEY);
                     storeValue(expr, val);
+                } else {
+                    storeValue(expr, UNKNOWN_VALUE);
                 }
             } else {
                 targets.merge(nullPointerException, target);

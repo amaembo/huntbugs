@@ -452,6 +452,37 @@ public class TestKnownComparison {
         System.out.println(a);
     }
 
+    @AssertNoWarning(type="*")
+    public void testFieldDoWhile() {
+        do {
+            if(f == 5) {
+                System.out.println(f);
+            }
+            doSomeProcessing();
+            f = 5;
+        } while(ch < 10);
+    }
+    
+    private void doSomeProcessing() {
+        f++;
+        ch--;
+    }
+
+    @AssertNoWarning(type="*")
+    static class ArrayTest {
+        int[] arr;
+        
+        public ArrayTest(boolean b) {
+            arr = b ? new int[] {1,2} : new int[] {1};
+        }
+        
+        public void testArrayLength() {
+            if(arr.length > 1) {
+                System.out.println("Big");
+            }
+        }
+    }
+
     // procyon bug
 //    @AssertNoWarning(type="*")
 //    public int testRetries(Scanner sc) {
