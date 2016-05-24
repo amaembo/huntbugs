@@ -78,6 +78,7 @@ public class ValuesFlow {
         public void merge(TypeReference exception, Frame frame) {
             if(!targets.isEmpty()) {
                 for(Entry<TypeReference, Frame> entry : targets.entrySet()) {
+                    // TODO: support exceptions with inconsistent hierarchy
                     if(Types.isInstance(exception, entry.getKey())) {
                         entry.setValue(Frame.combine(entry.getValue(), frame));
                         return;
@@ -157,11 +158,15 @@ public class ValuesFlow {
                         returnFrame = passFrame.processChildren(expr, targets);
                         passFrame = null;
                         return;
-                    case AThrow:
+                    case AThrow: {
                         passFrame.processChildren(expr, targets);
-                        targets.merge(expr.getInferredType(), passFrame);
+                        TypeReference exc = expr.getInferredType();
+                        if(exc == null) exc = expr.getExpectedType();
+                        if(exc == null) exc = Frame.throwable;
+                        targets.merge(exc, passFrame);
                         passFrame = null;
                         return;
+                    }
                     case Goto:
                         if(expr.getOperand() instanceof Label) {
                             Label label = (Label)expr.getOperand();

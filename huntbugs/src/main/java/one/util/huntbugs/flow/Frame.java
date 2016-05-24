@@ -56,18 +56,32 @@ class Frame {
     static final TypeDefinition outOfMemoryError;
     static final TypeDefinition linkageError;
     static final TypeDefinition error;
+    static final TypeDefinition throwable;
     static final TypeDefinition exception;
     
     static {
         MetadataSystem ms = MetadataSystem.instance();
-        exception = ms.lookupType("java/lang/Exception").resolve();
-        runtimeException = ms.lookupType("java/lang/RuntimeException").resolve();
-        nullPointerException = ms.lookupType("java/lang/NullPointerException").resolve();
-        arrayIndexOutOfBoundsException = ms.lookupType("java/lang/ArrayIndexOutOfBoundsException").resolve();
-        arrayStoreException = ms.lookupType("java/lang/ArrayStoreException").resolve();
-        outOfMemoryError = ms.lookupType("java/lang/OutOfMemoryError").resolve();
-        linkageError = ms.lookupType("java/lang/LinkageError").resolve();
-        error = ms.lookupType("java/lang/Error").resolve();
+        throwable = getException(ms, "java/lang/Throwable");
+        exception = getException(ms, "java/lang/Exception");
+        runtimeException = getException(ms, "java/lang/RuntimeException");
+        nullPointerException = getException(ms, "java/lang/NullPointerException");
+        arrayIndexOutOfBoundsException = getException(ms, "java/lang/ArrayIndexOutOfBoundsException");
+        arrayStoreException = getException(ms, "java/lang/ArrayStoreException");
+        outOfMemoryError = getException(ms, "java/lang/OutOfMemoryError");
+        linkageError = getException(ms, "java/lang/LinkageError");
+        error = getException(ms, "java/lang/Error");
+    }
+
+    static TypeDefinition getException(MetadataSystem ms, String internalName) {
+        TypeReference tr = ms.lookupType(internalName);
+        if(tr == null) {
+            throw new InternalError("Unable to lookup exception "+internalName);
+        }
+        TypeDefinition td = tr.resolve();
+        if(td == null) {
+            throw new InternalError("Unable to resolve exception "+internalName);
+        }
+        return td;
     }
     
     private final Map<Variable, Expression> sources;
@@ -307,6 +321,10 @@ class Frame {
         case InvokeStatic:
         case InvokeVirtual: {
             MethodReference mr = (MethodReference) expr.getOperand();
+            target.processKnownMethods(expr, mr);
+            if (!Methods.isSideEffectFree(mr))
+                target = target.replaceAll(src -> src.getCode() == AstCode.GetField || src.getCode() == AstCode.GetStatic
+                        || src.getCode() == AstCode.LoadElement ? fc.makeUpdatedNode(src) : src).deleteFields(); 
             if(!targets.isEmpty()) {
                 targets.merge(error, target);
                 targets.merge(runtimeException, target);
@@ -319,11 +337,7 @@ class Frame {
                     targets.merge(exception, target);
                 }
             }
-            target.processKnownMethods(expr, mr);
-            if (Methods.isSideEffectFree(mr))
-                return target;
-            return target.replaceAll(src -> src.getCode() == AstCode.GetField || src.getCode() == AstCode.GetStatic
-                || src.getCode() == AstCode.LoadElement ? fc.makeUpdatedNode(src) : src).deleteFields();
+            return target;
         }
         case LoadElement:
             targets.merge(arrayIndexOutOfBoundsException, target);

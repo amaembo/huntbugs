@@ -159,14 +159,14 @@ public class TestSelfAssignment {
     @AssertWarning(type="SelfAssignmentLocal")
     @AssertNoWarning(type="SelfAssignmentLocalInsteadOfField")
     void testLocal(int a) {
-        a = (int)a; // cast to prevent error in Eclipse
+        a = a; // cast to prevent error in Eclipse
     }
     
     @SuppressWarnings("cast")
     @AssertWarning(type="SelfAssignmentLocalInsteadOfField")
     @AssertNoWarning(type="SelfAssignmentLocal")
     void testLocal(Object f) {
-        f = (Object)f; // cast to prevent error in Eclipse
+        f = f; // cast to prevent error in Eclipse
     }
 
     public static class HeapNode {
@@ -192,6 +192,17 @@ public class TestSelfAssignment {
             } else {
                 break;
             }
+        }
+    }
+    
+    @AssertNoWarning(type="*")
+    void testWithCatch() {
+        Object oldVal = f;
+        try {
+            test();
+        }
+        catch(Exception exc) {
+            f = oldVal;
         }
     }
 }
