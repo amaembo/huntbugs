@@ -322,9 +322,16 @@ class Frame {
         case InvokeVirtual: {
             MethodReference mr = (MethodReference) expr.getOperand();
             target.processKnownMethods(expr, mr);
-            if (!Methods.isSideEffectFree(mr))
+            if (!Methods.isSideEffectFree(mr)) {
                 target = target.replaceAll(src -> src.getCode() == AstCode.GetField || src.getCode() == AstCode.GetStatic
-                        || src.getCode() == AstCode.LoadElement ? fc.makeUpdatedNode(src) : src).deleteFields(); 
+                        || src.getCode() == AstCode.LoadElement ? fc.makeUpdatedNode(src) : src);
+                // calling another constructor from current constructor will initialize all final fields
+                if(expr.getCode() == AstCode.InvokeSpecial && fc.md.isConstructor() && mr.isConstructor() && 
+                        Nodes.isThis(expr.getArguments().get(0)) && mr.getDeclaringType().isEquivalentTo(fc.md.getDeclaringType()))
+                    target = target.deleteAllFields();
+                else
+                    target = target.deleteFields();
+            }
             if(!targets.isEmpty()) {
                 targets.merge(error, target);
                 targets.merge(runtimeException, target);
@@ -599,6 +606,12 @@ class Frame {
             return new Frame(this, this.sources, res);
         }
         return this;
+    }
+    
+    private Frame deleteAllFields() {
+        if(fieldValues.isEmpty())
+            return this;
+        return new Frame(this, this.sources, Collections.emptyMap());
     }
     
     private Frame deleteFields() {
