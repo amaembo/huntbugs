@@ -26,7 +26,6 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.warning.Roles;
-import one.util.huntbugs.warning.Role.TypeRole;
 
 /**
  * @author Tagir Valeev
@@ -34,8 +33,6 @@ import one.util.huntbugs.warning.Role.TypeRole;
  */
 @WarningDefinition(category="Correctness", name="PrimitiveArrayPassedAsVarArg", maxScore=60)
 public class IncorrectVarArg {
-    private static final TypeRole ARRAY_TYPE = TypeRole.forName("ARRAY_TYPE");
-    
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
         if(expr.getOperand() instanceof MethodReference) {
@@ -55,7 +52,7 @@ public class IncorrectVarArg {
                                 return;
                         }
                         mc.report("PrimitiveArrayPassedAsVarArg", priority, lastArg, Roles.CALLED_METHOD.create(mr),
-                            ARRAY_TYPE.create(nested));
+                            Roles.ARRAY_TYPE.create(nested));
                     }
                 }
             }

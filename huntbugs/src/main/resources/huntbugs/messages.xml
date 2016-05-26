@@ -1039,5 +1039,11 @@
       <LongDescription><![CDATA[This code specifies length = $NUMBER$, but it's statically known that given array
         length should not exceed $MAX_LENGTH$. This would result in <code>IndexOutOfBoundsException</code> in runtime.]]></LongDescription>
     </Warning>
+    <Warning Type="ContravariantArrayStore">
+      <Title>Contravariant store to an array</Title>
+      <Description>Attempt to store value of type $VALUE_TYPE$ to an array of type $ARRAY_TYPE$.</Description>
+      <LongDescription><![CDATA[This code stores the value of type $VALUE_TYPE$ into an array of type $ARRAY_TYPE$.
+      It seems that these types are incompatible, thus this operation may cause <code>ArrayStoreException</code> at runtime.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

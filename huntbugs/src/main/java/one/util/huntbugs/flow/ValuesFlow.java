@@ -465,21 +465,28 @@ public class ValuesFlow {
         }
         return result;
     }
+    
+    private static TypeReference mergeTypes(TypeReference t1, TypeReference t2) {
+        if (t1 == null || t2 == null)
+            return null;
+        if (t1.isEquivalentTo(t2))
+            return t1;
+        if(t1.isArray() ^ t2.isArray())
+            return null;
+        if(t1.isArray()) {
+            return mergeTypes(t1.getElementType(), t2.getElementType()).makeArrayType();
+        }
+        List<TypeReference> chain1 = Types.getBaseTypes(t1);
+        List<TypeReference> chain2 = Types.getBaseTypes(t2);
+        for (int i = Math.min(chain1.size(), chain2.size()) - 1; i >= 0; i--) {
+            if (chain1.get(i).equals(chain2.get(i)))
+                return chain1.get(i);
+        }
+        return null;
+    }
 
     public static TypeReference reduceType(Expression input) {
-        return reduce(input, Types::getExpressionType, (t1, t2) -> {
-            if (t1 == null || t2 == null)
-                return null;
-            if (t1.equals(t2))
-                return t1;
-            List<TypeReference> chain1 = Types.getBaseTypes(t1);
-            List<TypeReference> chain2 = Types.getBaseTypes(t2);
-            for (int i = Math.min(chain1.size(), chain2.size()) - 1; i >= 0; i--) {
-                if (chain1.get(i).equals(chain2.get(i)))
-                    return chain1.get(i);
-            }
-            return null;
-        }, Objects::isNull);
+        return reduce(input, Types::getExpressionType, ValuesFlow::mergeTypes, Objects::isNull);
     }
 
     public static Expression getSource(Expression input) {

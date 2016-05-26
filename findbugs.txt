@@ -69,7 +69,7 @@ abbrev="SA" type="SA_LOCAL_SELF_ASSIGNMENT" category="STYLE" --> SelfAssignmentL
 abbrev="SA" type="SA_LOCAL_SELF_ASSIGNMENT_INSTEAD_OF_FIELD" category="CORRECTNESS" --> SelfAssignmentLocalInsteadOfField
 abbrev="DMI" type="DMI_LONG_BITS_TO_DOUBLE_INVOKED_ON_INT" category="CORRECTNESS"
 abbrev="BC" type="BC_IMPOSSIBLE_DOWNCAST_OF_TOARRAY" category="CORRECTNESS" cweid="570" --> ImpossibleToArrayDowncast
-abbrev="WMI" type="WMI_WRONG_MAP_ITERATOR" category="PERFORMANCE" --> WrongMapIterator
+abbrev="WMI" type="WMI_WRONG_MAP_ITERATOR" category="PERFORMANCE" --> WrongMapIterator, WrongMapIteratorValues
 abbrev="UI" type="UI_INHERITANCE_UNSAFE_GETRESOURCE" category="BAD_PRACTICE" --> UnsafeGetResource
 abbrev="RV" type="RV_REM_OF_RANDOM_INT" category="STYLE" --> RandomIntRemainder
 abbrev="RV" type="RV_REM_OF_HASHCODE" category="STYLE" --> HashCodeRemainder
@@ -158,6 +158,7 @@ abbrev="HE" type="HE_HASHCODE_USE_OBJECT_EQUALS" category="BAD_PRACTICE" --> Has
 abbrev="HE" type="HE_HASHCODE_NO_EQUALS" category="BAD_PRACTICE" --> HashCodeNoEquals
 abbrev="HE" type="HE_EQUALS_USE_HASHCODE" category="BAD_PRACTICE" --> EqualsObjectHashCode
 abbrev="HE" type="HE_EQUALS_NO_HASHCODE" category="BAD_PRACTICE" --> EqualsNoHashCode
+abbrev="CAA" type="CAA_COVARIANT_ARRAY_ELEMENT_STORE" category="CORRECTNESS" experimental="true" --> ContravariantArrayStore
 
 ==== Not reimplemented
 
@@ -180,7 +181,6 @@ abbrev="VO" type="VO_VOLATILE_REFERENCE_TO_ARRAY" category="MT_CORRECTNESS"
 abbrev="HSC" type="HSC_HUGE_SHARED_STRING_CONSTANT" category="PERFORMANCE"
 abbrev="DP" type="DP_DO_INSIDE_DO_PRIVILEGED" category="MALICIOUS_CODE"
 abbrev="DP" type="DP_CREATE_CLASSLOADER_INSIDE_DO_PRIVILEGED" category="MALICIOUS_CODE"
-abbrev="CAA" type="CAA_COVARIANT_ARRAY_ELEMENT_STORE" category="CORRECTNESS" experimental="true"
 abbrev="DE" type="DE_MIGHT_DROP" category="BAD_PRACTICE"
 abbrev="DE" type="DE_MIGHT_IGNORE" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_FUTURE_KEYWORD_USED_AS_IDENTIFIER" category="BAD_PRACTICE"

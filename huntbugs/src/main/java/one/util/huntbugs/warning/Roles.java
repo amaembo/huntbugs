@@ -117,6 +117,14 @@ public final class Roles {
      */
     public static final TypeRole TARGET_TYPE = new TypeRole("TARGET_TYPE", Count.ZERO_ONE);
     /**
+     * Array type associated with warning
+     */
+    public static final TypeRole ARRAY_TYPE = new TypeRole("ARRAY_TYPE", Count.ZERO_ONE);
+    /**
+     * Value type associated with warning
+     */
+    public static final TypeRole VALUE_TYPE = new TypeRole("VALUE_TYPE", Count.ZERO_ONE);
+    /**
      * Type of Exception associated with the warning
      */
     public static final TypeRole EXCEPTION = new TypeRole("EXCEPTION");
