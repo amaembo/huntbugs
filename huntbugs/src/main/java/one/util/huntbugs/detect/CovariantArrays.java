@@ -47,10 +47,14 @@ public class CovariantArrays {
             if(arrayType == null || valueType == null || valueType.isPrimitive())
                 return;
             valueType = toRawType(valueType);
+            if(Types.isObject(valueType))
+                return;
             if(!arrayType.isArray())
                 return;
             TypeReference arrayElementType = arrayType.getElementType();
             arrayElementType = toRawType(arrayElementType);
+            if(Types.isObject(arrayElementType))
+                return;
             if(!Types.isInstance(valueType, arrayElementType)) {
                 int priority = 0;
                 if(Types.isInstance(arrayElementType, valueType)) {
