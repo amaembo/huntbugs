@@ -43,7 +43,7 @@ public class CovariantArrays {
         if(expr.getCode() == AstCode.StoreElement) {
             TypeReference arrayType = ValuesFlow.reduceType(Nodes.getChild(expr, 0));
             TypeReference valueType = ValuesFlow.reduceType(Nodes.getChild(expr, 2));
-            if(arrayType == null || valueType == null)
+            if(arrayType == null || valueType == null || valueType.isPrimitive())
                 return;
             if(!arrayType.isArray())
                 return;
