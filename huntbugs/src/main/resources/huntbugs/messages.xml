@@ -1051,5 +1051,11 @@
       <LongDescription><![CDATA[This code stores the value of type $VALUE_TYPE$ into an array of type $ARRAY_TYPE$.
       It seems that these types are incompatible, thus this operation may cause <code>ArrayStoreException</code> at runtime.]]></LongDescription>
     </Warning>
+    <Warning Type="FieldDoubleAssignment">
+      <Title>Field is assigned twice</Title>
+      <Description>The field $FIELD$ is assigned twice in a row.</Description>
+      <LongDescription><![CDATA[This code assigns the value to the field $FIELD$ twice in a row making the first assignment useless.
+      Probably something else was intended.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

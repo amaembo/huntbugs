@@ -160,6 +160,7 @@ abbrev="HE" type="HE_EQUALS_USE_HASHCODE" category="BAD_PRACTICE" --> EqualsObje
 abbrev="HE" type="HE_EQUALS_NO_HASHCODE" category="BAD_PRACTICE" --> EqualsNoHashCode
 abbrev="CAA" type="CAA_COVARIANT_ARRAY_ELEMENT_STORE" category="CORRECTNESS" experimental="true" --> ContravariantArrayStore
 abbrev="DE" type="DE_MIGHT_IGNORE" category="BAD_PRACTICE" --> IgnoredException
+abbrev="SA" type="SA_FIELD_DOUBLE_ASSIGNMENT" category="STYLE" --> FieldDoubleAssignment
 
 ==== Not reimplemented
 
@@ -351,7 +352,6 @@ abbrev="EC" type="EC_UNRELATED_CLASS_AND_INTERFACE" category="CORRECTNESS"
 abbrev="MWN" type="MWN_MISMATCHED_WAIT" category="MT_CORRECTNESS"
 abbrev="MWN" type="MWN_MISMATCHED_NOTIFY" category="MT_CORRECTNESS"
 abbrev="SA" type="SA_LOCAL_DOUBLE_ASSIGNMENT" category="STYLE"
-abbrev="SA" type="SA_FIELD_DOUBLE_ASSIGNMENT" category="STYLE"
 abbrev="LI" type="LI_LAZY_INIT_STATIC" category="MT_CORRECTNESS" cweid="543"
 abbrev="LI" type="LI_LAZY_INIT_UPDATE_STATIC" category="MT_CORRECTNESS" cweid="543"
 abbrev="JLM" type="JLM_JSR166_UTILCONCURRENT_MONITORENTER" category="MT_CORRECTNESS"
