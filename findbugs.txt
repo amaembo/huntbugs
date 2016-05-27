@@ -159,6 +159,7 @@ abbrev="HE" type="HE_HASHCODE_NO_EQUALS" category="BAD_PRACTICE" --> HashCodeNoE
 abbrev="HE" type="HE_EQUALS_USE_HASHCODE" category="BAD_PRACTICE" --> EqualsObjectHashCode
 abbrev="HE" type="HE_EQUALS_NO_HASHCODE" category="BAD_PRACTICE" --> EqualsNoHashCode
 abbrev="CAA" type="CAA_COVARIANT_ARRAY_ELEMENT_STORE" category="CORRECTNESS" experimental="true" --> ContravariantArrayStore
+abbrev="DE" type="DE_MIGHT_IGNORE" category="BAD_PRACTICE" --> IgnoredException
 
 ==== Not reimplemented
 
@@ -182,7 +183,6 @@ abbrev="HSC" type="HSC_HUGE_SHARED_STRING_CONSTANT" category="PERFORMANCE"
 abbrev="DP" type="DP_DO_INSIDE_DO_PRIVILEGED" category="MALICIOUS_CODE"
 abbrev="DP" type="DP_CREATE_CLASSLOADER_INSIDE_DO_PRIVILEGED" category="MALICIOUS_CODE"
 abbrev="DE" type="DE_MIGHT_DROP" category="BAD_PRACTICE"
-abbrev="DE" type="DE_MIGHT_IGNORE" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_FUTURE_KEYWORD_USED_AS_IDENTIFIER" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_FUTURE_KEYWORD_USED_AS_MEMBER_IDENTIFIER" category="BAD_PRACTICE"
 abbrev="JCIP" type="JCIP_FIELD_ISNT_FINAL_IN_IMMUTABLE_CLASS" category="BAD_PRACTICE"

@@ -112,9 +112,22 @@ final class MethodData {
                 return new Location(offset, getLineNumber(offset));
             if(nc == null || nc.getNode() instanceof Lambda)
                 return new Location(0, getLineNumber(0));
-            // TODO: better support of empty blocks
-            node = nc.getNode();
-            nc = nc.getParent();
+            // TODO: better support of catch blocks
+            while(true) {
+                Node parentNode = nc.getNode();
+                nc = nc.getParent();
+                List<Node> children = parentNode.getChildren();
+                int idx = children.indexOf(node);
+                if(idx < children.size() - 1) {
+                    node = children.get(idx+1);
+                    break;
+                }
+                node = parentNode;
+                if(nc == null || nc.getNode() instanceof Lambda) {
+                    offset = Math.max(realMethod.getBody().getCodeSize()-1, 0);
+                    return new Location(offset, getLineNumber(offset));
+                }
+            }
         }
     }
 

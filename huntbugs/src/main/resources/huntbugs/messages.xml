@@ -684,6 +684,12 @@
       <LongDescription><![CDATA[This code creates an exception (or error) object of type $EXCEPTION$, but doesn't do anything with it.
       Probably the <code>throw</code> keyword is missing.]]></LongDescription>
     </Warning>
+    <Warning Type="IgnoredException">
+      <Title>Exception is ignored</Title>
+      <Description>Exception $EXCEPTION$ is ignored in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code ignores any exception of type $EXCEPTION$. This is dangerous as may mask
+      programming errors or internal VM errors and make your program silently behaving incorrectly.]]></LongDescription>
+    </Warning>
     <Warning Type="ScheduledThreadPoolExecutorChangePoolSize">
       <Title>Futile attempt to change max pool size of ScheduledThreadPoolExecutor</Title>
       <Description>Callind $CALLED_METHOD$ has no effect for $ARG_TYPE$.</Description>
