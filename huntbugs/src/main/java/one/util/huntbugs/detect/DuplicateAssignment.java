@@ -65,6 +65,11 @@ public class DuplicateAssignment {
                             break;
                         if(!Nodes.isSideEffectFree(e2.getArguments().get(1)))
                             break;
+                        if (Nodes.findExpression(Nodes.getChild(e2, 1),
+                            ex -> ex.getCode() == AstCode.GetField
+                                && fr.isEquivalentTo((FieldReference) ex.getOperand())
+                                && Nodes.isEquivalent(ex.getArguments().get(0), receiver)) != null)
+                            break;
                         Expression receiver2 = e2.getArguments().get(0);
                         FieldReference fr2 = (FieldReference) e2.getOperand();
                         if(fr.isEquivalentTo(fr2) && Nodes.isEquivalent(receiver, receiver2)) {

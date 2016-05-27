@@ -41,6 +41,12 @@ public class TestCovariantArrays {
         numbers[0] = "abc";
     }
 
+    @AssertWarning(type="ContravariantArrayStore")
+    public <T extends Number> void genericStore(T val) {
+        Object[] numbers = new String[10];
+        numbers[0] = val;
+    }
+
     // parent is Child[] array, but every non-abstract subclass of Parent is also subclass of Child
     // so no ArrayStoreException will occur in current project and we don't report this method
     @AssertNoWarning(type="ContravariantArrayStore")

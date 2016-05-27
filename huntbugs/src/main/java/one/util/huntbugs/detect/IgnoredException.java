@@ -33,7 +33,7 @@ import one.util.huntbugs.warning.Roles;
  * @author lan
  *
  */
-@WarningDefinition(category="BadPractice", name="IgnoredException", maxScore=50)
+@WarningDefinition(category="BadPractice", name="IgnoredException", maxScore=40)
 public class IgnoredException {
     @AstVisitor
     public void visit(Node node, MethodContext mc) {

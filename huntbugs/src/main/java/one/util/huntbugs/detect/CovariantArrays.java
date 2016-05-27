@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.detect;
 
+import com.strobel.assembler.metadata.BuiltinTypes;
 import com.strobel.assembler.metadata.Flags;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
@@ -45,9 +46,11 @@ public class CovariantArrays {
             TypeReference valueType = ValuesFlow.reduceType(Nodes.getChild(expr, 2));
             if(arrayType == null || valueType == null || valueType.isPrimitive())
                 return;
+            valueType = toRawType(valueType);
             if(!arrayType.isArray())
                 return;
             TypeReference arrayElementType = arrayType.getElementType();
+            arrayElementType = toRawType(arrayElementType);
             if(!Types.isInstance(valueType, arrayElementType)) {
                 int priority = 0;
                 if(Types.isInstance(arrayElementType, valueType)) {
@@ -57,6 +60,16 @@ public class CovariantArrays {
                 }
                 mc.report("ContravariantArrayStore", priority, expr, Roles.ARRAY_TYPE.create(arrayType), Roles.VALUE_TYPE.create(valueType));
             }
+        }
+    }
+
+    private TypeReference toRawType(TypeReference type) {
+        if(!type.isGenericType())
+            return type;
+        try {
+            return type.getRawType();
+        } catch (UnsupportedOperationException e) {
+            return BuiltinTypes.Object;
         }
     }
 

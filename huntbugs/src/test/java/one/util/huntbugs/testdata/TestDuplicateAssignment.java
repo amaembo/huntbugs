@@ -43,6 +43,12 @@ public class TestDuplicateAssignment {
     }
     
     @AssertNoWarning(type="FieldDoubleAssignment")
+    public void doubleFieldReuse(int val) {
+        this.x = Math.abs(val);
+        this.x = this.x * 2 + 1;
+    }
+    
+    @AssertNoWarning(type="FieldDoubleAssignment")
     public void doubleDiffField(int val) {
         this.x = Math.abs(val);
         this.y = Math.addExact(val, val);

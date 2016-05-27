@@ -474,7 +474,8 @@ public class ValuesFlow {
         if(t1.isArray() ^ t2.isArray())
             return null;
         if(t1.isArray()) {
-            return mergeTypes(t1.getElementType(), t2.getElementType()).makeArrayType();
+            TypeReference merged = mergeTypes(t1.getElementType(), t2.getElementType());
+            return merged == null ? null : merged.makeArrayType();
         }
         List<TypeReference> chain1 = Types.getBaseTypes(t1);
         List<TypeReference> chain2 = Types.getBaseTypes(t2);
