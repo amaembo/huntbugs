@@ -45,6 +45,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.jar.JarFile;
 
 /**
@@ -111,18 +112,21 @@ public class HuntBugsMojo extends AbstractMojo {
         List<ITypeLoader> deps = new ArrayList<>();
         ArtifactRepository localRepository = session.getLocalRepository();
 
-        for (Artifact art : project.getDependencyArtifacts()) {
-            if (art.getScope().equals("compile")) {
-                File f = localRepository.find(art).getFile();
-                if (f != null) {
-                    Path path = f.toPath();
-                    if (!quiet) {
-                        getLog().info("HuntBugs: +dep " + path);
-                    }
-                    if (Files.isRegularFile(path)) {
-                        deps.add(new JarTypeLoader(new JarFile(path.toFile())));
-                    } else if (Files.isDirectory(path)) {
-                        deps.add(new ClasspathTypeLoader(path.toString()));
+        Set<Artifact> dependencyArtifacts = project.getDependencyArtifacts();
+        if (dependencyArtifacts != null) {
+            for (Artifact art : dependencyArtifacts) {
+                if (art.getScope().equals("compile")) {
+                    File f = localRepository.find(art).getFile();
+                    if (f != null) {
+                        Path path = f.toPath();
+                        if (!quiet) {
+                            getLog().info("HuntBugs: +dep " + path);
+                        }
+                        if (Files.isRegularFile(path)) {
+                            deps.add(new JarTypeLoader(new JarFile(path.toFile())));
+                        } else if (Files.isDirectory(path)) {
+                            deps.add(new ClasspathTypeLoader(path.toString()));
+                        }
                     }
                 }
             }
