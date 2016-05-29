@@ -110,4 +110,18 @@ public class TestNumericPromotion {
     public float divideFloatOk(int x, int y) {
         return (float)x / y;
     }
+    
+    @AssertWarning(type = "IntegerDivisionPromotedToFloat")
+    public void divideWithNeg(int x) {
+        int res = x/2;
+        System.out.println((double)res);
+        System.out.println((double)(-res));
+    }
+
+    @AssertNoWarning(type = "*")
+    public void divideWithNegOk(int x) {
+        int res = x/2;
+        System.out.println((double)res);
+        System.out.println(-res);
+    }
 }

@@ -91,7 +91,7 @@ public class NumericPromotion {
             }
             Expression arg = ValuesFlow.getSource(expr.getArguments().get(0));
             if (arg.getCode() == AstCode.Div) {
-                if(!ValuesFlow.findTransitiveUsages(arg, true).allMatch(Nodes::isToFloatingPointConversion))
+                if(!ValuesFlow.findTransitiveUsages(arg, true).allMatch(NumericPromotion::isToFloatingPointConversion))
                     return;
                 Object constant = Nodes.getConstant(arg.getArguments().get(1));
                 int priority = 0;
@@ -195,5 +195,13 @@ public class NumericPromotion {
             rightOperand = getMultiplicationConstant(right);
         }
         return leftOperand.multiply(rightOperand);
+    }
+    
+    private static boolean isToFloatingPointConversion(Expression expr) {
+        if(Nodes.isToFloatingPointConversion(expr))
+            return true;
+        if(expr.getCode() == AstCode.Neg)
+            return ValuesFlow.findTransitiveUsages(expr, true).allMatch(NumericPromotion::isToFloatingPointConversion);
+        return false;
     }
 }
