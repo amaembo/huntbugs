@@ -17,6 +17,7 @@ package one.util.huntbugs.detect;
 
 import com.strobel.assembler.metadata.BuiltinTypes;
 import com.strobel.assembler.metadata.Flags;
+import com.strobel.assembler.metadata.GenericParameter;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
@@ -68,6 +69,12 @@ public class CovariantArrays {
     }
 
     private TypeReference toRawType(TypeReference type) {
+        if(type.hasExtendsBound())
+            return toRawType(type.getExtendsBound());
+        if(type.hasSuperBound())
+            return BuiltinTypes.Object;
+        if(type instanceof GenericParameter)
+            return toRawType(type.getUnderlyingType());
         if(!type.isGenericType())
             return type;
         try {
