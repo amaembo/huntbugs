@@ -49,7 +49,7 @@ public class DuplicateAssignment {
                     continue;
                 Expression e = (Expression) n;
                 if(e.getCode() == AstCode.PutField) {
-                    Expression receiver = e.getArguments().get(0);
+                    Expression receiver = Nodes.getChildNoSpecial(e, 0);
                     FieldReference fr = (FieldReference) e.getOperand();
                     for(int j=i+1; j<body.size(); j++) {
                         Node n2 = body.get(j);
@@ -68,9 +68,9 @@ public class DuplicateAssignment {
                         if (Nodes.findExpression(Nodes.getChild(e2, 1),
                             ex -> ex.getCode() == AstCode.GetField
                                 && fr.isEquivalentTo((FieldReference) ex.getOperand())
-                                && Nodes.isEquivalent(ex.getArguments().get(0), receiver)) != null)
+                                && Nodes.isEquivalent(Nodes.getChildNoSpecial(ex, 0), receiver)) != null)
                             break;
-                        Expression receiver2 = e2.getArguments().get(0);
+                        Expression receiver2 = Nodes.getChildNoSpecial(e2, 0);
                         FieldReference fr2 = (FieldReference) e2.getOperand();
                         if(fr.isEquivalentTo(fr2) && Nodes.isEquivalent(receiver, receiver2)) {
                             int priority = 0;

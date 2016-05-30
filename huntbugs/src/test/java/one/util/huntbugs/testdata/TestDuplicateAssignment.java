@@ -62,6 +62,12 @@ public class TestDuplicateAssignment {
     }
     
     @AssertWarning(type="FieldDoubleAssignment")
+    public void trickyReceiver(TestDuplicateAssignment tda, int val) {
+        TestDuplicateAssignment tda2 = tda;
+        tda2.x = tda.x = val;
+    }
+    
+    @AssertWarning(type="FieldDoubleAssignment")
     public void array(TestDuplicateAssignment[] arr, int val) {
         arr[val].x = val;
         arr[val].x = val;
