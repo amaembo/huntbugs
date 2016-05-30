@@ -111,7 +111,6 @@ public class TestInfiniteRecursion {
     
     public static abstract class InfiniteLoop {
         int x;
-        int y;
 
         @AssertWarning(type="InfiniteRecursion")
         void report() {

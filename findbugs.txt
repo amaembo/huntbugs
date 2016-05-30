@@ -161,6 +161,8 @@ abbrev="HE" type="HE_EQUALS_NO_HASHCODE" category="BAD_PRACTICE" --> EqualsNoHas
 abbrev="CAA" type="CAA_COVARIANT_ARRAY_ELEMENT_STORE" category="CORRECTNESS" experimental="true" --> ContravariantArrayStore
 abbrev="DE" type="DE_MIGHT_IGNORE" category="BAD_PRACTICE" --> IgnoredException
 abbrev="SA" type="SA_FIELD_DOUBLE_ASSIGNMENT" category="STYLE" --> FieldDoubleAssignment
+abbrev="UuF" type="UUF_UNUSED_FIELD" category="PERFORMANCE" --> UnusedPrivateField
+abbrev="UuF" type="UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD" category="STYLE" --> UnusedPublicField
 
 ==== Not reimplemented
 
@@ -277,9 +279,7 @@ abbrev="SF" type="SF_SWITCH_NO_DEFAULT" category="STYLE"
 abbrev="SF" type="SF_DEAD_STORE_DUE_TO_SWITCH_FALLTHROUGH" category="CORRECTNESS" cweid="484"
 abbrev="SF" type="SF_DEAD_STORE_DUE_TO_SWITCH_FALLTHROUGH_TO_THROW" category="CORRECTNESS" cweid="484"
 abbrev="SS" type="SS_SHOULD_BE_STATIC" category="PERFORMANCE"
-abbrev="UuF" type="UUF_UNUSED_FIELD" category="PERFORMANCE"
 abbrev="UrF" type="URF_UNREAD_FIELD" category="PERFORMANCE"
-abbrev="UuF" type="UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD" category="STYLE"
 abbrev="UrF" type="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD" category="STYLE"
 abbrev="NP" type="NP_UNWRITTEN_FIELD" category="CORRECTNESS"
 abbrev="NP" type="NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD" category="STYLE"

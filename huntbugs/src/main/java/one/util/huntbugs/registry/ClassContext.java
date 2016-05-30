@@ -83,7 +83,8 @@ public class ClassContext extends ElementContext {
             }
         }
         return !detector.methodVisitors.isEmpty() || !detector.astVisitors.isEmpty()
-            || !detector.methodAfterVisitors.isEmpty() || !detector.classAfterVisitors.isEmpty();
+            || !detector.methodAfterVisitors.isEmpty() || !detector.classAfterVisitors.isEmpty()
+            || !detector.fieldVisitors.isEmpty();
     }
     
     void visitAfterClass() {

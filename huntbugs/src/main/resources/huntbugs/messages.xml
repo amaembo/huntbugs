@@ -1057,5 +1057,17 @@
       <LongDescription><![CDATA[This code assigns the value to the field $FIELD$ twice in a row making the first assignment useless.
       Probably something else was intended.]]></LongDescription>
     </Warning>
+    <Warning Type="UnusedPublicField">
+      <Title>Public or protected field is unused</Title>
+      <Description>Public or protected field $FIELD$ is unused.</Description>
+      <LongDescription><![CDATA[The field $FIELD$ is unused and could be removed. False positive is possible if it's intended to be used
+      in the code which is out of the scope of this analysis or used via reflection.]]></LongDescription>
+    </Warning>
+    <Warning Type="UnusedPrivateField">
+      <Title>Private or package-private field is unused</Title>
+      <Description>Private or package-private field $FIELD$ is unused.</Description>
+      <LongDescription><![CDATA[The field $FIELD$ is unused and could be removed. If it's intended to be used via reflection, consider annotating it
+      with some annotation to avoid confusion.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

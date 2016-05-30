@@ -42,7 +42,7 @@ public class FieldContext extends ElementContext {
     void visitField() {
         for(MethodHandle mh : detector.fieldVisitors) {
             try {
-                detector.bindDatabases(Detector.METHOD_VISITOR_TYPE.parameterCount(), cc.type, mh)
+                detector.bindDatabases(Detector.FIELD_VISITOR_TYPE.parameterCount(), cc.type, mh)
                         .invoke(det, this, fdata.fd, cc.type);
             } catch (Throwable e) {
                 ctx.addError(new ErrorMessage(detector, fdata.fd, -1, e));
