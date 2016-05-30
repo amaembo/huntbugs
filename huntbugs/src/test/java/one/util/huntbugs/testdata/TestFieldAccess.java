@@ -47,4 +47,17 @@ public class TestFieldAccess {
             this.e = e;
         }
     }
+    
+    @AssertNoWarning(type="*")
+    public static class TestGeneric<T> {
+        private T[] data;
+
+        public T[] getData() {
+            return data;
+        }
+
+        public void setData(T[] data) {
+            this.data = data;
+        }
+    }
 }

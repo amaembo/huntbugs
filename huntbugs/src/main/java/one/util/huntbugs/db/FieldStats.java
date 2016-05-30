@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.strobel.assembler.ir.Instruction;
+import com.strobel.assembler.ir.OpCode;
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodBody;
@@ -66,10 +67,15 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
                         // passthru
                     case GETFIELD:
                     case GETSTATIC:
-                        FieldDefinition fd = ((FieldReference)instr.getOperand(0)).resolve();
-                        if(fd == null || fd.isSynthetic())
-                            break;
-                        getOrCreate(fd.getDeclaringType()).link(md, fd, write);
+                        FieldReference fr = (FieldReference)instr.getOperand(0);
+                        FieldDefinition fd = fr.resolve();
+                        if(fd != null) {
+                            if(fd.isSynthetic())
+                                break;
+                            fr = fd;
+                        } // fd == null case is necessary to workaround procyon problem#301
+                        getOrCreate(fr.getDeclaringType()).link(md, fr,
+                            instr.getOpCode() == OpCode.PUTSTATIC || instr.getOpCode() == OpCode.GETSTATIC, write);
                         break;
                     default:
                     }
@@ -87,21 +93,21 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
     public static class TypeFieldStats {
         Map<String, Integer> fieldRecords = new HashMap<>();
         
-        void link(MethodDefinition src, FieldDefinition fd, boolean write) {
-            int prevStatus = fieldRecords.getOrDefault(fd.getName(), 0);
+        void link(MethodDefinition src, FieldReference fr, boolean isStatic, boolean write) {
+            int prevStatus = fieldRecords.getOrDefault(fr.getName(), 0);
             int curStatus = prevStatus;
-            if(src.getDeclaringType().isEquivalentTo(fd.getDeclaringType())) {
+            if(src.getDeclaringType().isEquivalentTo(fr.getDeclaringType())) {
                 curStatus |= write ? WRITE_CLASS : READ_CLASS;
-                if(write && (src.isConstructor() && !fd.isStatic() || src.isTypeInitializer() && fd.isStatic())) {
+                if(write && (src.isConstructor() && !isStatic || src.isTypeInitializer() && isStatic)) {
                     curStatus |= WRITE_CONSTRUCTOR;
                 }
-            } else if(src.getDeclaringType().getPackageName().equals(fd.getDeclaringType().getPackageName())) {
+            } else if(src.getDeclaringType().getPackageName().equals(fr.getDeclaringType().getPackageName())) {
                 curStatus |= write ? WRITE_PACKAGE : READ_PACKAGE;
             } else {
                 curStatus |= write ? WRITE_OUTSIDE : READ_OUTSIDE;
             }
             if(prevStatus != curStatus) {
-                fieldRecords.put(fd.getName(), curStatus);
+                fieldRecords.put(fr.getName(), curStatus);
             }
         }
     }
