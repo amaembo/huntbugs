@@ -132,7 +132,7 @@ public class Formatter {
         if (value == Integer.MAX_VALUE) {
             return "Integer.MAX_VALUE";
         }
-        if (value != 0
+        if (Math.abs(value) >= 0xFF
             && (Long.bitCount(value)+1 < Long.toString(value).length() || 66 - Long.numberOfLeadingZeros(value)
                 - Long.bitCount(value) < Long.toString(value).length())) {
             return "0x" + Long.toHexString(value);
@@ -143,6 +143,15 @@ public class Formatter {
     private String formatInteger(int value, String format) {
         if (format.equals(FORMAT_HEX)) {
             return "0x" + Integer.toHexString(value);
+        }
+        if (format.equals(FORMAT_DEC)) {
+            return Integer.toString(value);
+        }
+        if (value == Integer.MIN_VALUE) {
+            return "Integer.MIN_VALUE";
+        }
+        if (value == Integer.MAX_VALUE) {
+            return "Integer.MAX_VALUE";
         }
         return Integer.toString(value);
     }
