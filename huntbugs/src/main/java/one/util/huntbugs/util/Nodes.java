@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.util;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
@@ -113,7 +114,7 @@ public class Nodes {
     }
 
     public static boolean isComparison(Node node) {
-        if (!(node instanceof Expression) || node.getChildren().size() != 2)
+        if (!(node instanceof Expression) || ((Expression)node).getArguments().size() != 2)
             return false;
         switch (((Expression) node).getCode()) {
         case CmpEq:
@@ -129,7 +130,7 @@ public class Nodes {
     }
 
     public static boolean isBinaryMath(Node node) {
-        if (!(node instanceof Expression) || node.getChildren().size() != 2)
+        if (!(node instanceof Expression) || ((Expression)node).getArguments().size() != 2)
             return false;
         switch (((Expression) node).getCode()) {
         case Add:
@@ -357,12 +358,34 @@ public class Nodes {
     public static Node find(Node node, Predicate<Node> predicate) {
         if (predicate.test(node))
             return node;
-        for (Node child : node.getChildren()) {
+        for (Node child : getChildren(node)) {
             Node result = find(child, predicate);
             if (result != null)
                 return result;
         }
         return null;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public static Iterable<Node> getChildren(Node node) {
+        if(node instanceof Expression) {
+            Expression expr = (Expression)node;
+            Object operand = expr.getOperand();
+            if(operand instanceof Lambda) {
+                return Iterables.concat(expr.getArguments(), Collections.singleton((Node)operand));
+            }
+            return (Iterable<Node>)(Iterable<?>)expr.getArguments();
+        }
+        if(node instanceof Block) {
+            Block block = (Block) node;
+            Expression entryGoto = block.getEntryGoto();
+            if(entryGoto != null) {
+                return Iterables.concat(Collections.singleton(entryGoto), block.getBody());
+            }
+            return block.getBody();
+        }
+        
+        return node.getChildren();
     }
 
     public static Expression findExpression(Expression node, Predicate<Expression> predicate) {

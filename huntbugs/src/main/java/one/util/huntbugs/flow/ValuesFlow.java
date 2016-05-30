@@ -411,7 +411,7 @@ public class ValuesFlow {
         if(node instanceof Expression)
             initBackLinks((Expression)node, lambdas);
         else
-            for(Node child : node.getChildren())
+            for(Node child : Nodes.getChildren(node))
                 initBackLinks(child, lambdas);
     }
 

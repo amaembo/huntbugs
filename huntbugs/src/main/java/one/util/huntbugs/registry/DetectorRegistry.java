@@ -156,20 +156,16 @@ public class DetectorRegistry {
         if (node instanceof Lambda) {
             MethodDefinition curMethod = mdata.realMethod;
             mdata.realMethod = Nodes.getLambdaMethod((Lambda) node);
-            List<Node> children = node.getChildren();
-            if (!children.isEmpty()) {
-                NodeChain newChain = new NodeChain(parents, node);
-                for (Node child : children)
-                    visitChildren(child, newChain, list, mdata);
-            }
+            Iterable<Node> children = Nodes.getChildren(node);
+            NodeChain newChain = new NodeChain(parents, node);
+            for (Node child : children)
+                visitChildren(child, newChain, list, mdata);
             mdata.realMethod = curMethod;
         } else {
-            List<Node> children = node.getChildren();
-            if (!children.isEmpty()) {
-                NodeChain newChain = new NodeChain(parents, node);
-                for (Node child : children)
-                    visitChildren(child, newChain, list, mdata);
-            }
+            Iterable<Node> children = Nodes.getChildren(node);
+            NodeChain newChain = new NodeChain(parents, node);
+            for (Node child : children)
+                visitChildren(child, newChain, list, mdata);
         }
         mdata.parents = parents;
         for (MethodContext mc : list) {

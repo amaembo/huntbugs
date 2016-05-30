@@ -118,7 +118,7 @@ public class RoughConstant {
                     if(Nodes.isBoxing(parent))
                         parent = parents.getParent().getNode();
                     if(Nodes.isOp(parent, AstCode.InitArray)) {
-                        int children = parent.getChildren().size();
+                        int children = ((Expression)parent).getArguments().size();
                         if(children > 100)
                             priority += 30;
                         else if(children > 10)
