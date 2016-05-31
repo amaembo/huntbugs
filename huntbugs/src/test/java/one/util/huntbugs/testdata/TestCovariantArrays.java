@@ -28,12 +28,12 @@ public class TestCovariantArrays {
     static class Child extends Parent {}
     static class GrandChild extends Child {}
 
-    @AssertWarning(type="ContravariantArrayStore")
+    @AssertWarning("ContravariantArrayStore")
     public void test() {
         array[1] = 2;
     }
 
-    @AssertWarning(type="ContravariantArrayStore")
+    @AssertWarning("ContravariantArrayStore")
     public void caaStore(boolean b) {
         Object[] numbers = new Integer[10];
         if(b)
@@ -41,13 +41,13 @@ public class TestCovariantArrays {
         numbers[0] = "abc";
     }
 
-    @AssertWarning(type="ContravariantArrayStore")
+    @AssertWarning("ContravariantArrayStore")
     public <T extends Number> void genericStore(T val) {
         Object[] numbers = new String[10];
         numbers[0] = val;
     }
 
-    @AssertNoWarning(type="ContravariantArrayStore")
+    @AssertNoWarning("ContravariantArrayStore")
     public <T extends Number> void testNull() {
         String[] numbers = new String[10];
         numbers[0] = null;
@@ -55,7 +55,7 @@ public class TestCovariantArrays {
     
     // parent is Child[] array, but every non-abstract subclass of Parent is also subclass of Child
     // so no ArrayStoreException will occur in current project and we don't report this method
-    @AssertNoWarning(type="ContravariantArrayStore")
+    @AssertNoWarning("ContravariantArrayStore")
     public void caaStoreNoReport(Parent p) {
         Parent[] parents = new Child[10];
         parents[0] = p;

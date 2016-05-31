@@ -26,24 +26,24 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestToArrayDowncast {
-    @AssertWarning(type="ImpossibleToArrayDowncast")
+    @AssertWarning("ImpossibleToArrayDowncast")
     public String[] toArray(ArrayList<String> l) {
         return (String[]) l.toArray();
     }
 
-    @AssertWarning(type="ImpossibleToArrayDowncast")
+    @AssertWarning("ImpossibleToArrayDowncast")
     public String[] toArray(Collection<String> l) {
         return (String[]) l.toArray();
     }
     
-    @AssertNoWarning(type="ImpossibleToArrayDowncast")
+    @AssertNoWarning("ImpossibleToArrayDowncast")
     public String[] toArrayOk(Collection<String> l) {
         return l.toArray(new String[0]);
     }
 
     @SuppressWarnings("unchecked")
     // Probably some other warning should be issued here, but not this
-    @AssertNoWarning(type="ImpossibleToArrayDowncast")
+    @AssertNoWarning("ImpossibleToArrayDowncast")
     public <T> T[] toArrayGeneric(Collection<String> l) {
         return (T[])l.toArray();
     }

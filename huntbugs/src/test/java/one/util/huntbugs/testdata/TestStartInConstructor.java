@@ -23,13 +23,13 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestStartInConstructor {
-    @AssertWarning(type="StartInConstructor", minScore=45, maxScore=55)
+    @AssertWarning(value="StartInConstructor", minScore=45, maxScore=55)
     public TestStartInConstructor() {
         new Thread(() -> System.out.println()).start();
         System.out.println("Started!");
     }
     
-    @AssertWarning(type="StartInConstructor", minScore=45, maxScore=55)
+    @AssertWarning(value="StartInConstructor", minScore=45, maxScore=55)
     public TestStartInConstructor(String s, int x) {
         new Thread() {
             @Override
@@ -40,18 +40,18 @@ public class TestStartInConstructor {
         System.out.println("Started!");
     }
     
-    @AssertWarning(type="StartInConstructor", minScore=35, maxScore=45)
+    @AssertWarning(value="StartInConstructor", minScore=35, maxScore=45)
     public TestStartInConstructor(int x) {
         new Thread(() -> System.out.println()).start();
     }
     
-    @AssertNoWarning(type="StartInConstructor")
+    @AssertNoWarning("StartInConstructor")
     private TestStartInConstructor(String s) {
         new Thread(() -> System.out.println()).start();
     }
     
     public class SubClass extends TestStartInConstructor {
-        @AssertWarning(type="StartInConstructor", minScore=25, maxScore=35)
+        @AssertWarning(value="StartInConstructor", minScore=25, maxScore=35)
         public SubClass(int x) {
             new Thread(() -> System.out.println()).start();
         }

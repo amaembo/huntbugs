@@ -28,42 +28,42 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestInternationalization {
-    @AssertWarning(type="ConvertCaseWithDefaultLocale") 
+    @AssertWarning("ConvertCaseWithDefaultLocale") 
     public String toLowerCase(String s) {
         return s.toLowerCase();
     }
 
-    @AssertWarning(type="ConvertCaseWithDefaultLocale") 
+    @AssertWarning("ConvertCaseWithDefaultLocale") 
     public String toUpperCase(String s) {
         return s.toUpperCase();
     }
 
-    @AssertNoWarning(type="*") 
+    @AssertNoWarning("*") 
     public String toLowerCaseOk(String s) {
         return s.toLowerCase(Locale.ENGLISH);
     }
     
-    @AssertNoWarning(type="*") 
+    @AssertNoWarning("*") 
     public String toUpperCaseOk(String s) {
         return s.toUpperCase(Locale.ENGLISH);
     }
 
-    @AssertWarning(type="MethodReliesOnDefaultEncoding", minScore = 40, maxScore = 45) 
+    @AssertWarning(value="MethodReliesOnDefaultEncoding", minScore = 40, maxScore = 45) 
     public byte[] toBytes(String s) {
         return s.getBytes();
     }
     
-    @AssertWarning(type="MethodReliesOnDefaultEncoding", minScore = 28, maxScore = 35) 
+    @AssertWarning(value="MethodReliesOnDefaultEncoding", minScore = 28, maxScore = 35) 
     public PrintWriter printWriter(OutputStream os) {
         return new PrintWriter(os);
     }
 
-    @AssertNoWarning(type="*") 
+    @AssertNoWarning("*") 
     public PrintWriter printWriter() {
         return new PrintWriter(System.out);
     }
     
-    @AssertNoWarning(type="*") 
+    @AssertNoWarning("*") 
     public byte[] toBytesOk(String s) {
         return s.getBytes(StandardCharsets.UTF_8);
     }

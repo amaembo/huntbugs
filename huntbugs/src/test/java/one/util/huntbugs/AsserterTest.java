@@ -32,13 +32,13 @@ public class AsserterTest {
     public void test() throws Exception {
         Context ctx = new Context(Repository.createSelfRepository(), new AnalysisOptions());
         ctx.analyzePackage("one/util/huntbugs/asserter");
-        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule: AssertNoWarning(type = RoughConstantValue)")));
-        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule: AssertNoWarning(type = Rough*)")));
-        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule: AssertNoWarning(type = BadNameOfField)")));
-        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule: AssertNoWarning(type = UncalledPrivateMethod)")));
-        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule is not satisfied: AssertWarning(type = AAA; score = 0..100)")));
-        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule is not satisfied: AssertWarning(type = BBB; score = 0..100)")));
-        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule is not satisfied: AssertWarning(type = CCC; score = 0..100)")));
+        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule: AssertNoWarning(RoughConstantValue)")));
+        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule: AssertNoWarning(Rough*)")));
+        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule: AssertNoWarning(BadNameOfField)")));
+        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule: AssertNoWarning(UncalledPrivateMethod)")));
+        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule is not satisfied: AssertWarning(AAA; score = 0..100)")));
+        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule is not satisfied: AssertWarning(BBB; score = 0..100)")));
+        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule is not satisfied: AssertWarning(CCC; score = 0..100)")));
         assertEquals(7, ctx.getErrorCount());
     }
 }

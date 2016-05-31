@@ -23,7 +23,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestEmptySync {
-    @AssertWarning(type="EmptySynchronizeBlock")
+    @AssertWarning("EmptySynchronizeBlock")
     public void emptySync() {
         System.out.println("Before");
         synchronized (this) {
@@ -32,7 +32,7 @@ public class TestEmptySync {
         System.out.println("After");
     }
 
-    @AssertNoWarning(type="EmptySynchronizeBlock")
+    @AssertNoWarning("EmptySynchronizeBlock")
     public void nonEmptySync() {
         System.out.println("Before");
         synchronized (this) {

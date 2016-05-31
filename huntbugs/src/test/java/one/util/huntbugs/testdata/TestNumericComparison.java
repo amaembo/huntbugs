@@ -27,14 +27,14 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestNumericComparison {
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void testByte(byte b) {
         if(b + 1 > Byte.MAX_VALUE) {
             System.out.println("possible?");
         }
     }
     
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testChar(char c) {
         if(c < 0) {
             System.out.println("Never!");
@@ -44,14 +44,14 @@ public class TestNumericComparison {
         }
     }
 
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testShort(short s) {
         if(s == 0xFEF0) {
             System.out.println("Never!");
         }
     }
     
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testInt(boolean b) {
         int x = b ? 1 : 2;
         if(x > 2) {
@@ -59,7 +59,7 @@ public class TestNumericComparison {
         }
     }
     
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testIntPhi(boolean b) {
         int x = 1;
         if (b)
@@ -69,7 +69,7 @@ public class TestNumericComparison {
         }
     }
     
-    @AssertNoWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertNoWarning("ComparisonWithOutOfRangeValue")
     public void testCharOk(char c) {
         int r = c - 'a';
         if(r < 0) {
@@ -77,7 +77,7 @@ public class TestNumericComparison {
         }
     }
 
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void testAssert(char c) {
         assert c >= 0;
         if(c == 'x') {
@@ -85,7 +85,7 @@ public class TestNumericComparison {
         }
     }
 
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testByte(Byte b) {
         int i = b.byteValue();
         if(i < 0x80) {
@@ -93,21 +93,21 @@ public class TestNumericComparison {
         }
     }
 
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testInt(int c) {
         if(c < 0x100000000000L) {
             System.out.println("Always!");
         }
     }
     
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testArrayLength(int[] array) {
         if(array.length < 0) {
             System.out.println("Never!");
         }
     }
 
-    @AssertWarning(type="SwitchBranchUnreachable")
+    @AssertWarning("SwitchBranchUnreachable")
     public int testArrayLengthSwitch(int[] array) {
         switch(array.length) {
         case 0:
@@ -125,7 +125,7 @@ public class TestNumericComparison {
         }
     }
 
-    @AssertNoWarning(type="SwitchBranchUnreachable")
+    @AssertNoWarning("SwitchBranchUnreachable")
     public int testArrayLengthSwitchOk(int[] array) {
         switch(array.length) {
         case 0:
@@ -141,14 +141,14 @@ public class TestNumericComparison {
         }
     }
 
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testListLength(ArrayList<String> list) {
         if(list.size() == -1) {
             System.out.println("Never!");
         }
     }
 
-    @AssertNoWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertNoWarning("ComparisonWithOutOfRangeValue")
     public void testBitOpOk(int input) {
         int result = input & 0x1FFF0;
         if(result > 0xFFFF) {
@@ -156,7 +156,7 @@ public class TestNumericComparison {
         }
     }
 
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testBitOp(int input) {
         int result = 0xFF0 & input;
         if(result > 0xFFFF) {
@@ -164,7 +164,7 @@ public class TestNumericComparison {
         }
     }
     
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testBitOpSelf(int input) {
         input &= 0xFF0;
         if(input > 0xFFFF) {
@@ -172,7 +172,7 @@ public class TestNumericComparison {
         }
     }
     
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testBitOpPhi(int input, boolean b) {
         int mask = b ? 0xFF : 0x1F0;
         int result = mask & input;
@@ -181,7 +181,7 @@ public class TestNumericComparison {
         }
     }
 
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testBitOpPhi2(int input, boolean b) {
         int mask = b ? 0xFF : 0x1F0;
         int result = mask & input;
@@ -190,7 +190,7 @@ public class TestNumericComparison {
         }
     }
 
-    @AssertNoWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertNoWarning("ComparisonWithOutOfRangeValue")
     public void testBitOpPhiOk(int input, boolean b) {
         int mask = b ? 0xF0 : 0x1FF;
         int result = mask & input;
@@ -199,7 +199,7 @@ public class TestNumericComparison {
         }
     }
     
-    @AssertNoWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertNoWarning("ComparisonWithOutOfRangeValue")
     public void testBitOpPhiOk2(int input, boolean b) {
         int mask = b ? 0xF0 : -1;
         int result = mask & input;
@@ -208,7 +208,7 @@ public class TestNumericComparison {
         }
     }
     
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testRem(int input) {
         int result = input % 3;
         if(result == 3) {
@@ -216,7 +216,7 @@ public class TestNumericComparison {
         }
     }
 
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testRem(List<String> list) {
         int result = list.size() % 3;
         if(result < 0) {
@@ -224,7 +224,7 @@ public class TestNumericComparison {
         }
     }
 
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testRemPhi(List<String> list, boolean b) {
         int x = b ? 3 : 5;
         int result = list.size() % x;
@@ -233,7 +233,7 @@ public class TestNumericComparison {
         }
     }
     
-    @AssertNoWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertNoWarning("ComparisonWithOutOfRangeValue")
     public void testShrOk(int input) {
         int result = input >> 10;
         if(result == 0x1FFFFF || result == -0x200000) {
@@ -241,7 +241,7 @@ public class TestNumericComparison {
         }
     }
     
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testShr(int input) {
         int result = input >> 10;
         if(result == 0x200000) {
@@ -249,7 +249,7 @@ public class TestNumericComparison {
         }
     }
     
-    @AssertNoWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertNoWarning("ComparisonWithOutOfRangeValue")
     public void testUShrOk(int input) {
         int result = input >>> 10;
         if(result == 0x3FFFFF) {
@@ -257,7 +257,7 @@ public class TestNumericComparison {
         }
     }
     
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void testUShr(int input) {
         int result = input >>> 10;
         if(result == 0x400000) {
@@ -265,21 +265,21 @@ public class TestNumericComparison {
         }
     }
 
-    @AssertWarning(type="CheckForOddnessFailsForNegative")
+    @AssertWarning("CheckForOddnessFailsForNegative")
     public void testRem2(int input) {
         if(input % 2 == 1) {
             System.out.println("odd");
         }
     }
 
-    @AssertNoWarning(type="CheckForOddnessFailsForNegative")
+    @AssertNoWarning("CheckForOddnessFailsForNegative")
     public void testRem2Ok(List<String> list) {
         if(list.size() % 2 == 1) {
             System.out.println("odd");
         }
     }
 
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public int countMembers(int[] bits) {
         int count = 0;
         for (int i = 0; i < bits.length; i++) {
@@ -292,14 +292,14 @@ public class TestNumericComparison {
         return count;
     }
     
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void checkRandom(Random r) {
         if(r.nextInt(10) > 15) {
             System.out.println("Never");
         }
     }
     
-    @AssertWarning(type="ComparisonWithOutOfRangeValue")
+    @AssertWarning("ComparisonWithOutOfRangeValue")
     public void checkWithCatch(String s) {
         int x;
         try {

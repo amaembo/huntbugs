@@ -23,48 +23,48 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestUnnecessaryBoxing {
-    @AssertWarning(type = "BoxedForToString")
+    @AssertWarning("BoxedForToString")
     public String getString(int a, int b) {
         Integer integer = a + b;
         return integer.toString();
     }
 
-    @AssertWarning(type = "BoxedForToString")
+    @AssertWarning("BoxedForToString")
     public String getString(double a, double b) {
         return new Double(a + b).toString();
     }
     
-    @AssertNoWarning(type = "BoxedForToString")
+    @AssertNoWarning("BoxedForToString")
     public String getStringNoToString(int a, int b) {
         Integer sum = a + b;
         return Integer.toString(sum);
     }
 
-    @AssertWarning(type = "BoxedForUnboxing")
+    @AssertWarning("BoxedForUnboxing")
     public int boxUnbox(int a, int b) {
         Integer result = a + b;
         return result;
     }
     
-    @AssertWarning(type = "UnboxedForBoxing", minScore=40)
+    @AssertWarning(value="UnboxedForBoxing", minScore=40)
     public Integer unboxBox(Integer x) {
         int a = x;
         return a;
     }
 
-    @AssertNoWarning(type = "UnboxedForBoxing")
+    @AssertNoWarning("UnboxedForBoxing")
     public Integer unboxBox(Character x) {
         int a = x;
         return a;
     }
     
-    @AssertWarning(type = "UnboxedForBoxing", maxScore=30)
+    @AssertWarning(value="UnboxedForBoxing", maxScore=30)
     public Boolean unboxBox(Boolean x) {
         boolean a = x;
         return a;
     }
     
-    @AssertWarning(type = "UnboxedForBoxing")
+    @AssertWarning("UnboxedForBoxing")
     public Integer unboxBoxTwice(Integer x) {
         int a = x;
         if (x > 2)
@@ -72,7 +72,7 @@ public class TestUnnecessaryBoxing {
         return a;
     }
 
-    @AssertNoWarning(type = "UnboxedForBoxing")
+    @AssertNoWarning("UnboxedForBoxing")
     public Integer unboxBoxOk(Integer x) {
         int a = x;
         if (x > 2)

@@ -35,28 +35,28 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 public class TestBadMethodCalls {
     ScheduledThreadPoolExecutor ex = new ScheduledThreadPoolExecutor(10);
     
-    @AssertWarning(type="SystemExit", maxScore = 30)
+    @AssertWarning(value="SystemExit", maxScore = 30)
     public void systemExit() {
         System.exit(0);
     }
 
     @SuppressWarnings("deprecation")
-    @AssertWarning(type="SystemRunFinalizersOnExit")
+    @AssertWarning("SystemRunFinalizersOnExit")
     public void runFinalizers() {
         System.runFinalizersOnExit(true);
     }
     
-    @AssertWarning(type="SystemExit", minScore = 40)
+    @AssertWarning(value="SystemExit", minScore = 40)
     public void doSomething() {
         System.exit(0);
     }
 
-    @AssertWarning(type="SystemGc", maxScore = 40)
+    @AssertWarning(value="SystemGc", maxScore = 40)
     public void collectSomeGarbage() {
         System.gc();
     }
     
-    @AssertNoWarning(type="SystemGc")
+    @AssertNoWarning("SystemGc")
     public void collectGarbageInCatch() {
         try {
             System.out.println();
@@ -72,7 +72,7 @@ public class TestBadMethodCalls {
         }
     }
     
-    @AssertNoWarning(type="SystemGc")
+    @AssertNoWarning("SystemGc")
     public void collectGarbageTimeMeasure() {
         System.gc();
         long start = System.nanoTime();
@@ -81,7 +81,7 @@ public class TestBadMethodCalls {
         System.out.println(end - start);
     }
     
-    @AssertWarning(type="SystemGc")
+    @AssertWarning("SystemGc")
     public void collectGarbageInGeneralCatch() {
         try {
             System.out.println();
@@ -91,36 +91,36 @@ public class TestBadMethodCalls {
         }
     }
     
-    @AssertNoWarning(type="System*")
+    @AssertNoWarning("System*")
     public static void main(String[] args) {
         System.gc();
         System.exit(0);
 	}
 
     @SuppressWarnings("deprecation")
-    @AssertWarning(type="ThreadStopThrowable")
+    @AssertWarning("ThreadStopThrowable")
     public void threadStopThrowable() {
         Thread.currentThread().stop(new Exception());
     }
     
     @SuppressWarnings("deprecation")
-    @AssertNoWarning(type="ThreadStopThrowable")
+    @AssertNoWarning("ThreadStopThrowable")
     public void threadStop() {
         Thread.currentThread().stop();
     }
 
-    @AssertWarning(type="UselessThread")
+    @AssertWarning("UselessThread")
     public String testCreateThread() {
         return new Thread().getName();
     }
     
     static class MyThread extends Thread
     {
-        @AssertNoWarning(type="UselessThread")
+        @AssertNoWarning("UselessThread")
         public MyThread() {
         }
         
-        @AssertWarning(type="UselessThread")
+        @AssertWarning("UselessThread")
         public MyThread(int x) {
             System.out.println(new Thread().getName()+x);
         }
@@ -131,124 +131,124 @@ public class TestBadMethodCalls {
         }
     }
     
-    @AssertWarning(type="BigDecimalConstructedFromDouble") 
+    @AssertWarning("BigDecimalConstructedFromDouble") 
     public BigDecimal testBigDecimal() {
         return new BigDecimal(1.33);
     }
     
-    @AssertWarning(type="BigDecimalConstructedFromInfiniteOrNaN") 
+    @AssertWarning("BigDecimalConstructedFromInfiniteOrNaN") 
     public BigDecimal testBigDecimalInf() {
         return new BigDecimal(Double.POSITIVE_INFINITY);
     }
     
-    @AssertNoWarning(type="BigDecimal*") 
+    @AssertNoWarning("BigDecimal*") 
     public BigDecimal testBigDecimalRound(double x) {
         return new BigDecimal(1.5).add(new BigDecimal(x));
     }
     
-    @AssertWarning(type="URLBlockingMethod")
+    @AssertWarning("URLBlockingMethod")
     public int urlHashCode(URL url) {
         return url.hashCode();
     }
     
-    @AssertWarning(type="URLBlockingMethod")
+    @AssertWarning("URLBlockingMethod")
     public boolean urlEquals(URL url1, URL url2) {
         return url1.equals(url2);
     }
     
-    @AssertWarning(type="ArrayToString")
+    @AssertWarning("ArrayToString")
     public String format(String prefix, int[] arr) {
         return prefix+":"+arr;
     }
     
-    @AssertWarning(type="ArrayToString")
+    @AssertWarning("ArrayToString")
     public String format2(String suffix, int[] arr) {
         return arr+":"+suffix;
     }
     
-    @AssertWarning(type="ArrayToString")
+    @AssertWarning("ArrayToString")
     public String format3(int[] arr) {
         return arr.toString();
     }
     
-    @AssertNoWarning(type="ArrayToString")
+    @AssertNoWarning("ArrayToString")
     public String format4(String arr) {
         return arr+arr;
     }
     
-    @AssertWarning(type="ArrayHashCode")
+    @AssertWarning("ArrayHashCode")
     public int hash(String str, int[] arr) {
         return str.hashCode()*31+arr.hashCode();
     }
     
-    @AssertWarning(type="ArrayHashCode")
+    @AssertWarning("ArrayHashCode")
     public int hash2(String str, int[] arr) {
         return Objects.hashCode(str)*31+Objects.hashCode(arr);
     }
     
-    @AssertWarning(type="ArrayHashCode")
+    @AssertWarning("ArrayHashCode")
     public int hash3(String str, int[] arr) {
         return Objects.hash(str, arr);
     }
     
-    @AssertWarning(type="DoubleLongBitsToDoubleOnInt")
+    @AssertWarning("DoubleLongBitsToDoubleOnInt")
     public double testDouble(int x) {
         return Double.longBitsToDouble(x);
     }
 
-    @AssertWarning(type="ScheduledThreadPoolExecutorChangePoolSize")
+    @AssertWarning("ScheduledThreadPoolExecutorChangePoolSize")
     public void testThreadPoolExecutor(int poolSize) {
         ex.setMaximumPoolSize(poolSize);
     }
 
     @SuppressWarnings("deprecation")
-    @AssertWarning(type="DateBadMonth")
+    @AssertWarning("DateBadMonth")
     public void testBadMonth(Date date) {
         date.setMonth(12);
     }
     
-    @AssertWarning(type="CollectionAddedToItself") 
+    @AssertWarning("CollectionAddedToItself") 
     public void testAddCollection(Collection<Object> c) {
         c.add(c);
     }
 
-    @AssertWarning(type="CollectionAddedToItself") 
+    @AssertWarning("CollectionAddedToItself") 
     public void testAddArrayList(ArrayList<Object> c) {
         c.add(c);
     }
     
-    @AssertWarning(type="NullCheckMethodForConstant")
+    @AssertWarning("NullCheckMethodForConstant")
     public void testNullCheckAssert() {
         Objects.requireNonNull("test");
     }
 
-    @AssertNoWarning(type="NullCheckMethodForConstant")
+    @AssertNoWarning("NullCheckMethodForConstant")
     public void testNullCheckAssertOk() {
         Objects.requireNonNull(null);
     }
 
-    @AssertWarning(type="NullCheckMethodForConstant")
+    @AssertWarning("NullCheckMethodForConstant")
     public void testNullCheckAssert2() {
         String s = "test";
         Assert.assertNotNull(s);
     }
     
-    @AssertWarning(type="WrongArgumentOrder")
+    @AssertWarning("WrongArgumentOrder")
     public void testWrongAssert(String str) {
         Assert.assertNotNull(str, "String is null");
     }
 
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void testCorrectAssert(String str) {
         Assert.assertNotNull("String is null", str);
     }
     
-    @AssertWarning(type="WrongArgumentOrder")
+    @AssertWarning("WrongArgumentOrder")
     public void testWrongPrecondition(String str) {
         Objects.requireNonNull("String is null", str);
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void testCorrectPrecondition(String str) {
         Objects.requireNonNull(str, "String is null");
     }
@@ -264,7 +264,7 @@ public class TestBadMethodCalls {
     }
     
     @Override
-    @AssertWarning(type="ArrayHashCode")
+    @AssertWarning("ArrayHashCode")
     public int hashCode() {
         return state.hashCode();
     }

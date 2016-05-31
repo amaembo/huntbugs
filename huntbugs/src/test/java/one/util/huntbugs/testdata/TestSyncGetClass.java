@@ -25,7 +25,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 public class TestSyncGetClass {
     private static int val;
     
-    @AssertWarning(type="SyncOnGetClass", minScore=50)
+    @AssertWarning(value="SyncOnGetClass", minScore=50)
     public void update(int x) {
         synchronized (getClass()) {
             val = x;
@@ -33,7 +33,7 @@ public class TestSyncGetClass {
         }
     }
 
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public static void updateStatic(TestSyncGetClass obj, int x) {
         synchronized (obj.getClass()) {
             val = x;
@@ -41,8 +41,8 @@ public class TestSyncGetClass {
         }
     }
 
-    @AssertNoWarning(type="SyncOnGetClass")
-    @AssertWarning(type="StaticFieldFromInstanceMethod")
+    @AssertNoWarning("SyncOnGetClass")
+    @AssertWarning("StaticFieldFromInstanceMethod")
     public void update(Object obj, int x) {
         synchronized (obj.getClass()) {
             val = x;
@@ -50,7 +50,7 @@ public class TestSyncGetClass {
         }
     }
 
-    @AssertWarning(type="SyncOnGetClass", minScore=40, maxScore=49)
+    @AssertWarning(value="SyncOnGetClass", minScore=40, maxScore=49)
     public void print(int x) {
         synchronized (getClass()) {
             System.out.println(x);

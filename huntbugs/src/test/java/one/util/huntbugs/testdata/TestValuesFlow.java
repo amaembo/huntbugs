@@ -26,7 +26,7 @@ import one.util.huntbugs.registry.anno.AssertNoWarning;
  *
  */
 public class TestValuesFlow {
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     void testForSwitch(Map<Character, Integer> mod) {
         Map<Character, Integer> mapTemp = new Hashtable<>();
         for (Entry<Character, Integer> e : mod.entrySet()) {

@@ -36,17 +36,17 @@ public class TestNoRuntimeRetention {
     @Retention(RetentionPolicy.RUNTIME)
     public @interface MyAnnoRuntime {} 
     
-    @AssertWarning(type="AnnotationNoRuntimeRetention")
+    @AssertWarning("AnnotationNoRuntimeRetention")
     public boolean testNoRuntimeRetention(Object obj) {
         return obj.getClass().isAnnotationPresent(MyAnno.class);
     }
 
-    @AssertWarning(type="AnnotationNoRuntimeRetention")
+    @AssertWarning("AnnotationNoRuntimeRetention")
     public boolean testNoRuntimeRetention(Method m) {
         return m.getDeclaredAnnotation(MyAnno.class) != null;
     }
 
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public boolean testRuntimeRetention(Method m) {
         return m.getDeclaredAnnotation(MyAnnoRuntime.class) != null;
     }

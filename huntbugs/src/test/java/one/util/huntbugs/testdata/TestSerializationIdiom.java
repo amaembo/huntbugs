@@ -24,7 +24,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestSerializationIdiom {
-    @AssertWarning(type="ComparatorIsNotSerializable")
+    @AssertWarning("ComparatorIsNotSerializable")
     public class MyComparator implements Comparator<String> {
         @Override
         public int compare(String o1, String o2) {

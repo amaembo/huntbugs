@@ -26,14 +26,14 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestMinValueHandling {
-    @AssertWarning(type="AbsoluteValueOfRandomInt", minScore=50, maxScore=60)
+    @AssertWarning(value="AbsoluteValueOfRandomInt", minScore=50, maxScore=60)
     public int testRandom() {
         int h = ThreadLocalRandom.current().nextInt();
         int v = Math.abs(h);
         return v % 15;
     }
 
-    @AssertWarning(type="AbsoluteValueOfRandomInt", minScore=30, maxScore=40)
+    @AssertWarning(value="AbsoluteValueOfRandomInt", minScore=30, maxScore=40)
     public long testRandomLong() {
         synchronized(this) {
             long h = new SplittableRandom().nextLong();
@@ -42,34 +42,34 @@ public class TestMinValueHandling {
         }
     }
     
-    @AssertWarning(type="AbsoluteValueOfHashCode", minScore=55, maxScore=60)
+    @AssertWarning(value="AbsoluteValueOfHashCode", minScore=55, maxScore=60)
     public int testHashCodeRem(Object obj) {
         int h = obj.hashCode();
         int v = Math.abs(h);
         return v % 15;
     }
     
-    @AssertWarning(type="AbsoluteValueOfHashCode", minScore=15, maxScore=25)
+    @AssertWarning(value="AbsoluteValueOfHashCode", minScore=15, maxScore=25)
     public int testPowerOf2Rem(Object obj) {
         int h = obj.hashCode();
         int v = Math.abs(h);
         return v % 32;
     }
     
-    @AssertWarning(type="AbsoluteValueOfHashCode", minScore=45, maxScore=55)
+    @AssertWarning(value="AbsoluteValueOfHashCode", minScore=45, maxScore=55)
     public int testHashCode(Object obj) {
         int h = obj.hashCode();
         int v = Math.abs(h);
         return v;
     }
 
-    @AssertNoWarning(type="AbsoluteValueOfHashCode")
+    @AssertNoWarning("AbsoluteValueOfHashCode")
     static int falsePositive(Object key) {
         int rawHash = key.hashCode();
         return rawHash == Integer.MIN_VALUE ? 0 : Math.abs(rawHash);
     }
 
-    @AssertNoWarning(type="AbsoluteValueOfHashCode")
+    @AssertNoWarning("AbsoluteValueOfHashCode")
     static int unaryMinus(Object key) {
         int rawHash = key.hashCode();
         return -Math.abs(rawHash);

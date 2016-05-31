@@ -25,20 +25,20 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestArrayRangeCheck {
-    @AssertWarning(type="ArrayIndexNegative")
+    @AssertWarning("ArrayIndexNegative")
     public int get(int[] arr) {
         int idx = -1;
         return arr[idx];
     }
 
-    @AssertWarning(type="ArrayIndexOutOfRange")
+    @AssertWarning("ArrayIndexOutOfRange")
     public void test() {
         int[] arr = {1,2,3};
         arr[3] = 4;
         System.out.println(Arrays.toString(arr));
     }
 
-    @AssertWarning(type="ArrayIndexOutOfRange")
+    @AssertWarning("ArrayIndexOutOfRange")
     public void testArrayBoolean(boolean b) {
         int[] arr = {1,2,3};
         if(b)
@@ -47,7 +47,7 @@ public class TestArrayRangeCheck {
         System.out.println(Arrays.toString(arr));
     }
 
-    @AssertWarning(type="ArrayIndexOutOfRange")
+    @AssertWarning("ArrayIndexOutOfRange")
     public int[] getValueLocal(boolean flag) {
         int[] array = new int[5];
         if(flag) {
@@ -60,7 +60,7 @@ public class TestArrayRangeCheck {
         }
     }
 
-    @AssertWarning(type="ArrayIndexOutOfRange")
+    @AssertWarning("ArrayIndexOutOfRange")
     public void testArrayClone(boolean b) {
         int[] arr = {1,2,3};
         int[] barr = arr.clone();
@@ -68,14 +68,14 @@ public class TestArrayRangeCheck {
         System.out.println(Arrays.toString(barr));
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void testOk() {
         int[] arr = {1,2,3};
         arr[2] = 4;
         System.out.println(Arrays.toString(arr));
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void testArrayCopyOk() {
         int[] a = new int[4];
         int[] b = new int[5];
@@ -83,7 +83,7 @@ public class TestArrayRangeCheck {
         System.out.println(Arrays.toString(b));
     }
     
-    @AssertWarning(type="ArrayLengthOutOfRange")
+    @AssertWarning("ArrayLengthOutOfRange")
     public void testArrayCopy() {
         int[] a = new int[4];
         int[] b = new int[5];
@@ -91,7 +91,7 @@ public class TestArrayRangeCheck {
         System.out.println(Arrays.toString(b));
     }
     
-    @AssertWarning(type="ArrayLengthOutOfRange")
+    @AssertWarning("ArrayLengthOutOfRange")
     public void testArrayCopyLength() {
         int[] a = new int[4];
         int[] b = new int[5];
@@ -99,7 +99,7 @@ public class TestArrayRangeCheck {
         System.out.println(Arrays.toString(b));
     }
     
-    @AssertWarning(type="ArrayOffsetOutOfRange")
+    @AssertWarning("ArrayOffsetOutOfRange")
     public void testArrayCopyIdx() {
         int[] a = new int[4];
         int[] b = new int[5];
@@ -107,7 +107,7 @@ public class TestArrayRangeCheck {
         System.out.println(Arrays.toString(b));
     }
     
-    @AssertWarning(type="ArrayIndexNegative")
+    @AssertWarning("ArrayIndexNegative")
     public void testArrayCopyNegative() {
         int[] a = new int[4];
         int[] b = new int[5];
@@ -115,7 +115,7 @@ public class TestArrayRangeCheck {
         System.out.println(Arrays.toString(b));
     }
 
-    @AssertNoWarning(type="Array*")
+    @AssertNoWarning("Array*")
     public void testArrayCopyCatch() {
         int[] a = new int[4];
         int[] b = new int[5];

@@ -27,13 +27,13 @@ public class TestSpinLoop {
 
     volatile boolean vflag;
 
-    @AssertWarning(type="SpinLoopOnField")
+    @AssertWarning("SpinLoopOnField")
     void waitForTrue() {
         while (flag)
             ;
     }
 
-    @AssertNoWarning(type="SpinLoopOnField")
+    @AssertNoWarning("SpinLoopOnField")
     void waitForVolatileTrue() {
         while (vflag)
             ;
@@ -43,19 +43,19 @@ public class TestSpinLoop {
 
     TestSpinLoop bar;
 
-    @AssertWarning(type="SpinLoopOnField")
+    @AssertWarning("SpinLoopOnField")
     void waitForNonNull() {
         while (foo == null)
             ;
     }
 
-    @AssertWarning(type="SpinLoopOnField")
+    @AssertWarning("SpinLoopOnField")
     static void waitForNonNullIndirect(int x, TestSpinLoop baz) {
         while (baz.foo == null)
             ;
     }
 
-    @AssertWarning(type="SpinLoopOnField")
+    @AssertWarning("SpinLoopOnField")
     static void waitForNonNullIndirect2(int x, TestSpinLoop baz) {
         while (baz.foo.bar == null)
             ;
@@ -63,7 +63,7 @@ public class TestSpinLoop {
 
     static boolean sflag;
 
-    @AssertWarning(type="SpinLoopOnField")
+    @AssertWarning("SpinLoopOnField")
     static void waitForStatic() {
         while (!sflag)
             ;

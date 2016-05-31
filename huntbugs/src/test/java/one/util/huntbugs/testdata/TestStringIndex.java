@@ -25,27 +25,27 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 public class TestStringIndex {
     private static final String TEST_STRING = " test string ";
 
-    @AssertWarning(type="StringIndexIsGreaterThanAllowed")
+    @AssertWarning("StringIndexIsGreaterThanAllowed")
     public String trimSubstring() {
         return TEST_STRING.trim().substring(TEST_STRING.length());
     }
     
-    @AssertWarning(type="UselessStringSubstring")
+    @AssertWarning("UselessStringSubstring")
     public String uselessSubstring() {
         return TEST_STRING.trim().substring(0);
     }
     
-    @AssertWarning(type="StringIndexIsLessThanZero")
+    @AssertWarning("StringIndexIsLessThanZero")
     public String lessThanZero() {
         return TEST_STRING.substring(-1);
     }
 
-    @AssertWarning(type="StringIndexIsLessThanZero")
+    @AssertWarning("StringIndexIsLessThanZero")
     public String lessThanZero2() {
         return TEST_STRING.substring(1, -1);
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public String substringCorrect() {
         return TEST_STRING.substring(TEST_STRING.length())
                 + TEST_STRING.substring(TEST_STRING.length()-1)
@@ -53,25 +53,25 @@ public class TestStringIndex {
                 +  TEST_STRING.substring(1, 2);
     }
     
-    @AssertWarning(type="StringIndexIsGreaterThanAllowed")
+    @AssertWarning("StringIndexIsGreaterThanAllowed")
     public String substringIncorrect() {
         return TEST_STRING.substring(TEST_STRING.length()+1);
     }
-    @AssertWarning(type="StringIndexIsGreaterThanAllowed")
+    @AssertWarning("StringIndexIsGreaterThanAllowed")
     public String substringIncorrect2() {
         return TEST_STRING.substring(1, TEST_STRING.length()+1);
     }
     
-    @AssertWarning(type="StringIndexIsGreaterThanAllowed")
+    @AssertWarning("StringIndexIsGreaterThanAllowed")
     public String substringIncorrect3() {
         return TEST_STRING.substring(2, 1);
     }
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public char charAtCorrect() {
         return TEST_STRING.charAt(TEST_STRING.length()-1);
     }
     
-    @AssertWarning(type="StringIndexIsGreaterThanAllowed")
+    @AssertWarning("StringIndexIsGreaterThanAllowed")
     public char charAtIncorrect() {
         return TEST_STRING.charAt(TEST_STRING.length());
     }

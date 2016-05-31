@@ -24,21 +24,21 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestExclusiveConditions {
-    @AssertWarning(type="AndEqualsAlwaysFalse")
+    @AssertWarning("AndEqualsAlwaysFalse")
     public void testSimple(int x) {
         if(x == 1 && x == 2) {
             System.out.println("Never!");
         }
     }
 
-    @AssertWarning(type="OrNotEqualsAlwaysTrue")
+    @AssertWarning("OrNotEqualsAlwaysTrue")
     public void testOr(int x) {
         if(x != 1 || x != 2) {
             System.out.println("Always!");
         }
     }
 
-    @AssertWarning(type="AndEqualsAlwaysFalse")
+    @AssertWarning("AndEqualsAlwaysFalse")
     public void testBoxing(Integer x) {
         Integer a = 1;
         Integer b = 2;
@@ -47,28 +47,28 @@ public class TestExclusiveConditions {
         }
     }
     
-    @AssertWarning(type="AndEqualsAlwaysFalse")
+    @AssertWarning("AndEqualsAlwaysFalse")
     public void testStrings(String str) {
         if(str.equals("A\nB") && str.equals("B\nA")) {
             System.out.println("Never!");
         }
     }
 
-    @AssertWarning(type="AndEqualsAlwaysFalse")
+    @AssertWarning("AndEqualsAlwaysFalse")
     public void testEnum(TimeUnit tu) {
         if(tu.equals(TimeUnit.DAYS) && tu == TimeUnit.HOURS) {
             System.out.println("Never!");
         }
     }
     
-    @AssertWarning(type="AndEqualsAlwaysFalse")
+    @AssertWarning("AndEqualsAlwaysFalse")
     public void testComplex(int x, int y, int z) {
         if(x == 1 && y == 2 && z == 3 && 4 == x) {
             System.out.println("Never!");
         }
     }
 
-    @AssertWarning(type="OrNotEqualsAlwaysTrue")
+    @AssertWarning("OrNotEqualsAlwaysTrue")
     public void testComplexOr(int x, int y, int z) {
         if(x != 1 || y != 2 || z != 3 || 4 != x) {
             System.out.println("Always!");

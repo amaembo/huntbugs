@@ -30,60 +30,60 @@ public class TestNegativeRemainder {
     Random r = new Random(1);
     SplittableRandom sr = new SplittableRandom();
     
-    @AssertWarning(type="HashCodeRemainder")
+    @AssertWarning("HashCodeRemainder")
     public static Object getHashBucket(Object a[], Object x) {
         return a[x.hashCode() % a.length];
     }
 
-    @AssertWarning(type="HashCodeRemainder")
+    @AssertWarning("HashCodeRemainder")
     public static Object getHashBucket2(Object a[], Object x) {
         int i = x.hashCode() % a.length;
         return a[i];
     }
     
-    @AssertWarning(type="HashCodeRemainder")
+    @AssertWarning("HashCodeRemainder")
     public static void setHashBucket(Object a[], Object x) {
         int i = x.hashCode() % a.length;
         a[i] = 1;
     }
     
-    @AssertNoWarning(type="HashCodeRemainder")
+    @AssertNoWarning("HashCodeRemainder")
     public static void setHashBucketOk(Object a[], Object x) {
         int i = x.hashCode() % a.length;
         a[1] = i;
     }
     
-    @AssertWarning(type="HashCodeRemainder")
+    @AssertWarning("HashCodeRemainder")
     public static String getHashBucketList(List<String> a, Object x) {
         return a.get(x.hashCode() % a.size());
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public static void setHashBucketListOk(List<Integer> a, Object x) {
         a.set(1, x.hashCode() % a.size());
     }
     
-    @AssertWarning(type="HashCodeRemainder")
+    @AssertWarning("HashCodeRemainder")
     public static void setHashBucketList(List<Integer> a, Object x) {
         a.set(x.hashCode() % a.size(), 1);
     }
     
-    @AssertWarning(type="RandomIntRemainder")
+    @AssertWarning("RandomIntRemainder")
     public void setRandomElement(List<Integer> a) {
         a.set(r.nextInt() % a.size(), 1);
     }
     
-    @AssertWarning(type="RandomIntRemainder")
+    @AssertWarning("RandomIntRemainder")
     public void setSplittableRandomElement(int[] a) {
         a[sr.nextInt() % a.length] = 1;
     }
     
-    @AssertNoWarning(type="RandomIntRemainder")
+    @AssertNoWarning("RandomIntRemainder")
     public void setElementToRandom(int[] a) {
         a[1] = sr.nextInt() % a.length;
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void setRandomElementOk(List<Integer> a) {
         a.set(r.nextInt(a.size()), 1);
     }

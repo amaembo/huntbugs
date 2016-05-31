@@ -23,37 +23,37 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestNumberConstructor {
-    @AssertWarning(type = "NumberConstructor", minScore = 42)
+    @AssertWarning(value="NumberConstructor", minScore = 42)
     public Integer testInteger() {
         return new Integer(123);
     }
 
-    @AssertWarning(type = "NumberConstructor", minScore = 20, maxScore = 35)
+    @AssertWarning(value="NumberConstructor", minScore = 20, maxScore = 35)
     public Integer testInteger2() {
         return new Integer(130);
     }
 
-    @AssertWarning(type = "NumberConstructor", maxScore = 15)
+    @AssertWarning(value="NumberConstructor", maxScore = 15)
     public Long testLong() {
         return new Long(130);
     }
 
-    @AssertWarning(type = "NumberConstructor", maxScore = 42)
+    @AssertWarning(value="NumberConstructor", maxScore = 42)
     public Integer testInteger3(int x) {
         return new Integer(x);
     }
 
-    @AssertWarning(type = "NumberConstructor", maxScore = 42)
+    @AssertWarning(value="NumberConstructor", maxScore = 42)
     public Character testChar(char x) {
         return new Character(x);
     }
 
-    @AssertWarning(type = "BooleanConstructor", minScore = 42, maxScore=55)
+    @AssertWarning(value="BooleanConstructor", minScore = 42, maxScore=55)
     public Boolean testBoolean(boolean x) {
         return new Boolean(x);
     }
 
-    @AssertNoWarning(type = "NumberConstructor")
+    @AssertNoWarning("NumberConstructor")
     public Float testFloat(float x) {
         return new Float(x);
     }

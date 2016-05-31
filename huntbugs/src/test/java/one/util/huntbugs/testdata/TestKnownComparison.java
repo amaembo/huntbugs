@@ -29,14 +29,14 @@ public class TestKnownComparison {
     private final int finalField;
     private char ch;
     
-    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testFinalField() {
         if(finalField > 15) {
             System.out.println("Never!");
         }
     }
     
-    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public TestKnownComparison() {
         finalField = 10;
         testInstanceFieldOk2(true);
@@ -45,7 +45,7 @@ public class TestKnownComparison {
         }
     }
     
-    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public TestKnownComparison(boolean b) {
         if(ch + 1 == 5) {
             System.out.println("Never! "+b);
@@ -53,7 +53,7 @@ public class TestKnownComparison {
         finalField = 10;
     }
     
-    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testAnd(int x) {
         int a = 2;
         int b = 3;
@@ -62,7 +62,7 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testArrayLength(boolean x) {
         int[] a = {1, 2, 3};
         int[] b = {4, 5, 6};
@@ -72,7 +72,7 @@ public class TestKnownComparison {
         }
     }
     
-    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testAnd2(int x) {
         int a = 2;
         int b = 3;
@@ -81,7 +81,7 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnown")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnown")
     public void test() {
         int a = 2;
         int b = 3;
@@ -90,7 +90,7 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnown")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnown")
     public void testOr(int x) {
         int a = 2;
         int b = 3;
@@ -99,7 +99,7 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnown")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnown")
     public void testInc() {
         int a = 2;
         int b = 3;
@@ -109,7 +109,7 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertNoWarning(type = "ResultOfComparisonIsStaticallyKnown")
+    @AssertNoWarning("ResultOfComparisonIsStaticallyKnown")
     public void testIncrement(boolean f) {
         int a = 2;
         int b = 3;
@@ -120,13 +120,13 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public int testTernary() {
         int a = 2;
         return a == 2 ? 1 : -1;
     }
 
-    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public int testLoopBreak() {
         int a = 2;
         int b = 1;
@@ -139,7 +139,7 @@ public class TestKnownComparison {
         return b == 2 ? 1 : -1;
     }
 
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testFor() {
         for (int i = 0; i < 10; i++) {
             if (i == 0)
@@ -148,7 +148,7 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testSubFor(List<String> l2) {
         for (int i = 0, n = l2.size(); i < n; i++) {
             if (i - 1 == 0)
@@ -157,7 +157,7 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testForContinue(boolean b) {
         for (int i = 0; i < 10; i++) {
             if (b && i == 0 || !b && i == 2) {
@@ -168,7 +168,7 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testNestedForForSwitch(boolean b) {
         for (int pass = 0; pass < 2; pass++) {
             if (pass == 1)
@@ -196,7 +196,7 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testNestedForFor() {
         for (int a = 0; a < 10; a++) {
             if (a % 2 == 0) {
@@ -221,7 +221,7 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testIncInLoop() {
         int x = 10;
         for (int i = 0; i < 10; i++) {
@@ -232,7 +232,7 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testInLambda(int x) {
         Runnable r = () -> {
             int a = 2;
@@ -244,7 +244,7 @@ public class TestKnownComparison {
         r.run();
     }
 
-    @AssertNoWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertNoWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testInLambdaFP(int x) {
         Runnable r = () -> {
             int a = 2;
@@ -255,7 +255,7 @@ public class TestKnownComparison {
         r.run();
     }
 
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testComplexLoop(int x) {
         int s = -1;
         for (int i = 0; i < x; i++) {
@@ -275,7 +275,7 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testComplexLoop(String ssType, String type) {
         if (ssType == null)
             return;
@@ -310,7 +310,7 @@ public class TestKnownComparison {
         }
     }
     
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testComplexLoop2(String type) {
         int x = -1;
         for (int i = 0; i < 100; i++) {
@@ -328,7 +328,7 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testComplexLoop3(String type) {
         int x = -1;
         for (int i = 0; i < 100; i++) {
@@ -347,14 +347,14 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testAssert(String type) {
         int x = 1;
         assert x > 0 && !type.isEmpty();
         System.out.println(x+":"+type);
     }
 
-    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public static void testStaticField() {
         val = 3;
         if(val > 3) {
@@ -362,7 +362,7 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public static void testStaticFieldOk() {
         val = 2;
         testStaticField();
@@ -371,7 +371,7 @@ public class TestKnownComparison {
         }
     }
     
-    @AssertWarning(type = "ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testInstanceField() {
         f = 3;
         if(f > 3) {
@@ -379,7 +379,7 @@ public class TestKnownComparison {
         }
     }
     
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testInstanceFieldOk() {
         f = 2;
         testInstanceField();
@@ -388,7 +388,7 @@ public class TestKnownComparison {
         }
     }
     
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testInstanceFieldOk2(boolean b) {
         f = 2;
         int x = 0;
@@ -399,7 +399,7 @@ public class TestKnownComparison {
         System.out.println(x);
     }
     
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testInstanceFieldOk3(int x) {
         if(x > 0)
             f = 2;
@@ -409,7 +409,7 @@ public class TestKnownComparison {
         System.out.println(x);
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void testFieldLoop() {
         f = 0;
         while(f < 10) {
@@ -423,8 +423,8 @@ public class TestKnownComparison {
         }
     }
     
-    @AssertWarning(type="ResultOfComparisonIsStaticallyKnownDeadCode")
-    @AssertNoWarning(type="ResultOfComparisonIsStaticallyKnown")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertNoWarning("ResultOfComparisonIsStaticallyKnown")
     static class TestInitial {
         static long x = 2;
         
@@ -435,7 +435,7 @@ public class TestKnownComparison {
         }
     }
     
-    @AssertWarning(type="ResultOfComparisonIsStaticallyKnownDeadCode")
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testAioobe(int[] x, int y) {
         int a = 0;
         try {
@@ -452,7 +452,7 @@ public class TestKnownComparison {
         System.out.println(a);
     }
 
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void testFieldDoWhile() {
         do {
             if(f == 5) {
@@ -468,7 +468,7 @@ public class TestKnownComparison {
         ch--;
     }
 
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     static class ArrayTest {
         int[] arr;
         
@@ -484,7 +484,7 @@ public class TestKnownComparison {
     }
 
     // procyon bug
-//    @AssertNoWarning(type="*")
+//    @AssertNoWarning("*")
 //    public int testRetries(Scanner sc) {
 //        int cnt = 0;
 //        while(true) {

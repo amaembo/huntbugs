@@ -72,7 +72,7 @@ public class MemberAsserter {
                 String type = "";
                 int minScore = 0, maxScore = 100;
                 for(AnnotationParameter param : anno.getParameters()) {
-                    if(param.getMember().equals("type"))
+                    if(param.getMember().equals("value"))
                         type = (String) ((ConstantAnnotationElement)param.getValue()).getConstantValue();
                     else if(param.getMember().equals("minScore"))
                         minScore = (int) ((ConstantAnnotationElement)param.getValue()).getConstantValue();
@@ -83,7 +83,7 @@ public class MemberAsserter {
             } else if(anno.getAnnotationType().getFullName().equals(AssertNoWarning.class.getName())) {
                 String type = "";
                 for(AnnotationParameter param : anno.getParameters()) {
-                    if(param.getMember().equals("type"))
+                    if(param.getMember().equals("value"))
                         type = (String) ((ConstantAnnotationElement)param.getValue()).getConstantValue();
                 }
                 assertions.add(new AssertionData(false, type, Warning.MIN_SCORE, Warning.MAX_SCORE));

@@ -27,25 +27,25 @@ public class TestFloatNaN {
         Runnable r2 = System.out::println;
     }
     
-    @AssertWarning(type="FloatCompareToNaN")
+    @AssertWarning("FloatCompareToNaN")
     void testFloat(float a) {
         if(a == Float.NaN)
             System.out.println("NaN!");
     }
 
-    @AssertWarning(type="FloatCompareToNaN")
+    @AssertWarning("FloatCompareToNaN")
     void testNotFloat(float a) {
         if(Float.NaN != a)
             System.out.println("NaN!");
     }
     
-    @AssertWarning(type="FloatCompareToNaN")
+    @AssertWarning("FloatCompareToNaN")
     void testDouble(double a) {
         if(a == Double.NaN)
             System.out.println("NaN!");
     }
     
-    @AssertWarning(type="FloatCompareToNaN")
+    @AssertWarning("FloatCompareToNaN")
     void testNotDouble(double a) {
         if(Double.NaN != a)
             System.out.println("NaN!");

@@ -25,7 +25,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestSameBranches {
-    @AssertWarning(type = "SameBranchesIf")
+    @AssertWarning("SameBranchesIf")
     public void testSame(int a) {
         if (a > 0) {
             System.out.println("Foo");
@@ -34,12 +34,12 @@ public class TestSameBranches {
         }
     }
 
-    @AssertWarning(type = "SameBranchesTernary")
+    @AssertWarning("SameBranchesTernary")
     public int testSame(int a, int[] b) {
         return a > 0 ? b[a++] : b[a++];
     }
 
-    @AssertWarning(type = "SameBranchesIf")
+    @AssertWarning("SameBranchesIf")
     public void testSameComplex(int a, int b) {
         if (a > 0) {
             if (b > 0) {
@@ -66,7 +66,7 @@ public class TestSameBranches {
         }
     }
 
-    @AssertNoWarning(type = "SameBranchesIf")
+    @AssertNoWarning("SameBranchesIf")
     public void testSameDiffLambda(int a, int b) {
         if (a > 0) {
             System.out.println(Stream.of(1, 2, 3).reduce((m, n) -> n - m));
@@ -75,7 +75,7 @@ public class TestSameBranches {
         }
     }
 
-    @AssertWarning(type = "SameBranchesIf")
+    @AssertWarning("SameBranchesIf")
     public void testSameLambdaCapture(int a, int b) {
         if (a > 0) {
             System.out.println(Stream.of(1, 2, 3).map(x -> x + a).reduce((m, n) -> n + m));
@@ -84,7 +84,7 @@ public class TestSameBranches {
         }
     }
     
-    @AssertWarning(type = "SameBranchesIf")
+    @AssertWarning("SameBranchesIf")
     public void testSameSwitch(int a, int b) {
         if (a > 0) {
             switch(b) {
@@ -105,7 +105,7 @@ public class TestSameBranches {
         }
     }
     
-    @AssertNoWarning(type = "SameBranchesIf")
+    @AssertNoWarning("SameBranchesIf")
     public void testDiffComplex(int a, int b) {
         if (a > 0) {
             if (b > 0) {
@@ -132,7 +132,7 @@ public class TestSameBranches {
         }
     }
 
-    @AssertNoWarning(type = "SameBranchesIf")
+    @AssertNoWarning("SameBranchesIf")
     public void testDiff(int a) {
         if (a > 0) {
             System.out.println("Foo");
@@ -141,7 +141,7 @@ public class TestSameBranches {
         }
     }
     
-    @AssertWarning(type="SameBranchesSwitch")
+    @AssertWarning("SameBranchesSwitch")
     public void testSwitch(int a) {
         switch(a) {
         case 1:
@@ -164,7 +164,7 @@ public class TestSameBranches {
         }
     }
     
-    @AssertNoWarning(type="SameBranchesSwitch")
+    @AssertNoWarning("SameBranchesSwitch")
     public void testSwitchFallthrough(int a) {
         switch(a) {
         case 1:
@@ -178,7 +178,7 @@ public class TestSameBranches {
         }
     }
     
-    @AssertNoWarning(type="SameBranchesDefault")
+    @AssertNoWarning("SameBranchesDefault")
     public void testSwitchDefault(int a) {
         switch(a) {
         case 1:

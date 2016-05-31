@@ -25,18 +25,18 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestEasyMockProblems {
-    @AssertWarning(type="UselessEasyMockCall")
+    @AssertWarning("UselessEasyMockCall")
     public void testEasyMock() {
         EasyMock.replay();
     }
 
-    @AssertWarning(type="UselessEasyMockCall")
+    @AssertWarning("UselessEasyMockCall")
     public void testEasyMock2() {
         Object[] data = {};
         EasyMock.resetToDefault(data);
     }
 
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void testEasyMockOk() {
         Object[] data = {""};
         EasyMock.verify(data);

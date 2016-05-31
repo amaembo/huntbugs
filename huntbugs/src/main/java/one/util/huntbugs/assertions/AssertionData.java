@@ -71,7 +71,7 @@ class AssertionData {
     @Override
     public String toString() {
         if(hasWarning)
-            return "AssertWarning(type = "+type+(isPrefix?"*":"")+"; score = "+minScore+".."+maxScore+")";
-		return "AssertNoWarning(type = "+type+(isPrefix?"*":"")+")";
+            return "AssertWarning("+type+(isPrefix?"*":"")+"; score = "+minScore+".."+maxScore+")";
+		return "AssertNoWarning("+type+(isPrefix?"*":"")+")";
     }
 }

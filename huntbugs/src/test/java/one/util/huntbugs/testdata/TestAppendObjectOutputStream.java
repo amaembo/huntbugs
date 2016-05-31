@@ -29,19 +29,19 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestAppendObjectOutputStream {
-    @AssertWarning(type="AppendObjectOutputStream")
+    @AssertWarning("AppendObjectOutputStream")
     public ObjectOutputStream createStream() throws IOException {
         return new ObjectOutputStream(new FileOutputStream("/tmp/file", true));
     }
 
-    @AssertWarning(type="AppendObjectOutputStream")
+    @AssertWarning("AppendObjectOutputStream")
     public ObjectOutputStream createStreamComplex() throws IOException {
         OutputStream out = new FileOutputStream("/tmp/file", true);
         out = new BufferedOutputStream(out);
         return new ObjectOutputStream(out);
     }
 
-    @AssertWarning(type="AppendObjectOutputStream")
+    @AssertWarning("AppendObjectOutputStream")
     public ObjectOutputStream createStreamConditional(boolean buffered) throws IOException {
         OutputStream out = new FileOutputStream("/tmp/file", true);
         if(buffered)
@@ -49,7 +49,7 @@ public class TestAppendObjectOutputStream {
         return new ObjectOutputStream(out);
     }
     
-    @AssertNoWarning(type="AppendObjectOutputStream")
+    @AssertNoWarning("AppendObjectOutputStream")
     public ObjectOutputStream createStreamNoAppend() throws IOException {
         return new ObjectOutputStream(new FileOutputStream("/tmp/file", false));
     }

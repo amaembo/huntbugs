@@ -31,7 +31,7 @@ public class TestIteratorContract implements Iterator<String> {
     String nextElement;
     
     @Override
-    @AssertWarning(type="IteratorHasNextCallsNext")
+    @AssertWarning("IteratorHasNextCallsNext")
     public boolean hasNext() {
         try {
             nextElement = next();
@@ -42,7 +42,7 @@ public class TestIteratorContract implements Iterator<String> {
     }
 
     @Override
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public String next() {
         return nextElement == null ? input.next() : nextElement;
     }
@@ -56,14 +56,14 @@ public class TestIteratorContract implements Iterator<String> {
         }
 
         @Override
-        @AssertWarning(type="IteratorNoThrow")
+        @AssertWarning("IteratorNoThrow")
         public String next() {
             return ++state == 1 ? "Hello!".toLowerCase() : null;
         }
         
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public class NonIterator {
         public boolean hasNext() {
             return next() == null;

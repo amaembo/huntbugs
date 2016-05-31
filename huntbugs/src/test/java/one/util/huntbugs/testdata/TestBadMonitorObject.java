@@ -22,7 +22,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestBadMonitorObject {
-    @AssertWarning(type="SynchronizationOnBoxedNumber")
+    @AssertWarning("SynchronizationOnBoxedNumber")
     public void syncNumber() {
         Integer num = 1;
         synchronized(num) {
@@ -30,21 +30,21 @@ public class TestBadMonitorObject {
         }
     }
 
-    @AssertWarning(type="SynchronizationOnUnsharedBoxed")
+    @AssertWarning("SynchronizationOnUnsharedBoxed")
     public void syncUnsharedNumber() {
         synchronized(new Integer(1)) {
             System.out.println("In lock");
         }
     }
 
-    @AssertWarning(type="SynchronizationOnUnsharedBoxed")
+    @AssertWarning("SynchronizationOnUnsharedBoxed")
     public void syncUnsharedBoolean() {
         synchronized(new Boolean(true)) {
             System.out.println("In lock");
         }
     }
     
-    @AssertWarning(type="SynchronizationOnBoolean")
+    @AssertWarning("SynchronizationOnBoolean")
     public void syncBoolean() {
         synchronized(Boolean.TRUE) {
             System.out.println("In lock");

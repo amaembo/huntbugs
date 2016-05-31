@@ -25,56 +25,56 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestInfiniteRecursion {
-    @AssertWarning(type="InfiniteRecursion")
+    @AssertWarning("InfiniteRecursion")
     public TestInfiniteRecursion(int x) {
         System.out.print(new TestInfiniteRecursion(1));
     }
     
-    @AssertWarning(type="InfiniteRecursion")
+    @AssertWarning("InfiniteRecursion")
     public TestInfiniteRecursion(int x, int y) {
         if(x > 2)
             return;
         new TestInfiniteRecursion(x, y);
     }
     
-    @AssertWarning(type="InfiniteRecursion")
+    @AssertWarning("InfiniteRecursion")
     public static void testSimple() {
         testSimple();
     }
 
-    @AssertWarning(type="InfiniteRecursion")
+    @AssertWarning("InfiniteRecursion")
     public static void testSimple(int x) {
         testSimple(x);
     }
     
-    @AssertWarning(type="InfiniteRecursion")
+    @AssertWarning("InfiniteRecursion")
     public static void testSimpleMod(int x) {
         x--;
         testSimpleMod(x);
     }
 
-    @AssertWarning(type="InfiniteRecursion")
+    @AssertWarning("InfiniteRecursion")
     public static void testSimpleCheck(int x) {
         if(x > 2)
             return;
         testSimpleCheck(x);
     }
     
-    @AssertWarning(type="InfiniteRecursion")
+    @AssertWarning("InfiniteRecursion")
     public static void testSimpleCheck(int x, long y, double z, boolean b) {
         if(!b)
             return;
         testSimpleCheck(x, y, z, b);
     }
     
-    @AssertNoWarning(type="InfiniteRecursion")
+    @AssertNoWarning("InfiniteRecursion")
     public static void testSimpleModOk(int x) {
         if(x-- > 0)
             return;
         testSimpleModOk(x);
     }
     
-    @AssertWarning(type="InfiniteRecursion")
+    @AssertWarning("InfiniteRecursion")
     public int test() {
         return test();
     }
@@ -85,14 +85,14 @@ public class TestInfiniteRecursion {
         return --f > 0;
     }
     
-    @AssertNoWarning(type="InfiniteRecursion")
+    @AssertNoWarning("InfiniteRecursion")
     public boolean has() {
         if(updateF())
             return false;
         return has();
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void printRecursively(List<?> list) {
         for(Object obj : list) {
             if(obj instanceof List) {
@@ -103,7 +103,7 @@ public class TestInfiniteRecursion {
     }
     
     public interface Iface {
-        @AssertWarning(type="InfiniteRecursion")
+        @AssertWarning("InfiniteRecursion")
         default public int test(int x) {
             return test(x+1);
         }
@@ -112,31 +112,31 @@ public class TestInfiniteRecursion {
     public static abstract class InfiniteLoop {
         int x;
 
-        @AssertWarning(type="InfiniteRecursion")
+        @AssertWarning("InfiniteRecursion")
         void report() {
             report();
         }
 
-        @AssertWarning(type="InfiniteRecursion")
+        @AssertWarning("InfiniteRecursion")
         void report2(Object a, Object b) {
             if (a.equals(b)) // we miss this one because we assume equals can do
                              // a store
                 report2(a, b);
         }
 
-        @AssertWarning(type="InfiniteRecursion")
+        @AssertWarning("InfiniteRecursion")
         static void report3(InfiniteLoop obj) {
             InfiniteLoop.report3(obj);
         }
 
-        @AssertNoWarning(type="InfiniteRecursion")
+        @AssertNoWarning("InfiniteRecursion")
         void doNotReport(Object a, Object b) {
             if (a.equals(b)) {
                 doNotReport(b, a);
             }
         }
 
-        @AssertNoWarning(type="InfiniteRecursion")
+        @AssertNoWarning("InfiniteRecursion")
         void doNotReport2(Object a, Object b) {
             if (x == 0) {
                 x = 1;
@@ -145,7 +145,7 @@ public class TestInfiniteRecursion {
             }
         }
 
-        @AssertNoWarning(type="InfiniteRecursion")
+        @AssertNoWarning("InfiniteRecursion")
         void doNotReport3(Object a, Object b) {
             if (opaque()) {
                 // Assume method invocation reads and writes all fields

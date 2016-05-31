@@ -28,39 +28,39 @@ public class TestUncalledPrivateMethod {
     @interface MyAnno {
     }
 
-    @AssertWarning(type = "UncalledPrivateMethod")
+    @AssertWarning("UncalledPrivateMethod")
     private void simple() {
         System.out.println("Uncalled");
     }
 
-    @AssertWarning(type = "UncalledPrivateMethod")
+    @AssertWarning("UncalledPrivateMethod")
     @Deprecated
     private void deprecated() {
         System.out.println("Uncalled");
     }
 
-    @AssertNoWarning(type = "UncalledPrivateMethod")
+    @AssertNoWarning("UncalledPrivateMethod")
     @MyAnno
     private void annotated() {
         System.out.println("Uncalled");
     }
 
-    @AssertNoWarning(type = "UncalledPrivateMethod")
+    @AssertNoWarning("UncalledPrivateMethod")
     void packagePrivate() {
         System.out.println("Uncalled");
     }
 
-    @AssertNoWarning(type = "UncalledPrivateMethod")
+    @AssertNoWarning("UncalledPrivateMethod")
     private void called() {
         System.out.println("Called");
     }
 
-    @AssertNoWarning(type = "UncalledPrivateMethod")
+    @AssertNoWarning("UncalledPrivateMethod")
     private void methodRef(String s) {
         System.out.println("Called " + s);
     }
 
-    @AssertNoWarning(type = "UncalledPrivateMethod")
+    @AssertNoWarning("UncalledPrivateMethod")
     private void lambda(String s) {
         System.out.println("Called " + s);
     }
@@ -71,19 +71,19 @@ public class TestUncalledPrivateMethod {
         Stream.of("b").forEach(b -> this.lambda(b));
     }
     
-    @AssertWarning(type = "UncalledPrivateMethodChain")
-    @AssertNoWarning(type = "UncalledPrivateMethod")
+    @AssertWarning("UncalledPrivateMethodChain")
+    @AssertNoWarning("UncalledPrivateMethod")
     private void callA() {
         callB();
     }
     
-    @AssertNoWarning(type = "UncalledPrivateMethod")
+    @AssertNoWarning("UncalledPrivateMethod")
     private void callB() {
         callA();
     }
     
-    @AssertWarning(type = "UncalledPrivateMethodChain")
-    @AssertNoWarning(type = "UncalledPrivateMethod")
+    @AssertWarning("UncalledPrivateMethodChain")
+    @AssertNoWarning("UncalledPrivateMethod")
     private void selfLambda() {
         Runnable r = () -> selfLambda();
         r.run();

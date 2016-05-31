@@ -29,47 +29,47 @@ public class TestStaticFieldFromInstanceMethod {
     private static int debugLevel = 0;
     static Object data;
     
-    @AssertWarning(type="StaticFieldFromInstanceMethod", minScore=55)
+    @AssertWarning(value="StaticFieldFromInstanceMethod", minScore=55)
     public void testWrite(int x) {
         val = x;
         System.out.println(val);
     }
 
-    @AssertWarning(type="StaticFieldFromInstanceMethod", minScore=35, maxScore=35)
+    @AssertWarning(value="StaticFieldFromInstanceMethod", minScore=35, maxScore=35)
     private void testWritePrivate(int x) {
         val = x;
         System.out.println(val);
     }
     
-    @AssertWarning(type="StaticFieldFromInstanceMethod", minScore=45, maxScore=45)
+    @AssertWarning(value="StaticFieldFromInstanceMethod", minScore=45, maxScore=45)
     protected void testWriteProtected(int x) {
         val = x;
         System.out.println(val);
     }
     
-    @AssertWarning(type="StaticFieldFromInstanceMethod", minScore=50, maxScore=50)
+    @AssertWarning(value="StaticFieldFromInstanceMethod", minScore=50, maxScore=50)
     public void cleanUp() {
         data = null;
     }
     
-    @AssertWarning(type="StaticFieldFromInstanceMethod", minScore=35, maxScore=35)
+    @AssertWarning(value="StaticFieldFromInstanceMethod", minScore=35, maxScore=35)
     public void cleanUpSynchronized() {
         synchronized(TestStaticFieldFromInstanceMethod.class) {
             data = null;
         }
     }
 
-    @AssertWarning(type="StaticFieldFromInstanceMethod", minScore=35, maxScore=35)
+    @AssertWarning(value="StaticFieldFromInstanceMethod", minScore=35, maxScore=35)
     public synchronized void cleanUpSynchronizedMethod() {
         data = null;
     }
     
-    @AssertWarning(type="StaticFieldFromInstanceMethod", minScore=40, maxScore=40)
+    @AssertWarning(value="StaticFieldFromInstanceMethod", minScore=40, maxScore=40)
     public void setVerbose(boolean v) {
         VERBOSE = v;
     }
 
-    @AssertWarning(type="StaticFieldFromInstanceMethod", minScore=45, maxScore=45)
+    @AssertWarning(value="StaticFieldFromInstanceMethod", minScore=45, maxScore=45)
     public void log(String message) {
         if(loggingSwitchedOff)
             return;
@@ -81,12 +81,12 @@ public class TestStaticFieldFromInstanceMethod {
         }
     }
     
-    @AssertWarning(type="StaticFieldFromInstanceMethod", minScore=40, maxScore=40)
+    @AssertWarning(value="StaticFieldFromInstanceMethod", minScore=40, maxScore=40)
     public void setDebugLevel(int level) {
         debugLevel = level;
     }
     
-    @AssertNoWarning(type="StaticFieldFromInstanceMethod")
+    @AssertNoWarning("StaticFieldFromInstanceMethod")
     public static void testWriteFromStatic(int x) {
         val = x;
     }

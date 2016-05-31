@@ -30,7 +30,7 @@ public class TestVolatileIncrement {
     long b;
     double c;
 
-    @AssertNoWarning(type = "Volatile*")
+    @AssertNoWarning("Volatile*")
     public int testNonVolatile() {
         a++;
         ++b;
@@ -38,45 +38,45 @@ public class TestVolatileIncrement {
         return (int) (a+b+c);
     }
 
-    @AssertWarning(type = "VolatileIncrement", minScore = 70)
+    @AssertWarning(value="VolatileIncrement", minScore = 70)
     public int testPre() {
         return x += 2;
     }
     
-    @AssertWarning(type = "VolatileIncrement", minScore = 70)
+    @AssertWarning(value="VolatileIncrement", minScore = 70)
     public int testPost() {
         return ++x;
     }
 
-    @AssertWarning(type = "VolatileIncrement", minScore = 40, maxScore = 50)
+    @AssertWarning(value="VolatileIncrement", minScore = 40, maxScore = 50)
     public synchronized int testPostSynchronized() {
         return ++x;
     }
     
-    @AssertWarning(type = "VolatileIncrement", minScore = 40, maxScore = 50)
+    @AssertWarning(value="VolatileIncrement", minScore = 40, maxScore = 50)
     public int testPostSynchronizedBlock() {
         synchronized (this) {
             return ++x;
         }
     }
     
-    @AssertWarning(type = "VolatileMath", minScore = 70)
+    @AssertWarning(value="VolatileMath", minScore = 70)
     public int testMul() {
         return x *= 2;
     }
 
-    @AssertWarning(type = "VolatileMath", minScore = 80)
+    @AssertWarning(value="VolatileMath", minScore = 80)
     public double testMulDouble() {
         z *= 3;
         return z *= 2;
     }
 
-    @AssertWarning(type = "VolatileIncrement", minScore = 80)
+    @AssertWarning(value="VolatileIncrement", minScore = 80)
     public long testPreLong() {
         return y += 2;
     }
 
-    @AssertWarning(type = "VolatileIncrement", minScore = 80)
+    @AssertWarning(value="VolatileIncrement", minScore = 80)
     public long testPostLong() {
         return ++y;
     }

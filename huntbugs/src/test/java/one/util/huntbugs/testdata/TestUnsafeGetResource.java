@@ -26,36 +26,36 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestUnsafeGetResource {
-    @AssertWarning(type="UnsafeGetResource", minScore=50)
+    @AssertWarning(value="UnsafeGetResource", minScore=50)
     public URL getURL() {
         Class<?> myClass = getClass();
         return myClass.getResource("foo");
     }
 
-    @AssertNoWarning(type="UnsafeGetResource")
+    @AssertNoWarning("UnsafeGetResource")
     public URL getURLOk() {
         return TestUnsafeGetResource.class.getResource("foo");
     }
     
-    @AssertWarning(type="UnsafeGetResource", minScore=50)
+    @AssertWarning(value="UnsafeGetResource", minScore=50)
     public InputStream openResource() {
         return getClass().getResourceAsStream("foo");
     }
 
-    @AssertWarning(type="UnsafeGetResource", maxScore=35)
+    @AssertWarning(value="UnsafeGetResource", maxScore=35)
     public InputStream openResourceFromRoot() {
         return getClass().getResourceAsStream("/foo");
     }
     
     public static class NoSubClasses {
-        @AssertWarning(type="UnsafeGetResource", minScore=40, maxScore=40)
+        @AssertWarning(value="UnsafeGetResource", minScore=40, maxScore=40)
         public URL getURL() {
             return getClass().getResource("foo");
         }
     }
     
     public static final class SubClass extends TestUnsafeGetResource {
-        @AssertNoWarning(type="UnsafeGetResource")
+        @AssertNoWarning("UnsafeGetResource")
         public URL getURL2() {
             return getClass().getResource("foo");
         }

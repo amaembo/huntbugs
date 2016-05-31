@@ -25,7 +25,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestIncorrectVarArg {
-    @AssertWarning(type="PrimitiveArrayPassedAsVarArg")
+    @AssertWarning("PrimitiveArrayPassedAsVarArg")
     public void testAsList(int[] data) {
         Arrays.asList(data).forEach(System.out::println);
     }
@@ -38,17 +38,17 @@ public class TestIncorrectVarArg {
         System.out.println(data.length);
     }
     
-    @AssertWarning(type="PrimitiveArrayPassedAsVarArg")
+    @AssertWarning("PrimitiveArrayPassedAsVarArg")
     public void testCustom(int[] data) {
         custom(data);
     }
 
-    @AssertNoWarning(type="PrimitiveArrayPassedAsVarArg")
+    @AssertNoWarning("PrimitiveArrayPassedAsVarArg")
     public void testOk(int[] data) {
         noVarArg(new Object[] {data});
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void testIntStream(int[] data) {
         IntStream.of(data).forEach(System.out::println);
     }

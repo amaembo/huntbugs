@@ -26,27 +26,27 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestLockProblems {
-    @AssertWarning(type="IncorrectConcurrentMethod")
+    @AssertWarning("IncorrectConcurrentMethod")
     public void waitForCondition(Condition cond) throws InterruptedException {
         cond.wait(1);
     }
 
-    @AssertWarning(type="IncorrectConcurrentMethod")
+    @AssertWarning("IncorrectConcurrentMethod")
     public void notifyCondition(Condition cond) {
         cond.notify();
     }
 
-    @AssertNoWarning(type="IncorrectConcurrentMethod")
+    @AssertNoWarning("IncorrectConcurrentMethod")
     public void waitForObject(Object cond) throws InterruptedException {
         cond.wait();
     }
 
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void waitForConditionOk(Condition cond) throws InterruptedException {
         cond.await();
     }
 
-    @AssertWarning(type="IncorrectConcurrentMethod")
+    @AssertWarning("IncorrectConcurrentMethod")
     public void notifyCountDown(CountDownLatch latch) {
         latch.notifyAll();
     }

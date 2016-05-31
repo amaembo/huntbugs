@@ -23,7 +23,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestConditionChain {
-    @AssertWarning(type = "SameConditions")
+    @AssertWarning("SameConditions")
     public void testSameConditions(int x) {
         if (x > 2) {
             if (2 < x) {
@@ -32,7 +32,7 @@ public class TestConditionChain {
         }
     }
 
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testExcludingConditions(float x) {
         if (x <= 0) {
             System.out.println("ok");
@@ -41,7 +41,7 @@ public class TestConditionChain {
         }
     }
 
-    @AssertWarning(type = "SameConditions")
+    @AssertWarning("SameConditions")
     public void testSameConditionsElse(int x) {
         if (x > 2) {
             if (x > 2) {
@@ -52,7 +52,7 @@ public class TestConditionChain {
         }
     }
 
-    @AssertWarning(type = "SameConditions")
+    @AssertWarning("SameConditions")
     public void testSameConditionsChain(int x) {
         if (x > 2) {
             if (x < 4) {
@@ -63,7 +63,7 @@ public class TestConditionChain {
         }
     }
 
-    @AssertWarning(type = "SameConditions")
+    @AssertWarning("SameConditions")
     public void testSameConditionsChainElse1(int x) {
         if (x > 2) {
             if (x < 4) {
@@ -76,7 +76,7 @@ public class TestConditionChain {
         }
     }
 
-    @AssertWarning(type = "SameConditions")
+    @AssertWarning("SameConditions")
     public void testSameConditionsChainElse2(int x) {
         if (x > 2) {
             if (x < 4) {
@@ -91,7 +91,7 @@ public class TestConditionChain {
         }
     }
 
-    @AssertWarning(type = "SameConditionsExcluding")
+    @AssertWarning("SameConditionsExcluding")
     public void testSameConditionsExcluding(int x) {
         if (x > 2) {
             System.out.println("foo3");
@@ -106,8 +106,8 @@ public class TestConditionChain {
         }
     }
 
-    @AssertNoWarning(type="SameConditionsExcluding")
-    @AssertWarning(type="SameConditions", maxScore = 50)
+    @AssertNoWarning("SameConditionsExcluding")
+    @AssertWarning(value="SameConditions", maxScore = 50)
     void testCondition(int vc, short value) {
         for (int i = vc; --i >= 0;) {
             if (value <= 0)

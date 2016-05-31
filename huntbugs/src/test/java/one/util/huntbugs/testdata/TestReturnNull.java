@@ -25,7 +25,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestReturnNull {
-    @AssertWarning(type="OptionalReturnNull")
+    @AssertWarning("OptionalReturnNull")
     Optional<String> testOptional(int a) {
         Optional<String> x = null;
         if(a > 5)
@@ -33,26 +33,26 @@ public class TestReturnNull {
         return x;
     }
 
-    @AssertWarning(type="BooleanReturnNull")
+    @AssertWarning("BooleanReturnNull")
     Boolean testBoolean(int a) {
         if(a > 5)
             return true;
         return null;
     }
     
-    @AssertWarning(type="ArrayReturnNull", minScore = 35)
+    @AssertWarning(value="ArrayReturnNull", minScore = 35)
     public int[] testArray(int a) {
         if(a > 5)
             return new int[] {a};
         return null;
     }
     
-    @AssertWarning(type="ArrayReturnNull", maxScore = 30)
+    @AssertWarning(value="ArrayReturnNull", maxScore = 30)
     public int[] testArrayNull() {
         return null;
     }
     
-    @AssertWarning(type="OptionalReturnNull")
+    @AssertWarning("OptionalReturnNull")
     String testInLambda(String x) {
         Function<String, Optional<String>> s = y -> null;
         return s.apply(x).get();

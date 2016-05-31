@@ -23,7 +23,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestAverageComputation {
-    @AssertWarning(type = "AverageComputationCouldOverflow")
+    @AssertWarning("AverageComputationCouldOverflow")
     static int bsearch(int[] a, int low, int high, int key) {
         while (low <= high) {
             int mid = (low + high) >> 1;
@@ -39,7 +39,7 @@ public class TestAverageComputation {
         return -1;
     }
 
-    @AssertWarning(type = "AverageComputationCouldOverflow")
+    @AssertWarning("AverageComputationCouldOverflow")
     static int bsearch2(int[] a, int low, int high, int key) {
         while (low <= high) {
             int mid = (low + high) / 2;
@@ -55,7 +55,7 @@ public class TestAverageComputation {
         return -1;
     }
 
-    @AssertNoWarning(type = "AverageComputationCouldOverflow")
+    @AssertNoWarning("AverageComputationCouldOverflow")
     static int bsearchOk(int[] a, int low, int high, int key) {
         while (low <= high) {
             int mid = (low + high) >>> 1;

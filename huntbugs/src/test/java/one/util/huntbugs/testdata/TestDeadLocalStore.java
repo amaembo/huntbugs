@@ -25,13 +25,13 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 public class TestDeadLocalStore {
     int x;
 
-    @AssertWarning(type = "ParameterOverwritten", minScore = 55)
+    @AssertWarning(value="ParameterOverwritten", minScore = 55)
     public void testDeadLocalSimple(int x) {
         x = 10;
         System.out.println(x);
     }
 
-    @AssertNoWarning(type = "ParameterOverwritten")
+    @AssertNoWarning("ParameterOverwritten")
     public void testDeadLocalBranch(int x) {
         if (Math.random() > 0.5)
             x = 10;
@@ -40,36 +40,36 @@ public class TestDeadLocalStore {
 
     class Extension extends TestDeadLocalStore {
         @Override
-        @AssertWarning(type = "ParameterOverwritten", maxScore = 40)
+        @AssertWarning(value="ParameterOverwritten", maxScore = 40)
         public void testDeadLocalSimple(int x) {
             x = 10;
             System.out.println(x);
         }
     }
 
-    @AssertWarning(type = "DeadIncrementInReturn")
+    @AssertWarning("DeadIncrementInReturn")
     public int testDeadIncrement(int x) {
         return x++;
     }
 
-    @AssertNoWarning(type = "DeadIncrementInReturn")
+    @AssertNoWarning("DeadIncrementInReturn")
     public int testFieldIncrement() {
         return x++;
     }
 
     @SuppressWarnings("unused")
-    @AssertWarning(type = "DeadStoreInReturn")
+    @AssertWarning("DeadStoreInReturn")
     public boolean testDeadStore(boolean b) {
         return b = true;
     }
 
-    @AssertWarning(type = "DeadIncrementInAssignment")
+    @AssertWarning("DeadIncrementInAssignment")
     public void testDeadIncrementAssignment(int i) {
         i = i++;
         System.out.println(i);
     }
 
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testDeadIncrementAssignment2(int i) {
         int x = i++;
         System.out.println(i);

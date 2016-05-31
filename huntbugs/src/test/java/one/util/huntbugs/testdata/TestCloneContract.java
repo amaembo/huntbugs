@@ -23,7 +23,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestCloneContract {
-    @AssertWarning(type="CloneableDoesNotImplementClone")
+    @AssertWarning("CloneableDoesNotImplementClone")
     public class Clone0 implements Cloneable {
         // empty
     }
@@ -32,7 +32,7 @@ public class TestCloneContract {
         public int f = 0;
         
         @Override
-        @AssertWarning(type="CloneableNoSuperCall", minScore=45)
+        @AssertWarning(value="CloneableNoSuperCall", minScore=45)
         protected Object clone() throws CloneNotSupportedException {
             return new Clone1();
         }
@@ -40,21 +40,21 @@ public class TestCloneContract {
 
     public class Clone2 extends Clone1 {
         @Override
-        @AssertWarning(type="CloneableNoSuperCall", minScore=35, maxScore=44)
+        @AssertWarning(value="CloneableNoSuperCall", minScore=35, maxScore=44)
         protected Object clone() throws CloneNotSupportedException {
             return new Clone2();
         }
     }
     
     @Override
-    @AssertWarning(type="NotCloneableHasClone")
+    @AssertWarning("NotCloneableHasClone")
     public TestCloneContract clone() {
         return new TestCloneContract();
     }
     
     public class NotCloneable {
         @Override
-        @AssertNoWarning(type="*")
+        @AssertNoWarning("*")
         public Object clone() {
             throw new UnsupportedOperationException();
         }

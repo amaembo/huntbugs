@@ -27,7 +27,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 public class TestDubiousCatch {
     Object obj = new Object();
 
-    @AssertWarning(type="CatchIllegalMonitorStateException")
+    @AssertWarning("CatchIllegalMonitorStateException")
     public boolean catchIllegalState() {
         try {
             obj.wait();
@@ -37,7 +37,7 @@ public class TestDubiousCatch {
         }
     }
 
-    @AssertWarning(type="CatchConcurrentModificationException")
+    @AssertWarning("CatchConcurrentModificationException")
     public int catchCME(List<String> list) {
         try {
             int i = 0;
@@ -51,7 +51,7 @@ public class TestDubiousCatch {
         }
     }
 
-    @AssertWarning(type="CatchConcurrentModificationException")
+    @AssertWarning("CatchConcurrentModificationException")
     public void catchCMEVoid(List<String> list) {
         try {
             for (String s : list) {

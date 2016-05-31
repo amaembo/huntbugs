@@ -25,61 +25,61 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 public class TestDuplicateAssignment {
     int x = 1, y;
     
-    @AssertNoWarning(type="FieldDoubleAssignment")
+    @AssertNoWarning("FieldDoubleAssignment")
     public TestDuplicateAssignment(int a) {
         x = a;
     }
     
     @SuppressWarnings("cast")
-    @AssertWarning(type="FieldDoubleAssignment")
+    @AssertWarning("FieldDoubleAssignment")
     public void doubleFieldChain(int val) {
         this.x = (int)(this.x = Math.abs(val));
     }
     
-    @AssertWarning(type="FieldDoubleAssignment")
+    @AssertWarning("FieldDoubleAssignment")
     public void doubleField(int val) {
         this.x = Math.abs(val);
         this.x = Math.addExact(val, val);
     }
     
-    @AssertNoWarning(type="FieldDoubleAssignment")
+    @AssertNoWarning("FieldDoubleAssignment")
     public void doubleFieldReuse(int val) {
         this.x = Math.abs(val);
         this.x = this.x * 2 + 1;
     }
     
-    @AssertNoWarning(type="FieldDoubleAssignment")
+    @AssertNoWarning("FieldDoubleAssignment")
     public void doubleDiffField(int val) {
         this.x = Math.abs(val);
         this.y = Math.addExact(val, val);
     }
     
-    @AssertWarning(type="FieldDoubleAssignment")
+    @AssertWarning("FieldDoubleAssignment")
     public void doubleDiffFieldSameField(int val) {
         this.x = Math.abs(val);
         this.y = Math.addExact(val, val);
         this.x = Math.decrementExact(val);
     }
     
-    @AssertWarning(type="FieldDoubleAssignment")
+    @AssertWarning("FieldDoubleAssignment")
     public void trickyReceiver(TestDuplicateAssignment tda, int val) {
         TestDuplicateAssignment tda2 = tda;
         tda2.x = tda.x = val;
     }
     
-    @AssertWarning(type="FieldDoubleAssignment")
+    @AssertWarning("FieldDoubleAssignment")
     public void array(TestDuplicateAssignment[] arr, int val) {
         arr[val].x = val;
         arr[val].x = val;
     }
 
-    @AssertNoWarning(type="FieldDoubleAssignment")
+    @AssertNoWarning("FieldDoubleAssignment")
     public void arrayOk(TestDuplicateAssignment[] arr, int val) {
         arr[0].x = val;
         arr[1].x = val;
     }
     
-    @AssertNoWarning(type="FieldDoubleAssignment")
+    @AssertNoWarning("FieldDoubleAssignment")
     public void doubleDiffObject(TestDuplicateAssignment tda, int val) {
         this.x = Math.abs(val);
         tda.x = Math.addExact(val, val);

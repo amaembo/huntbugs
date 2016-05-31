@@ -23,14 +23,14 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestDroppedExceptionObject {
-    @AssertWarning(type="DroppedException")
+    @AssertWarning("DroppedException")
     public void test(String s) {
         if(s.isEmpty())
             new IllegalArgumentException(s);
         System.out.println(s);
     }
 
-    @AssertNoWarning(type="DroppedException")
+    @AssertNoWarning("DroppedException")
     public void testOk(String s) {
         if(s.isEmpty())
             throw new IllegalArgumentException(s);

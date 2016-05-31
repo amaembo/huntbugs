@@ -25,7 +25,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestCompareUsage {
-    @AssertWarning(type="NegatingComparatorResult")
+    @AssertWarning("NegatingComparatorResult")
     public boolean less(String s1, String s2) {
         int res = s1.compareTo(s2);
         if(s1.isEmpty())
@@ -34,40 +34,40 @@ public class TestCompareUsage {
         return neg > 0;
     }
 
-    @AssertWarning(type="ComparingComparatorResultWithNumber")
+    @AssertWarning("ComparingComparatorResultWithNumber")
     public boolean greater(String s1, String s2) {
         return 1 == s1.compareTo(s2);
     }
 
-    @AssertWarning(type="ComparingComparatorResultWithNumber")
+    @AssertWarning("ComparingComparatorResultWithNumber")
     public boolean greater2(String s1, String s2) {
         int res = s1.compareTo(s2);
         return res == 1;
     }
     
-    @AssertNoWarning(type="ComparingComparatorResultWithNumber")
+    @AssertNoWarning("ComparingComparatorResultWithNumber")
     public boolean eq(String s1, String s2) {
         return s1.compareTo(s2) == 0;
     }
     
-    @AssertNoWarning(type="NegatingComparatorResult")
+    @AssertNoWarning("NegatingComparatorResult")
     public boolean ok(String s1, String s2) {
         int res = s1.isEmpty() ? 1 : -1;
         int neg = -res;
         return neg > 0;
     }
 
-    @AssertWarning(type="NegatingComparatorResult")
+    @AssertWarning("NegatingComparatorResult")
     public boolean lessCmp(String s1, String s2) {
         return -Comparator.<String>naturalOrder().compare(s1, s2) > 0;
     }
 
-    @AssertNoWarning(type="NegatingComparatorResult")
+    @AssertNoWarning("NegatingComparatorResult")
     public boolean lessOk(String s1, String s2) {
         return s2.compareTo(s1) > 0;
     }
     
-    @AssertNoWarning(type="NegatingComparatorResult")
+    @AssertNoWarning("NegatingComparatorResult")
     public boolean lessCmpOk(String s1, String s2) {
         return Comparator.<String>naturalOrder().compare(s2, s1) > 0;
     }

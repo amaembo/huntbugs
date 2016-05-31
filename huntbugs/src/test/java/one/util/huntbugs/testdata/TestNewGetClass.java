@@ -23,12 +23,12 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestNewGetClass {
-    @AssertWarning(type="NewForGetClass")
+    @AssertWarning("NewForGetClass")
     public void test() {
         System.out.println(new TestNewGetClass().getClass());
     }
 
-    @AssertNoWarning(type="NewForGetClass")
+    @AssertNoWarning("NewForGetClass")
     public void testOk() {
         TestNewGetClass x;
         System.out.println((x = new TestNewGetClass()).getClass());

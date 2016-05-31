@@ -23,27 +23,27 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestStringUsage {
-    @AssertWarning(type="StringConstructorEmpty")
+    @AssertWarning("StringConstructorEmpty")
     public String testStringCtor() {
         return new String();
     }
     
-    @AssertWarning(type="StringConstructor")
+    @AssertWarning("StringConstructor")
     public String testStringCtor2() {
         return new String("test");
     }
 
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public String testStringCtor3() {
         return new String(new char[] {'c'});
     }
     
-    @AssertWarning(type="StringToString")
+    @AssertWarning("StringToString")
     public String testStringToString(String s) {
         return s.toString();
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public String testObjectToString(Object s) {
         if(s instanceof String)
             return s.toString();

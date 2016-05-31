@@ -23,15 +23,15 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestInfiniteLoop {
-    @AssertWarning(type = "InfiniteLoop")
+    @AssertWarning("InfiniteLoop")
     public void testLoop(int x) {
         while (x > 2) {
             System.out.println(x);
         }
     }
 
-    @AssertNoWarning(type = "InfiniteLoop")
-    @AssertWarning(type = "InvariantLoopCondition")
+    @AssertNoWarning("InfiniteLoop")
+    @AssertWarning("InvariantLoopCondition")
     public void testLoopInvariant(int x) {
         while (x > 2) {
             System.out.println(1);
@@ -40,7 +40,7 @@ public class TestInfiniteLoop {
         }
     }
 
-    @AssertNoWarning(type = "InfiniteLoop")
+    @AssertNoWarning("InfiniteLoop")
     public void testLoopOk(int x) {
         while (x > 2) {
             System.out.println(x--);
@@ -49,7 +49,7 @@ public class TestInfiniteLoop {
 
     TestInfiniteLoop next;
 
-    @AssertNoWarning(type = "InfiniteLoop")
+    @AssertNoWarning("InfiniteLoop")
     public void dump(TestInfiniteLoop obj) {
         int x = 10;
         while (obj != null) {

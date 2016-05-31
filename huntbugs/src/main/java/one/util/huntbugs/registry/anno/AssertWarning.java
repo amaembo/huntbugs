@@ -29,7 +29,7 @@ import one.util.huntbugs.warning.Warning;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.CONSTRUCTOR})
 public @interface AssertWarning {
-    String type();
+    String value();
 
     int minScore() default Warning.MIN_SCORE;
 

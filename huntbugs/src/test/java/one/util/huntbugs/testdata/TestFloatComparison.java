@@ -23,49 +23,49 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestFloatComparison {
-    @AssertWarning(type="FloatComparison", minScore = 25, maxScore = 45)
+    @AssertWarning(value="FloatComparison", minScore = 25, maxScore = 45)
     void testFloat(float a, float b) {
         if(a == b)
             System.out.println("Equals");
     }
 
-    @AssertWarning(type="FloatComparison", minScore = 5, maxScore = 20)
+    @AssertWarning(value="FloatComparison", minScore = 5, maxScore = 20)
     void testFloatInt(float a, int b) {
         if(a == b)
             System.out.println("Equals");
     }
     
-    @AssertNoWarning(type="FloatComparison")
+    @AssertNoWarning("FloatComparison")
     void testFloat(float a) {
         if(a == 0)
             System.out.println("Equals");
     }
 
-    @AssertWarning(type="FloatComparison", minScore = 25, maxScore = 45)
+    @AssertWarning(value="FloatComparison", minScore = 25, maxScore = 45)
     void testDouble(double a, double b) {
         if(a == b)
             System.out.println("Equals");
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     void testRound(double a) {
         if(a == (int)a)
             System.out.println("Round");
     }
     
-    @AssertNoWarning(type="FloatComparison")
+    @AssertNoWarning("FloatComparison")
     void testDouble(double a) {
         if(a == 0)
             System.out.println("Equals");
     }
     
-    @AssertWarning(type="FloatComparison", minScore = 5, maxScore = 15)
+    @AssertWarning(value="FloatComparison", minScore = 5, maxScore = 15)
     void testDouble2(double a) {
         if(a == 3.0)
             System.out.println("Equals");
     }
     
-    @AssertWarning(type="FloatComparison", minScore = 15, maxScore = 25)
+    @AssertWarning(value="FloatComparison", minScore = 15, maxScore = 25)
     void testDouble3(double a) {
         if(a == 5.0)
             System.out.println("Equals");
@@ -73,13 +73,13 @@ public class TestFloatComparison {
             System.out.println("Equals");
     }
     
-    @AssertWarning(type="FloatComparison", minScore = 15, maxScore = 25)
+    @AssertWarning(value="FloatComparison", minScore = 15, maxScore = 25)
     void testDouble4(double a) {
         if(a == 10.5)
             System.out.println("Equals");
     }
 
-    @AssertWarning(type="FloatComparison", minScore = 10, maxScore = 20)
+    @AssertWarning(value="FloatComparison", minScore = 10, maxScore = 20)
     void testDoublePhi(boolean b, double a) {
         double x = a;
         if(b) x = a+10;
@@ -87,7 +87,7 @@ public class TestFloatComparison {
             System.out.println("Equals");
     }
     
-    @AssertWarning(type="FloatComparison", minScore = 10, maxScore = 20)
+    @AssertWarning(value="FloatComparison", minScore = 10, maxScore = 20)
     void testDoubleTernary(boolean b, double a) {
         double x = b ? a : a+10;
         if(a == x)

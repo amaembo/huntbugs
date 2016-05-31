@@ -23,7 +23,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestStringConcatInLoop {
-    @AssertWarning(type="StringConcatInLoop", minScore=47)
+    @AssertWarning(value="StringConcatInLoop", minScore=47)
     public String testStringConcatInLoopSimple(String[] data) {
         String result = "";
         for(String row : data)
@@ -31,7 +31,7 @@ public class TestStringConcatInLoop {
         return result;
     }
 
-    @AssertWarning(type="StringConcatInLoop", maxScore=47)
+    @AssertWarning(value="StringConcatInLoop", maxScore=47)
     public String testStringConcatInLoopIf(String[] data) {
         String result = "";
         for(String row : data)
@@ -40,7 +40,7 @@ public class TestStringConcatInLoop {
         return result;
     }
 
-    @AssertWarning(type="StringConcatInLoop")
+    @AssertWarning("StringConcatInLoop")
     public String testStringConcatInLoopNested(String[] data) {
         String result = "";
         for(String row : data) {
@@ -50,7 +50,7 @@ public class TestStringConcatInLoop {
         return result;
     }
     
-    @AssertWarning(type="StringConcatInLoop")
+    @AssertWarning("StringConcatInLoop")
     public int testStringConcatInLoopNested2(String[] data) {
         int i=0;
         for(String row : data) {
@@ -62,7 +62,7 @@ public class TestStringConcatInLoop {
         return i;
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public int testStringConcatOk(String[] data) {
         int n = 0;
         for(String row : data) {

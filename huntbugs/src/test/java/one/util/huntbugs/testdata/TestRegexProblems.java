@@ -26,43 +26,43 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestRegexProblems {
-    @AssertWarning(type="RegexBadSyntax")
+    @AssertWarning("RegexBadSyntax")
     public void testBadRegex(String test) {
         if(test.matches("***")) {
             System.out.println("Matches");
         }
     }
 
-    @AssertWarning(type="RegexUnintended")
+    @AssertWarning("RegexUnintended")
     public void testPipe(String test) {
         for(String part : test.split("|")) {
             System.out.println(part);
         }
     }
     
-    @AssertWarning(type="RegexUnintended")
+    @AssertWarning("RegexUnintended")
     public void testDot(String test) {
         for(String part : test.split(".")) {
             System.out.println(part);
         }
     }
 
-    @AssertNoWarning(type="RegexUnintended")
+    @AssertNoWarning("RegexUnintended")
     public String testDotReplace(String test) {
         return test.replaceAll(".", " ");
     }
 
-    @AssertWarning(type="RegexUnintended")
+    @AssertWarning("RegexUnintended")
     public String testDotReplaceFirst(String test) {
         return test.replaceFirst(".", " ");
     }
 
-    @AssertWarning(type="RegexFileSeparator")
+    @AssertWarning("RegexFileSeparator")
     public String[] testFileSeparator(String test) {
         return test.split(File.separator);
     }
     
-    @AssertWarning(type="RegexFileSeparator")
+    @AssertWarning("RegexFileSeparator")
     public String[] testFileSeparator2(String test) {
         return test.split(FileSystems.getDefault().getSeparator());
     }

@@ -26,61 +26,61 @@ public class TestSelfAssignment {
     Object f;
     static Object st;
     
-    @AssertWarning(type="SelfAssignmentField")
+    @AssertWarning("SelfAssignmentField")
     void test() {
         Object a = f;
         f = a;
     }
     
-    @AssertWarning(type="SelfAssignmentField")
+    @AssertWarning("SelfAssignmentField")
     void testArray() {
         TestSelfAssignment[] arr = {new TestSelfAssignment()};
         arr[0].f = arr[0].f;
     }
     
-    @AssertWarning(type="SelfAssignmentField")
+    @AssertWarning("SelfAssignmentField")
     void testArray(int a) {
         TestSelfAssignment[] arr = {new TestSelfAssignment()};
         arr[a+1].f = arr[1+a].f;
     }
     
-    @AssertNoWarning(type="SelfAssignmentField")
+    @AssertNoWarning("SelfAssignmentField")
     void testArrayOk() {
         TestSelfAssignment[] arr = {new TestSelfAssignment(), new TestSelfAssignment()};
         arr[0].f = arr[1].f;
     }
 
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     void testArrayOk2(int i, int[] arr) {
         arr[i] = arr[++i];
     }
     
-    @AssertNoWarning(type="SelfAssignmentField")
+    @AssertNoWarning("SelfAssignmentField")
     void testArraySideEffect() {
         TestSelfAssignment[] arr = {new TestSelfAssignment(), new TestSelfAssignment()};
         int i=0;
         arr[i++].f = arr[i++].f;
     }
     
-    @AssertWarning(type="SelfAssignmentField")
+    @AssertWarning("SelfAssignmentField")
     void testThis() {
         TestSelfAssignment copy = this;
         Object a = f;
         copy.f = a;
     }
     
-    @AssertNoWarning(type="SelfAssignmentField")
+    @AssertNoWarning("SelfAssignmentField")
     void testOk() {
         f = new TestSelfAssignment().f;
     }
 
-    @AssertWarning(type="SelfAssignmentField")
+    @AssertWarning("SelfAssignmentField")
     void testStatic() {
         Object a = st;
         st = a;
     }
     
-    @AssertNoWarning(type="SelfAssignmentField")
+    @AssertNoWarning("SelfAssignmentField")
     void testSideEffectStatic() {
         Object a = st;
         st = null;
@@ -88,7 +88,7 @@ public class TestSelfAssignment {
         st = a;
     }
     
-    @AssertNoWarning(type="SelfAssignmentField")
+    @AssertNoWarning("SelfAssignmentField")
     void testSideEffect() {
         Object a = f;
         f = null;
@@ -96,43 +96,43 @@ public class TestSelfAssignment {
         f = a;
     }
 
-    @AssertNoWarning(type="SelfAssignmentField")
+    @AssertNoWarning("SelfAssignmentField")
     void testTwoObjects() {
         TestSelfAssignment t1 = new TestSelfAssignment();
         TestSelfAssignment t2 = new TestSelfAssignment();
         t1.f = t2.f;
     }
 
-    @AssertWarning(type="SelfAssignmentArrayElement")
+    @AssertWarning("SelfAssignmentArrayElement")
     void testArraySelf(int[] a, int idx) {
         a[idx] = a[idx];
     }
     
-    @AssertNoWarning(type="SelfAssignmentArrayElement")
+    @AssertNoWarning("SelfAssignmentArrayElement")
     void testArraySelfDiffArray(int[] a, int[] b, int idx) {
         a[idx] = b[idx];
     }
     
-    @AssertWarning(type="SelfAssignmentArrayElement")
+    @AssertWarning("SelfAssignmentArrayElement")
     void testArraySelfCopyArray(int[] a, int[] b, int idx) {
         a = b;
         a[idx] = b[idx];
     }
     
-    @AssertWarning(type="SelfAssignmentArrayElement")
+    @AssertWarning("SelfAssignmentArrayElement")
     void testArraySelfVar(int[] a, int idx) {
         int x = a[idx];
         a[idx] = x;
     }
     
-    @AssertNoWarning(type="SelfAssignmentArrayElement")
+    @AssertNoWarning("SelfAssignmentArrayElement")
     void testArraySelfChanged(int[] a, int idx) {
         int x = a[idx];
         a[idx] = 1;
         a[idx] = x;
     }
     
-    @AssertNoWarning(type="SelfAssignmentArrayElement")
+    @AssertNoWarning("SelfAssignmentArrayElement")
     void testArraySelfSideEffect(int[] a, int idx) {
         int x = a[idx];
         update(a);
@@ -143,12 +143,12 @@ public class TestSelfAssignment {
         arr[0] = 2;
     }
     
-    @AssertNoWarning(type="SelfAssignmentArrayElement")
+    @AssertNoWarning("SelfAssignmentArrayElement")
     void testArraySelfDiffIndex(int[] a, int idx) {
         a[idx++] = a[idx++];
     }
     
-    @AssertNoWarning(type="SelfAssignmentArrayElement")
+    @AssertNoWarning("SelfAssignmentArrayElement")
     void testNew() {
         int[] a = new int[10];
         int[] b = new int[10];
@@ -156,15 +156,15 @@ public class TestSelfAssignment {
     }
 
     @SuppressWarnings("cast")
-    @AssertWarning(type="SelfAssignmentLocal")
-    @AssertNoWarning(type="SelfAssignmentLocalInsteadOfField")
+    @AssertWarning("SelfAssignmentLocal")
+    @AssertNoWarning("SelfAssignmentLocalInsteadOfField")
     void testLocal(int a) {
         a = (int)a; // cast to prevent error in Eclipse
     }
     
     @SuppressWarnings("cast")
-    @AssertWarning(type="SelfAssignmentLocalInsteadOfField")
-    @AssertNoWarning(type="SelfAssignmentLocal")
+    @AssertWarning("SelfAssignmentLocalInsteadOfField")
+    @AssertNoWarning("SelfAssignmentLocal")
     void testLocal(Object f) {
         f = (Object)f; // cast to prevent error in Eclipse
     }
@@ -174,7 +174,7 @@ public class TestSelfAssignment {
         public String myEdge;
     }
 
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     void heapify(HeapNode node) {
         while (true) {
             HeapNode min = node;
@@ -195,7 +195,7 @@ public class TestSelfAssignment {
         }
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     void testWithCatch() {
         Object oldVal = f;
         try {

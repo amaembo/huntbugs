@@ -28,7 +28,7 @@ public class TestExposeRepresentation {
     private class InternalClass {
         private int[] f;
         
-        @AssertNoWarning(type="*")
+        @AssertNoWarning("*")
         public void setField(int[] f) {
             this.f = f;
         }
@@ -38,7 +38,7 @@ public class TestExposeRepresentation {
     static Hashtable<String, Integer> ht;
     InternalClass ic = new InternalClass();
 
-    @AssertWarning(type="ExposeMutableFieldViaParameter", minScore=40)
+    @AssertWarning(value="ExposeMutableFieldViaParameter", minScore=40)
     public void setField(int[] f) {
         if(f.length > 2)
             this.f = f;
@@ -46,23 +46,23 @@ public class TestExposeRepresentation {
             ic.setField(f);
     }
     
-    @AssertNoWarning(type="ExposeMutableFieldViaParameter")
+    @AssertNoWarning("ExposeMutableFieldViaParameter")
     public void setFieldClone(int[] f) {
         f = f.clone();
         this.f = f;
     }
     
-    @AssertWarning(type="ExposeMutableFieldViaParameter", maxScore=39)
+    @AssertWarning(value="ExposeMutableFieldViaParameter", maxScore=39)
     public void setFieldVarArgs(int... f) {
         this.f = f;
     }
     
-    @AssertNoWarning(type="ExposeMutableFieldViaParameter")
+    @AssertNoWarning("ExposeMutableFieldViaParameter")
     public void setField(TestExposeRepresentation obj, int[] f) {
         obj.f = f;
     }
     
-    @AssertWarning(type="ExposeMutableStaticFieldViaParameter", minScore=50)
+    @AssertWarning(value="ExposeMutableStaticFieldViaParameter", minScore=50)
     public static void setHashTable(Hashtable<String, Integer> ht) {
         TestExposeRepresentation.ht = ht;
     }

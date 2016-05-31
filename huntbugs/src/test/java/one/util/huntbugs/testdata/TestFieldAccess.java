@@ -23,30 +23,30 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestFieldAccess {
-    @AssertWarning(type="UnusedPrivateField")
+    @AssertWarning("UnusedPrivateField")
     private int a;
 
-    @AssertWarning(type="UnusedPrivateField")
+    @AssertWarning("UnusedPrivateField")
     static int b;
 
-    @AssertWarning(type="UnusedPublicField")
+    @AssertWarning("UnusedPublicField")
     public int c;
     
-    @AssertWarning(type="UnusedPublicField")
+    @AssertWarning("UnusedPublicField")
     protected static int d;
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public int e;
     
-    @AssertWarning(type="UnreadPrivateField")
+    @AssertWarning("UnreadPrivateField")
     private int f;
     
-    @AssertWarning(type="FieldShouldBeStatic")
-    @AssertNoWarning(type="UnreadPrivateField")
+    @AssertWarning("FieldShouldBeStatic")
+    @AssertNoWarning("UnreadPrivateField")
     private final String g = "test";
     
-    @AssertNoWarning(type="FieldShouldBeStatic")
-    @AssertWarning(type="UnreadPrivateField")
+    @AssertNoWarning("FieldShouldBeStatic")
+    @AssertWarning("UnreadPrivateField")
     private final String h; 
     
     {
@@ -56,7 +56,7 @@ public class TestFieldAccess {
             h = "fail";
     }
     
-    @AssertWarning(type="UnreadPrivateField")
+    @AssertWarning("UnreadPrivateField")
     public void setF(int f) {
         this.f = f;
     }
@@ -71,7 +71,7 @@ public class TestFieldAccess {
         }
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public static class TestGeneric<T> {
         private T[] data;
 
@@ -88,7 +88,7 @@ public class TestFieldAccess {
     private double y;
     private double z;
 
-    @AssertWarning(type="FieldUsedInSingleMethod")
+    @AssertWarning("FieldUsedInSingleMethod")
     public void test() {
         x = Math.random();
         if(x > 0.5) {
@@ -96,7 +96,7 @@ public class TestFieldAccess {
         }
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void testOk() {
         if(z > 0.5) {
             System.out.println("Big!");
@@ -104,7 +104,7 @@ public class TestFieldAccess {
         z = Math.random();
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void testOk(TestFieldAccess tfa) {
         if(tfa.y > 0) {
             this.y = tfa.y;
@@ -112,15 +112,15 @@ public class TestFieldAccess {
         }
     }
     
-    @AssertWarning(type="UnwrittenPublicField")
+    @AssertWarning("UnwrittenPublicField")
     public long unwritten;
     
-    @AssertWarning(type="UnwrittenPublicField")
+    @AssertWarning("UnwrittenPublicField")
     public long getUnwritten() {
         return unwritten;
     }
     
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public enum MyEnum {
         A, B, C;
     }

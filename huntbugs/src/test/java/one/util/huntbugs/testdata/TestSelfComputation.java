@@ -24,32 +24,32 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestSelfComputation {
-    @AssertWarning(type = "SelfComputation")
+    @AssertWarning("SelfComputation")
     public int test(int a, int b) {
         return (a - b) / (a - b);
     }
 
-    @AssertWarning(type = "SelfComputation")
+    @AssertWarning("SelfComputation")
     public int test(int[] x) {
         return x[1] - x[1];
     }
 
-    @AssertWarning(type = "SelfComparison")
+    @AssertWarning("SelfComparison")
     public boolean testCmp(int[] x) {
         return x[1] == x[1];
     }
     
-    @AssertWarning(type = "SelfComparison")
+    @AssertWarning("SelfComparison")
     public boolean testCmp(double[] x, double[] y) {    
         return x[1] + y[0] >= x[1] + y[0];
     }
     
-    @AssertNoWarning(type = "SelfComputation")
+    @AssertNoWarning("SelfComputation")
     public int test(int[] x, int idx) {
         return x[idx++] - x[idx++];
     }
     
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public void testLambdas(List<Integer> l1, List<Integer> l2) {
         l1.forEach(a -> {
             l2.forEach(b -> {
@@ -60,7 +60,7 @@ public class TestSelfComputation {
     
 
     // Fails due to Procyon bug, reported https://bitbucket.org/mstrobel/procyon/issues/287/variables-incorerctly-merged
-//    @AssertNoWarning(type = "SelfComputation")
+//    @AssertNoWarning("SelfComputation")
 //    public int appendDigits(long num, int maxdigits) {
 //        char[] buf = new char[maxdigits];
 //        int ix = maxdigits;

@@ -23,39 +23,39 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestInvalidMinMax {
-    @AssertWarning(type = "InvalidMinMax")
+    @AssertWarning("InvalidMinMax")
     public int checkBounds(int rawInput) {
         return Math.min(0, Math.max(100, rawInput));
     }
 
-    @AssertWarning(type = "InvalidMinMax")
+    @AssertWarning("InvalidMinMax")
     public int checkBounds2(int rawInput) {
         return Math.min(0, Math.max(rawInput, 100));
     }
 
-    @AssertWarning(type = "InvalidMinMax")
+    @AssertWarning("InvalidMinMax")
     public int checkBounds3(int rawInput) {
         return Math.min(Math.max(rawInput, 100), 0);
     }
 
-    @AssertWarning(type = "InvalidMinMax")
+    @AssertWarning("InvalidMinMax")
     public int checkBounds4(int rawInput) {
         return Math.min(Math.max(100, rawInput), 0);
     }
 
-    @AssertWarning(type = "InvalidMinMax")
+    @AssertWarning("InvalidMinMax")
     public int checkBounds5(int rawInput) {
         return Math.max(Math.min(0, rawInput), 100);
     }
 
-    @AssertWarning(type = "InvalidMinMax")
+    @AssertWarning("InvalidMinMax")
     public int checkBounds6(int rawInput) {
         rawInput = Math.min(0, rawInput);
         rawInput = Math.max(100, rawInput);
         return rawInput;
     }
 
-    @AssertWarning(type = "InvalidMinMax")
+    @AssertWarning("InvalidMinMax")
     public int checkWithVars(int rawInput) {
         int min = 0;
         int max = 100;
@@ -67,7 +67,7 @@ public class TestInvalidMinMax {
         return rawInput;
     }
     
-    @AssertWarning(type = "InvalidMinMax")
+    @AssertWarning("InvalidMinMax")
     public int getScore(int totalCount, int failCount, double scaleFactor) {
         // Based on
         // https://github.com/marksinclair/junit-plugin/commit/c0dc11e08923edd23cee90962da638e4a7eb47d5
@@ -76,49 +76,49 @@ public class TestInvalidMinMax {
         return score;
     }
 
-    @AssertWarning(type = "InvalidMinMax")
+    @AssertWarning("InvalidMinMax")
     public long checkBounds(long rawInput) {
         return Math.min(0, Math.max(100, rawInput));
     }
 
-    @AssertWarning(type = "InvalidMinMax")
+    @AssertWarning("InvalidMinMax")
     public float checkBounds(float rawInput) {
         return Math.min(0, Math.max(100, rawInput));
     }
 
-    @AssertWarning(type = "InvalidMinMax")
+    @AssertWarning("InvalidMinMax")
     public double checkBounds(double rawInput) {
         return Math.min(0, Math.max(100, rawInput));
     }
 
-    @AssertNoWarning(type = "InvalidMinMax")
+    @AssertNoWarning("InvalidMinMax")
     public int checkBoundsCorrect(int rawInput) {
         return Math.min(100, Math.max(0, rawInput));
     }
 
-    @AssertNoWarning(type = "InvalidMinMax")
+    @AssertNoWarning("InvalidMinMax")
     public int checkBoundsCorrect2(int rawInput) {
         return Math.max(0, Math.min(100, rawInput));
     }
 
-    @AssertNoWarning(type = "InvalidMinMax")
+    @AssertNoWarning("InvalidMinMax")
     public int checkBoundsCorrect3(int rawInput) {
         rawInput = Math.min(100, rawInput);
         rawInput = Math.max(0, rawInput);
         return rawInput;
     }
 
-    @AssertNoWarning(type = "InvalidMinMax")
+    @AssertNoWarning("InvalidMinMax")
     public long checkBoundsCorrect(long rawInput) {
         return Math.min(100, Math.max(0, rawInput));
     }
 
-    @AssertNoWarning(type = "InvalidMinMax")
+    @AssertNoWarning("InvalidMinMax")
     public float checkBoundsCorrect(float rawInput) {
         return Math.min(100, Math.max(0, rawInput));
     }
 
-    @AssertNoWarning(type = "InvalidMinMax")
+    @AssertNoWarning("InvalidMinMax")
     public double checkBoundsCorrect(double rawInput) {
         return Math.min(100, Math.max(0, rawInput));
     }

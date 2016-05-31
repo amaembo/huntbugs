@@ -22,20 +22,20 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  * @author Tagir Valeev
  *
  */
-@AssertWarning(type="BBB")
-@AssertNoWarning(type="RoughConstantValue")
+@AssertWarning("BBB")
+@AssertNoWarning("RoughConstantValue")
 public class TestAsserter {
-    @AssertWarning(type="CCC")
-    @AssertNoWarning(type="BadNameOfField")
+    @AssertWarning("CCC")
+    @AssertNoWarning("BadNameOfField")
     int TheField = 123;
     
-    @AssertWarning(type="AAA")
-    @AssertNoWarning(type="Rough*")
+    @AssertWarning("AAA")
+    @AssertNoWarning("Rough*")
     public double test() {
         return 3.1415*TheField;
     }
     
-    @AssertNoWarning(type="UncalledPrivateMethod")
+    @AssertNoWarning("UncalledPrivateMethod")
     private void uncalled() {
         System.out.println("Uncalled");
     }

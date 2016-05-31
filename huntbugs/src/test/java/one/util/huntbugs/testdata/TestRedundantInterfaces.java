@@ -29,16 +29,16 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  * @author Tagir Valeev
  *
  */
-@AssertWarning(type="RedundantInterface")
+@AssertWarning("RedundantInterface")
 public class TestRedundantInterfaces extends TreeSet<String> implements Set<String>, Collection<String> {
     private static final long serialVersionUID = 1L;
 
-    @AssertNoWarning(type="RedundantInterface")
+    @AssertNoWarning("RedundantInterface")
     public static class NoRedundantInterfaces extends LinkedList<String> implements RandomAccess, Serializable {
         private static final long serialVersionUID = 1L;
     }
     
-    @AssertNoWarning(type="RedundantInterface")
+    @AssertNoWarning("RedundantInterface")
     public static class NoRedundantInterfaces2 extends NoRedundantInterfaces implements Serializable {
         private static final long serialVersionUID = 1L;
     }

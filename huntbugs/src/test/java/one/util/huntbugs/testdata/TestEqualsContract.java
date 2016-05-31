@@ -27,14 +27,14 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 public class TestEqualsContract {
 
     @Override
-    @AssertWarning(type = "EqualsReturnsFalse", minScore = 40)
+    @AssertWarning(value="EqualsReturnsFalse", minScore = 40)
     public boolean equals(Object obj) {
         return false;
     }
 
     static class NonPublic {
         @Override
-        @AssertWarning(type = "EqualsReturnsTrue", maxScore = 30)
+        @AssertWarning(value="EqualsReturnsTrue", maxScore = 30)
         public boolean equals(Object obj) {
             return true;
         }
@@ -49,7 +49,7 @@ public class TestEqualsContract {
         int f;
 
         @Override
-        @AssertWarning(type = "EqualsNoHashCode")
+        @AssertWarning("EqualsNoHashCode")
         public boolean equals(Object obj) {
             if (this == obj)
                 return true;
@@ -62,8 +62,8 @@ public class TestEqualsContract {
 
     public static final class Final {
         @Override
-        @AssertWarning(type = "EqualsReturnsFalse", minScore = 35, maxScore = 45)
-        @AssertNoWarning(type = "EqualsObjectHashCode")
+        @AssertWarning(value="EqualsReturnsFalse", minScore = 35, maxScore = 45)
+        @AssertNoWarning("EqualsObjectHashCode")
         public boolean equals(Object obj) {
             return false;
         }
@@ -73,7 +73,7 @@ public class TestEqualsContract {
         public int i;
 
         @Override
-        @AssertWarning(type = "EqualsClassNames")
+        @AssertWarning("EqualsClassNames")
         public boolean equals(Object obj) {
             if (!"one.util.huntbugs.testdata.TestEqualsContract.ClassName".equals(obj.getClass().getName()))
                 return false;
@@ -82,14 +82,14 @@ public class TestEqualsContract {
         }
     }
 
-    @AssertWarning(type = "EqualsOther")
+    @AssertWarning("EqualsOther")
     public static class OtherEquals {
         public boolean equals(TestEqualsContract other) {
             return other != null;
         }
     }
 
-    @AssertWarning(type = "EqualsSelf")
+    @AssertWarning("EqualsSelf")
     public static class SelfEquals {
         public boolean equals(SelfEquals other) {
             return other == this;
@@ -105,7 +105,7 @@ public class TestEqualsContract {
         int f;
 
         @Override
-        @AssertWarning(type = "EqualsNoHashCode")
+        @AssertWarning("EqualsNoHashCode")
         public boolean equals(Object obj) {
             if (this == obj)
                 return true;
@@ -118,7 +118,7 @@ public class TestEqualsContract {
 
     public static class SubClassNoFields extends SelfEquals {
         @Override
-        @AssertNoWarning(type = "EqualsNoHashCode")
+        @AssertNoWarning("EqualsNoHashCode")
         public boolean equals(Object obj) {
             return obj instanceof SubClassNoFields && super.equals(obj);
         }
@@ -126,7 +126,7 @@ public class TestEqualsContract {
     
     public static class SubClassNoFields2 extends SelfEquals {
         @Override
-        @AssertNoWarning(type = "EqualsNoHashCode")
+        @AssertNoWarning("EqualsNoHashCode")
         public boolean equals(Object obj) {
             if(!(obj instanceof SubClassNoFields2))
                 return false;
@@ -134,8 +134,8 @@ public class TestEqualsContract {
         }
     }
     
-    @AssertWarning(type = "EqualsEnum")
-    @AssertNoWarning(type = "EqualsSelf")
+    @AssertWarning("EqualsEnum")
+    @AssertNoWarning("EqualsSelf")
     public static enum EnumEquals {
         A, B, C;
 
@@ -144,7 +144,7 @@ public class TestEqualsContract {
         }
     }
 
-    @AssertNoWarning(type = "*")
+    @AssertNoWarning("*")
     public static class EqualsOk {
         public boolean equals(EqualsOk other, int check) {
             return other != this && check > 2;
@@ -153,7 +153,7 @@ public class TestEqualsContract {
 
     public static class HashCodeObject {
         @Override
-        @AssertWarning(type = "HashCodeObjectEquals")
+        @AssertWarning("HashCodeObjectEquals")
         public int hashCode() {
             return 42;
         }
@@ -169,7 +169,7 @@ public class TestEqualsContract {
         }
 
         @Override
-        @AssertWarning(type = "HashCodeNoEquals")
+        @AssertWarning("HashCodeNoEquals")
         public int hashCode() {
             return super.hashCode() * 31 + myField.hashCode();
         }
@@ -179,7 +179,7 @@ public class TestEqualsContract {
         public int f;
 
         @Override
-        @AssertWarning(type = "EqualsObjectHashCode", maxScore = 48, minScore = 43)
+        @AssertWarning(value="EqualsObjectHashCode", maxScore = 48, minScore = 43)
         public boolean equals(Object obj) {
             if (this == obj)
                 return true;
@@ -194,7 +194,7 @@ public class TestEqualsContract {
         public int f;
 
         @Override
-        @AssertWarning(type = "EqualsObjectHashCode", maxScore = 32, minScore = 22)
+        @AssertWarning(value="EqualsObjectHashCode", maxScore = 32, minScore = 22)
         public boolean equals(Object obj) {
             if (this == obj)
                 return true;
@@ -205,7 +205,7 @@ public class TestEqualsContract {
         }
     }
 
-    @AssertNoWarning(type = "Equals*")
+    @AssertNoWarning("Equals*")
     public static class EqualsList extends ArrayList<String> {
         private static final long serialVersionUID = 1L;
         public int f;

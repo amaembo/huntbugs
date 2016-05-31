@@ -27,17 +27,17 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestCheckReturnValue {
-    @AssertWarning(type="ReturnValueOfRead")
+    @AssertWarning("ReturnValueOfRead")
     public void read(InputStream is, byte[] arr) throws IOException {
         is.read(arr);
     }
 
-    @AssertWarning(type="ReturnValueOfSkip")
+    @AssertWarning("ReturnValueOfSkip")
     public void skipTen(Reader r) throws IOException {
         r.skip(10);
     }
 
-    @AssertNoWarning(type="ReturnValueOfSkip")
+    @AssertNoWarning("ReturnValueOfSkip")
     public void skipTenOk(Reader r) throws IOException {
         long skip = 10;
         while(skip > 0) {
@@ -45,7 +45,7 @@ public class TestCheckReturnValue {
         }
     }
 
-    @AssertNoWarning(type="*")
+    @AssertNoWarning("*")
     public void readOk(InputStream is, byte[] arr) throws IOException {
         if(is.read(arr) != arr.length) {
             throw new IOException("Not fuly read");

@@ -22,7 +22,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestUnnecessaryInstanceOf {
-    @AssertWarning(type="UnnecessaryInstanceOfInferred")
+    @AssertWarning("UnnecessaryInstanceOfInferred")
     void testInferred(int x) {
         Object a = 1.0;
         if(x > 2) a = -2;
@@ -32,7 +32,7 @@ public class TestUnnecessaryInstanceOf {
     }
 
     @SuppressWarnings("cast")
-    @AssertWarning(type="UnnecessaryInstanceOf")
+    @AssertWarning("UnnecessaryInstanceOf")
     void testSimple() {
 		String a = "test";
 		if (a instanceof CharSequence) {

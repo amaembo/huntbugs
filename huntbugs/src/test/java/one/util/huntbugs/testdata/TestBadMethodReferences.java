@@ -24,7 +24,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestBadMethodReferences {
-    @AssertWarning(type="MaxMinMethodReferenceForComparator")
+    @AssertWarning("MaxMinMethodReferenceForComparator")
     public void test() {
         new Random().ints(1000).boxed().sorted(Integer::max).forEach(System.out::println);
     }

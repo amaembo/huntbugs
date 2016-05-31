@@ -22,7 +22,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestIgnoredException {
-    @AssertWarning(type="IgnoredException")
+    @AssertWarning("IgnoredException")
     public void test1() {
         try {
             System.out.println("Test");
@@ -32,7 +32,7 @@ public class TestIgnoredException {
         }
     }
 
-    @AssertWarning(type="IgnoredException")
+    @AssertWarning("IgnoredException")
     public void test2() {
         try {
             System.out.println("Test");
@@ -43,7 +43,7 @@ public class TestIgnoredException {
         System.out.println("Passed");
     }
 
-    @AssertWarning(type="IgnoredException")
+    @AssertWarning("IgnoredException")
     public void test3() {
         for(int i=0; i<10; i++) {
             try {

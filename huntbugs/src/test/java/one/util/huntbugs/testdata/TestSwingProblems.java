@@ -25,19 +25,19 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestSwingProblems {
-    @AssertNoWarning(type="SwingMethodNotInSwingThread")
+    @AssertNoWarning("SwingMethodNotInSwingThread")
     private static void run() {
         JPanel panel = new JPanel();
         panel.setVisible(true);
     }
     
-    @AssertNoWarning(type="SwingMethodNotInSwingThread")
+    @AssertNoWarning("SwingMethodNotInSwingThread")
     public static void main(String[] args, boolean x) {
         JPanel panel = new JPanel();
         panel.setVisible(x && args.length > 0);
     }
     
-    @AssertWarning(type="SwingMethodNotInSwingThread")
+    @AssertWarning("SwingMethodNotInSwingThread")
     public static void main(String[] args) {
         JPanel panel = new JPanel();
         panel.setVisible(true);

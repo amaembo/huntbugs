@@ -27,7 +27,7 @@ public class TestWaitContract {
 
     private final Object object = new Object();
 
-    @AssertNoWarning(type = "NotifyNaked")
+    @AssertNoWarning("NotifyNaked")
     public void setCondition() {
         synchronized (object) {
             condition = true;
@@ -35,7 +35,7 @@ public class TestWaitContract {
         }
     }
 
-    @AssertWarning(type = "WaitUnconditional")
+    @AssertWarning("WaitUnconditional")
     public void noLoopOrTest() throws Exception {
 
         synchronized (object) {
@@ -43,14 +43,14 @@ public class TestWaitContract {
         }
     }
 
-    @AssertWarning(type = "NotifyNaked")
+    @AssertWarning("NotifyNaked")
     public void nakedNotify() throws Exception {
         synchronized (object) {
             object.notify();
         }
     }
     
-    @AssertWarning(type = "WaitNotInLoop")
+    @AssertWarning("WaitNotInLoop")
     public void noLoop() throws Exception {
 
         synchronized (object) {
@@ -59,7 +59,7 @@ public class TestWaitContract {
         }
     }
 
-    @AssertNoWarning(type = "Wait*")
+    @AssertNoWarning("Wait*")
     public void whileDo() throws Exception {
 
         synchronized (object) {
@@ -69,7 +69,7 @@ public class TestWaitContract {
         }
     }
 
-    @AssertWarning(type = "WaitUnconditional")
+    @AssertWarning("WaitUnconditional")
     public void doWhile() throws Exception {
 
         synchronized (object) {
