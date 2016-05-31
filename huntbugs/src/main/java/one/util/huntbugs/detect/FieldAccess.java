@@ -55,6 +55,8 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
 @WarningDefinition(category="RedundantCode", name="UnusedPublicField", maxScore=38)
 @WarningDefinition(category="RedundantCode", name="UnreadPrivateField", maxScore=48)
 @WarningDefinition(category="RedundantCode", name="UnreadPublicField", maxScore=37)
+@WarningDefinition(category="Correctness", name="UnwrittenPrivateField", maxScore=60)
+@WarningDefinition(category="Correctness", name="UnwrittenPublicField", maxScore=45)
 @WarningDefinition(category="Performance", name="FieldShouldBeStatic", maxScore=50)
 @WarningDefinition(category="Performance", name="FieldUsedInSingleMethod", maxScore=55)
 public class FieldAccess {
@@ -62,6 +64,7 @@ public class FieldAccess {
         MethodReference firstWriteMethod;
         MethodReference firstReadMethod;
         Location firstWriteLocation;
+        Location firstReadLocation;
         Object constant;
         boolean usedInSingleMethod = true;
     }
@@ -79,6 +82,7 @@ public class FieldAccess {
                 if(Nodes.isFieldRead(expr)) {
                     if(fieldRecord.firstReadMethod == null) {
                         fieldRecord.firstReadMethod = md;
+                        fieldRecord.firstReadLocation = mc.getLocation(expr);
                     }
                 } else {
                     if(fieldRecord.firstWriteMethod == null) {
@@ -167,6 +171,20 @@ public class FieldAccess {
             fc.report(warningType, priority, anno);
             return;
         }
+        if(!Flags.testAny(flags, FieldStats.WRITE)) {
+            WarningAnnotation<?>[] anno = {};
+            int priority = 0;
+            String warningType = fd.isPublic() || fd.isProtected() ? "UnwrittenPublicField" : "UnwrittenPrivateField";
+            if (fieldRecord != null) {
+                anno = new WarningAnnotation[] { Roles.METHOD.create(fieldRecord.firstReadMethod),
+                        Roles.LOCATION.create(fieldRecord.firstReadLocation) };
+            }
+            if(fd.isPublic()) {
+                priority += 5;
+            }
+            fc.report(warningType, priority, anno);
+            return;
+        }
         if (fullyAnalyzed
             && !Flags.testAny(flags, FieldStats.READ_PACKAGE | FieldStats.READ_OUTSIDE | FieldStats.WRITE_PACKAGE
                 | FieldStats.WRITE_OUTSIDE) && fieldRecord != null && fieldRecord.usedInSingleMethod
@@ -180,6 +198,8 @@ public class FieldAccess {
                 priority += 3;
             if(fieldRecord.firstWriteMethod.isConstructor())
                 priority += 5;
+            if(fd.getFieldType().isPrimitive())
+                priority += 3;
             fc.report("FieldUsedInSingleMethod", priority, Roles.METHOD.create(fieldRecord.firstWriteMethod),
                 Roles.LOCATION.create(fieldRecord.firstWriteLocation));
         }

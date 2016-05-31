@@ -1092,7 +1092,21 @@
       <Title>Field could be refactored to local variable</Title>
       <Description>Field $FIELD$ could be refactored to local variable.</Description>
       <LongDescription><![CDATA[Analysis discovers that field $FIELD$ is used only inside method $METHOD$ and
-      the value stored after method execution is never used again. Consider converting this field into local variable.]]></LongDescription>
+      the value stored after method execution is never used again. Consider converting this field into local variable 
+      to reduce the object footprint and possibly limit the lifespan of stored object.]]></LongDescription>
+    </Warning>
+    <Warning Type="UnwrittenPublicField">
+      <Title>Public or protected field is used, but never written</Title>
+      <Description>Public or protected field $FIELD$ is used, but never written.</Description>
+      <LongDescription><![CDATA[The field $FIELD$ is used, but never written, so it always has default value. 
+      False positive is possible if it's intended to be written in the code which is out of the scope of this analysis 
+      or written via reflection.]]></LongDescription>
+    </Warning>
+    <Warning Type="UnwrittenPrivateField">
+      <Title>Private or package-private field is used, but never written</Title>
+      <Description>Private or package-private field $FIELD$ is used, but never written.</Description>
+      <LongDescription><![CDATA[The field $FIELD$ is used, but never written, so it always has default value. 
+      If it's intended to be written (injected) via reflection, consider annotating it with some annotation to avoid confusion.]]></LongDescription>
     </Warning>
   </WarningList>
 </p:Messages>

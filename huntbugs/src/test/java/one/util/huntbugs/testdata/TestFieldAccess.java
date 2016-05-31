@@ -112,6 +112,14 @@ public class TestFieldAccess {
         }
     }
     
+    @AssertWarning(type="UnwrittenPublicField")
+    public long unwritten;
+    
+    @AssertWarning(type="UnwrittenPublicField")
+    public long getUnwritten() {
+        return unwritten;
+    }
+    
     @AssertNoWarning(type="*")
     public enum MyEnum {
         A, B, C;
