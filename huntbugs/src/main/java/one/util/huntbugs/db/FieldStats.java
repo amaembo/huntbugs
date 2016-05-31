@@ -16,7 +16,9 @@
 package one.util.huntbugs.db;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import com.strobel.assembler.ir.Instruction;
 import com.strobel.assembler.ir.OpCode;
@@ -60,8 +62,12 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
             MethodBody body = md.getBody();
             if(body != null) {
                 boolean hadNull = false;
+                Set<Instruction> seenLabels = new HashSet<>();
                 for(Instruction instr : body.getInstructions()) {
                     boolean write = false;
+                    if(instr.getOperandCount() == 1 && instr.getOperand(0) instanceof Instruction) {
+                        seenLabels.add(instr.getOperand(0));
+                    }
                     switch(instr.getOpCode()) {
                     case ACONST_NULL:
                         hadNull = true;
@@ -72,6 +78,8 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
                         // passthru
                     case GETFIELD:
                     case GETSTATIC:
+                        if(hadNull && seenLabels.contains(instr))
+                            hadNull = false;
                         FieldReference fr = (FieldReference)instr.getOperand(0);
                         FieldDefinition fd = fr.resolve();
                         if(fd != null) {

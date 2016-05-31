@@ -135,4 +135,15 @@ public class TestFieldAccess {
     public String getS() {
         return s;
     }
+    
+    @AssertNoWarning("FieldIsAlwaysNull")
+    private String s2 = Math.random() > 0.5 ? "test" : null;
+    
+    public void reset2() {
+        s2 = null;
+    }
+    
+    public String getS2() {
+        return s2;
+    }
 }
