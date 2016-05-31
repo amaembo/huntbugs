@@ -83,4 +83,37 @@ public class TestFieldAccess {
             this.data = data;
         }
     }
+    
+    private double x;
+    private double y;
+    private double z;
+
+    @AssertWarning(type="FieldUsedInSingleMethod")
+    public void test() {
+        x = Math.random();
+        if(x > 0.5) {
+            System.out.println("Big!");
+        }
+    }
+    
+    @AssertNoWarning(type="*")
+    public void testOk() {
+        if(z > 0.5) {
+            System.out.println("Big!");
+        }
+        z = Math.random();
+    }
+    
+    @AssertNoWarning(type="*")
+    public void testOk(TestFieldAccess tfa) {
+        if(tfa.y > 0) {
+            this.y = tfa.y;
+            System.out.println("Big!");
+        }
+    }
+    
+    @AssertNoWarning(type="*")
+    public enum MyEnum {
+        A, B, C;
+    }
 }

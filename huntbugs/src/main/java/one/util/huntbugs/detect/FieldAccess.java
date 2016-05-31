@@ -31,12 +31,15 @@ import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
 import one.util.huntbugs.db.FieldStats;
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.FieldContext;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AssertWarning;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.FieldVisitor;
+import one.util.huntbugs.registry.anno.MethodVisitor;
+import one.util.huntbugs.registry.anno.VisitOrder;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
@@ -49,46 +52,75 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
  *
  */
 @WarningDefinition(category="RedundantCode", name="UnusedPrivateField", maxScore=45)
-@WarningDefinition(category="RedundantCode", name="UnusedPublicField", maxScore=35)
+@WarningDefinition(category="RedundantCode", name="UnusedPublicField", maxScore=38)
 @WarningDefinition(category="RedundantCode", name="UnreadPrivateField", maxScore=48)
-@WarningDefinition(category="RedundantCode", name="UnreadPublicField", maxScore=32)
+@WarningDefinition(category="RedundantCode", name="UnreadPublicField", maxScore=37)
 @WarningDefinition(category="Performance", name="FieldShouldBeStatic", maxScore=50)
+@WarningDefinition(category="Performance", name="FieldUsedInSingleMethod", maxScore=55)
 public class FieldAccess {
     static class FieldRecord {
         MethodReference firstWriteMethod;
+        MethodReference firstReadMethod;
         Location firstWriteLocation;
         Object constant;
+        boolean usedInSingleMethod = true;
     }
     
-    Map<String, FieldRecord> fields = new HashMap<>();
+    private final Map<String, FieldRecord> fields = new HashMap<>();
+    private boolean fullyAnalyzed = true;
     
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visitCode(Expression expr, MethodContext mc, MethodDefinition md, TypeDefinition td) {
-        
-        if(expr.getCode() == AstCode.PutField || expr.getCode() == AstCode.PutStatic) {
+        if(expr.getCode() == AstCode.PutField || expr.getCode() == AstCode.PutStatic ||
+                expr.getCode() == AstCode.GetField || expr.getCode() == AstCode.GetStatic) {
             FieldDefinition fd = ((FieldReference) expr.getOperand()).resolve();
             if(fd != null && !fd.isSynthetic() && fd.getDeclaringType().isEquivalentTo(td)) {
-                FieldRecord fieldRecord = fields.get(fd.getName());
-                if(fieldRecord == null) {
-                    fieldRecord = new FieldRecord();
-                    fieldRecord.firstWriteMethod = md;
-                    fieldRecord.firstWriteLocation = mc.getLocation(expr);
-                    fieldRecord.constant = Nodes.getConstant(Nodes.getChild(expr, expr.getArguments().size()-1));
-                    fields.put(fd.getName(), fieldRecord);
+                FieldRecord fieldRecord = fields.computeIfAbsent(fd.getName(), n -> new FieldRecord());
+                if(Nodes.isFieldRead(expr)) {
+                    if(fieldRecord.firstReadMethod == null) {
+                        fieldRecord.firstReadMethod = md;
+                    }
                 } else {
-                    if(fieldRecord.constant != null) {
-                        Object constant = Nodes.getConstant(Nodes.getChild(expr, expr.getArguments().size()-1));
-                        if(!Objects.equals(fieldRecord.constant, constant))
-                            fieldRecord.constant = null;
+                    if(fieldRecord.firstWriteMethod == null) {
+                        fieldRecord.firstWriteMethod = md;
+                        fieldRecord.firstWriteLocation = mc.getLocation(expr);
+                        fieldRecord.constant = Nodes.getConstant(Nodes.getChild(expr, expr.getArguments().size()-1));
+                    } else {
+                        if(fieldRecord.constant != null) {
+                            Object constant = Nodes.getConstant(Nodes.getChild(expr, expr.getArguments().size()-1));
+                            if(!Objects.equals(fieldRecord.constant, constant))
+                                fieldRecord.constant = null;
+                        }
+                    }
+                }
+                if(fieldRecord.usedInSingleMethod) {
+                    if (md.isTypeInitializer()) {
+                        fieldRecord.usedInSingleMethod = false;
+                    }
+                    if (Nodes.isFieldRead(expr) && ValuesFlow.getSource(expr) == expr) {
+                        fieldRecord.usedInSingleMethod = false;
+                    }
+                    if((expr.getCode() == AstCode.PutField || expr.getCode() == AstCode.GetField) && 
+                            (md.isStatic() || !Nodes.isThis(Nodes.getChild(expr, 0)))) {
+                        fieldRecord.usedInSingleMethod = false;
+                    }
+                    if(fieldRecord.firstWriteMethod != null && fieldRecord.firstWriteMethod != md || 
+                            fieldRecord.firstReadMethod != null && fieldRecord.firstReadMethod != md) {
+                        fieldRecord.usedInSingleMethod = false;
                     }
                 }
             }
         }
     }
     
+    @MethodVisitor(order=VisitOrder.AFTER)
+    public void checkAnalyzed(MethodContext mc) {
+        fullyAnalyzed &= mc.isFullyAnalyzed();
+    }
+    
     @FieldVisitor
     public void visit(FieldContext fc, FieldDefinition fd, TypeDefinition td, FieldStats fs) {
-        if(fd.isSynthetic())
+        if(fd.isSynthetic() || fd.isEnumConstant())
             return;
         int flags = fs.getFlags(fd);
         if(Flags.testAny(flags, FieldStats.UNRESOLVED) || hasAnnotation(fd)) {
@@ -101,7 +133,7 @@ public class FieldAccess {
             // Autogenerated by javacc 
             if(fd.getName().equals("lengthOfMatch") && td.getName().endsWith("TokenManager"))
                 return;
-            fc.report(fd.isPublic() || fd.isProtected() ? "UnusedPublicField" : "UnusedPrivateField", 0);
+            fc.report(fd.isPublic() || fd.isProtected() ? "UnusedPublicField" : "UnusedPrivateField", fd.isPublic() ? 5 : 0);
             return;
         }
         FieldRecord fieldRecord = fields.get(fd.getName());
@@ -123,13 +155,33 @@ public class FieldAccess {
                 anno = new WarningAnnotation[] { Roles.METHOD.create(fieldRecord.firstWriteMethod),
                         Roles.LOCATION.create(fieldRecord.firstWriteLocation) };
             }
-            if(fd.isFinal() && fd.isPublic()) {
-                priority += 10;
-                if(fd.isStatic()) {
-                    priority += 10;
+            if(fd.isPublic()) {
+                priority += 5;
+                if(fd.isFinal()) {
+                    priority += 5;
+                    if(fd.isStatic()) {
+                        priority += 10;
+                    }
                 }
             }
             fc.report(warningType, priority, anno);
+            return;
+        }
+        if (fullyAnalyzed
+            && !Flags.testAny(flags, FieldStats.READ_PACKAGE | FieldStats.READ_OUTSIDE | FieldStats.WRITE_PACKAGE
+                | FieldStats.WRITE_OUTSIDE) && fieldRecord != null && fieldRecord.usedInSingleMethod
+            && fieldRecord.firstWriteLocation != null) {
+            int priority = 0;
+            if(!fd.isStatic())
+                priority += 5;
+            if(fd.isPublic())
+                priority += 10;
+            else if(fd.isProtected())
+                priority += 3;
+            if(fieldRecord.firstWriteMethod.isConstructor())
+                priority += 5;
+            fc.report("FieldUsedInSingleMethod", priority, Roles.METHOD.create(fieldRecord.firstWriteMethod),
+                Roles.LOCATION.create(fieldRecord.firstWriteLocation));
         }
     }
 

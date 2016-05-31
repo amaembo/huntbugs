@@ -1088,5 +1088,11 @@
       <LongDescription><![CDATA[The final field $FIELD$ is initialized to a statically known value.
       Consider making this field static.]]></LongDescription>
     </Warning>
+    <Warning Type="FieldUsedInSingleMethod">
+      <Title>Field could be refactored to local variable</Title>
+      <Description>Field $FIELD$ could be refactored to local variable.</Description>
+      <LongDescription><![CDATA[Analysis discovers that field $FIELD$ is used only inside method $METHOD$ and
+      the value stored after method execution is never used again. Consider converting this field into local variable.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

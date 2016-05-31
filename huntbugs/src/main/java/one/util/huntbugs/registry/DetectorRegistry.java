@@ -229,12 +229,15 @@ public class DetectorRegistry {
                         methodAst.getBody().addAll(AstBuilder.build(body, true, context));
                         AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
                         mdata.origParams = ValuesFlow.annotate(ctx, md, cf, methodAst);
+                        mdata.fullyAnalyzed = true;
                     } catch (Throwable t) {
                         ctx.addError(new ErrorMessage(null, type.getFullName(), md.getFullName(), md.getSignature(),
                                 -1, t));
                     }
                     visitChildren(methodAst, null, mcs.get(true), mdata);
                 }
+            } else {
+                mdata.fullyAnalyzed = true;
             }
             for (MethodContext mc : mcs.get(true)) {
                 mc.visitAfterMethod();

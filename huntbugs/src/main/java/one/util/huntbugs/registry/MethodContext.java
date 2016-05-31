@@ -232,4 +232,8 @@ public class MethodContext extends ElementContext {
     public String toString() {
         return "Analyzing method " + mdata + " with detector " + detector;
     }
+
+    public boolean isFullyAnalyzed() {
+        return mdata.fullyAnalyzed;
+    }
 }

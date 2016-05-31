@@ -50,6 +50,7 @@ final class MethodData {
 
     private OffsetToLineNumberConverter ltc;
     List<Expression> origParams;
+    boolean fullyAnalyzed;
 
     MethodData(MethodDefinition md) {
         this.mainMethod = this.realMethod = md;
