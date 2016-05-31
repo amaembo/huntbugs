@@ -136,6 +136,10 @@ public final class Roles {
      * Superclass type associated with the warning
      */
     public static final TypeRole SUPERCLASS = TypeRole.forName("SUPERCLASS");
+    /**
+     * Subclass type associated with the warning
+     */
+    public static final TypeRole SUBCLASS = TypeRole.forName("SUBCLASS");
 
     private Roles() {
         

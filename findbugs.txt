@@ -170,6 +170,7 @@ abbrev="NP" type="NP_UNWRITTEN_FIELD" category="CORRECTNESS" --> UnwrittenPrivat
 abbrev="NP" type="NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD" category="STYLE" --> UnwrittenPublicField
 abbrev="UwF" type="UWF_UNWRITTEN_FIELD" category="CORRECTNESS" --> UnwrittenPrivateField
 abbrev="UwF" type="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD" category="STYLE" --> UnwrittenPublicField
+abbrev="UwF" type="UWF_NULL_FIELD" category="CORRECTNESS" --> FieldIsAlwaysNull
 
 ==== Not reimplemented
 
@@ -286,7 +287,6 @@ abbrev="SF" type="SF_SWITCH_NO_DEFAULT" category="STYLE"
 abbrev="SF" type="SF_DEAD_STORE_DUE_TO_SWITCH_FALLTHROUGH" category="CORRECTNESS" cweid="484"
 abbrev="SF" type="SF_DEAD_STORE_DUE_TO_SWITCH_FALLTHROUGH_TO_THROW" category="CORRECTNESS" cweid="484"
 abbrev="UwF" type="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" category="STYLE"
-abbrev="UwF" type="UWF_NULL_FIELD" category="CORRECTNESS"
 abbrev="SIC" type="SIC_THREADLOCAL_DEADLY_EMBRACE" category="CORRECTNESS"
 abbrev="SIC" type="SIC_INNER_SHOULD_BE_STATIC" category="PERFORMANCE"
 abbrev="SIC" type="SIC_INNER_SHOULD_BE_STATIC_NEEDS_THIS" category="PERFORMANCE"

@@ -1108,5 +1108,18 @@
       <LongDescription><![CDATA[The field $FIELD$ is used, but never written, so it always has default value. 
       If it's intended to be written (injected) via reflection, consider annotating it with some annotation to avoid confusion.]]></LongDescription>
     </Warning>
+    <Warning Type="FieldIsAlwaysNull">
+      <Title>Field only ever set to null</Title>
+      <Description>Field $FIELD$ only ever set to null.</Description>
+      <LongDescription><![CDATA[All writes to this field $FIELD$ are of the constant value <code>null</code>, 
+      and thus all reads of the field will return <code>null</code>. Probably something else was meant or this field can be removed. 
+      If it's intended to be written (injected) via reflection, consider annotating it with some annotation to avoid confusion.]]></LongDescription>
+    </Warning>
+    <Warning Type="InitializerRefersSubclass">
+      <Title>Class initializer refers to subclass</Title>
+      <Description>Initializer of $TYPE$ refers to its subclass $SUBCLASS$.</Description>
+      <LongDescription><![CDATA[The class initializer of $TYPE$ may trigger the initialization of its subclass $SUBCLASS$.
+      This might cause JVM-level deadlock when both classes are initialized simultaneously from different threads.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

@@ -124,4 +124,15 @@ public class TestFieldAccess {
     public enum MyEnum {
         A, B, C;
     }
+    
+    @AssertWarning("FieldIsAlwaysNull")
+    private String s = null;
+    
+    public void reset() {
+        s = null;
+    }
+    
+    public String getS() {
+        return s;
+    }
 }

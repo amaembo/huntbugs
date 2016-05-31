@@ -40,6 +40,7 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
     public static final int WRITE_CLASS = 0x0002;
     public static final int WRITE_PACKAGE = 0x0004;
     public static final int WRITE_OUTSIDE = 0x0008;
+    public static final int WRITE_NONNULL = 0x0010;
     public static final int WRITE = WRITE_CLASS | WRITE_PACKAGE | WRITE_OUTSIDE;
     public static final int READ_CLASS = 0x0100;
     public static final int READ_PACKAGE = 0x0200;
@@ -58,9 +59,13 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
         for(MethodDefinition md : td.getDeclaredMethods()) {
             MethodBody body = md.getBody();
             if(body != null) {
+                boolean hadNull = false;
                 for(Instruction instr : body.getInstructions()) {
                     boolean write = false;
                     switch(instr.getOpCode()) {
+                    case ACONST_NULL:
+                        hadNull = true;
+                        continue;
                     case PUTFIELD:
                     case PUTSTATIC:
                         write = true;
@@ -75,10 +80,11 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
                             fr = fd;
                         } // fd == null case is necessary to workaround procyon problem#301
                         getOrCreate(fr.getDeclaringType()).link(md, fr,
-                            instr.getOpCode() == OpCode.PUTSTATIC || instr.getOpCode() == OpCode.GETSTATIC, write);
+                            instr.getOpCode() == OpCode.PUTSTATIC || instr.getOpCode() == OpCode.GETSTATIC, write, hadNull);
                         break;
                     default:
                     }
+                    hadNull = false;
                 }
             }
         }
@@ -93,7 +99,7 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
     public static class TypeFieldStats {
         Map<String, Integer> fieldRecords = new HashMap<>();
         
-        void link(MethodDefinition src, FieldReference fr, boolean isStatic, boolean write) {
+        void link(MethodDefinition src, FieldReference fr, boolean isStatic, boolean write, boolean hadNull) {
             int prevStatus = fieldRecords.getOrDefault(fr.getName(), 0);
             int curStatus = prevStatus;
             if(src.getDeclaringType().isEquivalentTo(fr.getDeclaringType())) {
@@ -105,6 +111,9 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
                 curStatus |= write ? WRITE_PACKAGE : READ_PACKAGE;
             } else {
                 curStatus |= write ? WRITE_OUTSIDE : READ_OUTSIDE;
+            }
+            if(write && !hadNull) {
+                curStatus |= WRITE_NONNULL;
             }
             if(prevStatus != curStatus) {
                 fieldRecords.put(fr.getName(), curStatus);

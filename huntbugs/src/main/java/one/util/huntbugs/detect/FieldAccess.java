@@ -57,6 +57,7 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
 @WarningDefinition(category="RedundantCode", name="UnreadPublicField", maxScore=37)
 @WarningDefinition(category="Correctness", name="UnwrittenPrivateField", maxScore=60)
 @WarningDefinition(category="Correctness", name="UnwrittenPublicField", maxScore=45)
+@WarningDefinition(category="Correctness", name="FieldIsAlwaysNull", maxScore=55)
 @WarningDefinition(category="Performance", name="FieldShouldBeStatic", maxScore=50)
 @WarningDefinition(category="Performance", name="FieldUsedInSingleMethod", maxScore=55)
 public class FieldAccess {
@@ -155,7 +156,7 @@ public class FieldAccess {
             WarningAnnotation<?>[] anno = {};
             int priority = 0;
             String warningType = fd.isPublic() || fd.isProtected() ? "UnreadPublicField" : "UnreadPrivateField";
-            if (fieldRecord != null) {
+            if (fieldRecord != null && fieldRecord.firstWriteMethod != null) {
                 anno = new WarningAnnotation[] { Roles.METHOD.create(fieldRecord.firstWriteMethod),
                         Roles.LOCATION.create(fieldRecord.firstWriteLocation) };
             }
@@ -175,7 +176,7 @@ public class FieldAccess {
             WarningAnnotation<?>[] anno = {};
             int priority = 0;
             String warningType = fd.isPublic() || fd.isProtected() ? "UnwrittenPublicField" : "UnwrittenPrivateField";
-            if (fieldRecord != null) {
+            if (fieldRecord != null && fieldRecord.firstReadMethod != null) {
                 anno = new WarningAnnotation[] { Roles.METHOD.create(fieldRecord.firstReadMethod),
                         Roles.LOCATION.create(fieldRecord.firstReadLocation) };
             }
@@ -183,6 +184,19 @@ public class FieldAccess {
                 priority += 5;
             }
             fc.report(warningType, priority, anno);
+            return;
+        }
+        if(!Flags.testAny(flags, FieldStats.WRITE_NONNULL)) {
+            WarningAnnotation<?>[] anno = {};
+            int priority = 0;
+            if (fieldRecord != null && fieldRecord.firstWriteMethod != null) {
+                anno = new WarningAnnotation[] { Roles.METHOD.create(fieldRecord.firstWriteMethod),
+                        Roles.LOCATION.create(fieldRecord.firstWriteLocation) };
+            }
+            if(fd.isPublic()) {
+                priority += 10;
+            }
+            fc.report("FieldIsAlwaysNull", priority, anno);
             return;
         }
         if (fullyAnalyzed
