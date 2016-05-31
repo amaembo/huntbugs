@@ -38,6 +38,29 @@ public class TestFieldAccess {
     @AssertNoWarning(type="*")
     public int e;
     
+    @AssertWarning(type="UnreadPrivateField")
+    private int f;
+    
+    @AssertWarning(type="FieldShouldBeStatic")
+    @AssertNoWarning(type="UnreadPrivateField")
+    private final String g = "test";
+    
+    @AssertNoWarning(type="FieldShouldBeStatic")
+    @AssertWarning(type="UnreadPrivateField")
+    private final String h; 
+    
+    {
+        if(Math.random() > 0.5)
+            h = "pass";
+        else
+            h = "fail";
+    }
+    
+    @AssertWarning(type="UnreadPrivateField")
+    public void setF(int f) {
+        this.f = f;
+    }
+    
     public class SubClass extends TestFieldAccess {
         public int getE() {
             return e;

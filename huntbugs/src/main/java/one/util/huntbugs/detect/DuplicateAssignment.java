@@ -35,7 +35,7 @@ import one.util.huntbugs.warning.Role.LocationRole;
  * @author lan
  *
  */
-@WarningDefinition(category="RedundantCode", name="FieldDoubleAssignment", maxScore=60)
+@WarningDefinition(category="RedundantCode", name="FieldDoubleAssignment", maxScore=65)
 public class DuplicateAssignment {
     private static final LocationRole DUPLICATE_ASSIGNMENT_AT = LocationRole.forName("DUPLICATE_ASSIGNMENT_AT");
     

@@ -34,10 +34,10 @@ import one.util.huntbugs.warning.Role.NumberRole;
  * @author lan
  *
  */
-@WarningDefinition(category = "Correctness", name = "ArrayIndexNegative", maxScore = 70)
-@WarningDefinition(category = "Correctness", name = "ArrayIndexOutOfRange", maxScore = 70)
-@WarningDefinition(category = "Correctness", name = "ArrayOffsetOutOfRange", maxScore = 70)
-@WarningDefinition(category = "Correctness", name = "ArrayLengthOutOfRange", maxScore = 70)
+@WarningDefinition(category = "Correctness", name = "ArrayIndexNegative", maxScore = 85)
+@WarningDefinition(category = "Correctness", name = "ArrayIndexOutOfRange", maxScore = 85)
+@WarningDefinition(category = "Correctness", name = "ArrayOffsetOutOfRange", maxScore = 85)
+@WarningDefinition(category = "Correctness", name = "ArrayLengthOutOfRange", maxScore = 85)
 public class ArrayRangeCheck {
     private static final NumberRole MAX_LENGTH = NumberRole.forName("MAX_LENGTH");  
     private static final long IMPOSSIBLE_ARRAY_LENGTH = Integer.MAX_VALUE + 1L;

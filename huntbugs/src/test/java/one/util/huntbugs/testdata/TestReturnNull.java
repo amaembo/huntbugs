@@ -40,10 +40,15 @@ public class TestReturnNull {
         return null;
     }
     
-    @AssertWarning(type="ArrayReturnNull")
-    int[] testArray(int a) {
+    @AssertWarning(type="ArrayReturnNull", minScore = 35)
+    public int[] testArray(int a) {
         if(a > 5)
             return new int[] {a};
+        return null;
+    }
+    
+    @AssertWarning(type="ArrayReturnNull", maxScore = 30)
+    public int[] testArrayNull() {
         return null;
     }
     

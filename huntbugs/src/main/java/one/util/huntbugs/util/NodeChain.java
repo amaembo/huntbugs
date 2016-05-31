@@ -16,6 +16,7 @@
 package one.util.huntbugs.util;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Objects;
 
 import com.strobel.assembler.metadata.MethodDefinition;
@@ -116,5 +117,10 @@ public class NodeChain {
             nc = nc.getParent();
         }
         return null;
+    }
+
+    public boolean isOnlyChild(Node node) {
+        Iterator<Node> iterator = Nodes.getChildren(getNode()).iterator();
+        return iterator.hasNext() && iterator.next() == node && !iterator.hasNext();
     }
 }

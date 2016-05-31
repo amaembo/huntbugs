@@ -38,8 +38,8 @@ import one.util.huntbugs.warning.Role.StringRole;
  * @author Tagir Valeev
  *
  */
-@WarningDefinition(category = "Correctness", name = "AndEqualsAlwaysFalse", maxScore = 70)
-@WarningDefinition(category = "Correctness", name = "OrNotEqualsAlwaysTrue", maxScore = 60)
+@WarningDefinition(category = "Correctness", name = "AndEqualsAlwaysFalse", maxScore = 85)
+@WarningDefinition(category = "Correctness", name = "OrNotEqualsAlwaysTrue", maxScore = 70)
 public class ExclusiveConditions {
     private static final StringRole CONST1 = StringRole.forName("CONST1");
     private static final StringRole CONST2 = StringRole.forName("CONST2");

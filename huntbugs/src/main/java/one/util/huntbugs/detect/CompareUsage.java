@@ -29,13 +29,12 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
-import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author Tagir Valeev
  *
  */
-@WarningDefinition(category = "BadPractice", name = "NegatingComparatorResult", maxScore = 60)
+@WarningDefinition(category = "BadPractice", name = "NegatingComparatorResult", maxScore = 50)
 @WarningDefinition(category = "Correctness", name = "ComparingComparatorResultWithNumber", maxScore = 70)
 public class CompareUsage {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)

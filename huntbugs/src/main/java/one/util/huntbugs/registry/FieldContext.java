@@ -26,6 +26,7 @@ import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningType;
+import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 public class FieldContext extends ElementContext {
     private final ClassContext cc;
@@ -60,6 +61,9 @@ public class FieldContext extends ElementContext {
         anno.addAll(Arrays.asList(annotations));
         Warning w = new Warning(wt, priority, anno);
         cc.getMemberAsserter(fdata.fd).checkWarning(this::error, w);
+        MemberInfo mi = w.getAnnotation(Roles.METHOD);
+        if(mi != null)
+            cc.cdata.getAsserter(mi).checkWarning(this::error, w);
         ctx.addWarning(w);
     }
 

@@ -42,7 +42,7 @@ import one.util.huntbugs.util.Nodes;
  * @author Tagir Valeev
  *
  */
-@WarningDefinition(category = "Correctness", name = "InfiniteRecursion", maxScore = 80)
+@WarningDefinition(category = "Correctness", name = "InfiniteRecursion", maxScore = 90)
 public class InfiniteRecursion {
     boolean stateChange;
     boolean controlTransfer;

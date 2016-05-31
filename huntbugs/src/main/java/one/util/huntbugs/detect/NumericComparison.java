@@ -41,8 +41,8 @@ import one.util.huntbugs.warning.Role.StringRole;
  * @author Tagir Valeev
  *
  */
-@WarningDefinition(category = "Correctness", name = "ComparisonWithOutOfRangeValue", maxScore = 65)
-@WarningDefinition(category = "RedundantCode", name = "SwitchBranchUnreachable", maxScore = 65)
+@WarningDefinition(category = "Correctness", name = "ComparisonWithOutOfRangeValue", maxScore = 75)
+@WarningDefinition(category = "RedundantCode", name = "SwitchBranchUnreachable", maxScore = 75)
 @WarningDefinition(category = "BadPractice", name = "CheckForOddnessFailsForNegative", maxScore = 40)
 public class NumericComparison {
     private static final LongRange SHORT_RANGE = new LongRange(Short.MIN_VALUE, Short.MAX_VALUE);

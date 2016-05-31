@@ -34,9 +34,9 @@ import one.util.huntbugs.warning.Roles;
  * @author Tagir Valeev
  *
  */
-@WarningDefinition(category = "Correctness", name = "RemOne", maxScore = 70)
-@WarningDefinition(category = "Correctness", name = "CompareBitAndIncompatible", maxScore = 70)
-@WarningDefinition(category = "Correctness", name = "CompareBitOrIncompatible", maxScore = 70)
+@WarningDefinition(category = "Correctness", name = "RemOne", maxScore = 80)
+@WarningDefinition(category = "Correctness", name = "CompareBitAndIncompatible", maxScore = 75)
+@WarningDefinition(category = "Correctness", name = "CompareBitOrIncompatible", maxScore = 75)
 @WarningDefinition(category = "RedundantCode", name = "UselessOrWithZero", maxScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "UselessAndWithMinusOne", maxScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "UselessAndWithZero", maxScore = 70)

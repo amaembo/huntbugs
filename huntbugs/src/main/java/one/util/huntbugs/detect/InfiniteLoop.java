@@ -33,8 +33,8 @@ import one.util.huntbugs.util.Nodes;
  * @author Tagir Valeev
  *
  */
-@WarningDefinition(category = "Correctness", name = "InfiniteLoop", maxScore = 80)
-@WarningDefinition(category = "Correctness", name = "InvariantLoopCondition", maxScore = 55)
+@WarningDefinition(category = "Correctness", name = "InfiniteLoop", maxScore = 90)
+@WarningDefinition(category = "Correctness", name = "InvariantLoopCondition", maxScore = 60)
 public class InfiniteLoop {
     @AstVisitor
     public void visit(Node node, MethodContext mc) {

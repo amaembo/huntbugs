@@ -1069,5 +1069,24 @@
       <LongDescription><![CDATA[The field $FIELD$ is unused and could be removed. If it's intended to be used via reflection, consider annotating it
       with some annotation to avoid confusion.]]></LongDescription>
     </Warning>
+    <Warning Type="UnreadPublicField">
+      <Title>Public or protected field is never read</Title>
+      <Description>Public or protected field $FIELD$ is written, but never read.</Description>
+      <LongDescription><![CDATA[The field $FIELD$ is written, but never read, so probably it should be removed. 
+      False positive is possible if it's intended to be read in the code which is out of the scope of this analysis 
+      or used via reflection.]]></LongDescription>
+    </Warning>
+    <Warning Type="UnreadPrivateField">
+      <Title>Private or package-private field is never read</Title>
+      <Description>Private or package-private field $FIELD$ is is written, but never read.</Description>
+      <LongDescription><![CDATA[The field $FIELD$ is written, but never read, so probably it should be removed. 
+      If it's intended to be read via reflection, consider annotating it with some annotation to avoid confusion.]]></LongDescription>
+    </Warning>
+    <Warning Type="FieldShouldBeStatic">
+      <Title>Non-static final field is initialized to a static value</Title>
+      <Description>Non-static final field $FIELD$ is initialized to a static value.</Description>
+      <LongDescription><![CDATA[The final field $FIELD$ is initialized to a statically known value.
+      Consider making this field static.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

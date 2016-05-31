@@ -35,7 +35,7 @@ import one.util.huntbugs.warning.Role.LocationRole;
  *
  */
 @WarningDefinition(category = "RedundantCode", name = "SameConditions", maxScore = 50)
-@WarningDefinition(category = "RedundantCode", name = "SameConditionsExcluding", maxScore = 70)
+@WarningDefinition(category = "RedundantCode", name = "SameConditionsExcluding", maxScore = 75)
 public class ConditionChain {
     private static final LocationRole SAME_CONDITION = LocationRole.forName("SAME_CONDITION");
 
