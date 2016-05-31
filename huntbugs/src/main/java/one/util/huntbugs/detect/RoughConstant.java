@@ -37,8 +37,6 @@ import one.util.huntbugs.warning.Warning;
 @WarningDefinition(category="BadPractice", name="RoughConstantValue", maxScore=60)
 public class RoughConstant {
     static class BadConstant {
-        double base;
-        double factor;
         String replacement;
         double value;
         int basePriority;
@@ -46,9 +44,7 @@ public class RoughConstant {
         Set<Number> approxSet = new HashSet<>();
 
         BadConstant(double base, double factor, String replacement, int basePriority) {
-            this.base = base;
-            this.factor = factor;
-            this.value = this.base * this.factor;
+            this.value = base * factor;
             this.replacement = replacement;
             this.basePriority = basePriority;
             BigDecimal valueBig = BigDecimal.valueOf(value);

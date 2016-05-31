@@ -319,7 +319,7 @@ public class NumericComparison {
             Object constant = Nodes.getConstant(arg.getArguments().get(1));
             if (constant instanceof Integer) {
                 int shrOp = ((int) constant) & 0x1F;
-                if (shrOp > 0) {
+                if (shrOp != 0) {
                     int bits = 32 - shrOp;
                     int max = (1 << bits);
                     return new LongRange(0, max - 1);

@@ -15,10 +15,10 @@
  */
 package one.util.huntbugs.output;
 
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.io.Writer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,8 +46,8 @@ import one.util.huntbugs.warning.WarningAnnotation.TypeInfo;
 public final class Reports {
     public static void write(Path xmlTarget, Path htmlTarget, Context ctx) {
         Document dom = makeDom(ctx);
-        try (Writer xmlWriter = new FileWriter(xmlTarget.toFile()); 
-                Writer htmlWriter = new FileWriter(htmlTarget.toFile())) {
+        try (Writer xmlWriter = Files.newBufferedWriter(xmlTarget); 
+                Writer htmlWriter = Files.newBufferedWriter(htmlTarget)) {
             new CombinedReportWriter(
                 Arrays.asList(
                     new XmlReportWriter(xmlWriter),
