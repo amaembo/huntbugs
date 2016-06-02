@@ -35,6 +35,7 @@ import one.util.huntbugs.util.Types;
 
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.componentmodel.Key;
 import com.strobel.decompiler.ast.AstCode;
@@ -565,9 +566,17 @@ public class ValuesFlow {
         return expr.getArguments().stream().anyMatch(ValuesFlow::isAssertionStatusCheck);
     }
     
+    private static boolean isAssertionMethod(Expression expr) {
+        if(expr.getCode() != AstCode.InvokeStatic)
+            return false;
+        MethodReference mr = (MethodReference) expr.getOperand();
+        String name = mr.getName();
+        return name.equals("isTrue") || name.equals("assertTrue");
+    }
+
     public static boolean isAssertion(Expression expr) {
         Set<Expression> usages = findUsages(expr);
-        return !usages.isEmpty() && usages.stream().allMatch(parent -> isAssertionCondition(parent) || isAssertion(parent));
+        return !usages.isEmpty() && usages.stream().allMatch(parent -> isAssertionCondition(parent) || isAssertion(parent) || isAssertionMethod(parent));
     }
     
     public static boolean isSpecial(Expression expr) {

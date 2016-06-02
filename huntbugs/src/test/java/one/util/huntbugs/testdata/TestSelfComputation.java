@@ -16,6 +16,9 @@
 package one.util.huntbugs.testdata;
 
 import java.util.List;
+
+import org.junit.Assert;
+
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -47,6 +50,11 @@ public class TestSelfComputation {
     @AssertWarning("SelfEquals")
     public boolean testEquals(String s1) {    
         return s1.equals(s1);
+    }
+    
+    @AssertNoWarning("SelfEquals")
+    public void testMyEquals(Object obj) {
+        Assert.assertTrue(obj.equals(obj));
     }
     
     @AssertNoWarning("SelfComputation")
