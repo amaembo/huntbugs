@@ -44,6 +44,11 @@ public class TestSelfComputation {
         return x[1] + y[0] >= x[1] + y[0];
     }
     
+    @AssertWarning("SelfEquals")
+    public boolean testEquals(String s1) {    
+        return s1.equals(s1);
+    }
+    
     @AssertNoWarning("SelfComputation")
     public int test(int[] x, int idx) {
         return x[idx++] - x[idx++];

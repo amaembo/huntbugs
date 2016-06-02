@@ -199,6 +199,11 @@
       <Description>The expression is compared with itself in $METHOD$.</Description>
       <LongDescription><![CDATA[The expression is compared with itself like <code>(x $OPERATION$ x)</code> which does not make sense. Probably there's logical error or typo in the code.]]></LongDescription>
     </Warning>
+    <Warning Type="SelfEquals">
+      <Title>The equals() method is called for the same expression</Title>
+      <Description>The equals() method is called for the same expression in $METHOD$.</Description>
+      <LongDescription><![CDATA[The expression is compared with itself like <code>x.equals(x)</code> which does not make sense. Probably there's logical error or typo in the code.]]></LongDescription>
+    </Warning>
     <Warning Type="SelfComputation">
       <Title>The operand is repeating in computation making it nonsensical</Title>
       <Description>The operation like x $OPERATION$ x is performed in $METHOD$.</Description>
