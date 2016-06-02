@@ -32,16 +32,21 @@ import one.util.huntbugs.warning.Roles;
  * @author lan
  *
  */
-@WarningDefinition(category="Multithreading", name="InitializerRefersSubclass", maxScore=55)
+@WarningDefinition(category="Multithreading", name="InitializerRefersSubclass", maxScore=40)
 public class InitializerRefersSubclass {
     @AstVisitor(nodes=AstNodes.EXPRESSIONS, methodName="<clinit>")
     public void visit(Expression expr, NodeChain nc, MethodContext mc, TypeDefinition td) {
         if(expr.getOperand() instanceof MemberReference) {
             MemberReference mr = (MemberReference) expr.getOperand();
             TypeReference tr = mr.getDeclaringType();
-            if (tr != null && !tr.isEquivalentTo(td) && Types.isInstance(mr.getDeclaringType(), td) && nc
+            TypeDefinition subType = tr == null ? null : tr.resolve();
+            if (subType != null && (subType.isAnonymous() || subType.isLocalClass())) {
+                subType = subType.getBaseType().resolve();
+            }
+            if (subType != null && !td.isEquivalentTo(subType) && Types.isInstance(subType, td) && nc
                     .getLambdaMethod() == null) {
-                mc.report("InitializerRefersSubclass", 0, expr, Roles.SUBCLASS.create(mr.getDeclaringType()));
+                mc.report("InitializerRefersSubclass", td.isNonPublic() || subType.isNonPublic() ? 5 : 0, expr,
+                    Roles.SUBCLASS.create(subType));
             }
         }
     }

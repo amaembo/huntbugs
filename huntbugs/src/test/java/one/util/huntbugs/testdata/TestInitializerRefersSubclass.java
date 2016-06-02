@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.testdata;
 
+import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
 /**
@@ -25,7 +26,21 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 public class TestInitializerRefersSubclass {
     static final TestInitializerRefersSubclass instance = new SubClass();
     
-    static class SubClass extends TestInitializerRefersSubclass {
+    public static class SubClass extends TestInitializerRefersSubclass {
+        
+    }
+    
+    @AssertNoWarning("InitializerRefersSubclass")
+    static class AnonymousOk {
+        static final AnonymousOk instance = new AnonymousOk() {};
+    }
+    
+    @AssertWarning("InitializerRefersSubclass")
+    static class Anonymous {
+        static final AnonymousSubClass instance = new AnonymousSubClass() {};
+    }
+    
+    static class AnonymousSubClass extends Anonymous {
         
     }
 }
