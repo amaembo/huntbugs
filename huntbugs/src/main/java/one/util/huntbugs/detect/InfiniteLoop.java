@@ -62,7 +62,7 @@ public class InfiniteLoop {
             return;
         }
         // Will be reported as ResultOfComparisonIsStaticallyKnown
-        if (Nodes.getConstant(expr) != null)
+        if (expr.getCode().isComparison() && Nodes.getConstant(expr) != null)
             return;
         if (!Nodes.isPure(expr))
             return;

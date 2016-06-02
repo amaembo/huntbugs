@@ -30,6 +30,14 @@ public class TestInfiniteLoop {
         }
     }
 
+    @AssertWarning("InfiniteLoop")
+    public void testFlag() {
+        boolean b = true;
+        while (b) {
+            System.out.println(b);
+        }
+    }
+
     @AssertNoWarning("InfiniteLoop")
     @AssertWarning("InvariantLoopCondition")
     public void testLoopInvariant(int x) {
