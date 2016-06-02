@@ -37,6 +37,13 @@
     This will generate a fairly useless result such as <code>[C@16f0472</code>. 
     Consider using <code>java.util.Arrays.toString</code> to convert the array into a readable String that gives the contents of the array.]]></LongDescription>
     </Warning>
+    <Warning Type="StreamToString">
+      <Title>Invocation of toString() on a Stream</Title>
+      <Description>Invocation of toString() on a Stream in $METHOD$</Description>
+      <LongDescription><![CDATA[The code invokes <code>toString()</code> on a Stream object. 
+    This will generate a fairly useless result such as <code>java.util.stream.ReferencePipeline&#36;Head@16f0472</code>.
+    Probably it was intended to collect the stream like <code>collect(Collectors.joining())</code>.]]></LongDescription>
+    </Warning>
     <Warning Type="FloatCompareToNaN">
       <Title>Useless attempt to compare floating point number to NaN</Title>
       <Description>Useless attempt to compare a $USED_TYPE$ number to NaN</Description>

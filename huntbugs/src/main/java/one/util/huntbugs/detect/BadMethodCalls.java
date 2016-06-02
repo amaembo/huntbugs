@@ -51,6 +51,7 @@ import one.util.huntbugs.warning.Role.TypeRole;
 @WarningDefinition(category = "Correctness", name = "BigDecimalConstructedFromDouble", maxScore = 50)
 @WarningDefinition(category = "Correctness", name = "BigDecimalConstructedFromInfiniteOrNaN", maxScore = 70)
 @WarningDefinition(category = "Correctness", name = "ArrayToString", maxScore = 60)
+@WarningDefinition(category = "Correctness", name = "StreamToString", maxScore = 60)
 @WarningDefinition(category = "Correctness", name = "ArrayHashCode", maxScore = 60)
 @WarningDefinition(category = "Correctness", name = "DoubleLongBitsToDoubleOnInt", maxScore = 70)
 @WarningDefinition(category = "Correctness", name = "ScheduledThreadPoolExecutorChangePoolSize", maxScore = 70)
@@ -148,8 +149,11 @@ public class BadMethodCalls {
         } else if (isToStringCall(typeName, name, signature)) {
             Expression lastArg = Nodes.getChild(node, node.getArguments().size() - 1);
             TypeReference type = ValuesFlow.reduceType(lastArg);
-            if (type != null && type.isArray()) {
-                ctx.report("ArrayToString", 0, lastArg);
+            if (type != null) {
+                if(type.isArray())
+                    ctx.report("ArrayToString", 0, lastArg);
+                else if(Types.isInstance(type, "java/util/stream/Stream"))
+                    ctx.report("StreamToString", 0, lastArg);
             }
         } else if (name.equals("hashCode") && signature.equals("()I") || typeName.equals("java/util/Objects") && name
                 .equals("hashCode") && signature.equals("(Ljava/lang/Object;)I")) {

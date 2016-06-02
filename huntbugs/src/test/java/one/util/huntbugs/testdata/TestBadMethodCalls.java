@@ -20,6 +20,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
@@ -267,5 +268,10 @@ public class TestBadMethodCalls {
     @AssertWarning("ArrayHashCode")
     public int hashCode() {
         return state.hashCode();
+    }
+
+    @AssertWarning("StreamToString")
+    public String process(List<String> vals) {
+        return vals.stream().map(String::trim).toString();
     }
 }
