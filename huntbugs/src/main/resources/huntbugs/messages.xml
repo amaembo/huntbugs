@@ -929,6 +929,13 @@
       Probably there's some error in the code. If such behavior is intended 
       consider moving the condition out of the loop or using explicitly infinite loop like <code>while(true)</code>.]]></LongDescription>
     </Warning>
+    <Warning Type="InvariantLoopConditionPart">
+      <Title>Invariant part of loop condition</Title>
+      <Description>Invariant part of loop condition in $METHOD$.</Description>
+      <LongDescription><![CDATA[The part of loop condition which involves variable <code>$VARIABLE$</code> is unlikely to change over the loop iterations.
+      Probably there's some error in the code. If such behavior is intended 
+      consider moving the condition out of the loop for code clarity.]]></LongDescription>
+    </Warning>
     <Warning Type="CollectionAddedToItself">
       <Title>Collection added to itself</Title>
       <Description>Collection is added to itself in $METHOD$.</Description>

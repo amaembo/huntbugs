@@ -47,6 +47,14 @@ public class TestInfiniteLoop {
         }
     }
 
+    @AssertNoWarning("InfiniteLoop")
+    @AssertWarning("InvariantLoopConditionPart")
+    public void testLoopPart(int x, int z) {
+        while (x > 2 || z == 10) {
+            System.out.println(x--);
+        }
+    }
+
     TestInfiniteLoop next;
 
     @AssertNoWarning("InfiniteLoop")

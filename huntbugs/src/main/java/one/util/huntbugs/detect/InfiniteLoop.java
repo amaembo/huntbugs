@@ -28,6 +28,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.Roles;
 
 /**
  * @author Tagir Valeev
@@ -35,6 +36,7 @@ import one.util.huntbugs.util.Nodes;
  */
 @WarningDefinition(category = "Correctness", name = "InfiniteLoop", maxScore = 90)
 @WarningDefinition(category = "Correctness", name = "InvariantLoopCondition", maxScore = 60)
+@WarningDefinition(category = "Correctness", name = "InvariantLoopConditionPart", maxScore = 55)
 public class InfiniteLoop {
     @AstVisitor
     public void visit(Node node, MethodContext mc) {
@@ -43,36 +45,60 @@ public class InfiniteLoop {
             if (loop.getCondition() == null)
                 return;
             Expression expr = loop.getCondition();
-            if (!Nodes.isPure(expr))
+            if(!Nodes.isSideEffectFree(expr))
                 return;
-            Set<Variable> vars = Nodes.stream(expr).filter(e -> e.getCode() == AstCode.Load).map(
-                e -> (Variable) e.getOperand()).collect(Collectors.toSet());
-            class LoopState {
-                boolean hasControlFlow, hasLoads, hasStores;
+            checkCondition(mc, loop, expr, true);
+        }
+    }
+
+    private void checkCondition(MethodContext mc, Loop loop, Expression expr, boolean fullCondition) {
+        if(expr.getCode() == AstCode.LogicalAnd || expr.getCode() == AstCode.LogicalOr) {
+            checkCondition(mc, loop, expr.getArguments().get(0), false);
+            checkCondition(mc, loop, expr.getArguments().get(1), false);
+            return;
+        }
+        if(expr.getCode() == AstCode.LogicalNot) {
+            checkCondition(mc, loop, expr.getArguments().get(0), fullCondition);
+            return;
+        }
+        // Will be reported as ResultOfComparisonIsStaticallyKnown
+        if (Nodes.getConstant(expr) != null)
+            return;
+        if (!Nodes.isPure(expr))
+            return;
+        Set<Variable> vars = Nodes.stream(expr).filter(e -> e.getCode() == AstCode.Load).map(
+            e -> (Variable) e.getOperand()).collect(Collectors.toSet());
+        if(vars.isEmpty())
+            return;
+        class LoopState {
+            boolean hasControlFlow, hasLoads, hasStores;
+        }
+        LoopState ls = new LoopState();
+        loop.getBody().getChildrenAndSelfRecursive().forEach(n -> {
+            if(!(n instanceof Expression))
+                return;
+            Expression e = (Expression) n;
+            if (e.getCode() == AstCode.LoopOrSwitchBreak || e.getCode() == AstCode.Return
+                    || e.getCode() == AstCode.AThrow || e.getCode() == AstCode.Goto)
+                    ls.hasControlFlow = true;
+            if (e.getOperand() instanceof Variable && vars.contains(e.getOperand())) {
+                ls.hasLoads = true;
+                if(e.getCode() == AstCode.Store || e.getCode() == AstCode.Inc)
+                    ls.hasStores = true;
             }
-            LoopState ls = new LoopState();
-            loop.getBody().getChildrenAndSelfRecursive().forEach(n -> {
-                if(!(n instanceof Expression))
-                    return;
-                Expression e = (Expression) n;
-                if (e.getCode() == AstCode.LoopOrSwitchBreak || e.getCode() == AstCode.Return
-                        || e.getCode() == AstCode.AThrow || e.getCode() == AstCode.Goto)
-                        ls.hasControlFlow = true;
-                if (e.getOperand() instanceof Variable && vars.contains(e.getOperand())) {
-                    ls.hasLoads = true;
-                    if(e.getCode() == AstCode.Store || e.getCode() == AstCode.Inc)
-                        ls.hasStores = true;
-                }
-                if (e.getCode() == AstCode.PreIncrement || e.getCode() == AstCode.PostIncrement) {
-                    if(vars.contains(e.getArguments().get(0).getOperand()))
-                        ls.hasStores = true;
-                }
-            });
+            if (e.getCode() == AstCode.PreIncrement || e.getCode() == AstCode.PostIncrement) {
+                if(vars.contains(e.getArguments().get(0).getOperand()))
+                    ls.hasStores = true;
+            }
+        });
+        if(fullCondition) {
             if(!ls.hasControlFlow && !ls.hasStores) {
-                mc.report("InfiniteLoop", 0, node);
+                mc.report("InfiniteLoop", 0, loop, Roles.VARIABLE.create(vars.iterator().next().getName()));
             } else if(!ls.hasLoads) {
-                mc.report("InvariantLoopCondition", 0, node);
+                mc.report("InvariantLoopCondition", 0, expr, Roles.VARIABLE.create(vars.iterator().next().getName()));
             }
+        } else if((!ls.hasControlFlow && !ls.hasStores) || !ls.hasLoads) {
+            mc.report("InvariantLoopConditionPart", 0, expr, Roles.VARIABLE.create(vars.iterator().next().getName()));
         }
     }
 }
