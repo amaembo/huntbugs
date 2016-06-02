@@ -15,13 +15,19 @@
  */
 package one.util.huntbugs.repo;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.jar.JarFile;
 
 import com.strobel.assembler.metadata.ITypeLoader;
@@ -37,11 +43,15 @@ public interface Repository {
 
     public static Repository createSelfRepository() {
         List<Repository> repos = new ArrayList<>();
+        Set<Path> paths = new HashSet<>();
         try {
             Enumeration<URL> resources = CompositeRepository.class.getClassLoader().getResources(".");
             while (resources.hasMoreElements()) {
                 try {
-                    repos.add(new DirRepository(new File(resources.nextElement().toURI()).toPath()));
+                    Path path = Paths.get(resources.nextElement().toURI());
+                    if(paths.add(path)) {
+                        repos.add(new DirRepository(path));
+                    }
                 } catch (URISyntaxException e) {
                     // ignore
                 }
@@ -49,13 +59,19 @@ public interface Repository {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        if (repos.isEmpty()) {
+        CodeSource codeSource = CompositeRepository.class.getProtectionDomain().getCodeSource();
+        URL url = codeSource == null ? null : codeSource.getLocation();
+        if(url != null) {
             try {
-                repos.add(new JarRepository(new JarFile(CompositeRepository.class.getProtectionDomain().getCodeSource()
-                        .getLocation().toURI().getPath())));
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            } catch (URISyntaxException e) {
+                Path path = Paths.get(url.toURI());
+                if(paths.add(path)) {
+                    if(Files.isDirectory(path))
+                        repos.add(new DirRepository(path));
+                    else if(Files.isRegularFile(path))
+                        repos.add(new JarRepository(new JarFile(path.toFile())));
+                }
+            } catch (URISyntaxException | FileSystemNotFoundException | IllegalArgumentException 
+                    | IOException | UnsupportedOperationException e) {
                 // ignore
             }
         }
