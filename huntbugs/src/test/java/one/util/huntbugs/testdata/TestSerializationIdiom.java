@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 import one.util.huntbugs.registry.anno.AssertWarning;
@@ -30,5 +31,23 @@ public class TestSerializationIdiom {
         public int compare(String o1, String o2) {
             return o1.toLowerCase().compareTo(o2.toLowerCase());
         }
+    }
+    
+    @SuppressWarnings("serial")
+    public static class NonStaticUid implements Serializable {
+        @AssertWarning("SerialVersionUidNotStatic")
+        final long serialVersionUID = 1L;
+    }
+    
+    @SuppressWarnings("serial")
+    public static class NonFinalUid implements Serializable {
+        @AssertWarning("SerialVersionUidNotFinal")
+        static long serialVersionUID = 1L;
+    }
+    
+    @SuppressWarnings("serial")
+    public static class NonLongUid implements Serializable {
+        @AssertWarning("SerialVersionUidNotLong")
+        static final int serialVersionUID = 1;
     }
 }

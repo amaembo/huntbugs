@@ -16,11 +16,14 @@
 package one.util.huntbugs.detect;
 
 import com.strobel.assembler.metadata.FieldDefinition;
+import com.strobel.assembler.metadata.JvmType;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 
 import one.util.huntbugs.registry.ClassContext;
+import one.util.huntbugs.registry.FieldContext;
 import one.util.huntbugs.registry.anno.ClassVisitor;
+import one.util.huntbugs.registry.anno.FieldVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Role.TypeRole;
@@ -29,7 +32,10 @@ import one.util.huntbugs.warning.Role.TypeRole;
  * @author Tagir Valeev
  *
  */
-@WarningDefinition(category="Serialization", name="ComparatorIsNotSerializable", maxScore=50)
+@WarningDefinition(category="Serialization", name="ComparatorIsNotSerializable", maxScore=45)
+@WarningDefinition(category="Serialization", name="SerialVersionUidNotFinal", maxScore=50)
+@WarningDefinition(category="Serialization", name="SerialVersionUidNotStatic", maxScore=50)
+@WarningDefinition(category="Serialization", name="SerialVersionUidNotLong", maxScore=40)
 public class SerializationIdiom {
     private static final TypeRole SHOULD_IMPLEMENT = TypeRole.forName("SHOULD_IMPLEMENT");
     
@@ -51,6 +57,21 @@ public class SerializationIdiom {
                 }
             }
             cc.report("ComparatorIsNotSerializable", priority, SHOULD_IMPLEMENT.create("java/io/Serializable"));
+        }
+    }
+    
+    @FieldVisitor
+    public void visitField(FieldDefinition fd, FieldContext fc) {
+        if(fd.getName().equals("serialVersionUID")) {
+            if(!fd.isFinal()) {
+                fc.report("SerialVersionUidNotFinal", 0);
+            }
+            if(!fd.isStatic()) {
+                fc.report("SerialVersionUidNotStatic", 0);
+            }
+            if(fd.getFieldType().getSimpleType() == JvmType.Integer) {
+                fc.report("SerialVersionUidNotLong", 0);
+            }
         }
     }
 }

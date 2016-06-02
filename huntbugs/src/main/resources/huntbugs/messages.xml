@@ -742,6 +742,24 @@
       If a comparator is used to construct an ordered collection such as a <code>TreeMap</code>, then the <code>TreeMap</code> will be serializable only if the comparator is also serializable. 
       As most comparators have little or no state, making them serializable is generally easy and good defensive programming. ]]></LongDescription>
     </Warning>
+    <Warning Type="SerialVersionUidNotStatic">
+      <Title>The serialVersionUID field is not static</Title>
+      <Description>The $FIELD$ is not static.</Description>
+      <LongDescription><![CDATA[This class defines a $FIELD$ that is not static.
+       The field should be made static if it is intended to specify the version UID for purposes of serialization.]]></LongDescription>
+    </Warning>
+    <Warning Type="SerialVersionUidNotFinal">
+      <Title>The serialVersionUID field is not final</Title>
+      <Description>The $FIELD$ is not final.</Description>
+      <LongDescription><![CDATA[This class defines a $FIELD$ that is not final.
+       The field should be made final if it is intended to specify the version UID for purposes of serialization.]]></LongDescription>
+    </Warning>
+    <Warning Type="SerialVersionUidNotLong">
+      <Title>The serialVersionUID field type is not long</Title>
+      <Description>The $FIELD$ must be of long type.</Description>
+      <LongDescription><![CDATA[This class defines a $FIELD$ which type is <code>int</code>.
+       The field type should be changed to <code>long</code> if it is intended to specify the version UID for purposes of serialization.]]></LongDescription>
+    </Warning>
     <Warning Type="RedundantInterface">
       <Title>Class implements the same interface as superclass</Title>
       <Description>Class $TYPE$ implements $INTERFACE$ which is already implemented by superclass.</Description>

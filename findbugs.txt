@@ -171,6 +171,9 @@ abbrev="NP" type="NP_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD" category="STYLE" --> U
 abbrev="UwF" type="UWF_UNWRITTEN_FIELD" category="CORRECTNESS" --> UnwrittenPrivateField
 abbrev="UwF" type="UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD" category="STYLE" --> UnwrittenPublicField
 abbrev="UwF" type="UWF_NULL_FIELD" category="CORRECTNESS" --> FieldIsAlwaysNull
+abbrev="Se" type="SE_NONFINAL_SERIALVERSIONID" category="BAD_PRACTICE" --> SerialVersionUidNotFinal
+abbrev="Se" type="SE_NONSTATIC_SERIALVERSIONID" category="BAD_PRACTICE" --> SerialVersionUidNotStatic
+abbrev="Se" type="SE_NONLONG_SERIALVERSIONID" category="BAD_PRACTICE" --> SerialVersionUidNotLong
 
 ==== Not reimplemented
 
@@ -274,9 +277,6 @@ abbrev="Se" type="SE_READ_RESOLVE_MUST_RETURN_OBJECT" category="BAD_PRACTICE"
 abbrev="Se" type="SE_TRANSIENT_FIELD_NOT_RESTORED" category="BAD_PRACTICE"
 abbrev="WS" type="WS_WRITEOBJECT_SYNC" category="MT_CORRECTNESS"
 abbrev="RS" type="RS_READOBJECT_SYNC" category="MT_CORRECTNESS"
-abbrev="Se" type="SE_NONFINAL_SERIALVERSIONID" category="BAD_PRACTICE"
-abbrev="Se" type="SE_NONSTATIC_SERIALVERSIONID" category="BAD_PRACTICE"
-abbrev="Se" type="SE_NONLONG_SERIALVERSIONID" category="BAD_PRACTICE"
 abbrev="Se" type="SE_METHOD_MUST_BE_PRIVATE" category="CORRECTNESS"
 abbrev="Se" type="SE_BAD_FIELD" category="BAD_PRACTICE"
 abbrev="Se" type="SE_INNER_CLASS" category="BAD_PRACTICE"
