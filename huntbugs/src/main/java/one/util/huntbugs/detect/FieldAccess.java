@@ -183,6 +183,10 @@ public class FieldAccess {
             if(fd.isPublic()) {
                 priority += 5;
             }
+            // Probably field is kept for backwards serialization compatibility
+            if(!fd.isStatic() && Types.isInstance(td, "java/io/Serializable")) {
+                priority += 10;
+            }
             fc.report(warningType, priority, anno);
             return;
         }
