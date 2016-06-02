@@ -80,6 +80,12 @@
       <LongDescription><![CDATA[This code updates a volatile field $FIELD$. Such operation is not atomic, so updates could be lost under contention.
     Consider using <code>AtomicInteger</code> or <code>AtomicLong</code> instead.]]></LongDescription>
     </Warning>
+    <Warning Type="VolatileArray">
+      <Title>Volatile array field is declared</Title>
+      <Description>Field $FIELD$ is a volatile array.</Description>
+      <LongDescription><![CDATA[Field $FIELD$ is a volatile array. However, reads and writes to array elements are not volatile,
+      so cannot be safely updated from different threads. Consider using $REPLACEMENT$ instead.]]></LongDescription>
+    </Warning>
     <Warning Type="InvalidMinMax">
       <Title>Incorrect combination of max and min</Title>
       <Description>Incorrect code: $OUTER_FUNC$($OUTER_NUMBER$, $INNER_FUNC$($INNER_NUMBER$, value)).</Description>

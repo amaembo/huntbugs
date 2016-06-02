@@ -73,6 +73,10 @@ public final class Roles {
      */
     public static final MemberRole METHOD_REFERENCE = new MemberRole("METHOD_REFERENCE", Count.ZERO_ONE);
     /**
+     * Class which should be used instead
+     */
+    public static final TypeRole REPLACEMENT_CLASS = new TypeRole("REPLACEMENT", Count.ZERO_ONE);
+    /**
      * Method which should be called instead
      */
     public static final MemberRole REPLACEMENT_METHOD = new MemberRole("REPLACEMENT", Count.ZERO_ONE);

@@ -43,7 +43,7 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
     public static final int WRITE_PACKAGE = 0x0004;
     public static final int WRITE_OUTSIDE = 0x0008;
     public static final int WRITE_NONNULL = 0x0010;
-    public static final int WRITE = WRITE_CLASS | WRITE_PACKAGE | WRITE_OUTSIDE;
+    public static final int WRITE = WRITE_CONSTRUCTOR | WRITE_CLASS | WRITE_PACKAGE | WRITE_OUTSIDE;
     public static final int READ_CLASS = 0x0100;
     public static final int READ_PACKAGE = 0x0200;
     public static final int READ_OUTSIDE = 0x0400;
@@ -111,9 +111,10 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
             int prevStatus = fieldRecords.getOrDefault(fr.getName(), 0);
             int curStatus = prevStatus;
             if(src.getDeclaringType().isEquivalentTo(fr.getDeclaringType())) {
-                curStatus |= write ? WRITE_CLASS : READ_CLASS;
                 if(write && (src.isConstructor() && !isStatic || src.isTypeInitializer() && isStatic)) {
                     curStatus |= WRITE_CONSTRUCTOR;
+                } else {
+                    curStatus |= write ? WRITE_CLASS : READ_CLASS;
                 }
             } else if(src.getDeclaringType().getPackageName().equals(fr.getDeclaringType().getPackageName())) {
                 curStatus |= write ? WRITE_PACKAGE : READ_PACKAGE;
