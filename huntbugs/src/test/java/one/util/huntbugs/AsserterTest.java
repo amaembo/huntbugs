@@ -40,6 +40,9 @@ public class AsserterTest {
         assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule is not satisfied: AssertWarning(AAA; score = 0..100)")));
         assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule is not satisfied: AssertWarning(BBB; score = 0..100)")));
         assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule is not satisfied: AssertWarning(CCC; score = 0..100)")));
-        assertEquals(8, ctx.getErrorCount());
+        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule is not satisfied: AssertWarning(ParameterOverwritte*; score = 0..100)")));
+        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule is not satisfied: AssertWarning(ParameterOverwritt*; score = 0..100)")));
+        assertTrue(ctx.errors().anyMatch(em -> em.toString().contains("rule is not satisfied: AssertWarning(BadName*; score = 0..100)")));
+        assertEquals(11, ctx.getErrorCount());
     }
 }

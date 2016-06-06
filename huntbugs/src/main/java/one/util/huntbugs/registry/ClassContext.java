@@ -105,6 +105,8 @@ public class ClassContext extends ElementContext {
         anno.addAll(getTypeSpecificAnnotations());
         anno.addAll(Arrays.asList(annotations));
         Warning w = new Warning(wt, priority, anno);
+        if(!cdata.filter.test(w))
+            return;
         MemberAsserter ma = cdata.ca;
         MemberInfo mi = w.getAnnotation(Roles.METHOD);
         if(mi != null)

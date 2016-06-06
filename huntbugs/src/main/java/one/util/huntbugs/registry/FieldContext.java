@@ -60,6 +60,8 @@ public class FieldContext extends ElementContext {
         anno.add(Roles.FIELD.create(fdata.fd));
         anno.addAll(Arrays.asList(annotations));
         Warning w = new Warning(wt, priority, anno);
+        if(!cc.cdata.filter.test(w))
+            return;
         cc.getMemberAsserter(fdata.fd).checkWarning(this::error, w);
         MemberInfo mi = w.getAnnotation(Roles.METHOD);
         if(mi != null)

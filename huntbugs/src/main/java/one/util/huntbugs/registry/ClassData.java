@@ -17,10 +17,13 @@ package one.util.huntbugs.registry;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.assertions.MemberAsserter;
+import one.util.huntbugs.filter.AnnotationFilters;
+import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 import com.strobel.assembler.metadata.MemberReference;
@@ -34,10 +37,12 @@ public class ClassData {
     final TypeDefinition td;
     final MemberAsserter ca;
     Map<MemberInfo, MemberAsserter> mas;
+    Predicate<Warning> filter;
 
     ClassData(TypeDefinition td) {
         this.td = td;
         this.ca = MemberAsserter.forMember(td);
+        this.filter = AnnotationFilters.forType(td);
     }
 
     void finish(Context ctx) {

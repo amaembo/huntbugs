@@ -143,6 +143,8 @@ public class MethodContext extends ElementContext {
     void finalizeMethod() {
         if (lastWarning != null) {
             Warning warn = lastWarning.build();
+            if(!cc.cdata.filter.test(warn))
+                return;
             cc.getMemberAsserter(mdata.mainMethod).checkWarning(this::error, warn);
             ctx.addWarning(warn);
         }
@@ -184,6 +186,8 @@ public class MethodContext extends ElementContext {
             lastWarning = info;
         } else if (!lastWarning.tryMerge(info)) {
             Warning warn = lastWarning.build();
+            if(!cc.cdata.filter.test(warn))
+                return;
             cc.getMemberAsserter(mdata.mainMethod).checkWarning(this::error, warn);
             ctx.addWarning(warn);
             lastWarning = info;

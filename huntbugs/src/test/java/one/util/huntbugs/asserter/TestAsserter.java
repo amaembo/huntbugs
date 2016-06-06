@@ -28,11 +28,28 @@ public class TestAsserter {
     @AssertWarning("CCC")
     @AssertNoWarning("BadNameOfField")
     int TheField = 123;
+
+    @AssertWarning("BadName*")
+    @SuppressMyWarning("BadNameOfField")
+    int TheFieldSuppressed = 123;
     
     @AssertWarning("AAA")
     @AssertNoWarning("Rough*")
     public double test() {
         return 3.1415*TheField;
+    }
+    
+    @AssertWarning("ParameterOverwritte*")
+    @SuppressMyWarning("Param*")
+    public double testSuppress(int x) {
+        x = 10;
+        return x*2;
+    }
+    
+    @AssertWarning("ParameterOverwritt*")
+    public double testSuppressParam(@SuppressMyWarning("all") int x) {
+        x = 10;
+        return x*2;
     }
     
     @AssertNoWarning("UncalledPrivateMethod")
@@ -49,5 +66,9 @@ public class TestAsserter {
             }
         }
         new X().print(5);
+    }
+    
+    @interface SuppressMyWarning {
+        String value();
     }
 }
