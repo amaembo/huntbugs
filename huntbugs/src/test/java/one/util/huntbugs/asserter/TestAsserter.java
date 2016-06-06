@@ -39,4 +39,15 @@ public class TestAsserter {
     private void uncalled() {
         System.out.println("Uncalled");
     }
+    
+    public void testLocalClass() {
+        class X {
+            @AssertNoWarning("ParameterOverwritten")
+            public void print(int x) {
+                x = 10;
+                System.out.println(x);
+            }
+        }
+        new X().print(5);
+    }
 }

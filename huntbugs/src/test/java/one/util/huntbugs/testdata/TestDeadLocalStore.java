@@ -76,4 +76,15 @@ public class TestDeadLocalStore {
         i = x;
         System.out.println(i);
     }
+    
+    public void testLocalClass() {
+        class X {
+            @AssertWarning("ParameterOverwritten")
+            public void print(int x) {
+                x = 10;
+                System.out.println(x);
+            }
+        }
+        new X().print(5);
+    }
 }
