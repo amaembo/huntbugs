@@ -27,6 +27,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarFile;
+import java.util.logging.LogManager;
 
 import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
@@ -133,6 +134,7 @@ public class HuntBugs {
     }
 
     private int run(String[] args) {
+        LogManager.getLogManager().reset();
         if (args.length == 0) {
             System.out.println("Welcome to HuntBugs");
             System.out.println("Please specify at least one option or at least one directory/jar to analyze");

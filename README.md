@@ -16,3 +16,32 @@ Currently 172 FindBugs warnings reimplemented and several new warnings added.
 Run `mvn one.util:huntbugs-maven-plugin:huntbugs`
 
 The output report is located in `target/huntbugs/report.html`
+
+### Use with Ant
+
+* Build `huntbugs-ant-plugin`
+* Take the resulting `huntbugs-ant-plugin-<version>-nodeps.jar`
+* Define the task:
+
+~~~~xml
+<taskdef resource="one/util/huntbugs/ant/antlib.xml">
+    <classpath path="path/to/huntbugs-ant-plugin-<version>-nodeps.jar"/>
+</taskdef>
+~~~~
+
+* Run it:
+
+~~~~xml
+<huntbugs classPath="${MY_APP_CLASSPATH}" 
+          auxClassPath="${DEPS_CLASSPATH}" 
+          html="path/to/html/report.html" 
+          xml="path/to/xml/report.xml"/>
+~~~~
+
+### Use with Gradle
+
+Check the [Gradle plugin page](https://github.com/lavcraft/huntbugs-gradle-plugin)
+
+### Use with Eclipse
+
+Check the [Eclipse plugin page](https://github.com/aaasko/huntbugs-eclipse) (in early development stage)
