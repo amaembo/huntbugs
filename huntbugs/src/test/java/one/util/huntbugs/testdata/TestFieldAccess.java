@@ -72,7 +72,7 @@ public class TestFieldAccess {
     }
     
     @AssertNoWarning("*")
-    public static class TestGeneric<T> {
+    static class TestGeneric<T> {
         private T[] data;
 
         public T[] getData() {
