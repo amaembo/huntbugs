@@ -60,6 +60,12 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
 @WarningDefinition(category="Correctness", name="FieldIsAlwaysNull", maxScore=55)
 @WarningDefinition(category="Performance", name="FieldShouldBeStatic", maxScore=50)
 @WarningDefinition(category="Performance", name="FieldUsedInSingleMethod", maxScore=55)
+@WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBeFinal", maxScore=55)
+@WarningDefinition(category="MaliciousCode", name="StaticFieldCannotBeFinal", maxScore=35)
+@WarningDefinition(category="MaliciousCode", name="StaticFieldMutableArray", maxScore=40)
+@WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBeRefactoredToFinal", maxScore=40)
+@WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBePackagePrivate", maxScore=55)
+@WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBeNonInterfacePackagePrivate", maxScore=30)
 public class FieldAccess {
     static class FieldRecord {
         MethodReference firstWriteMethod;
@@ -67,6 +73,9 @@ public class FieldAccess {
         Location firstWriteLocation;
         Location firstReadLocation;
         Object constant;
+        int numWrites;
+        boolean mutable;
+        boolean array;
         boolean usedInSingleMethod = true;
     }
     
@@ -86,17 +95,26 @@ public class FieldAccess {
                         fieldRecord.firstReadLocation = mc.getLocation(expr);
                     }
                 } else {
+                    Expression value = Nodes.getChild(expr, expr.getArguments().size()-1);
                     if(fieldRecord.firstWriteMethod == null) {
                         fieldRecord.firstWriteMethod = md;
                         fieldRecord.firstWriteLocation = mc.getLocation(expr);
-                        fieldRecord.constant = Nodes.getConstant(Nodes.getChild(expr, expr.getArguments().size()-1));
+                        fieldRecord.constant = Nodes.getConstant(value);
                     } else {
                         if(fieldRecord.constant != null) {
-                            Object constant = Nodes.getConstant(Nodes.getChild(expr, expr.getArguments().size()-1));
+                            Object constant = Nodes.getConstant(value);
                             if(!Objects.equals(fieldRecord.constant, constant))
                                 fieldRecord.constant = null;
                         }
                     }
+                    if(fd.getFieldType().isArray() || value.getInferredType() != null && value.getInferredType().isArray()) {
+                        fieldRecord.array = true;
+                        if (value.getCode() != AstCode.NewArray
+                            || !Integer.valueOf(0).equals(Nodes.getConstant(value.getArguments().get(0)))) {
+                            fieldRecord.mutable = true;
+                        }
+                    }
+                    fieldRecord.numWrites++;
                 }
                 if(fieldRecord.usedInSingleMethod) {
                     if (md.isTypeInitializer()) {
@@ -153,13 +171,8 @@ public class FieldAccess {
                 return;
             if(fd.getName().equals("errorCode") && td.getSimpleName().equals("TokenMgrError"))
                 return;
-            WarningAnnotation<?>[] anno = {};
             int priority = 0;
             String warningType = fd.isPublic() || fd.isProtected() ? "UnreadPublicField" : "UnreadPrivateField";
-            if (fieldRecord != null && fieldRecord.firstWriteMethod != null) {
-                anno = new WarningAnnotation[] { Roles.METHOD.create(fieldRecord.firstWriteMethod),
-                        Roles.LOCATION.create(fieldRecord.firstWriteLocation) };
-            }
             if(fd.isPublic()) {
                 priority += 5;
                 if(fd.isFinal()) {
@@ -169,8 +182,7 @@ public class FieldAccess {
                     }
                 }
             }
-            fc.report(warningType, priority, anno);
-            return;
+            fc.report(warningType, priority, getWriteAnnotations(fieldRecord));
         }
         if(!Flags.testAny(flags, FieldStats.WRITE)) {
             WarningAnnotation<?>[] anno = {};
@@ -191,16 +203,11 @@ public class FieldAccess {
             return;
         }
         if(!Flags.testAny(flags, FieldStats.WRITE_NONNULL)) {
-            WarningAnnotation<?>[] anno = {};
             int priority = 0;
-            if (fieldRecord != null && fieldRecord.firstWriteMethod != null) {
-                anno = new WarningAnnotation[] { Roles.METHOD.create(fieldRecord.firstWriteMethod),
-                        Roles.LOCATION.create(fieldRecord.firstWriteLocation) };
-            }
             if(fd.isPublic()) {
                 priority += 10;
             }
-            fc.report("FieldIsAlwaysNull", priority, anno);
+            fc.report("FieldIsAlwaysNull", priority, getWriteAnnotations(fieldRecord));
             return;
         }
         if (fullyAnalyzed
@@ -221,6 +228,41 @@ public class FieldAccess {
             fc.report("FieldUsedInSingleMethod", priority, Roles.METHOD.create(fieldRecord.firstWriteMethod),
                 Roles.LOCATION.create(fieldRecord.firstWriteLocation));
         }
+        if(fd.isStatic() && (fd.isPublic() || fd.isProtected()) && (td.isPublic() || td.isProtected())) {
+            if(!fd.isFinal() && Flags.testAny(flags, FieldStats.WRITE_CONSTRUCTOR) &&
+                    !Flags.testAny(flags, FieldStats.WRITE_CLASS | FieldStats.WRITE_PACKAGE | FieldStats.WRITE_OUTSIDE)) {
+                String type = "StaticFieldShouldBeRefactoredToFinal";
+                if(fieldRecord != null && fieldRecord.numWrites == 1) {
+                    type = "StaticFieldShouldBeFinal";
+                }
+                fc.report(type, fd.isProtected() ? 10 : 0, getWriteAnnotations(fieldRecord));
+                return;
+            }
+            boolean mutable = fieldRecord != null && fieldRecord.mutable;
+            if(mutable || !fd.isFinal()) {
+                String type = null;
+                if(!Flags.testAny(flags, FieldStats.WRITE_OUTSIDE | FieldStats.READ_OUTSIDE)) {
+                    type = td.isInterface() ? "StaticFieldShouldBeNonInterfacePackagePrivate"
+                        : "StaticFieldShouldBePackagePrivate";
+                } else if(!fd.isFinal()) {
+                    type = "StaticFieldCannotBeFinal";
+                } else if(mutable && fieldRecord.array) {
+                    type = "StaticFieldMutableArray";
+                }
+                if(type != null) {
+                    fc.report(type, fd.isProtected() ? 10 : 0, getWriteAnnotations(fieldRecord));
+                }
+            }
+        }
+    }
+
+    private WarningAnnotation<?>[] getWriteAnnotations(FieldRecord fieldRecord) {
+        WarningAnnotation<?>[] anno = {};
+        if (fieldRecord != null && fieldRecord.firstWriteMethod != null) {
+            anno = new WarningAnnotation[] { Roles.METHOD.create(fieldRecord.firstWriteMethod),
+                    Roles.LOCATION.create(fieldRecord.firstWriteLocation) };
+        }
+        return anno;
     }
 
     private static boolean hasAnnotation(FieldDefinition fd) {

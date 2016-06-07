@@ -1165,7 +1165,7 @@
       This might cause JVM-level deadlock when both classes are initialized simultaneously from different threads.]]></LongDescription>
     </Warning>
     <Warning Type="RedundantStreamForEach">
-      <Title>Redundant stream created just to call forEach.</Title>
+      <Title>Redundant stream created just to call forEach</Title>
       <Description>Redundant stream created just to call $CALLED_METHOD$ in $METHOD$.</Description>
       <LongDescription><![CDATA[This code creates a stream upon collection just to call $CALLED_METHOD$.
       It's shorter and usually more efficient to call $REPLACEMENT$ directly on the collection.
@@ -1174,11 +1174,50 @@
       but <code>forEach()</code> is synchronized.]]></LongDescription>
     </Warning>
     <Warning Type="RedundantStreamFind">
-      <Title>Redundant filter().findFirst().isPresent() chain.</Title>
+      <Title>Redundant filter().findFirst().isPresent() chain</Title>
       <Description>Redundant filter().findFirst().isPresent() chain in $METHOD$.</Description>
       <LongDescription><![CDATA[This code tries to check whether stream contains element matching the predicate
       using the sequence like <code>filter(predicate).findFirst().isPresent()</code>. There's dedicated method
       for such sequence: $REPLACEMENT$. Simply use <code>anyMatch(predicate)</code>.]]></LongDescription>
+    </Warning>
+    <Warning Type="StaticFieldShouldBeFinal">
+      <Title>Static field should be final</Title>
+      <Description>Static field $FIELD$ should be final.</Description>
+      <LongDescription><![CDATA[The field $FIELD$ is not final, but could be easily declared final to prevent
+      possible malicious changes from other packages.]]></LongDescription>
+    </Warning>
+    <Warning Type="StaticFieldCannotBeFinal">
+      <Title>Static field cannot be final</Title>
+      <Description>Static field $FIELD$ cannot be final.</Description>
+      <LongDescription><![CDATA[The field $FIELD$ is not final and could be modified from other packages.
+      As this final is written after class initialization, it's quite hard to make it final. 
+      Also this field is already accessed from other packages, so you cannot easily make it package-private.]]></LongDescription>
+    </Warning>
+    <Warning Type="StaticFieldMutableArray">
+      <Title>Static field is a mutable array</Title>
+      <Description>Static field $FIELD$ is a mutable array.</Description>
+      <LongDescription><![CDATA[The field $FIELD$ is a mutable array and could be modified from other packages.
+      This field is already accessed from other packages, so you cannot easily make it package-private.]]></LongDescription>
+    </Warning>
+    <Warning Type="StaticFieldShouldBePackagePrivate">
+      <Title>Static field should be package-private</Title>
+      <Description>Static field $FIELD$ should be package-private.</Description>
+      <LongDescription><![CDATA[The field $FIELD$ is mutable and could be modified from other packages.
+      Currently it's not used from other packages, so consider making it package-private to prevent unwanted access.]]></LongDescription>
+    </Warning>
+    <Warning Type="StaticFieldShouldBeNonInterfacePackagePrivate">
+      <Title>Static field should be moved out of interface and declared package-private</Title>
+      <Description>Static field $FIELD$ should be moved out of interface and declared package-private.</Description>
+      <LongDescription><![CDATA[The field $FIELD$ is mutable and could be modified from other packages.
+      Currently it's not used from other packages, but it's declared in the interface 
+      which does not allow to make it package-private.
+      Consider moving this field to some class and declare as package-private.]]></LongDescription>
+    </Warning>
+    <Warning Type="StaticFieldShouldBeRefactoredToFinal">
+      <Title>Static field could be refactored to be final</Title>
+      <Description>Static field $FIELD$ could be refactored to be final.</Description>
+      <LongDescription><![CDATA[The field $FIELD$ is not final and could be modified from other packages.
+      Analysis shows that it should not be very hard to make this field final, though some refactoring is probably required.]]></LongDescription>
     </Warning>
   </WarningList>
 </p:Messages>

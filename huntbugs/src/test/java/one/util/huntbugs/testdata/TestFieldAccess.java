@@ -146,4 +146,58 @@ public class TestFieldAccess {
     public String getS2() {
         return s2;
     }
+
+    @AssertWarning("StaticFieldShouldBeFinal")
+    public static double VALUE = Math.random(); 
+    
+    public static double getValue() {
+        return VALUE;
+    }
+    
+    @AssertWarning("StaticFieldShouldBeRefactoredToFinal")
+    public static double VALUE_COMPLEX = Math.random();
+    
+    static {
+        if(VALUE_COMPLEX < 0.5)
+            VALUE_COMPLEX = Math.random();
+    }
+    
+    public static double getValueComplex() {
+        return VALUE_COMPLEX;
+    }
+    
+    @AssertWarning(value = "StaticFieldShouldBePackagePrivate", maxScore=50)
+    protected static double VALUE_NON_FINAL = Math.random();
+    
+    public static double getValueNonFinal() {
+        return VALUE_NON_FINAL;
+    }
+    
+    public static void recreateValueNonFinal() {
+        VALUE_NON_FINAL = Math.random();
+    }
+
+    @AssertWarning("StaticFieldShouldBePackagePrivate")
+    public static final Object data = new Integer[] {5,4,3};
+
+    @AssertNoWarning("StaticField*")
+    public static final Object empty = new Integer[] {};
+
+    @AssertWarning("StaticFieldCannotBeFinal")
+    public static Object usedEverywhere = "1";
+    
+    public static void recreate() {
+        usedEverywhere = "2";
+    }
+    
+    public interface FieldInterface {
+        @AssertNoWarning("*")
+        public static int val = 10;
+
+        @AssertWarning("StaticFieldShouldBeNonInterfacePackagePrivate")
+        public static int[] arr = {1,2,3};
+
+        @AssertWarning("StaticFieldMutableArray")
+        public static int[] usedArr = {1,2,3};
+    }
 }
