@@ -37,7 +37,7 @@ import one.util.huntbugs.warning.Roles;
  */
 @WarningDefinition(category="Correctness", name="MaxMinMethodReferenceForComparator", maxScore=90)
 public class BadMethodReferences {
-    @AstVisitor(nodes=AstNodes.EXPRESSIONS)
+    @AstVisitor(nodes=AstNodes.EXPRESSIONS, minVersion=8)
     public void visit(Expression expr, MethodContext mc) {
         if(expr.getCode() == AstCode.InvokeDynamic) {
             DynamicCallSite dcs = (DynamicCallSite)expr.getOperand();

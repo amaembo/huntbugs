@@ -44,4 +44,6 @@ public @interface AstVisitor {
     String methodName() default "";
 
     String methodSignature() default "";
+    
+    int minVersion() default 0;
 }

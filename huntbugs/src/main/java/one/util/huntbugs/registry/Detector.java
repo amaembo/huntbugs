@@ -91,6 +91,8 @@ public class Detector {
                 return false;
             if (!anno.methodSignature().isEmpty() && !anno.methodSignature().equals(md.getSignature()))
                 return false;
+            if (anno.minVersion() > 0 && md.getDeclaringType().getCompilerMajorVersion() - 44 < anno.minVersion())
+                return false;
             return true;
         }
     }
