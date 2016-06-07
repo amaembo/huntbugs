@@ -137,6 +137,14 @@ public class Types {
         return isInstance(type, "java/util/Collection");
     }
     
+    public static boolean isStream(TypeReference type) {
+        return isInstance(type, "java/util/stream/Stream");
+    }
+    
+    public static boolean isBaseStream(TypeReference type) {
+        return isInstance(type, "java/util/stream/BaseStream");
+    }
+    
     public static boolean is(TypeReference type, Class<?> clazz) {
         return type.getFullName().equals(clazz.getName());
     }

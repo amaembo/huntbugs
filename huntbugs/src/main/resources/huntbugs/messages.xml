@@ -1164,5 +1164,21 @@
       <LongDescription><![CDATA[The class initializer of $TYPE$ may trigger the initialization of its subclass $SUBCLASS$.
       This might cause JVM-level deadlock when both classes are initialized simultaneously from different threads.]]></LongDescription>
     </Warning>
+    <Warning Type="RedundantStreamForEach">
+      <Title>Redundant stream created just to call forEach.</Title>
+      <Description>Redundant stream created just to call $CALLED_METHOD$ in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code creates a stream upon collection just to call $CALLED_METHOD$.
+      It's shorter and usually more efficient to call $REPLACEMENT$ directly on the collection.
+      Note that sometimes <code>collection.stream().forEach()</code> and <code>collection.forEach()</code> have different semantics.
+      For example, for <code>Collections.synchronizedXYZ</code> collections <code>stream().forEach()</code> is not synchronized,
+      but <code>forEach()</code> is synchronized.]]></LongDescription>
+    </Warning>
+    <Warning Type="RedundantStreamFind">
+      <Title>Redundant filter().findFirst().isPresent() chain.</Title>
+      <Description>Redundant filter().findFirst().isPresent() chain in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code tries to check whether stream contains element matching the predicate
+      using the sequence like <code>filter(predicate).findFirst().isPresent()</code>. There's dedicated method
+      for such sequence: $REPLACEMENT$. Simply use <code>anyMatch(predicate)</code>.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>
