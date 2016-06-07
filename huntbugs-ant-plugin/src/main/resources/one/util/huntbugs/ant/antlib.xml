@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<antlib>
+   <taskdef name="huntbugs" classname="one.util.huntbugs.ant.HuntBugsTask"/>
+</antlib>
