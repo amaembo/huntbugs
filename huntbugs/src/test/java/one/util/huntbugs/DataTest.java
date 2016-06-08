@@ -16,6 +16,8 @@
 package one.util.huntbugs;
 
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import one.util.huntbugs.analysis.AnalysisOptions;
@@ -24,8 +26,8 @@ import one.util.huntbugs.analysis.HuntBugsResult;
 import one.util.huntbugs.input.XmlReportReader;
 import one.util.huntbugs.output.Reports;
 import one.util.huntbugs.repo.Repository;
+import static org.junit.Assert.*;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -40,11 +42,14 @@ public class DataTest {
         ctx.reportStats(System.out);
         ctx.reportErrors(System.err);
         ctx.reportWarnings(new PrintStream("target/testWarnings.out"));
-        Reports.write(Paths.get("target/testWarnings.xml"), Paths.get("target/testWarnings.html"), ctx);
+        Path xmlReport = Paths.get("target/testWarnings.xml");
+        Reports.write(xmlReport, Paths.get("target/testWarnings.html"), ctx);
         System.out.println("Analyzed "+ctx.getClassesCount()+" classes");
         if(ctx.getErrorCount() > 0)
-            Assert.fail("Analysis finished with "+ctx.getErrorCount()+" errors");
-        HuntBugsResult result = XmlReportReader.read(ctx, Paths.get("target/testWarnings.xml"));
-        Reports.write(Paths.get("target/testWarnings_reread.xml"), null, result);
+            fail("Analysis finished with "+ctx.getErrorCount()+" errors");
+        HuntBugsResult result = XmlReportReader.read(ctx, xmlReport);
+        Path rereadReport = Paths.get("target/testWarnings_reread.xml");
+        Reports.write(rereadReport, null, result);
+        assertArrayEquals(Files.readAllBytes(xmlReport), Files.readAllBytes(rereadReport));
     }
 }
