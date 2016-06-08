@@ -305,6 +305,10 @@ public class Context implements HuntBugsResult {
         stat.merge(key, 1L, Long::sum);
     }
     
+    public Stream<WarningType> warningTypes() {
+        return registry.warningTypes();
+    }
+    
     public WarningType getWarningType(String typeName) {
         return registry.getWarningType(typeName);
     }

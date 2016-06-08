@@ -304,7 +304,7 @@ public class DetectorRegistry {
 
     public void reportTitles(PrintStream out) {
         List<String> rows = new ArrayList<>();
-        for (WarningType wt : typeToDetector.keySet()) {
+        warningTypes().forEach(wt -> {
             Message msg = ctx.getMessages().getMessagesForType(wt);
             ctx.incStat("Messages.Total");
             if (msg.getTitle().equals(wt.getName())) {
@@ -313,12 +313,16 @@ public class DetectorRegistry {
                 ctx.incStat("Messages");
                 rows.add(wt.getName() + ": " + msg.getTitle());
             }
-        }
+        });
         rows.sort(null);
         rows.forEach(out::println);
     }
 
     public WarningType getWarningType(String typeName) {
         return typeToDetector.keySet().stream().filter(wt -> wt.getName().equals(typeName)).findFirst().orElse(null);
+    }
+    
+    public Stream<WarningType> warningTypes() {
+        return typeToDetector.keySet().stream();
     }
 }
