@@ -57,8 +57,8 @@ public class HuntBugsTask extends Task {
 	@Override
 	public void execute() throws BuildException {
 		List<Repository> repos = createRepository();
-		if(xml == null || html == null) {
-			throw new BuildException("Both xml and html must be specified");
+		if(xml == null && html == null) {
+			throw new BuildException("Either xml or html must be specified");
 		}
 		Repository repo = new CompositeRepository(repos);
 		AnalysisOptions opt = new AnalysisOptions();
@@ -66,7 +66,8 @@ public class HuntBugsTask extends Task {
 		if(log == LogLevel.VERBOSE)
 			addListener(ctx);
 		ctx.analyzePackage("");
-		Reports.write(xml.toPath(), html.toPath(), ctx);
+		Reports.write(xml == null ? null : xml.toPath(), html == null ? null
+				: html.toPath(), ctx);
 	}
 
 	private void addListener(Context ctx) {
