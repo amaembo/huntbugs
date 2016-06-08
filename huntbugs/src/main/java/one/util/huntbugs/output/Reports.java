@@ -21,8 +21,10 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -34,6 +36,7 @@ import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.analysis.HuntBugsResult;
 import one.util.huntbugs.warning.Formatter;
+import one.util.huntbugs.warning.Messages;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
@@ -69,6 +72,35 @@ public final class Reports {
                 throw new UncheckedIOException(e);
             }
         }
+    }
+    
+    /**
+     * Merge several HuntBugs results into single
+     * 
+     * @param results collection of results (at least one must be present)
+     * @return the merged result
+     */
+    public static HuntBugsResult merge(Collection<HuntBugsResult> results) {
+        if(results.isEmpty())
+            throw new IllegalArgumentException("Result should not be empty");
+        HuntBugsResult first = results.iterator().next();
+        
+        return new HuntBugsResult() {
+            @Override
+            public Stream<Warning> warnings() {
+                return results.stream().flatMap(HuntBugsResult::warnings);
+            }
+            
+            @Override
+            public Messages getMessages() {
+                return first.getMessages();
+            }
+            
+            @Override
+            public Stream<ErrorMessage> errors() {
+                return results.stream().flatMap(HuntBugsResult::errors);
+            }
+        };
     }
 
     private static Document makeDom(HuntBugsResult ctx) {
