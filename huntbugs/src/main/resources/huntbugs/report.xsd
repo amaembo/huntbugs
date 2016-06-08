@@ -77,6 +77,9 @@
       <xsd:element name="LocationAnnotation" type="LocationAnnotation"
         minOccurs="0" maxOccurs="unbounded">
       </xsd:element>
+      <xsd:element name="NumberAnnotation" type="NumberAnnotation"
+        minOccurs="0" maxOccurs="unbounded">
+      </xsd:element>
       <xsd:element name="Annotation" type="Annotation"
         minOccurs="0" maxOccurs="unbounded">
       </xsd:element>
@@ -141,6 +144,12 @@
        <xsd:attribute name="Type" type="xsd:string" use="required"></xsd:attribute>
        <xsd:attribute name="Name" type="xsd:string" use="required"></xsd:attribute>
        <xsd:attribute name="Signature" type="xsd:string" use="required"></xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="NumberAnnotation">
+       <xsd:attribute name="Role" type="AnnotationRole"></xsd:attribute>
+       <xsd:attribute name="Type" type="xsd:string" use="required"></xsd:attribute>
+       <xsd:attribute name="Value" type="xsd:string" use="required"></xsd:attribute>
     </xsd:complexType>
 
     <xsd:complexType name="TypeAnnotation">

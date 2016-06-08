@@ -26,6 +26,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import one.util.huntbugs.util.Xml;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -78,22 +80,6 @@ public class Messages {
         return message;
     }
     
-    private static Element getChild(Element element, String tagName) {
-        Node node = element.getFirstChild();
-        while(node != null) {
-            if(node instanceof Element && ((Element)node).getTagName().equals(tagName)) {
-                return (Element) node;
-            }
-            node = node.getNextSibling();
-        }
-        return null;
-    }
-    
-    private static String getText(Element element, String tagName) {
-        Element child = getChild(element, tagName);
-        return child == null ? "" : child.getTextContent();
-    }
-    
     public static Messages load() {
         Document dom;
         try(InputStream is = Messages.class.getClassLoader().getResourceAsStream(MESSAGES_XML)) {
@@ -108,16 +94,16 @@ public class Messages {
         }
         Map<String, Message> map = new HashMap<>();
         Element element = dom.getDocumentElement();
-        Element warnings = getChild(element, "WarningList");
+        Element warnings = Xml.getChild(element, "WarningList");
         if(warnings != null) {
             Node node = warnings.getFirstChild();
             while(node != null) {
                 if(node instanceof Element && ((Element)node).getTagName().equals("Warning")) {
                     Element warning = (Element) node;
                     String type = warning.getAttribute("Type");
-                    String title = getText(warning, "Title");
-                    String description = getText(warning, "Description");
-                    String longDescription = getText(warning, "LongDescription");
+                    String title = Xml.getText(warning, "Title");
+                    String description = Xml.getText(warning, "Description");
+                    String longDescription = Xml.getText(warning, "LongDescription");
                     if(map.containsKey(type)) {
                         throw new IllegalStateException("Warning type "+type+" is declared twice");
                     }

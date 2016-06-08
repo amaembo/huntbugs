@@ -49,7 +49,7 @@ import one.util.huntbugs.warning.WarningType;
  * @author Tagir Valeev
  *
  */
-public class Context {
+public class Context implements HuntBugsResult {
     private final List<ErrorMessage> errors = Collections.synchronizedList(new ArrayList<>());
     private final List<Warning> warnings = Collections.synchronizedList(new ArrayList<>());
     private final Set<String> missingClasses = ConcurrentHashMap.newKeySet();
@@ -74,6 +74,7 @@ public class Context {
         this.loader = loader;
     }
     
+    @Override
     public Messages getMessages() {
         if(msgs == null) {
             msgs = Messages.load();
@@ -237,10 +238,12 @@ public class Context {
         warnings.add(warning);
     }
     
+    @Override
     public Stream<Warning> warnings() {
         return warnings.stream();
     }
 
+    @Override
     public Stream<ErrorMessage> errors() {
         return errors.stream();
     }

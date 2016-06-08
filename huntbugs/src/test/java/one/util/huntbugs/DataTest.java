@@ -20,6 +20,8 @@ import java.nio.file.Paths;
 
 import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
+import one.util.huntbugs.analysis.HuntBugsResult;
+import one.util.huntbugs.input.XmlReportReader;
 import one.util.huntbugs.output.Reports;
 import one.util.huntbugs.repo.Repository;
 
@@ -42,5 +44,7 @@ public class DataTest {
         System.out.println("Analyzed "+ctx.getClassesCount()+" classes");
         if(ctx.getErrorCount() > 0)
             Assert.fail("Analysis finished with "+ctx.getErrorCount()+" errors");
+        HuntBugsResult result = XmlReportReader.read(ctx, Paths.get("target/testWarnings.xml"));
+        Reports.write(Paths.get("target/testWarnings_reread.xml"), null, result);
     }
 }

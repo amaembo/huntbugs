@@ -21,7 +21,6 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -33,6 +32,7 @@ import org.w3c.dom.Element;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
+import one.util.huntbugs.analysis.HuntBugsResult;
 import one.util.huntbugs.warning.Formatter;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
@@ -44,22 +44,34 @@ import one.util.huntbugs.warning.WarningAnnotation.TypeInfo;
  *
  */
 public final class Reports {
-    public static void write(Path xmlTarget, Path htmlTarget, Context ctx) {
-        Document dom = makeDom(ctx);
-        try (Writer xmlWriter = Files.newBufferedWriter(xmlTarget); 
-                Writer htmlWriter = Files.newBufferedWriter(htmlTarget)) {
-            new CombinedReportWriter(
-                Arrays.asList(
-                    new XmlReportWriter(xmlWriter),
-                    new HtmlReportWriter(htmlWriter)
-                )
-            ).write(dom);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+    /**
+     * Writes XML and/or HTML analysis reports
+     * 
+     * @param xmlTarget path to the xml result (can be null if no xml output is
+     *        desired)
+     * @param htmlTarget path to the html result (can be null if no html output
+     *        is desired)
+     * @param result HuntBugs analysis result (usually {@link Context} object)
+     */
+    public static void write(Path xmlTarget, Path htmlTarget, HuntBugsResult result) {
+        Document dom = makeDom(result);
+        if (xmlTarget != null) {
+            try (Writer xmlWriter = Files.newBufferedWriter(xmlTarget)) {
+                new XmlReportWriter(xmlWriter).write(dom);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+        if (htmlTarget != null) {
+            try (Writer htmlWriter = Files.newBufferedWriter(htmlTarget)) {
+                new HtmlReportWriter(htmlWriter).write(dom);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
     }
-    
-    private static Document makeDom(Context ctx) {
+
+    private static Document makeDom(HuntBugsResult ctx) {
         Document doc;
         try {
             doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
@@ -73,9 +85,9 @@ public final class Reports {
             root.appendChild(errors);
         Element warnings = doc.createElement("WarningList");
         Formatter formatter = new Formatter(ctx.getMessages());
-        ctx.warnings().sorted(Comparator.comparing(Warning::getScore).reversed().thenComparing(w -> w.getType()
-                .getName()).thenComparing(Warning::getClassName)).map(w -> writeWarning(doc, w, formatter)).forEach(
-                    warnings::appendChild);
+        ctx.warnings().sorted(
+            Comparator.comparing(Warning::getScore).reversed().thenComparing(w -> w.getType().getName()).thenComparing(
+                Warning::getClassName)).map(w -> writeWarning(doc, w, formatter)).forEach(warnings::appendChild);
         root.appendChild(warnings);
         doc.appendChild(root);
         return doc;
@@ -118,66 +130,74 @@ public final class Reports {
         Element location = doc.createElement("Location");
         List<Element> anotherLocations = new ArrayList<>();
         List<Element> attributes = new ArrayList<>();
-        w.annotations().forEach(anno -> {
-            switch (anno.getRole().toString()) {
-            case "TYPE":
-                classElement.setAttribute("Name", ((TypeInfo) anno.getValue()).getTypeName());
-                break;
-            case "FILE":
-                classElement.setAttribute("SourceFile", formatter.formatValue(anno.getValue(), Formatter.FORMAT_PLAIN));
-                break;
-            case "LOCATION": {
-                location.setAttribute("Offset", String.valueOf(((Location) anno.getValue()).getOffset()));
-                int line = ((Location) anno.getValue()).getSourceLine();
-                if (line != -1)
-                    location.setAttribute("Line", String.valueOf(line));
-                break;
-            }
-            case "ANOTHER_INSTANCE": {
-                Element anotherLocation = doc.createElement("AnotherLocation");
-                anotherLocation.setAttribute("Offset", String.valueOf(((Location) anno.getValue()).getOffset()));
-                int line = ((Location) anno.getValue()).getSourceLine();
-                if (line != -1)
-                    anotherLocation.setAttribute("Line", String.valueOf(line));
-                anotherLocations.add(anotherLocation);
-                break;
-            }
-            case "METHOD": {
-                MemberInfo mr = (MemberInfo) anno.getValue();
-                methodElement.setAttribute("Name", mr.getName());
-                methodElement.setAttribute("Signature", mr.getSignature());
-                break;
-            }
-            case "FIELD": {
-                MemberInfo mr = (MemberInfo) anno.getValue();
-                fieldElement.setAttribute("Name", mr.getName());
-                fieldElement.setAttribute("Signature", mr.getSignature());
-                break;
-            }
-            default:
-                Object value = anno.getValue();
-                Element attribute;
-                if (value instanceof TypeInfo) {
-                    attribute = doc.createElement("TypeAnnotation");
-                    attribute.setAttribute("Name", ((TypeInfo) value).getTypeName());
-                } else if (value instanceof Location) {
-                    attribute = doc.createElement("LocationAnnotation");
-                    attribute.setAttribute("Line", String.valueOf(((Location) value).getSourceLine()));
-                } else if (value instanceof MemberInfo) {
-                    MemberInfo mr = (MemberInfo) anno.getValue();
-                    attribute = doc.createElement("MemberAnnotation");
-                    attribute.setAttribute("Type", mr.getTypeName());
-                    attribute.setAttribute("Name", mr.getName());
-                    attribute.setAttribute("Signature", mr.getSignature());
-                } else {
-                    attribute = doc.createElement("Annotation");
-                    attribute.appendChild(doc.createTextNode(formatter.formatValue(anno.getValue(),
-                        Formatter.FORMAT_PLAIN)));
+        w.annotations().forEach(
+            anno -> {
+                switch (anno.getRole().toString()) {
+                case "TYPE":
+                    classElement.setAttribute("Name", ((TypeInfo) anno.getValue()).getTypeName());
+                    break;
+                case "FILE":
+                    classElement.setAttribute("SourceFile", formatter.formatValue(anno.getValue(),
+                        Formatter.FORMAT_PLAIN));
+                    break;
+                case "LOCATION": {
+                    location.setAttribute("Offset", String.valueOf(((Location) anno.getValue()).getOffset()));
+                    int line = ((Location) anno.getValue()).getSourceLine();
+                    if (line != -1)
+                        location.setAttribute("Line", String.valueOf(line));
+                    break;
                 }
-                attribute.setAttribute("Role", anno.getRole().toString());
-                attributes.add(attribute);
-            }
-        });
+                case "ANOTHER_INSTANCE": {
+                    Element anotherLocation = doc.createElement("AnotherLocation");
+                    anotherLocation.setAttribute("Offset", String.valueOf(((Location) anno.getValue()).getOffset()));
+                    int line = ((Location) anno.getValue()).getSourceLine();
+                    if (line != -1)
+                        anotherLocation.setAttribute("Line", String.valueOf(line));
+                    anotherLocations.add(anotherLocation);
+                    break;
+                }
+                case "METHOD": {
+                    MemberInfo mr = (MemberInfo) anno.getValue();
+                    methodElement.setAttribute("Name", mr.getName());
+                    methodElement.setAttribute("Signature", mr.getSignature());
+                    break;
+                }
+                case "FIELD": {
+                    MemberInfo mr = (MemberInfo) anno.getValue();
+                    fieldElement.setAttribute("Name", mr.getName());
+                    fieldElement.setAttribute("Signature", mr.getSignature());
+                    break;
+                }
+                default:
+                    Object value = anno.getValue();
+                    Element attribute;
+                    if (value instanceof TypeInfo) {
+                        attribute = doc.createElement("TypeAnnotation");
+                        attribute.setAttribute("Name", ((TypeInfo) value).getTypeName());
+                    } else if (value instanceof Location) {
+                        attribute = doc.createElement("LocationAnnotation");
+                        attribute.setAttribute("Line", String.valueOf(((Location) value).getSourceLine()));
+                        attribute.setAttribute("Offset", String.valueOf(((Location) value).getOffset()));
+                    } else if (value instanceof MemberInfo) {
+                        MemberInfo mr = (MemberInfo) anno.getValue();
+                        attribute = doc.createElement("MemberAnnotation");
+                        attribute.setAttribute("Type", mr.getTypeName());
+                        attribute.setAttribute("Name", mr.getName());
+                        attribute.setAttribute("Signature", mr.getSignature());
+                    } else if (value instanceof Number) {
+                        Number n = (Number) anno.getValue();
+                        attribute = doc.createElement("NumberAnnotation");
+                        attribute.setAttribute("Type", n.getClass().getSimpleName());
+                        attribute.setAttribute("Value", n.toString());
+                    } else {
+                        attribute = doc.createElement("Annotation");
+                        attribute.appendChild(doc.createTextNode(formatter.formatValue(anno.getValue(),
+                            Formatter.FORMAT_PLAIN)));
+                    }
+                    attribute.setAttribute("Role", anno.getRole().toString());
+                    attributes.add(attribute);
+                }
+            });
         if (methodElement.hasAttribute("Name"))
             element.appendChild(methodElement);
         if (fieldElement.hasAttribute("Name"))
