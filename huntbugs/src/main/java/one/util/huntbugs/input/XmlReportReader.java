@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -47,6 +48,7 @@ import one.util.huntbugs.warning.Role.TypeRole;
 import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.WarningStatus;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
 import one.util.huntbugs.warning.WarningAnnotation.TypeInfo;
 import one.util.huntbugs.warning.WarningType;
@@ -125,8 +127,17 @@ public class XmlReportReader {
             return null;
         }
         int score = Xml.getIntAttribute(e, "Score", wtype.getMaxScore());
+        String status = Xml.getAttribute(e, "Status");
+        WarningStatus wstatus = WarningStatus.DEFAULT;
+        if(status != null) {
+            try {
+                wstatus = WarningStatus.valueOf(status.toUpperCase(Locale.ENGLISH));
+            } catch (IllegalArgumentException ex) {
+                // ignore
+            }
+        }
         int priority = Math.max(0, wtype.getMaxScore()-score);
-        return new Warning(wtype, priority, Xml.elements(e).flatMap(XmlReportReader::loadAnnotations).collect(Collectors.toList()));
+        return new Warning(wtype, priority, Xml.elements(e).flatMap(XmlReportReader::loadAnnotations).collect(Collectors.toList()), wstatus);
     }
     
     private static Stream<WarningAnnotation<?>> loadAnnotations(Element e) {
@@ -141,8 +152,9 @@ public class XmlReportReader {
             return Stream.of(Roles.METHOD.create(Xml.getChild((Element) e.getParentNode(), "Class")
                     .getAttribute("Name"), e.getAttribute("Name"), e.getAttribute("Signature")));
         case "Field":
-            return Stream.of(Roles.FIELD.create(Xml.getChild((Element) e.getParentNode(), "Class")
-                .getAttribute("Name"), e.getAttribute("Name"), e.getAttribute("Signature")));
+            return Stream.of(Roles.FIELD.create(e.hasAttribute("Type") ? e.getAttribute("Type") : Xml.getChild(
+                (Element) e.getParentNode(), "Class").getAttribute("Name"), e.getAttribute("Name"), e
+                    .getAttribute("Signature")));
         case "Location":
             return Stream.of(Roles.LOCATION.create(new Location(Xml.getIntAttribute(e, "Offset", -1), Xml
                     .getIntAttribute(e, "Line", -1))));

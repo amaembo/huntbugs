@@ -21,9 +21,15 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -37,7 +43,10 @@ import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.analysis.HuntBugsResult;
 import one.util.huntbugs.warning.Formatter;
 import one.util.huntbugs.warning.Messages;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Warning;
+import one.util.huntbugs.warning.WarningAnnotation;
+import one.util.huntbugs.warning.WarningStatus;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 import one.util.huntbugs.warning.WarningAnnotation.TypeInfo;
@@ -102,6 +111,69 @@ public final class Reports {
             }
         };
     }
+    
+    public static HuntBugsResult diff(HuntBugsResult oldResult, HuntBugsResult newResult) {
+        List<Warning> diffWarnings = diffWarnings(oldResult.warnings().filter(w -> w.getStatus() != WarningStatus.FIXED)
+                .collect(Collectors.toList()), newResult.warnings().collect(Collectors.toList()));
+        return new HuntBugsResult() {
+            @Override
+            public Stream<Warning> warnings() {
+                return diffWarnings.stream();
+            }
+            
+            @Override
+            public Messages getMessages() {
+                return newResult.getMessages();
+            }
+            
+            @Override
+            public Stream<ErrorMessage> errors() {
+                return newResult.errors();
+            }
+        };
+    }
+
+    private static List<Warning> diffWarnings(List<Warning> oldWarnings, List<Warning> newWarnings) {
+        Function<Warning, List<Object>> keyExtractor = w ->
+            Arrays.asList(w.getType().getName(), w.getAnnotation(Roles.TYPE), w.getAnnotation(Roles.METHOD),
+                w.getAnnotation(Roles.FIELD), w.getAnnotation(Roles.VARIABLE));
+        Map<List<Object>, List<Warning>> oldWarningsMap = oldWarnings.stream().collect(Collectors.groupingBy(keyExtractor));
+        List<Warning> result = new ArrayList<>();
+        for(Warning warn : newWarnings) {
+            List<Object> key = keyExtractor.apply(warn);
+            List<Warning> matchedList = oldWarningsMap.get(key);
+            Warning matched = null;
+            if(matchedList != null) {
+                if(matchedList.size() == 1) {
+                    oldWarningsMap.remove(key);
+                    matched = matchedList.get(0);
+                } else {
+                    matched = matchedList.remove(matchedList.size()-1);
+                }
+            }
+            WarningStatus status = WarningStatus.DEFAULT;
+            if(matched == null) {
+                status = WarningStatus.ADDED;
+            } else {
+                if(!warningEquals(warn, matched)) {
+                    status = WarningStatus.CHANGED;
+                } else if(warn.getScore() > matched.getScore()) {
+                    status = WarningStatus.SCORE_RAISED;
+                } else if(warn.getScore() < matched.getScore()) {
+                    status = WarningStatus.SCORE_LOWERED;
+                }
+            }
+            result.add(warn.withStatus(status));
+        }
+        oldWarningsMap.values().stream().flatMap(List::stream).map(w -> w.withStatus(WarningStatus.FIXED)).forEach(result::add);
+        return result;
+    }
+
+    private static boolean warningEquals(Warning w1, Warning w2) {
+        Set<WarningAnnotation<?>> wa1 = w1.annotations().filter(wa -> wa.getRole().getType() != Location.class).collect(Collectors.toSet());
+        Set<WarningAnnotation<?>> wa2 = w2.annotations().filter(wa -> wa.getRole().getType() != Location.class).collect(Collectors.toSet());
+        return wa1.equals(wa2);
+    }
 
     private static Document makeDom(HuntBugsResult ctx) {
         Document doc;
@@ -146,6 +218,7 @@ public final class Reports {
         element.setAttribute("Type", w.getType().getName());
         element.setAttribute("Category", w.getType().getCategory());
         element.setAttribute("Score", String.valueOf(w.getScore()));
+        element.setAttribute("Status", w.getStatus().name().toLowerCase(Locale.ENGLISH));
         Element title = doc.createElement("Title");
         title.appendChild(doc.createTextNode(formatter.getTitle(w)));
         element.appendChild(title);
@@ -196,6 +269,7 @@ public final class Reports {
                 }
                 case "FIELD": {
                     MemberInfo mr = (MemberInfo) anno.getValue();
+                    fieldElement.setAttribute("Type", mr.getTypeName());
                     fieldElement.setAttribute("Name", mr.getName());
                     fieldElement.setAttribute("Signature", mr.getSignature());
                     break;

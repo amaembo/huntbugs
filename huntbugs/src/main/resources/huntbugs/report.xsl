@@ -19,6 +19,33 @@
       </body>
     </html>
   </xsl:template>
+  
+  <xsl:template match="HuntBugs">
+     <div>
+       <xsl:if test="count(WarningList/Warning[@Status!='fixed'])>0">
+         <div class="Tab" data-target="warnings-all">All warnings (<xsl:value-of select="count(WarningList/Warning[@Status!='fixed'])"/>)</div>
+       </xsl:if>
+       <xsl:if test="count(WarningList/Warning[@Status='added'])>0">
+         <div class="Tab" data-target="warnings-added">Added (<xsl:value-of select="count(WarningList/Warning[@Status='added'])"/>)</div>
+       </xsl:if>
+       <xsl:if test="count(WarningList/Warning[@Status='changed'])>0">
+         <div class="Tab" data-target="warnings-changed">Changed (<xsl:value-of select="count(WarningList/Warning[@Status='changed'])"/>)</div>
+       </xsl:if>
+       <xsl:if test="count(WarningList/Warning[@Status='score_raised'])>0">
+         <div class="Tab" data-target="warnings-raised">Score raised (<xsl:value-of select="count(WarningList/Warning[@Status='score_raised'])"/>)</div>
+       </xsl:if>
+       <xsl:if test="count(WarningList/Warning[@Status='score_lowered'])>0">
+         <div class="Tab" data-target="warnings-lowered">Score lowered (<xsl:value-of select="count(WarningList/Warning[@Status='score_lowered'])"/>)</div>
+       </xsl:if>
+       <xsl:if test="count(WarningList/Warning[@Status='fixed'])>0">
+         <div class="Tab" data-target="warnings-fixed">Fixed (<xsl:value-of select="count(WarningList/Warning[@Status='fixed'])"/>)</div>
+       </xsl:if>
+       <xsl:if test="count(ErrorList/Error)>0">
+         <div class="Tab" data-target="errors">Errors (<xsl:value-of select="count(ErrorList/Error)"/>)</div>
+       </xsl:if>
+     </div>
+     <xsl:apply-templates/>
+  </xsl:template>
 
   <xsl:template name="make-scripts">
     <script type="text/javascript"><![CDATA[
@@ -30,40 +57,67 @@
           }
         }
 
-        function updateCount() {
-          var warnings = document.getElementsByClassName("WarningsBody")[0].children;
+        function updateCount(tabContent) {
+          var warnings = tabContent.getElementsByClassName("WarningsBody")[0].children;
           var total = 0, shown = 0;
           for(var i=0; i<warnings.length; i+=2) {
             total++;
             if(!/ Hidden$/.test(warnings[i].className))
               shown++;
           }
-          document.getElementsByClassName("WarningCount")[0].innerText = shown+"/"+total;
-        }
-
-        var errorList = document.getElementsByClassName("toggleErrors");
-        if(errorList.length > 0) {
-          errorList[0].addEventListener("click", function() {
-            toggle(document.getElementsByClassName("toggleErrors")[0]);
-            toggle(document.getElementsByClassName("ErrorsBody")[0]);
-          });
+          tabContent.getElementsByClassName("WarningCount")[0].innerText = shown+"/"+total;
         }
         
-        var rows = document.getElementsByClassName("WarningRow");
-        for(var i=0; i<rows.length; i++) {
-          var btns = rows[i].getElementsByClassName("hideWarning");
-          if(btns.length == 0)
-            continue;
-          (function(clsName, btn) {
-            btn.addEventListener("click", function() {
-              var toHide = document.getElementsByClassName("Warning-"+clsName);
-              for(var j=0; j<toHide.length; j++) {
-                toggle(toHide[j]);
-              }
-              updateCount();
-            });
-          })(/Warning-(\w+)/.exec(rows[i].className)[1], btns[0]);
+        var tabRecords = [];
+        
+        function activateTab(tab) {
+          for(var i=0; i<tabRecords.length; i++) {
+            if(tabRecords[i][0] == tab) {
+              tabRecords[i][0].className = "Tab";
+              tabRecords[i][1].className = "TabContent Active";
+            } else {
+              tabRecords[i][0].className = "Tab Inactive";
+              tabRecords[i][1].className = "TabContent";
+            }
+          }
         }
+        
+        function initTabs() {
+          var tabs = document.getElementsByClassName("Tab");
+          
+          for(var i=0; i<tabs.length; i++) {
+            var tab = tabs[i];
+            var tabContent = document.getElementById(tab.getAttribute("data-target"));
+            tabRecords.push([tab, tabContent]);
+            (function(tab) { 
+              tabs[i].addEventListener("click", function() {activateTab(tab);});
+            })(tab);
+            initTabContent(tabContent);
+          }
+          if(tabs.length > 0) {
+            activateTab(tabs[0]);
+          }
+        }
+        
+        function initTabContent(tabContent) {
+          var rows = tabContent.getElementsByClassName("WarningRow");
+          for(var i=0; i<rows.length; i++) {
+            var btns = rows[i].getElementsByClassName("hideWarning");
+            if(btns.length == 0)
+              continue;
+            (function(clsName, btn) {
+              btn.addEventListener("click", function() {
+                var toHide = tabContent.getElementsByClassName("Warning-"+clsName);
+                for(var j=0; j<toHide.length; j++) {
+                  toggle(toHide[j]);
+                }
+                updateCount(tabContent);
+              });
+            })(/Warning-(\w+)/.exec(rows[i].className)[1], btns[0]);
+          }
+        }
+
+        initTabs();
     ]]></script>
   </xsl:template>
   
@@ -140,33 +194,50 @@
         color: #444;
       }
       
-      .toggleErrors, .hideWarning {
+      .hideWarning {
         cursor: pointer;
         color: #55F;
         text-decoration: underline;
       }
       
-      .ErrorsBody.Hidden, .WarningRow.Hidden {
+      .WarningRow.Hidden {
         display: none;
       }
       
-      .toggleErrors.Hidden:after {
-        content: 'Hide';
+      .TabContent {
+        display: none;
       }
       
-      .toggleErrors:after {
-        content: 'Show';
+      .TabContent.Active {
+        display: block;
+        border: 1px solid #DDD;
+        padding: 3pt;
+        clear: both;
+      }
+      
+      .Tab {
+        float: left;
+        padding: 1em;
+        background-color: #DDD;
+        margin-right: 5pt;
+      }
+      
+      .Tab.Inactive {
+        background-color: #BBB;
+        cursor: pointer;
       }
       </style>
     </head>
   </xsl:template>
 
   <xsl:template match="ErrorList">
-    <table class="Errors"><thead><tr><th colspan="2">Errors (<xsl:value-of select="count(Error)"/>) [<span class="toggleErrors"></span>]</th></tr></thead>
-      <tbody class="ErrorsBody Hidden">
-        <xsl:apply-templates/>
-      </tbody>
-    </table>
+    <div class="TabContent" id="errors">
+      <table class="Errors"><thead><tr><th colspan="2">Errors (<xsl:value-of select="count(Error)"/>)</th></tr></thead>
+        <tbody class="ErrorsBody Hidden">
+          <xsl:apply-templates/>
+        </tbody>
+      </table>
+    </div>
   </xsl:template>
 
   <xsl:template match="Error">
@@ -184,11 +255,48 @@
   </xsl:template>
   
   <xsl:template match="WarningList">
-    <table class="Warnings"><thead><tr><th colspan="2">Warnings (<span class="WarningCount"><xsl:value-of select="count(Warning)"/></span>)</th></tr></thead>
+    <div id="warnings-all" class="TabContent">
+    <table class="Warnings"><thead><tr><th colspan="2">All warnings (<span class="WarningCount"><xsl:value-of select="count(Warning[@Status!='fixed'])"/></span>)</th></tr></thead>
       <tbody class="WarningsBody">
-        <xsl:apply-templates/>
+        <xsl:apply-templates select="Warning[@Status!='fixed']"/>
       </tbody>
     </table>
+    </div>
+    <div id="warnings-added" class="TabContent">
+    <table class="Warnings"><thead><tr><th colspan="2">Added (<span class="WarningCount"><xsl:value-of select="count(Warning[@Status='added'])"/></span>)</th></tr></thead>
+      <tbody class="WarningsBody">
+        <xsl:apply-templates select="Warning[@Status='added']"/>
+      </tbody>
+    </table>
+    </div>
+    <div id="warnings-changed" class="TabContent">
+    <table class="Warnings"><thead><tr><th colspan="2">Changed (<span class="WarningCount"><xsl:value-of select="count(Warning[@Status='changed'])"/></span>)</th></tr></thead>
+      <tbody class="WarningsBody">
+        <xsl:apply-templates select="Warning[@Status='changed']"/>
+      </tbody>
+    </table>
+    </div>
+    <div id="warnings-raised" class="TabContent">
+    <table class="Warnings"><thead><tr><th colspan="2">Score raised (<span class="WarningCount"><xsl:value-of select="count(Warning[@Status='score_raised'])"/></span>)</th></tr></thead>
+      <tbody class="WarningsBody">
+        <xsl:apply-templates select="Warning[@Status='score_raised']"/>
+      </tbody>
+    </table>
+    </div>
+    <div id="warnings-lowered" class="TabContent">
+    <table class="Warnings"><thead><tr><th colspan="2">Score lowered (<span class="WarningCount"><xsl:value-of select="count(Warning[@Status='score_lowered'])"/></span>)</th></tr></thead>
+      <tbody class="WarningsBody">
+        <xsl:apply-templates select="Warning[@Status='score_lowered']"/>
+      </tbody>
+    </table>
+    </div>
+    <div id="warnings-fixed" class="TabContent">
+    <table class="Warnings"><thead><tr><th colspan="2">Fixed (<span class="WarningCount"><xsl:value-of select="count(Warning[@Status='fixed'])"/></span>)</th></tr></thead>
+      <tbody class="WarningsBody">
+        <xsl:apply-templates select="Warning[@Status='fixed']"/>
+      </tbody>
+    </table>
+    </div>
   </xsl:template>
 
   <xsl:template match="Warning">

@@ -31,10 +31,15 @@ public class Warning {
 
     private final WarningType type;
     private final int priority;
-
     private final List<WarningAnnotation<?>> annotations;
-
+    private final WarningStatus status;
+    
     public Warning(WarningType type, int priority, List<WarningAnnotation<?>> annotations) {
+        this(type, priority, annotations, WarningStatus.DEFAULT);
+    }
+
+    public Warning(WarningType type, int priority, List<WarningAnnotation<?>> annotations, WarningStatus status) {
+        this.status = status;
         this.type = type;
         if(priority < 0) {
             throw new IllegalArgumentException("Priority is negative: "+priority+" (warning: "+type.getName()+")");
@@ -74,6 +79,17 @@ public class Warning {
 
     public WarningType getType() {
         return type;
+    }
+    
+    public WarningStatus getStatus() {
+        return status;
+    }
+
+    public Warning withStatus(WarningStatus status) {
+        if(this.status == status) {
+            return this;
+        }
+        return new Warning(type, priority, annotations, status);
     }
 
     public static int saturateScore(int score) {

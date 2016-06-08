@@ -31,6 +31,8 @@ import java.util.logging.LogManager;
 
 import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
+import one.util.huntbugs.analysis.HuntBugsResult;
+import one.util.huntbugs.input.XmlReportReader;
 import one.util.huntbugs.output.Reports;
 import one.util.huntbugs.repo.CompositeRepository;
 import one.util.huntbugs.repo.DirRepository;
@@ -52,6 +54,7 @@ public class HuntBugs {
     private boolean listMessages = false;
     private final AnalysisOptions options = new AnalysisOptions();
     private Repository repo;
+    private Path compareTo;
 
     private void parseCommandLine(String[] args) {
         List<Repository> repos = new ArrayList<>();
@@ -65,6 +68,8 @@ public class HuntBugs {
                 listDatabases = true;
             } else if (arg.equals("-lm")) {
                 listMessages = true;
+            } else if (arg.startsWith("-C")) {
+                compareTo = Paths.get(arg.substring(2));
             } else if (arg.startsWith("-D")) {
                 int pos = arg.indexOf('=');
                 if (pos < 0) {
@@ -143,6 +148,7 @@ public class HuntBugs {
             System.out.println("    -lv                        -- list all variables");
             System.out.println("    -ldb                       -- list all databases");
             System.out.println("    -lm                        -- list warning titles");
+            System.out.println("    -ColdResult.xml            -- output difference with old result");
             System.out.println("    -Dname=value               -- set given variable");
             System.out.println("    -Rruletype:rule=adjustment -- adjust score for warnings");
             return -1;
@@ -201,7 +207,16 @@ public class HuntBugs {
                     ctx.reportErrors(new PrintStream("huntbugs.errors.txt"));
                     ctx.reportWarnings(new PrintStream("huntbugs.warnings.txt"));
                     ctx.reportStats(new PrintStream("huntbugs.stats.txt"));
-                    Reports.write(Paths.get("huntbugs.warnings.xml"), Paths.get("huntbugs.warnings.html"), ctx);
+                    HuntBugsResult result = ctx;
+                    if(compareTo != null) {
+                        try {
+                            result = Reports.diff(XmlReportReader.read(ctx, compareTo), ctx);
+                        } catch (Exception e) {
+                            System.out.println("Warning: unable to read old result file "+compareTo+": "+e);
+                            System.out.println("Saving non-diff result");
+                        }
+                    }
+                    Reports.write(Paths.get("huntbugs.warnings.xml"), Paths.get("huntbugs.warnings.html"), result);
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
