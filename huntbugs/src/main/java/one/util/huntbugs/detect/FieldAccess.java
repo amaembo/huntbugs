@@ -184,50 +184,11 @@ public class FieldAccess {
             }
             fc.report(warningType, priority, getWriteAnnotations(fieldRecord));
         }
-        if(!Flags.testAny(flags, FieldStats.WRITE)) {
-            WarningAnnotation<?>[] anno = {};
-            int priority = 0;
-            String warningType = fd.isPublic() || fd.isProtected() ? "UnwrittenPublicField" : "UnwrittenPrivateField";
-            if (fieldRecord != null && fieldRecord.firstReadMethod != null) {
-                anno = new WarningAnnotation[] { Roles.METHOD.create(fieldRecord.firstReadMethod),
-                        Roles.LOCATION.create(fieldRecord.firstReadLocation) };
-            }
-            if(fd.isPublic()) {
-                priority += 5;
-            }
-            // Probably field is kept for backwards serialization compatibility
-            if(!fd.isStatic() && Types.isInstance(td, "java/io/Serializable")) {
-                priority += 10;
-            }
-            fc.report(warningType, priority, anno);
+        if(checkWrite(fc, fd, td, fieldRecord, flags))
             return;
-        }
-        if(!Flags.testAny(flags, FieldStats.WRITE_NONNULL)) {
-            int priority = 0;
-            if(fd.isPublic()) {
-                priority += 10;
-            }
-            fc.report("FieldIsAlwaysNull", priority, getWriteAnnotations(fieldRecord));
+        if(checkNull(fc, fd, fieldRecord, flags))
             return;
-        }
-        if (fullyAnalyzed
-            && !Flags.testAny(flags, FieldStats.READ_PACKAGE | FieldStats.READ_OUTSIDE | FieldStats.WRITE_PACKAGE
-                | FieldStats.WRITE_OUTSIDE) && fieldRecord != null && fieldRecord.usedInSingleMethod
-            && fieldRecord.firstWriteLocation != null) {
-            int priority = 0;
-            if(!fd.isStatic())
-                priority += 5;
-            if(fd.isPublic())
-                priority += 10;
-            else if(fd.isProtected())
-                priority += 3;
-            if(fieldRecord.firstWriteMethod.isConstructor())
-                priority += 5;
-            if(fd.getFieldType().isPrimitive())
-                priority += 3;
-            fc.report("FieldUsedInSingleMethod", priority, Roles.METHOD.create(fieldRecord.firstWriteMethod),
-                Roles.LOCATION.create(fieldRecord.firstWriteLocation));
-        }
+        checkSingleMethod(fc, fd, fieldRecord, flags);
         if(fd.isStatic() && (fd.isPublic() || fd.isProtected()) && (td.isPublic() || td.isProtected())) {
             if(!fd.isFinal() && Flags.testAny(flags, FieldStats.WRITE_CONSTRUCTOR) &&
                     !Flags.testAny(flags, FieldStats.WRITE_CLASS | FieldStats.WRITE_PACKAGE | FieldStats.WRITE_OUTSIDE)) {
@@ -253,6 +214,62 @@ public class FieldAccess {
                     fc.report(type, fd.isProtected() ? 10 : 0, getWriteAnnotations(fieldRecord));
                 }
             }
+        }
+    }
+
+    private boolean checkWrite(FieldContext fc, FieldDefinition fd, TypeDefinition td, FieldRecord fieldRecord, int flags) {
+        if(!Flags.testAny(flags, FieldStats.WRITE)) {
+            WarningAnnotation<?>[] anno = {};
+            int priority = 0;
+            String warningType = fd.isPublic() || fd.isProtected() ? "UnwrittenPublicField" : "UnwrittenPrivateField";
+            if (fieldRecord != null && fieldRecord.firstReadMethod != null) {
+                anno = new WarningAnnotation[] { Roles.METHOD.create(fieldRecord.firstReadMethod),
+                        Roles.LOCATION.create(fieldRecord.firstReadLocation) };
+            }
+            if(fd.isPublic()) {
+                priority += 5;
+            }
+            // Probably field is kept for backwards serialization compatibility
+            if(!fd.isStatic() && Types.isInstance(td, "java/io/Serializable")) {
+                priority += 10;
+            }
+            fc.report(warningType, priority, anno);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkNull(FieldContext fc, FieldDefinition fd, FieldRecord fieldRecord, int flags) {
+        if(!Flags.testAny(flags, FieldStats.WRITE_NONNULL) && Flags.testAny(flags, FieldStats.READ)) {
+            int priority = 0;
+            if(fd.isPublic()) {
+                priority += 10;
+            }
+            fc.report("FieldIsAlwaysNull", priority, getWriteAnnotations(fieldRecord));
+            return true;
+        }
+        return false;
+    }
+
+    private void checkSingleMethod(FieldContext fc, FieldDefinition fd, FieldRecord fieldRecord, int flags) {
+        if (fullyAnalyzed
+            && Flags.testAny(flags, FieldStats.READ)
+            && !Flags.testAny(flags, FieldStats.READ_PACKAGE | FieldStats.READ_OUTSIDE | FieldStats.WRITE_PACKAGE
+                | FieldStats.WRITE_OUTSIDE) && fieldRecord != null && fieldRecord.usedInSingleMethod
+            && fieldRecord.firstWriteLocation != null) {
+            int priority = 0;
+            if(!fd.isStatic())
+                priority += 5;
+            if(fd.isPublic())
+                priority += 10;
+            else if(fd.isProtected())
+                priority += 3;
+            if(fieldRecord.firstWriteMethod.isConstructor())
+                priority += 5;
+            if(fd.getFieldType().isPrimitive())
+                priority += 3;
+            fc.report("FieldUsedInSingleMethod", priority, Roles.METHOD.create(fieldRecord.firstWriteMethod),
+                Roles.LOCATION.create(fieldRecord.firstWriteLocation));
         }
     }
 
