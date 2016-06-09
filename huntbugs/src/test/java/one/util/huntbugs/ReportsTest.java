@@ -34,59 +34,83 @@ import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningStatus;
 import one.util.huntbugs.warning.WarningType;
+import one.util.huntbugs.warning.Role.StringRole;
 
 /**
  * @author lan
  *
  */
 public class ReportsTest {
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testMergeZero() {
         Reports.merge(Collections.emptyList());
     }
-    
+
     @Test
     public void testMerge() {
         Context ctx = new Context(Repository.createNullRepository(), new AnalysisOptions());
-        ctx.addWarning(new Warning(ctx.getWarningType("RoughConstantValue"), 0, Arrays.asList(Roles.TYPE.create("test/type"))));
-        ctx.addError(new ErrorMessage("detector", "cls", "member", "desc", -1, "Error"));
-        
-        Context ctx2 = new Context(Repository.createNullRepository(), new AnalysisOptions());
-        ctx2.addWarning(new Warning(ctx.getWarningType("BadNameOfField"), 0, Arrays.asList(Roles.TYPE.create("test/type2"))));
-        ctx2.addError(new ErrorMessage("detector2", "cls", "member", "desc", -1, "Error"));
-        
-        HuntBugsResult result = Reports.merge(Arrays.asList(ctx, ctx2));
-        assertEquals(2, result.errors().count());
-        assertEquals(2, result.warnings().count());
-        
-        assertEquals(Arrays.asList("detector", "detector2"), result.errors().map(ErrorMessage::getDetector).collect(
-            Collectors.toList()));
-        assertEquals(Arrays.asList("RoughConstantValue", "BadNameOfField"), result.warnings().map(Warning::getType).map(
-            WarningType::getName).collect(Collectors.toList()));
-    }
-    
-    @Test
-    public void testDiff() {
-        Context ctx = new Context(Repository.createNullRepository(), new AnalysisOptions());
-        ctx.addWarning(new Warning(ctx.getWarningType("RoughConstantValue"), 0, Arrays.asList(Roles.TYPE.create("test/type"))));
-        ctx.addWarning(new Warning(ctx.getWarningType("RoughConstantValue"), 0, Arrays.asList(Roles.TYPE.create("test/type2"))));
+        ctx.addWarning(new Warning(ctx.getWarningType("RoughConstantValue"), 0, Arrays.asList(Roles.TYPE
+                .create("test/type"))));
         ctx.addError(new ErrorMessage("detector", "cls", "member", "desc", -1, "Error"));
 
         Context ctx2 = new Context(Repository.createNullRepository(), new AnalysisOptions());
-        ctx2.addWarning(new Warning(ctx.getWarningType("RoughConstantValue"), 5, Arrays.asList(Roles.TYPE.create("test/type2"))));
-        ctx2.addWarning(new Warning(ctx.getWarningType("BadNameOfField"), 0, Arrays.asList(Roles.TYPE.create("test/type3"))));
+        ctx2.addWarning(new Warning(ctx.getWarningType("BadNameOfField"), 0, Arrays.asList(Roles.TYPE
+                .create("test/type2"))));
         ctx2.addError(new ErrorMessage("detector2", "cls", "member", "desc", -1, "Error"));
-        
+
+        HuntBugsResult result = Reports.merge(Arrays.asList(ctx, ctx2));
+        assertEquals(2, result.errors().count());
+        assertEquals(2, result.warnings().count());
+
+        assertEquals(Arrays.asList("detector", "detector2"), result.errors().map(ErrorMessage::getDetector).collect(
+            Collectors.toList()));
+        assertEquals(Arrays.asList("RoughConstantValue", "BadNameOfField"), result.warnings().map(Warning::getType)
+                .map(WarningType::getName).collect(Collectors.toList()));
+    }
+
+    @Test
+    public void testDiff() {
+        Context ctx = new Context(Repository.createNullRepository(), new AnalysisOptions());
+        ctx.addWarning(new Warning(ctx.getWarningType("RoughConstantValue"), 0, Arrays.asList(Roles.TYPE
+                .create("test/type"))));
+        ctx.addWarning(new Warning(ctx.getWarningType("RoughConstantValue"), 0, Arrays.asList(Roles.TYPE
+                .create("test/type2"))));
+        ctx.addWarning(new Warning(ctx.getWarningType("RoughConstantValue"), 0, Arrays.asList(Roles.TYPE
+                .create("test/type5"), Roles.NUMBER.create(1.23), Roles.OPERATION.create("=="))));
+        ctx.addWarning(new Warning(ctx.getWarningType("RoughConstantValue"), 0, Arrays.asList(Roles.TYPE
+                .create("test/type5"), Roles.NUMBER.create(1.25))));
+        ctx.addWarning(new Warning(ctx.getWarningType("RoughConstantValue"), 0, Arrays.asList(Roles.TYPE
+                .create("test/type4"), Roles.NUMBER.create(1.23))));
+        ctx.addError(new ErrorMessage("detector", "cls", "member", "desc", -1, "Error"));
+
+        Context ctx2 = new Context(Repository.createNullRepository(), new AnalysisOptions());
+        ctx2.addWarning(new Warning(ctx.getWarningType("RoughConstantValue"), 5, Arrays.asList(Roles.TYPE
+                .create("test/type2"))));
+        ctx2.addWarning(new Warning(ctx.getWarningType("BadNameOfField"), 0, Arrays.asList(Roles.TYPE
+                .create("test/type3"))));
+        ctx2.addWarning(new Warning(ctx.getWarningType("RoughConstantValue"), 0, Arrays.asList(Roles.TYPE
+                .create("test/type5"), Roles.NUMBER.create(1.23), StringRole.forName("OPERATION").create("=="))));
+        ctx2.addWarning(new Warning(ctx.getWarningType("RoughConstantValue"), 0, Arrays.asList(Roles.TYPE
+                .create("test/type5"), Roles.NUMBER.create(1.25))));
+        ctx2.addWarning(new Warning(ctx.getWarningType("RoughConstantValue"), 0, Arrays.asList(Roles.TYPE
+                .create("test/type4"), Roles.NUMBER.create(1.24))));
+        ctx2.addError(new ErrorMessage("detector2", "cls", "member", "desc", -1, "Error"));
+
         HuntBugsResult result = Reports.diff(ctx, ctx2);
         assertEquals(1, result.errors().count());
         assertEquals(Optional.of("detector2"), result.errors().map(ErrorMessage::getDetector).findFirst());
-        
-        assertEquals(3, result.warnings().count());
-        assertEquals(Optional.of(WarningStatus.ADDED), result.warnings().filter(w -> w.getType().getName().equals(
-            "BadNameOfField")).map(Warning::getStatus).findFirst());
-        assertEquals(Optional.of(WarningStatus.FIXED), result.warnings().filter(w -> w.getClassName().equals(
-            "test.type")).map(Warning::getStatus).findFirst());
-        assertEquals(Optional.of(WarningStatus.SCORE_LOWERED), result.warnings().filter(w -> w.getClassName().equals(
-            "test.type2") && w.getType().getName().equals("RoughConstantValue")).map(Warning::getStatus).findFirst());
+
+        assertEquals(6, result.warnings().count());
+        assertEquals(Optional.of(WarningStatus.ADDED), result.warnings().filter(
+            w -> w.getType().getName().equals("BadNameOfField")).map(Warning::getStatus).findFirst());
+        assertEquals(Optional.of(WarningStatus.FIXED), result.warnings().filter(
+            w -> w.getClassName().equals("test.type")).map(Warning::getStatus).findFirst());
+        assertTrue(result.warnings().filter(w -> w.getClassName().equals("test.type5")).map(Warning::getStatus)
+                .allMatch(WarningStatus.DEFAULT::equals));
+        assertEquals(Optional.of(WarningStatus.CHANGED), result.warnings().filter(
+            w -> w.getClassName().equals("test.type4")).map(Warning::getStatus).findFirst());
+        assertEquals(Optional.of(WarningStatus.SCORE_LOWERED), result.warnings().filter(
+            w -> w.getClassName().equals("test.type2") && w.getType().getName().equals("RoughConstantValue")).map(
+            Warning::getStatus).findFirst());
     }
 }

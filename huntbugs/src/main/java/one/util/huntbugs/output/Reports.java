@@ -148,14 +148,19 @@ public final class Reports {
                     oldWarningsMap.remove(key);
                     matched = matchedList.get(0);
                 } else {
-                    matched = matchedList.remove(matchedList.size()-1);
+                    matched = matchedList.stream().max(Comparator.comparingInt(w -> matchScore(warn, w))).get();
+                    matchedList.remove(matched);
                 }
             }
             WarningStatus status = WarningStatus.DEFAULT;
             if(matched == null) {
                 status = WarningStatus.ADDED;
             } else {
-                if(!warningEquals(warn, matched)) {
+                Set<WarningAnnotation<?>> waNew = warn.annotations().filter(
+                    wa -> wa.getRole().getType() != Location.class).collect(Collectors.toSet());
+                Set<WarningAnnotation<?>> waOld = matched.annotations().filter(
+                    wa -> wa.getRole().getType() != Location.class).collect(Collectors.toSet());
+                if(!waOld.equals(waNew)) {
                     status = WarningStatus.CHANGED;
                 } else if(warn.getScore() > matched.getScore()) {
                     status = WarningStatus.SCORE_RAISED;
@@ -168,11 +173,17 @@ public final class Reports {
         oldWarningsMap.values().stream().flatMap(List::stream).map(w -> w.withStatus(WarningStatus.FIXED)).forEach(result::add);
         return result;
     }
-
-    private static boolean warningEquals(Warning w1, Warning w2) {
-        Set<WarningAnnotation<?>> wa1 = w1.annotations().filter(wa -> wa.getRole().getType() != Location.class).collect(Collectors.toSet());
-        Set<WarningAnnotation<?>> wa2 = w2.annotations().filter(wa -> wa.getRole().getType() != Location.class).collect(Collectors.toSet());
-        return wa1.equals(wa2);
+    
+    private static int matchScore(Warning w1, Warning w2) {
+        int penalty = w1.getScore() == w2.getScore() ? 0 : 2;
+        if(w1.annotations().collect(Collectors.toSet()).equals(w2.annotations().collect(Collectors.toSet()))) {
+            return 100 - penalty;
+        }
+        if (w1.annotations().filter(wa -> wa.getRole().getType() != Location.class).collect(Collectors.toSet()).equals(
+            w2.annotations().filter(wa -> wa.getRole().getType() != Location.class).collect(Collectors.toSet()))) {
+            return 50 - penalty;
+        }
+        return 10 - penalty;
     }
 
     private static Document makeDom(HuntBugsResult ctx) {

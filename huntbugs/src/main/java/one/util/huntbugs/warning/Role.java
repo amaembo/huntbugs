@@ -73,7 +73,7 @@ public class Role<T> {
     public boolean equals(Object obj) {
         if (this == obj)
             return true;
-        if (obj == null || getClass() != obj.getClass())
+        if (!(obj instanceof Role))
             return false;
         Role<?> other = (Role<?>) obj;
         return Objects.equals(name, other.name) && Objects.equals(type, other.type);
