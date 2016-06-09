@@ -15,6 +15,10 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -190,6 +194,13 @@ public class TestFieldAccess {
         usedEverywhere = "2";
     }
     
+    @AssertWarning("StaticFieldShouldBeFinalAndPackagePrivate")
+    public static double[] ARRAY = {1.0, 2.0, 3.0};
+    
+    public double getArrayElement(int x) {
+        return ARRAY[x];
+    }
+    
     public interface FieldInterface {
         @AssertNoWarning("*")
         public static int val = 10;
@@ -199,5 +210,14 @@ public class TestFieldAccess {
 
         @AssertWarning("StaticFieldMutableArray")
         public static int[] usedArr = {1,2,3};
+        
+        @AssertNoWarning("*")
+        public static Collection<String> emptyStrings = Arrays.asList();
+
+        @AssertWarning("StaticFieldMutableCollection")
+        public static Collection<String> strings = Arrays.asList("1");
+
+        @AssertWarning("StaticFieldMutableCollection")
+        public static Collection<String> stringsList = new ArrayList<>();
     }
 }

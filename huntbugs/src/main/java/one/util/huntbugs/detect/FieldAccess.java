@@ -15,9 +15,12 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
@@ -61,12 +64,19 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
 @WarningDefinition(category="Performance", name="FieldShouldBeStatic", maxScore=50)
 @WarningDefinition(category="Performance", name="FieldUsedInSingleMethod", maxScore=55)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBeFinal", maxScore=55)
+@WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBeFinalAndPackagePrivate", maxScore=55)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldCannotBeFinal", maxScore=35)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldMutableArray", maxScore=40)
+@WarningDefinition(category="MaliciousCode", name="StaticFieldMutableCollection", maxScore=40)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBeRefactoredToFinal", maxScore=40)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBePackagePrivate", maxScore=55)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBeNonInterfacePackagePrivate", maxScore=30)
 public class FieldAccess {
+    private static final Set<String> MUTABLE_COLLECTION_CLASSES = new HashSet<>(Arrays.asList("java/util/ArrayList",
+        "java/util/HashSet", "java/util/HashMap", "java/util/Hashtable", "java/util/IdentityHashMap",
+        "java/util/LinkedHashSet", "java/util/LinkedList", "java/util/LinkedHashMap", "java/util/TreeSet",
+        "java/util/TreeMap", "java/util/Properties"));
+    
     static class FieldRecord {
         MethodReference firstWriteMethod;
         MethodReference firstReadMethod;
@@ -76,6 +86,7 @@ public class FieldAccess {
         int numWrites;
         boolean mutable;
         boolean array;
+        boolean collection;
         boolean usedInSingleMethod = true;
     }
     
@@ -107,10 +118,22 @@ public class FieldAccess {
                                 fieldRecord.constant = null;
                         }
                     }
+                    if(value.getCode() == AstCode.InitObject) {
+                        String typeName = ((MethodReference) value.getOperand()).getDeclaringType().getInternalName();
+                        if(MUTABLE_COLLECTION_CLASSES.contains(typeName)) {
+                            fieldRecord.mutable = true;
+                            fieldRecord.collection = true;
+                        }
+                    } else if(value.getCode() == AstCode.InvokeStatic) {
+                        MethodReference mr = (MethodReference) value.getOperand();
+                        if (isMutableCollectionFactory(value, mr)) {
+                            fieldRecord.mutable = true;
+                            fieldRecord.collection = true;
+                        }
+                    }
                     if(fd.getFieldType().isArray() || value.getInferredType() != null && value.getInferredType().isArray()) {
                         fieldRecord.array = true;
-                        if (value.getCode() != AstCode.NewArray
-                            || !Integer.valueOf(0).equals(Nodes.getConstant(value.getArguments().get(0)))) {
+                        if (!isEmptyArray(value)) {
                             fieldRecord.mutable = true;
                         }
                     }
@@ -134,6 +157,24 @@ public class FieldAccess {
                 }
             }
         }
+    }
+
+    private boolean isMutableCollectionFactory(Expression value, MethodReference mr) {
+        if (mr.getName().equals("asList") && mr.getDeclaringType().getInternalName().equals("java/util/Arrays")
+            && value.getArguments().size() == 1 && !isEmptyArray(Nodes.getChild(value, 0)))
+            return true;
+        if ((mr.getName().equals("newArrayList") || mr.getName().equals("newLinkedList"))
+            && mr.getDeclaringType().getInternalName().equals("com/google/common/collect/Lists"))
+            return true;
+        if ((mr.getName().equals("newHashSet") || mr.getName().equals("newTreeSet"))
+            && mr.getDeclaringType().getInternalName().equals("com/google/common/collect/Sets"))
+            return true;
+        return false;
+    }
+
+    private static boolean isEmptyArray(Expression value) {
+        return value.getCode() == AstCode.NewArray
+            && Integer.valueOf(0).equals(Nodes.getConstant(value.getArguments().get(0)));
     }
     
     @MethodVisitor(order=VisitOrder.AFTER)
@@ -190,16 +231,19 @@ public class FieldAccess {
             return;
         checkSingleMethod(fc, fd, fieldRecord, flags);
         if(fd.isStatic() && (fd.isPublic() || fd.isProtected()) && (td.isPublic() || td.isProtected())) {
+            boolean mutable = fieldRecord != null && fieldRecord.mutable;
             if(!fd.isFinal() && Flags.testAny(flags, FieldStats.WRITE_CONSTRUCTOR) &&
                     !Flags.testAny(flags, FieldStats.WRITE_CLASS | FieldStats.WRITE_PACKAGE | FieldStats.WRITE_OUTSIDE)) {
                 String type = "StaticFieldShouldBeRefactoredToFinal";
                 if(fieldRecord != null && fieldRecord.numWrites == 1) {
                     type = "StaticFieldShouldBeFinal";
+                    if(mutable && !Flags.testAny(flags, FieldStats.READ_OUTSIDE)) {
+                        type = "StaticFieldShouldBeFinalAndPackagePrivate";
+                    }
                 }
                 fc.report(type, fd.isProtected() ? 10 : 0, getWriteAnnotations(fieldRecord));
                 return;
             }
-            boolean mutable = fieldRecord != null && fieldRecord.mutable;
             if(mutable || !fd.isFinal()) {
                 String type = null;
                 if(!Flags.testAny(flags, FieldStats.WRITE_OUTSIDE | FieldStats.READ_OUTSIDE)) {
@@ -209,6 +253,8 @@ public class FieldAccess {
                     type = "StaticFieldCannotBeFinal";
                 } else if(mutable && fieldRecord.array) {
                     type = "StaticFieldMutableArray";
+                } else if(mutable && fieldRecord.collection) {
+                    type = "StaticFieldMutableCollection";
                 }
                 if(type != null) {
                     fc.report(type, fd.isProtected() ? 10 : 0, getWriteAnnotations(fieldRecord));

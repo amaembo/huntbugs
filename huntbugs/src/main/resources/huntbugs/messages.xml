@@ -1186,6 +1186,13 @@
       <LongDescription><![CDATA[The field $FIELD$ is not final, but could be easily declared final to prevent
       possible malicious changes from other packages.]]></LongDescription>
     </Warning>
+    <Warning Type="StaticFieldShouldBeFinalAndPackagePrivate">
+      <Title>Static field should be final and package-private</Title>
+      <Description>Static field $FIELD$ should be final and package-private.</Description>
+      <LongDescription><![CDATA[The field $FIELD$ is not final, but could be easily declared final to prevent
+      possible malicious changes from other packages. It's also mutable, so cannot be modified even if declared as final.
+      However as it's not accessed from other packages, you may declare it package-private to prevent undesired access.]]></LongDescription>
+    </Warning>
     <Warning Type="StaticFieldCannotBeFinal">
       <Title>Static field cannot be final</Title>
       <Description>Static field $FIELD$ cannot be final.</Description>
@@ -1197,6 +1204,12 @@
       <Title>Static field is a mutable array</Title>
       <Description>Static field $FIELD$ is a mutable array.</Description>
       <LongDescription><![CDATA[The field $FIELD$ is a mutable array and could be modified from other packages.
+      This field is already accessed from other packages, so you cannot easily make it package-private.]]></LongDescription>
+    </Warning>
+    <Warning Type="StaticFieldMutableCollection">
+      <Title>Static field is a mutable collection</Title>
+      <Description>Static field $FIELD$ is a mutable collection.</Description>
+      <LongDescription><![CDATA[The field $FIELD$ is a mutable collection and could be modified from other packages.
       This field is already accessed from other packages, so you cannot easily make it package-private.]]></LongDescription>
     </Warning>
     <Warning Type="StaticFieldShouldBePackagePrivate">

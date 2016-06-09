@@ -176,12 +176,15 @@ abbrev="Se" type="SE_NONSTATIC_SERIALVERSIONID" category="BAD_PRACTICE" --> Seri
 abbrev="Se" type="SE_NONLONG_SERIALVERSIONID" category="BAD_PRACTICE" --> SerialVersionUidNotLong
 abbrev="VO" type="VO_VOLATILE_REFERENCE_TO_ARRAY" category="MT_CORRECTNESS" --> VolatileArray
 abbrev="MS" type="MS_OOI_PKGPROTECT" category="MALICIOUS_CODE" --> StaticFieldShouldBeNonInterfacePackagePrivate
-abbrev="MS" type="MS_FINAL_PKGPROTECT" category="MALICIOUS_CODE" --> StaticFieldShouldBePackagePrivate
+abbrev="MS" type="MS_FINAL_PKGPROTECT" category="MALICIOUS_CODE" --> StaticFieldShouldBeFinalAndPackagePrivate
 abbrev="MS" type="MS_SHOULD_BE_FINAL" category="MALICIOUS_CODE" --> StaticFieldShouldBeFinal
 abbrev="MS" type="MS_SHOULD_BE_REFACTORED_TO_BE_FINAL" category="MALICIOUS_CODE" --> StaticFieldShouldBeRefactoredToFinal
 abbrev="MS" type="MS_PKGPROTECT" category="MALICIOUS_CODE" --> StaticFieldShouldBePackagePrivate
 abbrev="MS" type="MS_MUTABLE_ARRAY" category="MALICIOUS_CODE" --> StaticFieldMutableArray
 abbrev="MS" type="MS_CANNOT_BE_FINAL" category="MALICIOUS_CODE" --> StaticFieldCannotBeFinal
+abbrev="MS" type="MS_MUTABLE_HASHTABLE" category="MALICIOUS_CODE" --> StaticFieldMutableCollection
+abbrev="MS" type="MS_MUTABLE_COLLECTION" category="MALICIOUS_CODE" --> StaticFieldMutableCollection
+abbrev="MS" type="MS_MUTABLE_COLLECTION_PKGPROTECT" category="MALICIOUS_CODE" --> StaticFieldShouldBePackagePrivate
 
 ==== Not reimplemented
 
@@ -256,9 +259,6 @@ abbrev="SI" type="SI_INSTANCE_BEFORE_FINALS_ASSIGNED" category="BAD_PRACTICE"
 abbrev="IS" type="IS_FIELD_NOT_GUARDED" category="MT_CORRECTNESS"
 abbrev="ML" type="ML_SYNC_ON_FIELD_TO_GUARD_CHANGING_THAT_FIELD" category="MT_CORRECTNESS"
 abbrev="ML" type="ML_SYNC_ON_UPDATED_FIELD" category="MT_CORRECTNESS"
-abbrev="MS" type="MS_MUTABLE_HASHTABLE" category="MALICIOUS_CODE"
-abbrev="MS" type="MS_MUTABLE_COLLECTION" category="MALICIOUS_CODE"
-abbrev="MS" type="MS_MUTABLE_COLLECTION_PKGPROTECT" category="MALICIOUS_CODE"
 abbrev="ME" type="ME_MUTABLE_ENUM_FIELD" category="BAD_PRACTICE"
 abbrev="ME" type="ME_ENUM_FIELD_SETTER" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_VERY_CONFUSING" category="CORRECTNESS"

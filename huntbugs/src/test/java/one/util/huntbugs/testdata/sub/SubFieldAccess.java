@@ -25,4 +25,10 @@ public class SubFieldAccess {
     int val = TestFieldAccess.FieldInterface.usedArr[1];
     
     Object val2 = TestFieldAccess.usedEverywhere;
+    
+    static {
+        System.out.println(TestFieldAccess.FieldInterface.emptyStrings);
+        System.out.println(TestFieldAccess.FieldInterface.strings);
+        System.out.println(TestFieldAccess.FieldInterface.stringsList);
+    }
 }
