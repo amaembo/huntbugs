@@ -21,8 +21,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarFile;
 
+import javax.xml.parsers.ParserConfigurationException;
+
 import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
+import one.util.huntbugs.analysis.HuntBugsResult;
+import one.util.huntbugs.input.XmlReportReader;
 import one.util.huntbugs.output.Reports;
 import one.util.huntbugs.repo.AuxRepository;
 import one.util.huntbugs.repo.CompositeRepository;
@@ -33,6 +37,7 @@ import one.util.huntbugs.repo.Repository;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Task;
 import org.apache.tools.ant.types.Path;
+import org.xml.sax.SAXException;
 
 import com.strobel.assembler.metadata.ClasspathTypeLoader;
 import com.strobel.assembler.metadata.CompositeTypeLoader;
@@ -52,6 +57,8 @@ public class HuntBugsTask extends Task {
 
 	private File html;
 	
+	private File diff;
+	
 	private LogLevel log = LogLevel.VERBOSE; 
 	
 	@Override
@@ -66,8 +73,17 @@ public class HuntBugsTask extends Task {
 		if(log == LogLevel.VERBOSE)
 			addListener(ctx);
 		ctx.analyzePackage("");
+		HuntBugsResult result = ctx;
+		if(diff != null) {
+			try {
+				result = XmlReportReader.read(ctx, diff.toPath());
+			} catch (IOException | SAXException | ParserConfigurationException e) {
+				System.err.println("Unable to read old report "+diff+": "+e);
+				System.err.println("Skipping diff generation");
+			}
+		}
 		Reports.write(xml == null ? null : xml.toPath(), html == null ? null
-				: html.toPath(), ctx);
+				: html.toPath(), result);
 	}
 
 	private void addListener(Context ctx) {
@@ -133,6 +149,10 @@ public class HuntBugsTask extends Task {
 		if(this.auxClassPath == null)
 			this.auxClassPath = new Path(getProject());
 		this.auxClassPath.append(auxClassPath);
+	}
+	
+	public void setDiff(File diff) {
+		this.diff = diff;
 	}
 
 	public void setXml(File xml) {
