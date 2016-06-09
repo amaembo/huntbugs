@@ -76,7 +76,7 @@ public class HuntBugsTask extends Task {
 		HuntBugsResult result = ctx;
 		if(diff != null) {
 			try {
-				result = XmlReportReader.read(ctx, diff.toPath());
+				result = Reports.diff(XmlReportReader.read(ctx, diff.toPath()), ctx);
 			} catch (IOException | SAXException | ParserConfigurationException e) {
 				System.err.println("Unable to read old report "+diff+": "+e);
 				System.err.println("Skipping diff generation");
