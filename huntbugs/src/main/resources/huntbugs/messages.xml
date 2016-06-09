@@ -1210,7 +1210,8 @@
       <Title>Static field is a mutable collection</Title>
       <Description>Static field $FIELD$ is a mutable collection.</Description>
       <LongDescription><![CDATA[The field $FIELD$ is a mutable collection and could be modified from other packages.
-      This field is already accessed from other packages, so you cannot easily make it package-private.]]></LongDescription>
+      This field is already accessed from other packages, so you cannot easily make it package-private.
+      However you may consider protect malicious writes using one of <code>Collections.unmodifiableXYZ()</code> methods.]]></LongDescription>
     </Warning>
     <Warning Type="StaticFieldShouldBePackagePrivate">
       <Title>Static field should be package-private</Title>

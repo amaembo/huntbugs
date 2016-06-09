@@ -67,7 +67,7 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
 @WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBeFinalAndPackagePrivate", maxScore=55)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldCannotBeFinal", maxScore=35)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldMutableArray", maxScore=40)
-@WarningDefinition(category="MaliciousCode", name="StaticFieldMutableCollection", maxScore=40)
+@WarningDefinition(category="MaliciousCode", name="StaticFieldMutableCollection", maxScore=45)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBeRefactoredToFinal", maxScore=40)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBePackagePrivate", maxScore=55)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBeNonInterfacePackagePrivate", maxScore=30)
