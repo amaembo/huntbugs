@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarFile;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -43,6 +45,7 @@ import com.strobel.assembler.metadata.ClasspathTypeLoader;
 import com.strobel.assembler.metadata.CompositeTypeLoader;
 import com.strobel.assembler.metadata.ITypeLoader;
 import com.strobel.assembler.metadata.JarTypeLoader;
+import com.strobel.assembler.metadata.signatures.Reifier;
 
 public class HuntBugsTask extends Task {
 	public enum LogLevel {
@@ -63,6 +66,9 @@ public class HuntBugsTask extends Task {
 	
 	@Override
 	public void execute() throws BuildException {
+		// Disable unwanted Procyon logging 
+		Logger.getLogger(Reifier.class.getSimpleName()).setLevel(Level.OFF);
+		
 		List<Repository> repos = createRepository();
 		if(xml == null && html == null) {
 			throw new BuildException("Either xml or html must be specified");
