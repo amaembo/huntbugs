@@ -47,18 +47,20 @@ public class InfiniteLoop {
             Expression expr = loop.getCondition();
             if(!Nodes.isSideEffectFree(expr))
                 return;
-            checkCondition(mc, loop, expr, true);
+            checkCondition(mc, loop, expr, null);
         }
     }
 
-    private void checkCondition(MethodContext mc, Loop loop, Expression expr, boolean fullCondition) {
-        if(expr.getCode() == AstCode.LogicalAnd || expr.getCode() == AstCode.LogicalOr) {
-            checkCondition(mc, loop, expr.getArguments().get(0), false);
-            checkCondition(mc, loop, expr.getArguments().get(1), false);
+    private void checkCondition(MethodContext mc, Loop loop, Expression expr, AstCode parent) {
+        if((expr.getCode() == AstCode.LogicalAnd || expr.getCode() == AstCode.LogicalOr)
+                && (parent == null || expr.getCode() == parent)) {
+            checkCondition(mc, loop, expr.getArguments().get(0), expr.getCode());
+            checkCondition(mc, loop, expr.getArguments().get(1), expr.getCode());
             return;
         }
-        if(expr.getCode() == AstCode.LogicalNot) {
-            checkCondition(mc, loop, expr.getArguments().get(0), fullCondition);
+        if (expr.getCode() == AstCode.LogicalNot) {
+            checkCondition(mc, loop, expr.getArguments().get(0), parent == AstCode.LogicalAnd ? AstCode.LogicalOr
+                    : parent == AstCode.LogicalOr ? AstCode.LogicalAnd : parent);
             return;
         }
         // Will be reported as ResultOfComparisonIsStaticallyKnown
@@ -91,7 +93,7 @@ public class InfiniteLoop {
                     ls.hasStores = true;
             }
         });
-        if(fullCondition) {
+        if(parent == null) {
             if(!ls.hasControlFlow && !ls.hasStores) {
                 mc.report("InfiniteLoop", 0, loop, Roles.VARIABLE.create(vars.iterator().next().getName()));
             } else if(!ls.hasLoads) {

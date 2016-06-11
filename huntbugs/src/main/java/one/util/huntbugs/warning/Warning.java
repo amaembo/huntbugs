@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.warning;
 
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -45,7 +47,7 @@ public class Warning {
             throw new IllegalArgumentException("Priority is negative: "+priority+" (warning: "+type.getName()+")");
         }
         this.priority = priority;
-        this.annotations = annotations;
+        this.annotations = new ArrayList<>(new LinkedHashSet<>(annotations));
     }
     
     public String getClassName() {

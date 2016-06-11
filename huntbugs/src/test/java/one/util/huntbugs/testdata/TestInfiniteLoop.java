@@ -63,6 +63,14 @@ public class TestInfiniteLoop {
         }
     }
 
+    @AssertNoWarning("*")
+    public void testLoopPartOk(int x, int y, boolean b) {
+        while (x > 2 || b && y > 10) {
+            System.out.println(x--);
+            System.out.println(y--);
+        }
+    }
+
     TestInfiniteLoop next;
 
     @AssertNoWarning("InfiniteLoop")

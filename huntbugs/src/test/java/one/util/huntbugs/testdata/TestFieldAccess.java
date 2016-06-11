@@ -50,7 +50,7 @@ public class TestFieldAccess {
     private final String g = "test";
     
     @AssertNoWarning("FieldShouldBeStatic")
-    @AssertWarning("UnreadPrivateField")
+    @AssertWarning(value="UnreadPrivateField", minScore=45)
     private final String h; 
     
     {
@@ -63,6 +63,13 @@ public class TestFieldAccess {
     @AssertWarning("UnreadPrivateField")
     public void setF(int f) {
         this.f = f;
+    }
+    
+    @AssertWarning(value="UnreadPrivateField", maxScore=40)
+    private Object refField;
+    
+    public void setRef(Object val) {
+        refField = val;
     }
     
     public class SubClass extends TestFieldAccess {
@@ -122,6 +129,14 @@ public class TestFieldAccess {
     @AssertWarning("UnwrittenPublicField")
     public long getUnwritten() {
         return unwritten;
+    }
+    
+    @AssertWarning(value="UnwrittenPrivateField", maxScore=30)
+    private transient long unwrittenTransient;
+    
+    @AssertWarning("UnwrittenPrivateField")
+    public long getUnwrittenTransient() {
+        return unwrittenTransient;
     }
     
     @AssertNoWarning("*")

@@ -224,11 +224,15 @@ public class FieldAccess {
                     }
                 }
             }
+            if(!fd.isStatic() && !fd.isPublic() && fd.getName().startsWith("ref") && fd.getFieldType().getSimpleType() == JvmType.Object) {
+                // probably field is used to keep strong reference
+                priority += 10;
+            }
             fc.report(warningType, priority, getWriteAnnotations(fieldRecord));
         }
         if(checkWrite(fc, fd, td, fieldRecord, flags, isConstantType))
             return;
-        if(checkNull(fc, fd, fieldRecord, flags))
+        if(checkNull(fc, fd, td, fieldRecord, flags))
             return;
         checkSingleMethod(fc, fd, fieldRecord, flags);
         if(fd.isStatic() && (fd.isPublic() || fd.isProtected()) && (td.isPublic() || td.isProtected())) {
@@ -278,10 +282,7 @@ public class FieldAccess {
             if(fd.isPublic()) {
                 priority += 5;
             }
-            // Probably field is kept for backwards serialization compatibility
-            if(!fd.isStatic() && Types.isInstance(td, "java/io/Serializable")) {
-                priority += 10;
-            }
+            priority += tweakForSerialization(fd, td);
             if(fd.getFieldType().getSimpleType() == JvmType.Boolean) {
                 priority += 5;
             }
@@ -294,12 +295,24 @@ public class FieldAccess {
         return false;
     }
 
-    private boolean checkNull(FieldContext fc, FieldDefinition fd, FieldRecord fieldRecord, int flags) {
+    private int tweakForSerialization(FieldDefinition fd, TypeDefinition td) {
+        // Probably field is kept for backwards serialization compatibility
+        if(!fd.isStatic() && Types.isInstance(td, "java/io/Serializable")) {
+            return 10;
+        }
+        if(Flags.testAny(fd.getFlags(), Flags.TRANSIENT)) {
+            return 30;
+        }
+        return 0;
+    }
+
+    private boolean checkNull(FieldContext fc, FieldDefinition fd, TypeDefinition td, FieldRecord fieldRecord, int flags) {
         if(!Flags.testAny(flags, FieldStats.WRITE_NONNULL) && Flags.testAny(flags, FieldStats.READ)) {
             int priority = 0;
             if(fd.isPublic()) {
                 priority += 10;
             }
+            priority += tweakForSerialization(fd, td);
             fc.report("FieldIsAlwaysNull", priority, getWriteAnnotations(fieldRecord));
             return true;
         }
