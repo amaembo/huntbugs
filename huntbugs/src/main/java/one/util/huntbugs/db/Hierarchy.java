@@ -20,13 +20,17 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.strobel.assembler.metadata.Flags;
+import com.strobel.assembler.metadata.IMetadataResolver;
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 
 import one.util.huntbugs.registry.AbstractTypeDatabase;
 import one.util.huntbugs.registry.anno.TypeDatabase;
 import one.util.huntbugs.registry.anno.TypeDatabaseItem;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Types;
+import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 /**
  * @author Tagir Valeev
@@ -46,7 +50,16 @@ public class Hierarchy extends AbstractTypeDatabase<Hierarchy.TypeHierarchy> {
         for (TypeReference id : td.getExplicitInterfaces())
             link(th, id);
     }
-
+    
+    public boolean isOverridden(MethodDefinition md) {
+        if(md.isStatic() || md.isFinal() || md.getDeclaringType().isFinal())
+            return false;
+        IMetadataResolver resolver = md.getDeclaringType().getResolver();
+        MemberInfo mi = new MemberInfo(md);
+        TypeHierarchy th = get(md.getDeclaringType());
+        return th != null && th.isOverridden(resolver, mi);
+    }
+    
     private void link(TypeHierarchy th, TypeReference superType) {
         if (superType == null || Types.isObject(superType))
             return;
@@ -76,6 +89,25 @@ public class Hierarchy extends AbstractTypeDatabase<Hierarchy.TypeHierarchy> {
 
         public Set<TypeHierarchy> getSubClasses() {
             return Collections.unmodifiableSet(subClasses);
+        }
+        
+        boolean isOverridden(IMetadataResolver resolver, MemberInfo mi) {
+            for(TypeHierarchy th : subClasses) {
+                TypeReference str = resolver.lookupType(th.internalName);
+                if(str == null)
+                    continue;
+                TypeDefinition std = resolver.resolve(str);
+                if(std == null)
+                    continue;
+                MethodDefinition res = Methods.findMethod(std, mi);
+                if(res != null)
+                    return true;
+            }
+            for(TypeHierarchy th : subClasses) {
+                if(th.isOverridden(resolver, mi))
+                    return true;
+            }
+            return false;
         }
         
         public boolean isResolved() {

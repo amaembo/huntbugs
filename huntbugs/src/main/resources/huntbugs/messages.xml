@@ -1234,5 +1234,25 @@
       <LongDescription><![CDATA[The field $FIELD$ is not final and could be modified from other packages.
       Analysis shows that it should not be very hard to make this field final, though some refactoring is probably required.]]></LongDescription>
     </Warning>
+    <Warning Type="ConstructorParameterIsNotPassed">
+      <Title>Constructor parameter is not passed</Title>
+      <Description>Constructor calls another constructor, but doesn't pass the parameter $VARIABLE$.</Description>
+      <LongDescription><![CDATA[The constructor of class $TYPE$ calls another constructor, 
+      but parameter <code>$VARIABLE$</code> is not passed through and is not used in any other way.
+      Probably there's a mistake.]]></LongDescription>
+    </Warning>
+    <Warning Type="MethodParameterIsNotPassed">
+      <Title>Parameter is not passed to the overloaded method</Title>
+      <Description>Method $METHOD$ doesn't pass the parameter $VARIABLE$ to the overloaded method.</Description>
+      <LongDescription><![CDATA[The method $METHOD$ calls another method with the same name, 
+      but parameter <code>$VARIABLE$</code> is not passed through and is not used in any other way.
+      Probably there's a mistake.]]></LongDescription>
+    </Warning>
+    <Warning Type="MethodParameterIsNotUsed">
+      <Title>Method parameter is not used</Title>
+      <Description>Method $METHOD$ doesn't use its parameter $VARIABLE$.</Description>
+      <LongDescription><![CDATA[The method $METHOD$ does not use its parameter <code>$VARIABLE$</code>.
+      Probably this parameter could be removed.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

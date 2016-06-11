@@ -30,6 +30,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import one.util.huntbugs.analysis.Context;
+import one.util.huntbugs.util.Iterables;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 
@@ -416,12 +417,12 @@ public class ValuesFlow {
                 initBackLinks(child, lambdas);
     }
 
-    public static List<Expression> annotate(Context ctx, MethodDefinition md, ClassFields cf, Block method) {
+    public static List<Expression> annotate(Context ctx, MethodDefinition md, ClassFields cf, Block method, Iterable<Expression> closure) {
         ctx.incStat("ValuesFlow.Total");
         List<Lambda> lambdas = new ArrayList<>();
         initBackLinks(method, lambdas);
         FrameContext fc = new FrameContext(md, cf);
-        Frame origFrame = new Frame(fc);
+        Frame origFrame = new Frame(fc, closure);
         List<Expression> origParams = new ArrayList<>(origFrame.initial.values());
         FrameSet fs = new FrameSet(origFrame, EMPTY_TARGETS);
         fs.process(ctx, method);
@@ -430,7 +431,8 @@ public class ValuesFlow {
             fc.makeFieldsFrom(exitFrame);
             boolean valid = true;
             for(Lambda lambda : lambdas) {
-                valid &= annotate(ctx, Nodes.getLambdaMethod(lambda), cf, lambda.getBody()) != null;
+                valid &= annotate(ctx, Nodes.getLambdaMethod(lambda), cf, lambda.getBody(), Iterables.concat(origParams,
+                    closure)) != null;
             }
             if (valid) {
                 ctx.incStat("ValuesFlow");

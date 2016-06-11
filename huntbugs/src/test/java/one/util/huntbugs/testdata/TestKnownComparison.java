@@ -170,6 +170,7 @@ public class TestKnownComparison {
 
     @AssertNoWarning("*")
     public void testNestedForForSwitch(boolean b) {
+        System.out.println(b);
         for (int pass = 0; pass < 2; pass++) {
             if (pass == 1)
                 System.out.println("Second pass");

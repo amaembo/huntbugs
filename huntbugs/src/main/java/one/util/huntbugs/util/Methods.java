@@ -15,6 +15,10 @@
  */
 package one.util.huntbugs.util;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import com.strobel.assembler.ir.Instruction;
 import com.strobel.assembler.ir.OpCode;
 import com.strobel.assembler.metadata.MethodBody;
@@ -30,6 +34,10 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
  *
  */
 public class Methods {
+    private static final Set<String> SERIALIZATION_METHODS = 
+            new HashSet<>(Arrays.asList("writeReplace", "readResolve",
+                "readObject", "readObjectNoData", "writeObject"));
+    
     public static boolean isEqualsMethod(MethodReference mr) {
         return mr.getName().equals("equals") && mr.getSignature().equals("(Ljava/lang/Object;)Z");
     }
@@ -70,7 +78,7 @@ public class Methods {
         return null; 
     }
 
-    private static MethodDefinition findMethod(TypeDefinition td, MemberInfo mi) {
+    public static MethodDefinition findMethod(TypeDefinition td, MemberInfo mi) {
         if(td == null)
             return null;
         for(MethodDefinition decl : td.getDeclaredMethods()) {
@@ -156,5 +164,9 @@ public class Methods {
         }
         // Actually should not go here for valid bytecode
         return false;
+    }
+
+    public static boolean isSerializationMethod(MethodDefinition md) {
+        return SERIALIZATION_METHODS.contains(md.getName());
     }
 }

@@ -15,7 +15,6 @@
  */
 package one.util.huntbugs.detect;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -37,6 +36,7 @@ import one.util.huntbugs.registry.ClassContext;
 import one.util.huntbugs.registry.anno.AssertWarning;
 import one.util.huntbugs.registry.anno.ClassVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -49,17 +49,13 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 @WarningDefinition(category="RedundantCode", name="UncalledPrivateMethod", maxScore=45)
 @WarningDefinition(category="RedundantCode", name="UncalledPrivateMethodChain", maxScore=50)
 public class UncalledPrivateMethod {
-    private static final Set<String> RESERVED_NAMES = 
-            new HashSet<>(Arrays.asList("writeReplace", "readResolve",
-                "readObject", "readObjectNoData", "writeObject"));
-    
     private final Map<MemberInfo, Set<MemberInfo>> candidates = new LinkedHashMap<>();
     
     @ClassVisitor
     public void visitType(TypeDefinition td, ClassContext cc) {
         for(MethodDefinition md : td.getDeclaredMethods()) {
             if(md.isPrivate() && !md.isSpecialName() 
-                    && !RESERVED_NAMES.contains(md.getName())
+                    && !Methods.isSerializationMethod(md)
                     && !md.getName().toLowerCase(Locale.ENGLISH).contains("debug")
                     && !md.getName().toLowerCase(Locale.ENGLISH).contains("trace")
                     && !hasAnnotation(md)) {

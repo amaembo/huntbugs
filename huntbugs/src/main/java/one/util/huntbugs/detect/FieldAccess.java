@@ -18,6 +18,7 @@ package one.util.huntbugs.detect;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -29,8 +30,6 @@ import com.strobel.assembler.metadata.JvmType;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeDefinition;
-import com.strobel.assembler.metadata.TypeReference;
-import com.strobel.assembler.metadata.annotations.CustomAnnotation;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
@@ -38,13 +37,13 @@ import one.util.huntbugs.db.FieldStats;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.FieldContext;
 import one.util.huntbugs.registry.MethodContext;
-import one.util.huntbugs.registry.anno.AssertWarning;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.FieldVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.VisitOrder;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Annotations;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
@@ -188,7 +187,7 @@ public class FieldAccess {
         if(fd.isSynthetic() || fd.isEnumConstant())
             return;
         int flags = fs.getFlags(fd);
-        if(Flags.testAny(flags, FieldStats.UNRESOLVED) || hasAnnotation(fd)) {
+        if(Flags.testAny(flags, FieldStats.UNRESOLVED) || Annotations.hasAnnotation(fd)) {
             return;
         }
         boolean isConstantType = fd.getFieldType().isPrimitive() || Types.is(fd.getFieldType(), String.class);
@@ -309,7 +308,13 @@ public class FieldAccess {
     private boolean checkNull(FieldContext fc, FieldDefinition fd, TypeDefinition td, FieldRecord fieldRecord, int flags) {
         if(!Flags.testAny(flags, FieldStats.WRITE_NONNULL) && Flags.testAny(flags, FieldStats.READ)) {
             int priority = 0;
-            if(fd.isPublic()) {
+            if(fd.isFinal() && fd.isStatic()) {
+                priority += 20;
+                String lcName = fd.getName().toLowerCase(Locale.ENGLISH);
+                if (lcName.contains("null") || lcName.contains("zero") || lcName.contains("empty")) {
+                    priority += 15;
+                }
+            } else if(fd.isPublic()) {
                 priority += 10;
             }
             priority += tweakForSerialization(fd, td);
@@ -348,20 +353,5 @@ public class FieldAccess {
                     Roles.LOCATION.create(fieldRecord.firstWriteLocation) };
         }
         return anno;
-    }
-
-    private static boolean hasAnnotation(FieldDefinition fd) {
-        for(CustomAnnotation ca : fd.getAnnotations()) {
-            TypeReference annoType = ca.getAnnotationType();
-            if(annoType.getPackageName().equals(AssertWarning.class.getPackage().getName()))
-                continue;
-            if(annoType.getSimpleName().equalsIgnoreCase("nonnull") ||
-                   annoType.getSimpleName().equalsIgnoreCase("notnull") ||
-                   annoType.getSimpleName().equalsIgnoreCase("nullable") ||
-                   annoType.getSimpleName().equalsIgnoreCase("checkfornull"))
-                continue;
-            return true;
-        }
-        return false;
     }
 }
