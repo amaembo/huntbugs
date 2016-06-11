@@ -25,6 +25,7 @@ import java.util.Set;
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.Flags;
+import com.strobel.assembler.metadata.JvmType;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeDefinition;
@@ -225,7 +226,7 @@ public class FieldAccess {
             }
             fc.report(warningType, priority, getWriteAnnotations(fieldRecord));
         }
-        if(checkWrite(fc, fd, td, fieldRecord, flags))
+        if(checkWrite(fc, fd, td, fieldRecord, flags, isConstantType))
             return;
         if(checkNull(fc, fd, fieldRecord, flags))
             return;
@@ -263,8 +264,10 @@ public class FieldAccess {
         }
     }
 
-    private boolean checkWrite(FieldContext fc, FieldDefinition fd, TypeDefinition td, FieldRecord fieldRecord, int flags) {
+    private boolean checkWrite(FieldContext fc, FieldDefinition fd, TypeDefinition td, FieldRecord fieldRecord, int flags, boolean isConstantType) {
         if(!Flags.testAny(flags, FieldStats.WRITE)) {
+            if(fd.isStatic() && fd.isFinal() && isConstantType)
+                return false;
             WarningAnnotation<?>[] anno = {};
             int priority = 0;
             String warningType = fd.isPublic() || fd.isProtected() ? "UnwrittenPublicField" : "UnwrittenPrivateField";
@@ -278,6 +281,12 @@ public class FieldAccess {
             // Probably field is kept for backwards serialization compatibility
             if(!fd.isStatic() && Types.isInstance(td, "java/io/Serializable")) {
                 priority += 10;
+            }
+            if(fd.getFieldType().getSimpleType() == JvmType.Boolean) {
+                priority += 5;
+            }
+            if(fd.getName().equalsIgnoreCase("debug")) {
+                priority += 5;
             }
             fc.report(warningType, priority, anno);
             return true;
