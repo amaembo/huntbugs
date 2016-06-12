@@ -36,6 +36,7 @@ import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
 import one.util.huntbugs.db.FieldStats;
+import one.util.huntbugs.db.Mutability;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.FieldContext;
 import one.util.huntbugs.registry.MethodContext;
@@ -112,7 +113,7 @@ public class FieldAccess {
     private boolean fullyAnalyzed = true;
     
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
-    public void visitCode(Expression expr, MethodContext mc, MethodDefinition md, TypeDefinition td) {
+    public void visitCode(Expression expr, MethodContext mc, MethodDefinition md, TypeDefinition td, Mutability m) {
         if(expr.getCode() == AstCode.PutField || expr.getCode() == AstCode.PutStatic ||
                 expr.getCode() == AstCode.GetField || expr.getCode() == AstCode.GetStatic) {
             FieldDefinition fd = ((FieldReference) expr.getOperand()).resolve();
@@ -155,6 +156,9 @@ public class FieldAccess {
                         if (!isEmptyArray(value)) {
                             fieldRecord.mutable = true;
                         }
+                    }
+                    if(m.isKnownMutable(fd.getFieldType())) {
+                        fieldRecord.mutable = true;
                     }
                     fieldRecord.numWrites++;
                 }

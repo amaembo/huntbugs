@@ -24,6 +24,7 @@ import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Variable;
 
+import one.util.huntbugs.db.Mutability;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -52,7 +53,7 @@ public class ExposeRepresentation {
     }
 
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
-    public void visit(Expression expr, MethodContext mc, MethodDefinition md) {
+    public void visit(Expression expr, MethodContext mc, MethodDefinition md, Mutability m) {
         if (!md.isStatic() && expr.getCode() == AstCode.PutField) {
             FieldDefinition fd = ((FieldReference) expr.getOperand()).resolve();
             if (fd != null && (fd.isPrivate() || fd.isPackagePrivate() || fd.isProtected())) {
@@ -62,14 +63,14 @@ public class ExposeRepresentation {
                 if (!Nodes.isThis(self))
                     return;
                 Expression value = Nodes.getChild(expr, 1);
-                report(expr, mc, md, fd, value, "ExposeMutableFieldViaParameter");
+                report(expr, mc, md, fd, m, value, "ExposeMutableFieldViaParameter");
             }
         }
         if (expr.getCode() == AstCode.PutStatic) {
             FieldDefinition fd = ((FieldReference) expr.getOperand()).resolve();
             if (fd != null && (fd.isPrivate() || fd.isPackagePrivate())) {
                 Expression value = Nodes.getChild(expr, 0);
-                report(expr, mc, md, fd, value, "ExposeMutableStaticFieldViaParameter");
+                report(expr, mc, md, fd, m, value, "ExposeMutableStaticFieldViaParameter");
             }
         }
     }
@@ -82,12 +83,12 @@ public class ExposeRepresentation {
         return null;
     }
 
-    private void report(Expression expr, MethodContext mc, MethodDefinition md, FieldDefinition fd, Expression value,
+    private void report(Expression expr, MethodContext mc, MethodDefinition md, FieldDefinition fd, Mutability m, Expression value,
             String type) {
         ParameterDefinition pd = getParameter(value);
         if (pd == null)
             return;
-        if (!Types.isMutable(fd.getFieldType()))
+        if (!Types.isMutable(fd.getFieldType()) && !m.isKnownMutable(fd.getFieldType()))
             return;
         int priority = 0;
         if (md.isProtected() || fd.isProtected())
