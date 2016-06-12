@@ -17,6 +17,7 @@ package one.util.huntbugs.util;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.strobel.assembler.ir.Instruction;
@@ -24,6 +25,7 @@ import com.strobel.assembler.ir.OpCode;
 import com.strobel.assembler.metadata.MethodBody;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 
@@ -46,9 +48,42 @@ public class Methods {
         return mr.getName().equals("getClass") && mr.getErasedSignature().equals("()Ljava/lang/Class;");
     }
     
-    public static MethodDefinition findSuperMethod(MethodReference md) {
-        TypeDefinition td = md.getDeclaringType().resolve();
-        return td == null ? null : findSuperMethod(td, new MemberInfo(md));
+    public static MethodDefinition findSuperMethod(MethodReference mr) {
+        MethodDefinition md = mr.resolve();
+        if(md == null)
+            return null;
+        TypeDefinition td = md.getDeclaringType();
+        return findSuperMethod(td, new MemberInfo(resolveToBridge(md)));
+    }
+    
+    public static MethodDefinition resolveToBridge(MethodDefinition md) {
+        if (md.isBridgeMethod()) {
+            return md;
+        }
+        for (MethodDefinition candidate : md.getDeclaringType().getDeclaredMethods()) {
+            if (candidate.getName().equals(md.getName()) && candidate.isBridgeMethod()) {
+                List<ParameterDefinition> params = candidate.getParameters();
+                if (params.size() == md.getParameters().size()) {
+                    MethodBody body = candidate.getBody();
+                    if (body != null) {
+                        for (Instruction instr : body.getInstructions()) {
+                            if (instr.getOperandCount() == 1) {
+                                Object operand = instr.getOperand(0);
+                                if (operand instanceof MethodReference) {
+                                    MethodReference mr = (MethodReference) operand;
+                                    if (mr.getName().equals(md.getName()) && mr.getErasedSignature().equals(md
+                                            .getErasedSignature()) && mr.getDeclaringType().isEquivalentTo(md
+                                                    .getDeclaringType())) {
+                                        return candidate;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return md;
     }
     
     public static MethodDefinition findSuperMethod(TypeDefinition type, MemberInfo mi) {

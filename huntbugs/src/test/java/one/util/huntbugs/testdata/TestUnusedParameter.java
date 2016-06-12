@@ -22,7 +22,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  * @author shustkost
  *
  */
-public class TestUnusedParameter {
+public abstract class TestUnusedParameter {
     @AssertNoWarning("*")
     public TestUnusedParameter(int x, int y) {
         this(x, y, "other");
@@ -73,5 +73,31 @@ public class TestUnusedParameter {
     @AssertWarning("MethodParameterIsNotUsed")
     public void printStatic(double x) {
         printStatic("test", 0);
+    }
+    
+    @AssertNoWarning("*")
+    abstract protected void test(int x);
+    
+    static class Xyz extends TestUnusedParameter {
+        @AssertNoWarning("*")
+        @Override
+        protected void test(int x) {
+            System.out.println("Ok");            
+        }
+    }
+    
+    static class Generic<T> {
+        @AssertNoWarning("*")
+        protected void foo(T param) {
+            System.out.println("foo");
+        }
+    }
+    
+    static class SubClass extends Generic<String> {
+        @Override
+        @AssertNoWarning("*")
+        protected void foo(String param) {
+            System.out.println("bar");
+        }
     }
 }
