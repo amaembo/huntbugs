@@ -235,4 +235,24 @@ public class TestFieldAccess {
         @AssertWarning("StaticFieldMutableCollection")
         public static Collection<String> stringsList = new ArrayList<>();
     }
+    
+    @AssertNoWarning("*")
+    private static int exposeOk = 1;
+
+    @AssertNoWarning("*")
+    public static int getExposeOk() {
+        exposeOk++;
+        System.out.print(exposeOk);
+        return exposeOk;
+    }
+    
+    @AssertWarning("ExposeMutableFieldViaReturnValue")
+    private final int[] expose = {1};
+    
+    @AssertWarning("ExposeMutableFieldViaReturnValue")
+    public int[] getExpose() {
+        expose[0]++;
+        System.out.print(expose[0]);
+        return expose;
+    }
 }

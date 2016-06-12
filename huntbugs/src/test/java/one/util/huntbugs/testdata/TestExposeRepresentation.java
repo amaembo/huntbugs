@@ -38,7 +38,7 @@ public class TestExposeRepresentation {
     static Hashtable<String, Integer> ht;
     InternalClass ic = new InternalClass();
 
-    @AssertWarning(value="ExposeMutableFieldViaParameter", minScore=40)
+    @AssertWarning(value="ExposeMutableFieldViaParameter", minScore=30)
     public void setField(int[] f) {
         if(f.length > 2)
             this.f = f;
@@ -52,7 +52,7 @@ public class TestExposeRepresentation {
         this.f = f;
     }
     
-    @AssertWarning(value="ExposeMutableFieldViaParameter", maxScore=39)
+    @AssertWarning(value="ExposeMutableFieldViaParameter", maxScore=29)
     public void setFieldVarArgs(int... f) {
         this.f = f;
     }

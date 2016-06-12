@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.util;
 
+import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.Flags;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
@@ -58,5 +59,10 @@ public enum AccessLevel {
     public static AccessLevel of(MethodDefinition md) {
         TypeDefinition td = md.getDeclaringType();
         return ofFlags(td.getFlags()).min(ofFlags(md.getFlags()));
+    }
+    
+    public static AccessLevel of(FieldDefinition fd) {
+        TypeDefinition td = fd.getDeclaringType();
+        return ofFlags(td.getFlags()).min(ofFlags(fd.getFlags()));
     }
 }

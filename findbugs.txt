@@ -185,6 +185,8 @@ abbrev="MS" type="MS_CANNOT_BE_FINAL" category="MALICIOUS_CODE" --> StaticFieldC
 abbrev="MS" type="MS_MUTABLE_HASHTABLE" category="MALICIOUS_CODE" --> StaticFieldMutableCollection
 abbrev="MS" type="MS_MUTABLE_COLLECTION" category="MALICIOUS_CODE" --> StaticFieldMutableCollection
 abbrev="MS" type="MS_MUTABLE_COLLECTION_PKGPROTECT" category="MALICIOUS_CODE" --> StaticFieldShouldBePackagePrivate
+abbrev="MS" type="MS_EXPOSE_REP" category="MALICIOUS_CODE" --> ExposeMutableStaticFieldViaReturnValue
+abbrev="EI" type="EI_EXPOSE_REP" category="MALICIOUS_CODE" cweid="374" --> ExposeMutableFieldViaReturnValue
 
 ==== Not reimplemented
 
@@ -247,8 +249,6 @@ abbrev="Eq" type="EQ_ABSTRACT_SELF" category="BAD_PRACTICE"
 abbrev="Co" type="CO_ABSTRACT_SELF" category="BAD_PRACTICE"
 abbrev="MSF" type="MSF_MUTABLE_SERVLET_FIELD" category="MT_CORRECTNESS"
 abbrev="IS" type="IS2_INCONSISTENT_SYNC" category="MT_CORRECTNESS"
-abbrev="MS" type="MS_EXPOSE_REP" category="MALICIOUS_CODE"
-abbrev="EI" type="EI_EXPOSE_REP" category="MALICIOUS_CODE" cweid="374"
 abbrev="TLW" type="TLW_TWO_LOCK_WAIT" category="MT_CORRECTNESS"
 abbrev="UR" type="UR_UNINIT_READ" category="CORRECTNESS"
 abbrev="UR" type="UR_UNINIT_READ_CALLED_FROM_SUPER_CONSTRUCTOR" category="CORRECTNESS"

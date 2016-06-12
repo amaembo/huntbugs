@@ -43,6 +43,7 @@ import one.util.huntbugs.registry.anno.FieldVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.VisitOrder;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.AccessLevel;
 import one.util.huntbugs.util.Annotations;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
@@ -71,17 +72,31 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
 @WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBeRefactoredToFinal", maxScore=40)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBePackagePrivate", maxScore=55)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBeNonInterfacePackagePrivate", maxScore=30)
+@WarningDefinition(category = "MaliciousCode", name = "ExposeMutableFieldViaReturnValue", maxScore = 35)
+@WarningDefinition(category = "MaliciousCode", name = "ExposeMutableStaticFieldViaReturnValue", maxScore = 50)
 public class FieldAccess {
     private static final Set<String> MUTABLE_COLLECTION_CLASSES = new HashSet<>(Arrays.asList("java/util/ArrayList",
         "java/util/HashSet", "java/util/HashMap", "java/util/Hashtable", "java/util/IdentityHashMap",
         "java/util/LinkedHashSet", "java/util/LinkedList", "java/util/LinkedHashMap", "java/util/TreeSet",
         "java/util/TreeMap", "java/util/Properties"));
     
+    static class MethodLocation {
+        MethodDefinition md;
+        Location loc;
+
+        public MethodLocation(MethodDefinition md, Location loc) {
+            this.md = md;
+            this.loc = loc;
+        }
+        
+        public WarningAnnotation<?>[] getAnnotations() {
+            WarningAnnotation<?>[] anno = {Roles.METHOD.create(md), Roles.LOCATION.create(loc)};
+            return anno;
+        }
+    }
+    
     static class FieldRecord {
-        MethodReference firstWriteMethod;
-        MethodReference firstReadMethod;
-        Location firstWriteLocation;
-        Location firstReadLocation;
+        MethodLocation firstWrite, firstRead, expose;
         Object constant;
         int numWrites;
         boolean mutable;
@@ -101,15 +116,16 @@ public class FieldAccess {
             if(fd != null && !fd.isSynthetic() && fd.getDeclaringType().isEquivalentTo(td)) {
                 FieldRecord fieldRecord = fields.computeIfAbsent(fd.getName(), n -> new FieldRecord());
                 if(Nodes.isFieldRead(expr)) {
-                    if(fieldRecord.firstReadMethod == null) {
-                        fieldRecord.firstReadMethod = md;
-                        fieldRecord.firstReadLocation = mc.getLocation(expr);
+                    if(fieldRecord.firstRead == null) {
+                        fieldRecord.firstRead = new MethodLocation(md, mc.getLocation(expr));
+                    }
+                    if(ValuesFlow.findTransitiveUsages(expr, true).anyMatch(e -> e.getCode() == AstCode.Return)) {
+                        fieldRecord.expose = new MethodLocation(md, mc.getLocation(expr));
                     }
                 } else {
                     Expression value = Nodes.getChild(expr, expr.getArguments().size()-1);
-                    if(fieldRecord.firstWriteMethod == null) {
-                        fieldRecord.firstWriteMethod = md;
-                        fieldRecord.firstWriteLocation = mc.getLocation(expr);
+                    if(fieldRecord.firstWrite == null) {
+                        fieldRecord.firstWrite = new MethodLocation(md, mc.getLocation(expr));
                         fieldRecord.constant = Nodes.getConstant(value);
                     } else {
                         if(fieldRecord.constant != null) {
@@ -150,8 +166,8 @@ public class FieldAccess {
                             (md.isStatic() || !Nodes.isThis(Nodes.getChild(expr, 0)))) {
                         fieldRecord.usedInSingleMethod = false;
                     }
-                    if(fieldRecord.firstWriteMethod != null && fieldRecord.firstWriteMethod != md || 
-                            fieldRecord.firstReadMethod != null && fieldRecord.firstReadMethod != md) {
+                    if(fieldRecord.firstWrite != null && fieldRecord.firstWrite.md != md || 
+                            fieldRecord.firstRead != null && fieldRecord.firstRead.md != md) {
                         fieldRecord.usedInSingleMethod = false;
                     }
                 }
@@ -202,8 +218,7 @@ public class FieldAccess {
         }
         FieldRecord fieldRecord = fields.get(fd.getName());
         if (fieldRecord != null && !fd.isStatic() && fd.isFinal() && fieldRecord.constant != null) {
-            fc.report("FieldShouldBeStatic", 0, Roles.METHOD.create(fieldRecord.firstWriteMethod),
-                Roles.LOCATION.create(fieldRecord.firstWriteLocation));
+            fc.report("FieldShouldBeStatic", 0, fieldRecord.firstWrite.getAnnotations());
             return;
         }
         if(!Flags.testAny(flags, FieldStats.READ)) {
@@ -245,7 +260,7 @@ public class FieldAccess {
                         type = "StaticFieldShouldBeFinalAndPackagePrivate";
                     }
                 }
-                fc.report(type, fd.isProtected() ? 10 : 0, getWriteAnnotations(fieldRecord));
+                fc.report(type, AccessLevel.of(fd).select(0, 10, 100, 100), getWriteAnnotations(fieldRecord));
                 return;
             }
             if(mutable || !fd.isFinal()) {
@@ -261,8 +276,16 @@ public class FieldAccess {
                     type = "StaticFieldMutableCollection";
                 }
                 if(type != null) {
-                    fc.report(type, fd.isProtected() ? 10 : 0, getWriteAnnotations(fieldRecord));
+                    fc.report(type, AccessLevel.of(fd).select(0, 10, 100, 100), getWriteAnnotations(fieldRecord));
+                    return;
                 }
+            }
+        }
+        if(fieldRecord != null && (td.isPublic() || td.isProtected()) && (fd.isPrivate() || fd.isPackagePrivate())) {
+            MethodLocation expose = fieldRecord.expose;
+            if(fieldRecord.mutable && expose != null && (expose.md.isPublic() || expose.md.isProtected())) {
+                String type = fd.isStatic() ? "ExposeMutableStaticFieldViaReturnValue" : "ExposeMutableFieldViaReturnValue";
+                fc.report(type, AccessLevel.of(expose.md).select(0, 10, 100, 100), expose.getAnnotations());
             }
         }
     }
@@ -274,9 +297,8 @@ public class FieldAccess {
             WarningAnnotation<?>[] anno = {};
             int priority = 0;
             String warningType = fd.isPublic() || fd.isProtected() ? "UnwrittenPublicField" : "UnwrittenPrivateField";
-            if (fieldRecord != null && fieldRecord.firstReadMethod != null) {
-                anno = new WarningAnnotation[] { Roles.METHOD.create(fieldRecord.firstReadMethod),
-                        Roles.LOCATION.create(fieldRecord.firstReadLocation) };
+            if (fieldRecord != null && fieldRecord.firstRead != null) {
+                anno = fieldRecord.firstRead.getAnnotations();
             }
             if(fd.isPublic()) {
                 priority += 5;
@@ -329,29 +351,23 @@ public class FieldAccess {
             && Flags.testAny(flags, FieldStats.READ)
             && !Flags.testAny(flags, FieldStats.READ_PACKAGE | FieldStats.READ_OUTSIDE | FieldStats.WRITE_PACKAGE
                 | FieldStats.WRITE_OUTSIDE) && fieldRecord != null && fieldRecord.usedInSingleMethod
-            && fieldRecord.firstWriteLocation != null) {
-            int priority = 0;
+            && fieldRecord.firstWrite != null) {
+            int priority = AccessLevel.of(fd).select(10, 3, 1, 0);
             if(!fd.isStatic())
                 priority += 5;
-            if(fd.isPublic())
-                priority += 10;
-            else if(fd.isProtected())
-                priority += 3;
-            if(fieldRecord.firstWriteMethod.isConstructor())
+            if(fieldRecord.firstWrite.md.isConstructor())
                 priority += 5;
             if(fd.getFieldType().isPrimitive())
                 priority += 3;
-            fc.report("FieldUsedInSingleMethod", priority, Roles.METHOD.create(fieldRecord.firstWriteMethod),
-                Roles.LOCATION.create(fieldRecord.firstWriteLocation));
+            fc.report("FieldUsedInSingleMethod", priority, fieldRecord.firstWrite.getAnnotations());
         }
     }
 
     private WarningAnnotation<?>[] getWriteAnnotations(FieldRecord fieldRecord) {
-        WarningAnnotation<?>[] anno = {};
-        if (fieldRecord != null && fieldRecord.firstWriteMethod != null) {
-            anno = new WarningAnnotation[] { Roles.METHOD.create(fieldRecord.firstWriteMethod),
-                    Roles.LOCATION.create(fieldRecord.firstWriteLocation) };
+        if (fieldRecord != null && fieldRecord.firstWrite != null) {
+            return fieldRecord.firstWrite.getAnnotations();
         }
+        WarningAnnotation<?>[] anno = {};
         return anno;
     }
 }

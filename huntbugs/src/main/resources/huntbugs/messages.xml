@@ -513,11 +513,25 @@
       <LongDescription><![CDATA[This method stores a parameter into a static field $FIELD$. However the field type is $FIELD_TYPE$
       which allows uncontrolled modification by the caller. Consider copying an object before storing it in the field.]]></LongDescription>
     </Warning>
+    <Warning Type="ExposeMutableStaticFieldViaReturnValue">
+      <Title>Internal static state exposure by returning a mutable static field</Title>
+      <Description>Internal static state exposure by returning a mutable static field $FIELD$.</Description>
+      <LongDescription><![CDATA[This method returns a possibly mutable object stored in the static field $FIELD$.
+      As a result, uncontrolled modification of the object is possible. Consider returning a copy or wrapping an object
+      into unmodifiable wrapper.]]></LongDescription>
+    </Warning>
     <Warning Type="ExposeMutableFieldViaParameter">
       <Title>Internal state exposure by storing a mutable object into a field</Title>
       <Description>Internal state exposure by storing an object of $FIELD_TYPE$ type into a $FIELD$.</Description>
       <LongDescription><![CDATA[This method stores a parameter into a field $FIELD$. However the field type is $FIELD_TYPE$
       which allows uncontrolled modification by the caller. Consider copying an object before storing it in the field.]]></LongDescription>
+    </Warning>
+    <Warning Type="ExposeMutableFieldViaReturnValue">
+      <Title>Internal state exposure by returning a mutable field</Title>
+      <Description>Internal state exposure by returning a mutable field $FIELD$.</Description>
+      <LongDescription><![CDATA[This method returns a possibly mutable object stored in the field $FIELD$.
+      As a result, uncontrolled modification of the object is possible. Consider returning a copy or wrapping an object
+      into unmodifiable wrapper.]]></LongDescription>
     </Warning>
     <Warning Type="NewForGetClass">
       <Title>Method allocates an object, only to get the class object</Title>

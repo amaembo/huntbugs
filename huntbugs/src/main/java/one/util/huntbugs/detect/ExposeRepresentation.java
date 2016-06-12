@@ -38,8 +38,8 @@ import one.util.huntbugs.warning.Role.TypeRole;
  * @author Tagir Valeev
  *
  */
-@WarningDefinition(category = "MaliciousCode", name = "ExposeMutableFieldViaParameter", maxScore = 45)
-@WarningDefinition(category = "MaliciousCode", name = "ExposeMutableStaticFieldViaParameter", maxScore = 55)
+@WarningDefinition(category = "MaliciousCode", name = "ExposeMutableFieldViaParameter", maxScore = 35)
+@WarningDefinition(category = "MaliciousCode", name = "ExposeMutableStaticFieldViaParameter", maxScore = 50)
 public class ExposeRepresentation {
     private static final TypeRole FIELD_TYPE = TypeRole.forName("FIELD_TYPE");
 
