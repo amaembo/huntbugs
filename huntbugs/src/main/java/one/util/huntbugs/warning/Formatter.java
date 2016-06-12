@@ -26,7 +26,9 @@ import one.util.huntbugs.warning.WarningAnnotation.TypeInfo;
  */
 public class Formatter {
     public static final String FORMAT_PLAIN = "plain";
+    public static final String FORMAT_TYPE_PLAIN = "type.plain";
     public static final String FORMAT_HTML = "html";
+    public static final String FORMAT_TYPE_HTML = "type.html";
     public static final String FORMAT_NAME = "name";
     public static final String FORMAT_HEX = "hex";
     public static final String FORMAT_DEC = "dec";
@@ -201,8 +203,10 @@ public class Formatter {
     }
 
     public String formatMemberInfo(MemberInfo mi, String format) {
-        if (format.equals("name"))
+        if (format.equals(FORMAT_NAME))
             return mi.getName();
+        if(format.startsWith("type."))
+            return formatTypeInfo(mi.getType(), format.substring("type.".length()));
         String type = mi.getTypeName();
         int pos = type.lastIndexOf('/');
         if (pos > -1)

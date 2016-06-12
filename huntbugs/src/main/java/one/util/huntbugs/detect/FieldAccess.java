@@ -15,9 +15,11 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -69,6 +71,7 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
 @WarningDefinition(category="MaliciousCode", name="StaticFieldCannotBeFinal", maxScore=35)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldMutableArray", maxScore=40)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldMutableCollection", maxScore=45)
+@WarningDefinition(category="MaliciousCode", name="StaticFieldMutable", maxScore=40)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBeRefactoredToFinal", maxScore=40)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBePackagePrivate", maxScore=55)
 @WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBeNonInterfacePackagePrivate", maxScore=30)
@@ -265,6 +268,8 @@ public class FieldAccess {
             }
             if(mutable || !fd.isFinal()) {
                 String type = null;
+                List<WarningAnnotation<?>> anno = new ArrayList<>(Arrays.asList(getWriteAnnotations(fieldRecord)));
+                anno.add(Roles.FIELD_TYPE.create(fd.getFieldType()));
                 if(!Flags.testAny(flags, FieldStats.WRITE_OUTSIDE | FieldStats.READ_OUTSIDE)) {
                     type = td.isInterface() ? "StaticFieldShouldBeNonInterfacePackagePrivate"
                         : "StaticFieldShouldBePackagePrivate";
@@ -274,9 +279,11 @@ public class FieldAccess {
                     type = "StaticFieldMutableArray";
                 } else if(mutable && fieldRecord.collection) {
                     type = "StaticFieldMutableCollection";
+                } else if(mutable) {
+                    type = "StaticFieldMutable";
                 }
                 if(type != null) {
-                    fc.report(type, AccessLevel.of(fd).select(0, 10, 100, 100), getWriteAnnotations(fieldRecord));
+                    fc.report(type, AccessLevel.of(fd).select(0, 10, 100, 100), anno.toArray(new WarningAnnotation[0]));
                     return;
                 }
             }

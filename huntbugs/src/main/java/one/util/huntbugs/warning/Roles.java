@@ -121,6 +121,10 @@ public final class Roles {
      */
     public static final TypeRole TARGET_TYPE = new TypeRole("TARGET_TYPE", Count.ZERO_ONE);
     /**
+     * Field type associated with warning
+     */
+    public static final TypeRole FIELD_TYPE = new TypeRole("FIELD_TYPE", Count.ZERO_ONE);
+    /**
      * Array type associated with warning
      */
     public static final TypeRole ARRAY_TYPE = new TypeRole("ARRAY_TYPE", Count.ZERO_ONE);
