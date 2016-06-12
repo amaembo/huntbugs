@@ -548,6 +548,8 @@ public class ValuesFlow {
                     return null;
                 if(x.getCode() == AstCode.Load)
                     return findTransitiveUsages(x, includePhi);
+                if(x.getCode() == AstCode.TernaryOp && includePhi)
+                    return findTransitiveUsages(x, includePhi);
                 return Stream.of(x);
             });
     }

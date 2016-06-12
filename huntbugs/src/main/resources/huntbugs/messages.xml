@@ -1275,5 +1275,13 @@
       <LongDescription><![CDATA[The method $METHOD$ does not use its parameter <code>$VARIABLE$</code>.
       Probably this parameter could be removed.]]></LongDescription>
     </Warning>
+    <Warning Type="CompareReturnsMinValue">
+      <Title>Comparison method returns Integer.MIN_VALUE</Title>
+      <Description>Method $METHOD$ returns Integer.MIN_VALUE.</Description>
+      <LongDescription><![CDATA[The comparison method $METHOD$ explicitly returns <code>Integer.MIN_VALUE</code>.
+      While this is perfectly allowed by method contract, it may cause unexpected errors when
+      user tries to negate comparison result. Comparison method can return any negative number here,
+      so better to use something else like <code>-1</code>.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>
