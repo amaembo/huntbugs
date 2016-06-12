@@ -20,7 +20,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.strobel.assembler.metadata.MethodReference;
-import com.strobel.core.StringUtilities;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
@@ -105,8 +104,8 @@ public class ExclusiveConditions {
                     if (Equi.equiExpressions(arg, arg2) && !Objects.equals(constant, constant2)) {
                         // non-short-circuit logic is intended
                         if (reported.add(arg) & reported.add(arg2)) {
-                            mc.report("AndEqualsAlwaysFalse", 0, arg, CONST1.create(formatConstant(constant)), CONST2
-                                    .create(formatConstant(constant2)));
+                            mc.report("AndEqualsAlwaysFalse", 0, arg, CONST1.createFromConst(constant), CONST2
+                                    .createFromConst(constant2));
                         }
                     }
                 });
@@ -125,8 +124,8 @@ public class ExclusiveConditions {
                     if (Equi.equiExpressions(arg, arg2) && !Objects.equals(constant, constant2)) {
                         // non-short-circuit logic is intended
                         if (reported.add(arg) & reported.add(arg2)) {
-                            mc.report("OrNotEqualsAlwaysTrue", 0, arg, CONST1.create(formatConstant(constant)), CONST2
-                                    .create(formatConstant(constant2)));
+                            mc.report("OrNotEqualsAlwaysTrue", 0, arg, CONST1.createFromConst(
+                                constant), CONST2.createFromConst(constant2));
                         }
                     }
                 });
@@ -136,12 +135,5 @@ public class ExclusiveConditions {
                 checkNonEqual(equality, other.getArguments().get(1), mc);
             }
         });
-    }
-
-    String formatConstant(Object constant) {
-        if(constant instanceof String) {
-            return StringUtilities.escape((String)constant, true);
-        }
-        return String.valueOf(constant);
     }
 }

@@ -656,14 +656,14 @@ class Frame {
             storeValue(expr, left);
             return this;
         }
-        if (left == null || left.getClass() != leftType)
+        if (!leftType.isInstance(left))
             return this;
         Object right = expr.getArguments().get(1).getUserData(ValuesFlow.VALUE_KEY);
         if (right == UNKNOWN_VALUE) {
             storeValue(expr, right);
             return this;
         }
-        if (right == null || right.getClass() != rightType)
+        if (!rightType.isInstance(right))
             return this;
         Object result = UNKNOWN_VALUE;
         try {
@@ -683,15 +683,21 @@ class Frame {
             storeValue(expr, arg);
             return this;
         }
-        if (!type.isInstance(arg))
-            return this;
+        if (!type.isInstance(arg)) {
+            if(type == Boolean.class && arg instanceof Integer)
+                arg = Integer.valueOf(1).equals(arg);
+            else
+                return this;
+        }
         Object result = op.apply(type.cast(arg));
         storeValue(expr, result);
         return this;
     }
 
     private Frame processKnownMethods(Expression expr, MethodReference mr) {
-        if (mr.getDeclaringType().getInternalName().equals("java/lang/String")) {
+        if (Methods.isEqualsMethod(mr)) {
+            processBinaryOp(expr, Object.class, Object.class, Object::equals);
+        } else if (mr.getDeclaringType().getInternalName().equals("java/lang/String")) {
             if (mr.getName().equals("length"))
                 processUnaryOp(expr, String.class, String::length);
             else if (mr.getName().equals("toString") || mr.getName().equals("intern"))
@@ -700,6 +706,14 @@ class Frame {
                 processUnaryOp(expr, String.class, String::trim);
             else if (mr.getName().equals("substring"))
                 processBinaryOp(expr, String.class, Integer.class, String::substring);
+            else if (mr.getName().equals("valueOf") && mr.getParameters().size() == 1) {
+                if(mr.getErasedSignature().startsWith("(Z)")) {
+                    // Handle specially to process possible Integer -> Boolean conversion
+                    processUnaryOp(expr, Boolean.class, String::valueOf);
+                } else {
+                    processUnaryOp(expr, Object.class, String::valueOf);
+                }
+            }
         } else if (mr.getDeclaringType().getInternalName().equals("java/lang/Math")) {
             if (mr.getName().equals("abs")) {
                 switch (getType(expr)) {
@@ -716,6 +730,23 @@ class Frame {
             }
         } else if (Nodes.isBoxing(expr) || Nodes.isUnboxing(expr)) {
             processUnaryOp(expr, Number.class, Function.identity());
+        } else if (mr.getName().equals("toString") && mr.getDeclaringType().getInternalName().startsWith("java/lang/")
+            && expr.getArguments().size() == 1) {
+            if(mr.getDeclaringType().getInternalName().equals("java/lang/Boolean")) {
+                processUnaryOp(expr, Boolean.class, Object::toString);
+            } else {
+                processUnaryOp(expr, Object.class, Object::toString);
+            }
+        } else if (expr.getCode() == AstCode.InvokeStatic && expr.getArguments().size() == 1) {
+            if(mr.getName().equals("parseInt") && mr.getDeclaringType().getInternalName().equals("java/lang/Integer")) {
+                processUnaryOp(expr, String.class, Integer::parseInt);
+            } else if(mr.getName().equals("parseLong") && mr.getDeclaringType().getInternalName().equals("java/lang/Long")) {
+                processUnaryOp(expr, String.class, Long::parseLong);
+            } else if(mr.getName().equals("parseDouble") && mr.getDeclaringType().getInternalName().equals("java/lang/Double")) {
+                processUnaryOp(expr, String.class, Double::parseDouble);
+            } else if(mr.getName().equals("parseFloat") && mr.getDeclaringType().getInternalName().equals("java/lang/Float")) {
+                processUnaryOp(expr, String.class, Float::parseFloat);
+            }
         }
         return this;
     }

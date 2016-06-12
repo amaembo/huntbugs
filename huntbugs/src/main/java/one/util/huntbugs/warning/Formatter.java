@@ -222,4 +222,11 @@ public class Formatter {
             return "<code class=\"Member\" title=\"" + mi + "\">" + result + "</code>";
         return result;
     }
+
+    public static String formatConstant(Object constant) {
+        if(constant instanceof String) {
+            return StringUtilities.escape((String)constant, true);
+        }
+        return String.valueOf(constant);
+    }
 }

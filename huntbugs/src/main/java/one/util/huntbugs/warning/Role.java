@@ -18,12 +18,14 @@ package one.util.huntbugs.warning;
 import java.util.Objects;
 
 import com.strobel.assembler.metadata.MemberReference;
+import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
@@ -133,6 +135,10 @@ public class Role<T> {
             super(name, String.class, count);
         }
         
+        public WarningAnnotation<String> createFromConst(Object constant) {
+            return create(Formatter.formatConstant(constant));
+        }
+        
         public static StringRole forName(String name) {
             return new StringRole(name);
         }
@@ -192,6 +198,8 @@ public class Role<T> {
         }
         
         public WarningAnnotation<String> create(Expression expr) {
+            if(expr.getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod((MethodReference) expr.getOperand()))
+                return create("equals");
             return create(Nodes.getOperation(expr.getCode()));
         }
     }

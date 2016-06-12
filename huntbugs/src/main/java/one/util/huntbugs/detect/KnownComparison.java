@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.detect;
 
+import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.Condition;
@@ -26,10 +27,10 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Role.LocationRole;
-import one.util.huntbugs.warning.Role.NumberRole;
 import one.util.huntbugs.warning.Role.StringRole;
 import one.util.huntbugs.warning.Roles;
 
@@ -42,25 +43,26 @@ import one.util.huntbugs.warning.Roles;
 public class KnownComparison {
     private static final LocationRole DEAD_CODE_LOCATION = LocationRole.forName("DEAD_CODE_LOCATION");
     private static final StringRole RESULT = StringRole.forName("RESULT");
-    private static final NumberRole LEFT_OPERAND = NumberRole.forName("LEFT_OPERAND");
-    private static final NumberRole RIGHT_OPERAND = NumberRole.forName("RIGHT_OPERAND");
+    private static final StringRole LEFT_OPERAND = StringRole.forName("LEFT_OPERAND");
+    private static final StringRole RIGHT_OPERAND = StringRole.forName("RIGHT_OPERAND");
 
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, NodeChain nc, MethodContext mc) {
-        if (expr.getCode().isComparison()) {
+        if (expr.getCode().isComparison() || (expr.getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod(
+            (MethodReference) expr.getOperand()))) {
             Object result = Nodes.getConstant(expr);
             if (result instanceof Boolean && !ValuesFlow.isAssertion(expr)) {
                 Object left = Nodes.getConstant(expr.getArguments().get(0));
                 Object right = Nodes.getConstant(expr.getArguments().get(1));
-                if (left instanceof Number && right instanceof Number) {
+                if (left != null && right != null) {
                     Node deadCode = getDeadCode(expr, nc, (boolean) result);
                     if (deadCode == null) {
-                        mc.report("ResultOfComparisonIsStaticallyKnown", 0, expr, LEFT_OPERAND.create((Number) left),
-                            RIGHT_OPERAND.create((Number) right), Roles.OPERATION.create(expr), RESULT.create(result
+                        mc.report("ResultOfComparisonIsStaticallyKnown", 0, expr, LEFT_OPERAND.createFromConst(left),
+                            RIGHT_OPERAND.createFromConst(right), Roles.OPERATION.create(expr), RESULT.create(result
                                     .toString()));
-                    } else if(!Nodes.isThrow(deadCode)) {
-                        mc.report("ResultOfComparisonIsStaticallyKnownDeadCode", 0, expr, LEFT_OPERAND.create(
-                            (Number) left), RIGHT_OPERAND.create((Number) right), Roles.OPERATION.create(expr),
+                    } else if (!Nodes.isThrow(deadCode)) {
+                        mc.report("ResultOfComparisonIsStaticallyKnownDeadCode", 0, expr, LEFT_OPERAND.createFromConst(
+                            left), RIGHT_OPERAND.createFromConst(right), Roles.OPERATION.create(expr),
                             DEAD_CODE_LOCATION.create(mc, deadCode), RESULT.create(result.toString()));
                     }
                 }

@@ -53,6 +53,33 @@ public class TestKnownComparison {
         finalField = 10;
     }
     
+    @AssertWarning("ResultOfComparisonIsStaticallyKnown")
+    public void testBooleanStringCompare() {
+        boolean b = false;
+        String s = "false";
+        if(String.valueOf(b).equals(s)) {
+            System.out.println("Always!");
+        }
+    }
+
+    @AssertWarning("ResultOfComparisonIsStaticallyKnown")
+    public void testIntegerStringCompare() {
+        int x = 100;
+        String s = "100";
+        if(String.valueOf(x).equals(s)) {
+            System.out.println("Always!");
+        }
+    }
+    
+    @AssertWarning("ResultOfComparisonIsStaticallyKnown")
+    public void testBooleanBoxingCompare() {
+        boolean b = false;
+        Boolean boxed = b;
+        if(boxed.equals(false)) {
+            System.out.println("Always!");
+        }
+    }
+    
     @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testAnd(int x) {
         int a = 2;
