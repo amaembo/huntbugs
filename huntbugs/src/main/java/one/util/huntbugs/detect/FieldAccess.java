@@ -15,11 +15,9 @@
  */
 package one.util.huntbugs.detect;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -32,6 +30,7 @@ import com.strobel.assembler.metadata.JvmType;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeDefinition;
+import com.strobel.core.ArrayUtilities;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
@@ -272,8 +271,8 @@ public class FieldAccess {
             }
             if(mutable || !fd.isFinal()) {
                 String type = null;
-                List<WarningAnnotation<?>> anno = new ArrayList<>(Arrays.asList(getWriteAnnotations(fieldRecord)));
-                anno.add(Roles.FIELD_TYPE.create(fd.getFieldType()));
+                WarningAnnotation<?>[] anno = ArrayUtilities.append(getWriteAnnotations(fieldRecord),
+                    Roles.FIELD_TYPE.create(fd.getFieldType()));
                 if(!Flags.testAny(flags, FieldStats.WRITE_OUTSIDE | FieldStats.READ_OUTSIDE)) {
                     type = td.isInterface() ? "StaticFieldShouldBeNonInterfacePackagePrivate"
                         : "StaticFieldShouldBePackagePrivate";
@@ -287,7 +286,7 @@ public class FieldAccess {
                     type = "StaticFieldMutable";
                 }
                 if(type != null) {
-                    fc.report(type, AccessLevel.of(fd).select(0, 10, 100, 100), anno.toArray(new WarningAnnotation[0]));
+                    fc.report(type, AccessLevel.of(fd).select(0, 10, 100, 100), anno);
                     return;
                 }
             }
@@ -296,7 +295,8 @@ public class FieldAccess {
             MethodLocation expose = fieldRecord.expose;
             if(fieldRecord.mutable && expose != null && (expose.md.isPublic() || expose.md.isProtected())) {
                 String type = fd.isStatic() ? "ExposeMutableStaticFieldViaReturnValue" : "ExposeMutableFieldViaReturnValue";
-                fc.report(type, AccessLevel.of(expose.md).select(0, 10, 100, 100), expose.getAnnotations());
+                fc.report(type, AccessLevel.of(expose.md).select(0, 10, 100, 100), ArrayUtilities.append(expose
+                        .getAnnotations(), Roles.FIELD_TYPE.create(fd.getFieldType())));
             }
         }
     }

@@ -515,8 +515,8 @@
     </Warning>
     <Warning Type="ExposeMutableStaticFieldViaReturnValue">
       <Title>Internal static state exposure by returning a mutable static field</Title>
-      <Description>Internal static state exposure by returning a mutable static field $FIELD$.</Description>
-      <LongDescription><![CDATA[This method returns a possibly mutable object stored in the static field $FIELD$.
+      <Description>Internal static state exposure by returning a mutable static field $FIELD$ of type $FIELD_TYPE$.</Description>
+      <LongDescription><![CDATA[This method returns a possibly mutable object of type $FIELD_TYPE$ stored in the static field $FIELD$.
       As a result, uncontrolled modification of the object is possible. Consider returning a copy or wrapping an object
       into unmodifiable wrapper.]]></LongDescription>
     </Warning>
@@ -528,8 +528,8 @@
     </Warning>
     <Warning Type="ExposeMutableFieldViaReturnValue">
       <Title>Internal state exposure by returning a mutable field</Title>
-      <Description>Internal state exposure by returning a mutable field $FIELD$.</Description>
-      <LongDescription><![CDATA[This method returns a possibly mutable object stored in the field $FIELD$.
+      <Description>Internal state exposure by returning a mutable field $FIELD$ of type $FIELD_TYPE$.</Description>
+      <LongDescription><![CDATA[This method returns a possibly mutable object of type $FIELD_TYPE$ stored in the field $FIELD$.
       As a result, uncontrolled modification of the object is possible. Consider returning a copy or wrapping an object
       into unmodifiable wrapper.]]></LongDescription>
     </Warning>
@@ -1224,8 +1224,9 @@
     <Warning Type="StaticFieldMutable">
       <Title>Static field is mutable</Title>
       <Description>Static field $FIELD$ is mutable.</Description>
-      <LongDescription><![CDATA[The field $FIELD$ belongs to the mutale type $FIELD_TYPE$ and could be modified from other packages.
-      This field is already accessed from other packages, so you cannot easily make it package-private.]]></LongDescription>
+      <LongDescription><![CDATA[The field $FIELD$ belongs to the mutable type $FIELD_TYPE$ and could be modified from other packages.
+      This field is already accessed from other packages, so you cannot easily make it package-private.
+      Probably it's possible to make the $FIELD_TYPE$ immutable.]]></LongDescription>
     </Warning>
     <Warning Type="StaticFieldMutableCollection">
       <Title>Static field is a mutable collection</Title>
