@@ -28,12 +28,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarFile;
 import java.util.logging.LogManager;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
+import com.strobel.assembler.metadata.ClasspathTypeLoader;
+import com.strobel.assembler.metadata.CompositeTypeLoader;
+import com.strobel.assembler.metadata.ITypeLoader;
+import com.strobel.assembler.metadata.JarTypeLoader;
 
 import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.HuntBugsResult;
 import one.util.huntbugs.input.XmlReportReader;
 import one.util.huntbugs.output.Reports;
+import one.util.huntbugs.repo.AuxRepository;
 import one.util.huntbugs.repo.CompositeRepository;
 import one.util.huntbugs.repo.DirRepository;
 import one.util.huntbugs.repo.JarRepository;
@@ -58,6 +67,7 @@ public class HuntBugs {
 
     private void parseCommandLine(String[] args) {
         List<Repository> repos = new ArrayList<>();
+        List<ITypeLoader> deps = new ArrayList<>();
         List<Rule> rules = new ArrayList<>();
         for (String arg : args) {
             if (arg.equals("-lw")) {
@@ -110,16 +120,22 @@ public class HuntBugs {
                     throw new IllegalArgumentException("Illegal option: " + arg
                         + ": ruletype must be either 'category' or 'pattern'");
                 }
-            } else {
-                Path path = Paths.get(arg);
+            } else if(arg.startsWith("-A")){
                 try {
-                    PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + path.getFileName());
-                    Files.list(path.getParent()).filter(p -> pathMatcher.matches(p.getFileName())).map(
-                        this::createRepository).forEach(repos::add);
+                    glob(arg.substring(2)).map(this::createTypeLoader).forEach(deps::add);
+                } catch (IOException e) {
+                    throw new IllegalArgumentException("Cannot open JAR file " + arg);
+                }
+            } else {
+                try {
+                    glob(arg).map(this::createRepository).forEach(repos::add);
                 } catch (IOException e) {
                     throw new IllegalArgumentException("Cannot open JAR file " + arg);
                 }
             }
+        }
+        if (!deps.isEmpty()) {
+            repos.add(new AuxRepository(new CompositeTypeLoader(deps.toArray(new ITypeLoader[0]))));
         }
         if (!repos.isEmpty()) {
             repo = new CompositeRepository(repos);
@@ -138,6 +154,14 @@ public class HuntBugs {
         }
     }
 
+    private ITypeLoader createTypeLoader(Path path) {
+        try {
+            return Files.isDirectory(path) ? new ClasspathTypeLoader(path.toString()) : new JarTypeLoader(new JarFile(path.toFile()));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+    
     private int run(String[] args) {
         LogManager.getLogManager().reset();
         if (args.length == 0) {
@@ -149,6 +173,7 @@ public class HuntBugs {
             System.out.println("    -ldb                       -- list all databases");
             System.out.println("    -lm                        -- list warning titles");
             System.out.println("    -ColdResult.xml            -- output difference with old result");
+            System.out.println("    -Apath                     -- dependency path");
             System.out.println("    -Dname=value               -- set given variable");
             System.out.println("    -Rruletype:rule=adjustment -- adjust score for warnings");
             return -1;
@@ -229,6 +254,21 @@ public class HuntBugs {
             }));
         ctx.analyzePackage("");
         return 0;
+    }
+    
+    static Stream<Path> glob(String mask) throws IOException {
+        Matcher matcher = Pattern.compile("(.*)[\\\\/](.*)").matcher(mask);
+        Path parentPath;
+        String fName;
+        if(matcher.matches()) {
+            parentPath = Paths.get(matcher.group(1));
+            fName = matcher.group(2);
+        } else {
+            parentPath = Paths.get(".");
+            fName = mask;
+        }
+        PathMatcher pathMatcher = FileSystems.getDefault().getPathMatcher("glob:" + fName);
+        return Files.list(parentPath).filter(p -> pathMatcher.matches(p.getFileName()));
     }
 
     public static void main(String[] args) {
