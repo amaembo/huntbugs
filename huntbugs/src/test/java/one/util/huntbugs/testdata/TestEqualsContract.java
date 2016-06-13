@@ -124,6 +124,22 @@ public class TestEqualsContract {
         }
     }
     
+    public static class SubClassNoFields1 extends SelfEquals {
+        @Override
+        @AssertNoWarning("EqualsNoHashCode")
+        public boolean equals(Object obj) {
+            return obj == this || obj instanceof SubClassNoFields && super.equals(obj);
+        }
+    }
+    
+    public static class SubClassNoFields1a extends SelfEquals {
+        @Override
+        @AssertNoWarning("EqualsNoHashCode")
+        public boolean equals(Object obj) {
+            return this == obj || obj instanceof SubClassNoFields && super.equals(obj);
+        }
+    }
+    
     public static class SubClassNoFields2 extends SelfEquals {
         @Override
         @AssertNoWarning("EqualsNoHashCode")

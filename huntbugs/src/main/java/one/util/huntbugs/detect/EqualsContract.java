@@ -78,17 +78,14 @@ public class EqualsContract {
                     mc.report("EqualsReturnsFalse", priority, node);
                     alwaysFalse = true;
                 }
+                if(isInstanceOfAndSuperEquals(retVal))
+                    instanceCheckingEquals = true;
                 // Check the following pattern:
                 // public boolean equals(Object x) {
-                //     return x instanceof XYZ && super.equals(x);
+                //     return this == x || x instanceof XYZ && super.equals(x);
                 // }
-                if (retVal.getCode() == AstCode.LogicalAnd) {
-                    Expression left = retVal.getArguments().get(0);
-                    Expression right = retVal.getArguments().get(1);
-                    if (left.getCode() == AstCode.InstanceOf && right.getCode() == AstCode.InvokeSpecial
-                        && Methods.isEqualsMethod((MethodReference) right.getOperand())) {
-                        instanceCheckingEquals = true;
-                    }
+                if(retVal.getCode() == AstCode.LogicalOr && isSelfCheck(retVal.getArguments().get(0)) && isInstanceOfAndSuperEquals(retVal.getArguments().get(1))) {
+                    instanceCheckingEquals = true;
                 }
             }
         }
@@ -113,6 +110,37 @@ public class EqualsContract {
                 }
             }
         }
+    }
+
+    /**
+     * @param expr expression to check
+     * @return true if expression is like x instanceof XYZ && super.equals(x) 
+     */
+    private static boolean isInstanceOfAndSuperEquals(Expression expr) {
+        boolean isInstanceOfAndSuperEquals = false;
+        if (expr.getCode() == AstCode.LogicalAnd) {
+            Expression left = expr.getArguments().get(0);
+            Expression right = expr.getArguments().get(1);
+            if (left.getCode() == AstCode.InstanceOf && right.getCode() == AstCode.InvokeSpecial
+                && Methods.isEqualsMethod((MethodReference) right.getOperand())) {
+                isInstanceOfAndSuperEquals = true;
+            }
+        }
+        return isInstanceOfAndSuperEquals;
+    }
+    
+    /**
+     * @param expr expression to check
+     * @return true if expression is like this == arg 
+     */
+    private static boolean isSelfCheck(Expression expr) {
+        if(expr.getCode() == AstCode.CmpEq) {
+            Expression left = expr.getArguments().get(0);
+            Expression right = expr.getArguments().get(1);
+            return Nodes.isThis(left) && right.getCode() == AstCode.Load ||
+                    Nodes.isThis(right) && left.getCode() == AstCode.Load;
+        }
+        return false;
     }
 
     @ClassVisitor(order = VisitOrder.AFTER)
