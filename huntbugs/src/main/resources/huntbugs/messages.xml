@@ -1070,6 +1070,11 @@
       If it's designed to be called via reflection or via method handles API, 
       it's a good practice to annotate it by some annotation which will explicitly signal that the method is necessary.]]></LongDescription>
     </Warning>
+    <Warning Type="UncalledMethodOfAnonymousClass">
+      <Title>A method of anonymous class is never called</Title>
+      <Description>The method $METHOD$ of anonymous class is never called.</Description>
+      <LongDescription><![CDATA[The method $METHOD$ of anonymous class is never used and probably should be removed.]]></LongDescription>
+    </Warning>
     <Warning Type="UncalledPrivateMethodChain">
       <Title>The chain of private methods is never called</Title>
       <Description>The method $METHOD$ along with some other methods is never called.</Description>

@@ -148,4 +148,21 @@ public class Types {
     public static boolean is(TypeReference type, Class<?> clazz) {
         return type.getFullName().equals(clazz.getName());
     }
+
+    /**
+     * @param type type to check
+     * @return true if all superclasses and superinterfaces could be loaded
+     */
+    public static boolean hasCompleteHierarchy(TypeDefinition type) {
+        if(type == null)
+            return false;
+        TypeReference base = type.getBaseType();
+        if(base != null && !hasCompleteHierarchy(base.resolve()))
+            return false;
+        for(TypeReference tr : type.getExplicitInterfaces()) {
+            if(!hasCompleteHierarchy(tr.resolve()))
+                return false;
+        }
+        return true;
+    }
 }

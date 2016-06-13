@@ -26,17 +26,20 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class Annotations {
+    private static final String INTERNAL_ANNOTATION_PACKAGE = AssertWarning.class.getPackage().getName();
 
-    public static boolean hasAnnotation(IAnnotationsProvider fd) {
+    public static boolean hasAnnotation(IAnnotationsProvider fd, boolean ignoreDeprecated) {
         for (CustomAnnotation ca : fd.getAnnotations()) {
             TypeReference annoType = ca.getAnnotationType();
-            if (annoType.getPackageName().equals(AssertWarning.class.getPackage().getName()))
+            if (annoType.getPackageName().equals(INTERNAL_ANNOTATION_PACKAGE))
                 continue;
-            if (annoType.getSimpleName().startsWith("Suppress") && annoType.getSimpleName().endsWith("Warning"))
+            if (ignoreDeprecated && annoType.getInternalName().equals("java/lang/Deprecated"))
                 continue;
-            if (annoType.getSimpleName().equalsIgnoreCase("nonnull") || annoType.getSimpleName().equalsIgnoreCase(
-                "notnull") || annoType.getSimpleName().equalsIgnoreCase("nullable") || annoType.getSimpleName()
-                        .equalsIgnoreCase("checkfornull"))
+            String simpleName = annoType.getSimpleName();
+            if (simpleName.startsWith("Suppress") && simpleName.endsWith("Warning"))
+                continue;
+            if (simpleName.equalsIgnoreCase("nonnull") || simpleName.equalsIgnoreCase("notnull") || simpleName
+                    .equalsIgnoreCase("nullable") || simpleName.equalsIgnoreCase("checkfornull"))
                 continue;
             return true;
         }

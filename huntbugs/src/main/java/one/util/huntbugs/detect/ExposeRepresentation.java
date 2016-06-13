@@ -31,6 +31,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.ClassVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
@@ -46,45 +47,18 @@ public class ExposeRepresentation {
     public boolean checkClass(TypeDefinition td) {
         return td.isPublic();
     }
-    
+
     @MethodVisitor
     public boolean checkMethod(MethodDefinition md) {
         return (md.isPublic() || md.isProtected()) && !md.getParameters().isEmpty();
     }
 
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
-    public void visit(Expression expr, MethodContext mc, MethodDefinition md, Mutability m) {
-        if (!md.isStatic() && expr.getCode() == AstCode.PutField) {
-            FieldDefinition fd = ((FieldReference) expr.getOperand()).resolve();
-            if (fd != null && (fd.isPrivate() || fd.isPackagePrivate() || fd.isProtected())) {
-                if (md.isProtected() && fd.isProtected())
-                    return;
-                Expression self = Nodes.getChild(expr, 0);
-                if (!Nodes.isThis(self))
-                    return;
-                Expression value = Nodes.getChild(expr, 1);
-                report(expr, mc, md, fd, m, value, "ExposeMutableFieldViaParameter");
-            }
-        }
-        if (expr.getCode() == AstCode.PutStatic) {
-            FieldDefinition fd = ((FieldReference) expr.getOperand()).resolve();
-            if (fd != null && (fd.isPrivate() || fd.isPackagePrivate())) {
-                Expression value = Nodes.getChild(expr, 0);
-                report(expr, mc, md, fd, m, value, "ExposeMutableStaticFieldViaParameter");
-            }
-        }
-    }
-    
-    private ParameterDefinition getParameter(Expression value) {
-        if(value.getOperand() instanceof ParameterDefinition)
-            return (ParameterDefinition)value.getOperand();
-        if(value.getOperand() instanceof Variable)
-            return ((Variable)value.getOperand()).getOriginalParameter();
-        return null;
-    }
-
-    private void report(Expression expr, MethodContext mc, MethodDefinition md, FieldDefinition fd, Mutability m, Expression value,
-            String type) {
+    public void visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md, Mutability m) {
+        FieldDefinition fd = getField(expr, md);
+        if (fd == null)
+            return;
+        Expression value = Nodes.getChild(expr, expr.getArguments().size() - 1);
         ParameterDefinition pd = getParameter(value);
         if (pd == null)
             return;
@@ -95,6 +69,40 @@ public class ExposeRepresentation {
             priority += 10;
         if (md.isVarArgs() && pd.getPosition() == md.getParameters().size() - 1)
             priority += 10;
+        if (nc.getParent() == null && nc.getRoot().getBody().size() == 1)
+            priority += 15;
+        else if (!fd.isFinal())
+            priority += 3;
+        String type = fd.isStatic() ? "ExposeMutableStaticFieldViaParameter" : "ExposeMutableFieldViaParameter";
         mc.report(type, priority, expr, Roles.FIELD_TYPE.create(fd.getFieldType()));
+    }
+
+    private FieldDefinition getField(Expression expr, MethodDefinition md) {
+        if (!md.isStatic() && expr.getCode() == AstCode.PutField) {
+            FieldDefinition fd = ((FieldReference) expr.getOperand()).resolve();
+            if (fd != null && !fd.isSynthetic() && (fd.isPrivate() || fd.isPackagePrivate() || fd.isProtected())) {
+                if (md.isProtected() && fd.isProtected())
+                    return null;
+                Expression self = Nodes.getChild(expr, 0);
+                if (!Nodes.isThis(self))
+                    return null;
+                return fd;
+            }
+        }
+        if (expr.getCode() == AstCode.PutStatic) {
+            FieldDefinition fd = ((FieldReference) expr.getOperand()).resolve();
+            if (fd != null && !fd.isSynthetic() && (fd.isPrivate() || fd.isPackagePrivate())) {
+                return fd;
+            }
+        }
+        return null;
+    }
+
+    private ParameterDefinition getParameter(Expression value) {
+        if (value.getOperand() instanceof ParameterDefinition)
+            return (ParameterDefinition) value.getOperand();
+        if (value.getOperand() instanceof Variable)
+            return ((Variable) value.getOperand()).getOriginalParameter();
+        return null;
     }
 }

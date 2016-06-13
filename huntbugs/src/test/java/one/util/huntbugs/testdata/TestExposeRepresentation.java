@@ -63,9 +63,10 @@ public class TestExposeRepresentation {
         obj.f = f;
     }
     
-    @AssertWarning(value="ExposeMutableStaticFieldViaParameter", minScore=50)
+    @AssertWarning(value="ExposeMutableStaticFieldViaParameter", minScore=45)
     public static void setHashTable(Hashtable<String, Integer> ht) {
         TestExposeRepresentation.ht = ht;
+        System.out.println(ht);
     }
     
     @AssertWarning("ExposeMutableFieldViaParameter")

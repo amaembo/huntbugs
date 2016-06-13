@@ -87,5 +87,35 @@ public class TestUncalledPrivateMethod {
     private void selfLambda() {
         Runnable r = () -> selfLambda();
         r.run();
+        this.r.run();
     }
+    
+    Runnable r = new Runnable() {
+        @AssertWarning("UncalledMethodOfAnonymousClass")
+        public void test() {
+            System.out.println("test");
+        }
+
+        @AssertNoWarning("*")
+        public void test2() {
+            System.out.println("test2");
+        }
+        
+        @AssertNoWarning("*")
+        public void test3() {
+            System.out.println("test3");
+        }
+        
+        @Override
+        public void run() {
+            System.out.println("run");
+            test2();
+            new Runnable() {
+                @Override
+                public void run() {
+                    test3();
+                }
+            }.run();
+        }
+    };
 }

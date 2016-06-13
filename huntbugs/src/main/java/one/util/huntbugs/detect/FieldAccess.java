@@ -29,11 +29,11 @@ import com.strobel.assembler.metadata.Flags;
 import com.strobel.assembler.metadata.JvmType;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.core.ArrayUtilities;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
-
 import one.util.huntbugs.db.FieldStats;
 import one.util.huntbugs.db.Mutability;
 import one.util.huntbugs.flow.ValuesFlow;
@@ -47,6 +47,7 @@ import one.util.huntbugs.registry.anno.VisitOrder;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.AccessLevel;
 import one.util.huntbugs.util.Annotations;
+import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
@@ -106,13 +107,14 @@ public class FieldAccess {
         boolean array;
         boolean collection;
         boolean usedInSingleMethod = true;
+        boolean hasSimpleSetter;
     }
     
     private final Map<String, FieldRecord> fields = new HashMap<>();
     private boolean fullyAnalyzed = true;
-    
+
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
-    public void visitCode(Expression expr, MethodContext mc, MethodDefinition md, TypeDefinition td, Mutability m) {
+    public void visitCode(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md, TypeDefinition td, Mutability m) {
         if(expr.getCode() == AstCode.PutField || expr.getCode() == AstCode.PutStatic ||
                 expr.getCode() == AstCode.GetField || expr.getCode() == AstCode.GetStatic) {
             FieldDefinition fd = ((FieldReference) expr.getOperand()).resolve();
@@ -136,6 +138,11 @@ public class FieldAccess {
                             if(!Objects.equals(fieldRecord.constant, constant))
                                 fieldRecord.constant = null;
                         }
+                    }
+                    if (md.isPublic() && nc.getParent() == null && nc.getRoot().getBody().size() == 1 && (expr
+                            .getCode() == AstCode.PutField ^ md.isStatic()) && value
+                                    .getOperand() instanceof ParameterDefinition) {
+                        fieldRecord.hasSimpleSetter = true;
                     }
                     if(value.getCode() == AstCode.InitObject) {
                         String typeName = ((MethodReference) value.getOperand()).getDeclaringType().getInternalName();
@@ -209,7 +216,7 @@ public class FieldAccess {
         if(fd.isSynthetic() || fd.isEnumConstant())
             return;
         int flags = fs.getFlags(fd);
-        if(Flags.testAny(flags, FieldStats.UNRESOLVED) || Annotations.hasAnnotation(fd)) {
+        if(Flags.testAny(flags, FieldStats.UNRESOLVED) || Annotations.hasAnnotation(fd, false)) {
             return;
         }
         boolean isConstantType = fd.getFieldType().isPrimitive() || Types.is(fd.getFieldType(), String.class);
@@ -295,7 +302,12 @@ public class FieldAccess {
             MethodLocation expose = fieldRecord.expose;
             if(fieldRecord.mutable && expose != null && (expose.md.isPublic() || expose.md.isProtected())) {
                 String type = fd.isStatic() ? "ExposeMutableStaticFieldViaReturnValue" : "ExposeMutableFieldViaReturnValue";
-                fc.report(type, AccessLevel.of(expose.md).select(0, 10, 100, 100), ArrayUtilities.append(expose
+                int priority = AccessLevel.of(expose.md).select(0, 10, 100, 100);
+                if(fieldRecord.hasSimpleSetter)
+                    priority += 15;
+                else if(!fd.isFinal())
+                    priority += 3;
+                fc.report(type, priority, ArrayUtilities.append(expose
                         .getAnnotations(), Roles.FIELD_TYPE.create(fd.getFieldType())));
             }
         }

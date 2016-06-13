@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import com.strobel.assembler.ir.Instruction;
@@ -30,14 +31,15 @@ import com.strobel.assembler.metadata.MethodHandle;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
-import com.strobel.assembler.metadata.annotations.CustomAnnotation;
-
+import one.util.huntbugs.registry.AbstractTypeDatabase;
 import one.util.huntbugs.registry.ClassContext;
-import one.util.huntbugs.registry.anno.AssertWarning;
 import one.util.huntbugs.registry.anno.ClassVisitor;
+import one.util.huntbugs.registry.anno.TypeDatabase;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Annotations;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
@@ -47,45 +49,67 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
  *
  */
 @WarningDefinition(category="RedundantCode", name="UncalledPrivateMethod", maxScore=45)
+@WarningDefinition(category="RedundantCode", name="UncalledMethodOfAnonymousClass", maxScore=45)
 @WarningDefinition(category="RedundantCode", name="UncalledPrivateMethodChain", maxScore=50)
 public class UncalledPrivateMethod {
+    
+    @TypeDatabase
+    public static class NestedAnonymousCalls extends AbstractTypeDatabase<Void> {
+        Set<MemberInfo> mis = new HashSet<>();
+        
+        public NestedAnonymousCalls() {
+            super(tr -> null);
+        }
+
+        @Override
+        protected void visitType(TypeDefinition td) {
+            TypeReference tr = td.getDeclaringType();
+            if(tr == null) return;
+            TypeDefinition outer = tr.resolve();
+            if(outer == null || !outer.isAnonymous()) return;
+            for(MethodDefinition md : td.getDeclaredMethods()) {
+                extractCalls(md, mr -> {
+                    mis.add(new MemberInfo(mr));
+                    return true;
+                });
+            }
+        }
+        
+        public boolean isCalled(MemberInfo mi) {
+            return mis.contains(mi);
+        }
+    }
+    
     private final Map<MemberInfo, Set<MemberInfo>> candidates = new LinkedHashMap<>();
     
     @ClassVisitor
-    public void visitType(TypeDefinition td, ClassContext cc) {
+    public void visitType(TypeDefinition td, ClassContext cc, NestedAnonymousCalls nac) {
         for(MethodDefinition md : td.getDeclaredMethods()) {
             if(md.isPrivate() && !md.isSpecialName() 
                     && !Methods.isSerializationMethod(md)
                     && !md.getName().toLowerCase(Locale.ENGLISH).contains("debug")
                     && !md.getName().toLowerCase(Locale.ENGLISH).contains("trace")
-                    && !hasAnnotation(md)) {
+                    && !Annotations.hasAnnotation(md, true)) {
                 candidates.put(new MemberInfo(md), new HashSet<>());
+            }
+        }
+        if(td.isAnonymous() && Types.hasCompleteHierarchy(td)) {
+            for(MethodDefinition md : td.getDeclaredMethods()) {
+                if(!md.isPrivate() && Methods.findSuperMethod(md) == null) {
+                    MemberInfo mi = new MemberInfo(md);
+                    if(!nac.isCalled(mi)) {
+                        candidates.put(mi, new HashSet<>());
+                    }
+                }
             }
         }
         for(MethodDefinition md : td.getDeclaredMethods()) {
             if(candidates.isEmpty())
                 return;
-            MethodBody body = md.getBody();
-            if(body == null)
-                continue;
-            for(Instruction inst : body.getInstructions()) {
-                for(int i=0; i<inst.getOperandCount(); i++) {
-                    Object operand = inst.getOperand(i);
-                    if(operand instanceof MethodReference) {
-                        link(md, (MethodReference)operand);
-                        if(candidates.isEmpty())
-                            return;
-                    }
-                    if(operand instanceof DynamicCallSite) {
-                        MethodHandle mh = Nodes.getMethodHandle((DynamicCallSite) operand);
-                        if(mh != null) {
-                            link(md, mh.getMethod());
-                            if(candidates.isEmpty())
-                                return;
-                        }
-                    }
-                }
-            }
+            extractCalls(md, mr -> {
+                link(md, mr);
+                return !candidates.isEmpty();
+            });
         }
         while(!candidates.isEmpty()) {
             MemberInfo mi = candidates.keySet().iterator().next();
@@ -101,7 +125,9 @@ public class UncalledPrivateMethod {
                     }
                 }
             }
-            if(called.isEmpty()) {
+            if(td.isAnonymous()) {
+                cc.report("UncalledMethodOfAnonymousClass", 0, Roles.METHOD.create(mi));
+            } else if(called.isEmpty()) {
                 cc.report("UncalledPrivateMethod", 0, Roles.METHOD.create(mi));
             } else {
                 cc.report("UncalledPrivateMethodChain", 0, Stream.concat(Stream.of(Roles.METHOD.create(mi)),
@@ -109,6 +135,28 @@ public class UncalledPrivateMethod {
                         .filter(c -> !c.equals(mi))
                         .map(Roles.CALLED_METHOD::create))
                         .toArray(WarningAnnotation[]::new));
+            }
+        }
+    }
+    
+    static void extractCalls(MethodDefinition md, Predicate<MethodReference> action) {
+        MethodBody body = md.getBody();
+        if(body == null)
+            return;
+        for(Instruction inst : body.getInstructions()) {
+            for(int i=0; i<inst.getOperandCount(); i++) {
+                Object operand = inst.getOperand(i);
+                if(operand instanceof MethodReference) {
+                    if(!action.test((MethodReference)operand))
+                        return;
+                }
+                if(operand instanceof DynamicCallSite) {
+                    MethodHandle mh = Nodes.getMethodHandle((DynamicCallSite) operand);
+                    if(mh != null) {
+                        if(!action.test(mh.getMethod()))
+                            return;
+                    }
+                }
             }
         }
     }
@@ -132,22 +180,5 @@ public class UncalledPrivateMethod {
         if(called != null) {
             called.forEach(this::remove);
         }
-    }
-
-    private static boolean hasAnnotation(MethodDefinition md) {
-        for(CustomAnnotation ca : md.getAnnotations()) {
-            TypeReference annoType = ca.getAnnotationType();
-            if(annoType.getPackageName().equals(AssertWarning.class.getPackage().getName()))
-                continue;
-            if(annoType.getInternalName().equals("java/lang/Deprecated"))
-                continue;
-            if(annoType.getSimpleName().equalsIgnoreCase("nonnull") ||
-                   annoType.getSimpleName().equalsIgnoreCase("notnull") ||
-                   annoType.getSimpleName().equalsIgnoreCase("nullable") ||
-                   annoType.getSimpleName().equalsIgnoreCase("checkfornull"))
-                continue;
-            return true;
-        }
-        return false;
     }
 }

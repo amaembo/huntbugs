@@ -246,13 +246,17 @@ public class TestFieldAccess {
         return exposeOk;
     }
     
-    @AssertWarning("ExposeMutableFieldViaReturnValue")
-    private final int[] expose = {1};
+    @AssertWarning(value="ExposeMutableFieldViaReturnValue", maxScore=25)
+    private int[] expose = {1};
     
     @AssertWarning("ExposeMutableFieldViaReturnValue")
     public int[] getExpose() {
         expose[0]++;
         System.out.print(expose[0]);
         return expose;
+    }
+    
+    public void setExpose(int[] expose) {
+        this.expose = expose;
     }
 }
