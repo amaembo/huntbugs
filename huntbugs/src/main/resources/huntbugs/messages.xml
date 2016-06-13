@@ -221,14 +221,14 @@
       <Description>Unnecessary instanceof $INSTANCEOF_TYPE$ is detected in $METHOD$.</Description>
       <LongDescription><![CDATA[This code performs an <code>instanceof $INSTANCEOF_TYPE:plain$</code> check. However it's statically known that 
    the expression type is always $INFERRED_TYPE$, so this check is always true.<br> 
-   Probably something else was meant or this check could be replaced with zero check or removed at all.]]></LongDescription>
+   Probably something else was meant or this check could be replaced with null check or removed at all.]]></LongDescription>
     </Warning>
     <Warning Type="UnnecessaryInstanceOf">
       <Title>The instanceof check is unnecessary</Title>
       <Description>Unnecessary instanceof $INSTANCEOF_TYPE$ is performed in $METHOD$.</Description>
       <LongDescription><![CDATA[This code performs an <code>instanceof $INSTANCEOF_TYPE:plain$</code> check. However this check is always true as the expression
    type is $ACTUAL_TYPE$.<br>
-   Probably something else was meant or this check could be replaced with zero check or removed at all.]]></LongDescription>
+   Probably something else was meant or this check could be replaced with null check or removed at all.]]></LongDescription>
     </Warning>
     <Warning Type="SameBranchesTernary">
       <Title>The ternary operator has identical branches</Title>
