@@ -93,9 +93,11 @@ public class UncalledPrivateMethod {
                 candidates.put(new MemberInfo(md), new HashSet<>());
             }
         }
-        if(td.isAnonymous() && Types.hasCompleteHierarchy(td)) {
+        if (td.isAnonymous() && !td.isSynthetic() && !td.getSimpleName().contains("$_invokeMethod_") && Types
+                .hasCompleteHierarchy(td)) {
             for(MethodDefinition md : td.getDeclaredMethods()) {
-                if(!md.isPrivate() && Methods.findSuperMethod(md) == null) {
+                if (!md.isSpecialName() && !md.isPrivate() && !md.isSynthetic() && Methods.findSuperMethod(
+                    md) == null) {
                     MemberInfo mi = new MemberInfo(md);
                     if(!nac.isCalled(mi)) {
                         candidates.put(mi, new HashSet<>());
