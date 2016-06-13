@@ -501,7 +501,13 @@ public class TestKnownComparison {
         int[] arr;
         
         public ArrayTest(boolean b) {
-            arr = b ? new int[] {1,2} : new int[] {1};
+            // such construction is incorrectly handled by procyon
+            // arr = b ? new int[] {1,2} : new int[] {1};
+            if(b) {
+                arr = new int[] {1,2};
+            } else {
+                arr = new int[] {1};
+            }
         }
         
         public void testArrayLength() {

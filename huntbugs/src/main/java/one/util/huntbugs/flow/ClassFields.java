@@ -16,10 +16,15 @@
 package one.util.huntbugs.flow;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+
+import one.util.huntbugs.db.FieldStats;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 import com.strobel.assembler.metadata.FieldDefinition;
+import com.strobel.assembler.metadata.Flags;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.ast.Expression;
 
@@ -30,16 +35,22 @@ import com.strobel.decompiler.ast.Expression;
 public class ClassFields {
     Map<MemberInfo, FieldDefinition> fields = new HashMap<>();
     Map<MemberInfo, Expression> values = new HashMap<>();
+    Set<FieldDefinition> initializedInCtor = new HashSet<>();
 
-    public ClassFields(TypeDefinition td) {
+    public ClassFields(TypeDefinition td, FieldStats fieldStats) {
         for (FieldDefinition fd : td.getDeclaredFields()) {
             fields.put(new MemberInfo(fd), fd);
+            int flags = fieldStats.getFlags(fd);
+            if(Flags.testAny(flags, FieldStats.WRITE_CONSTRUCTOR) &&
+                    !Flags.testAny(flags, FieldStats.WRITE_CLASS | FieldStats.WRITE_PACKAGE | FieldStats.WRITE_OUTSIDE)) {
+                initializedInCtor.add(fd);
+            }
         }
     }
 
     public boolean isKnownFinal(MemberInfo field) {
         FieldDefinition fd = fields.get(field);
-        return fd != null && fd.isFinal();
+        return fd != null && (fd.isFinal() || initializedInCtor.contains(fd));
     }
 
     void mergeFinalFields(Frame frame) {
@@ -47,7 +58,8 @@ public class ClassFields {
             return;
         frame.fieldValues.forEach((mi, expr) -> {
             FieldDefinition fd = fields.get(mi);
-            if(fd != null && !fd.isStatic() && fd.isFinal()) {
+            if (fd != null && !fd.isStatic() && (fd.isFinal() || (fd.isPrivate() || fd.isPackagePrivate())
+                && initializedInCtor.contains(fd))) {
                 // TODO: better merging
                 values.merge(mi, expr, Frame::makePhiNode);
             }
@@ -59,7 +71,8 @@ public class ClassFields {
             return;
         frame.fieldValues.forEach((mi, expr) -> {
             FieldDefinition fd = fields.get(mi);
-            if(fd != null && fd.isStatic() && fd.isFinal()) {
+            if(fd != null && fd.isStatic() && (fd.isFinal() || (fd.isPrivate() || fd.isPackagePrivate())
+                    && initializedInCtor.contains(fd))) {
                 values.put(mi, expr);
             }
         });

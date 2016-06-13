@@ -31,6 +31,7 @@ import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.MethodBody;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
+import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.DecompilerContext;
 import com.strobel.decompiler.ast.AstBuilder;
 import com.strobel.decompiler.ast.AstOptimizationStep;
@@ -41,6 +42,7 @@ import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
+import one.util.huntbugs.db.FieldStats;
 import one.util.huntbugs.flow.ClassFields;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.anno.WarningDefinition;
@@ -69,6 +71,7 @@ public class DetectorRegistry {
     private final Detector systemDetector;
 
     private final DatabaseRegistry databases;
+    private final Function<TypeReference, FieldStats> fieldStatsDb;
 
     public static class SystemDetector {
     }
@@ -83,6 +86,7 @@ public class DetectorRegistry {
         } catch (IllegalAccessException e) {
             throw new InternalError(e);
         }
+        this.fieldStatsDb = databases.queryDatabase(FieldStats.class);
         init();
     }
 
@@ -188,7 +192,7 @@ public class DetectorRegistry {
         ctx.incStat("TotalClasses");
         
         ClassData cdata = new ClassData(type);
-        ClassFields cf = new ClassFields(type);
+        ClassFields cf = new ClassFields(type, fieldStatsDb.apply(type));
         
         List<MethodDefinition> declMethods = new ArrayList<>(type.getDeclaredMethods());
         declMethods.sort(Comparator.comparingInt(md ->

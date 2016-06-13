@@ -25,7 +25,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestAtomicConcurrent {
-    final Map<String, Integer> chm = new ConcurrentHashMap<>();
+    Map<String, Integer> chm = new ConcurrentHashMap<>();
     
     @AssertWarning("NonAtomicOperationOnConcurrentMap")
     public void testAtomic(String str) {
