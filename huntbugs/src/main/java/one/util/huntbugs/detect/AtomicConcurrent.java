@@ -17,10 +17,12 @@ package one.util.huntbugs.detect;
 
 import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -40,49 +42,50 @@ public class AtomicConcurrent {
     
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, NodeChain nc, MethodContext mc) {
-        if (expr.getCode() == AstCode.InvokeVirtual) {
+        if (expr.getCode() == AstCode.InvokeVirtual || expr.getCode() == AstCode.InvokeInterface) {
             MethodReference mr = (MethodReference) expr.getOperand();
-            String typeName = mr.getDeclaringType().getInternalName();
-            if (mr.getName().equals("put")
-                && (typeName.equals("java/util/concurrent/ConcurrentHashMap") || typeName
-                        .equals("java/util/concurrent/ConcurrentSkipListMap"))) {
-                Expression self = expr.getArguments().get(0);
-                Expression key = expr.getArguments().get(1);
-                Expression prevCall = null;
-                int priority = 0;
-                while (prevCall == null && nc != null) {
-                    if (nc.getNode() instanceof Condition) {
-                        Expression cond = ((Condition) nc.getNode()).getCondition();
-                        prevCall = Nodes.findExpression(cond, child -> isGetOrContains(self, key, child));
+            if (mr.getName().equals("put")) {
+                TypeReference tr = ValuesFlow.reduceType(Nodes.getChild(expr, 0));
+                String typeName = tr == null ? mr.getDeclaringType().getInternalName() : tr.getInternalName();
+                if (typeName.equals("java/util/concurrent/ConcurrentHashMap") || typeName
+                            .equals("java/util/concurrent/ConcurrentSkipListMap")) {
+                    Expression self = expr.getArguments().get(0);
+                    Expression key = expr.getArguments().get(1);
+                    Expression prevCall = null;
+                    int priority = 0;
+                    while (prevCall == null && nc != null) {
+                        if (nc.getNode() instanceof Condition) {
+                            Expression cond = ((Condition) nc.getNode()).getCondition();
+                            prevCall = Nodes.findExpression(cond, child -> isGetOrContains(self, key, child));
+                            if (prevCall == null) {
+                                prevCall = Nodes
+                                        .findExpressionWithSources(cond, child -> isGetOrContains(self, key, child));
+                                priority = 10;
+                            }
+                        }
+                        nc = nc.getParent();
+                    }
+                    if (prevCall == null) {
+                        priority = 0;
+                        prevCall = Nodes.findExpression(expr.getArguments().get(2), child -> isGetOrContains(self, key,
+                            child));
                         if (prevCall == null) {
-                            prevCall = Nodes
-                                    .findExpressionWithSources(cond, child -> isGetOrContains(self, key, child));
+                            prevCall = Nodes.findExpressionWithSources(expr.getArguments().get(2),
+                                child -> isGetOrContains(self, key, child));
                             priority = 10;
                         }
                     }
-                    nc = nc.getParent();
-                }
-                if (prevCall == null) {
-                    priority = 0;
-                    prevCall = Nodes.findExpression(expr.getArguments().get(2), child -> isGetOrContains(self, key,
-                        child));
-                    if (prevCall == null) {
-                        prevCall = Nodes.findExpressionWithSources(expr.getArguments().get(2),
-                            child -> isGetOrContains(self, key, child));
-                        priority = 10;
+                    if (prevCall != null) {
+                        mc.report("NonAtomicOperationOnConcurrentMap", priority, self, FIRST_METHOD.create(
+                            (MemberReference) prevCall.getOperand()), SECOND_METHOD.create(mr));
                     }
-                }
-                if (prevCall != null) {
-                    mc.report("NonAtomicOperationOnConcurrentMap", priority, self, FIRST_METHOD.create(
-                        (MemberReference) prevCall.getOperand()), SECOND_METHOD.create(mr));
-                    return;
                 }
             }
         }
     }
 
     private boolean isGetOrContains(Expression self, Expression key, Expression call) {
-        if (call.getCode() != AstCode.InvokeVirtual)
+        if (call.getCode() != AstCode.InvokeVirtual && call.getCode() != AstCode.InvokeInterface)
             return false;
         MethodReference mr = (MethodReference) call.getOperand();
         if (!mr.getName().equals("containsKey") && !mr.getName().equals("get"))
