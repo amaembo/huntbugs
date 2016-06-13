@@ -28,7 +28,7 @@ import one.util.huntbugs.warning.Roles;
  * @author lan
  *
  */
-@WarningDefinition(category="Multithreading", name="VolatileArray", maxScore=60)
+@WarningDefinition(category="Multithreading", name="VolatileArray", maxScore=50)
 public class VolatileArray {
     @FieldVisitor
     public void checkField(FieldDefinition fd, FieldStats fs, FieldContext fc) {
