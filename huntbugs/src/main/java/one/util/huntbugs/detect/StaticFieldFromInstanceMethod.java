@@ -17,6 +17,7 @@ package one.util.huntbugs.detect;
 
 import java.util.Locale;
 
+import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.Flags;
 import com.strobel.assembler.metadata.JvmType;
@@ -49,6 +50,9 @@ public class StaticFieldFromInstanceMethod {
     public void visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md, TypeDefinition td) {
         if(expr.getCode() == AstCode.PutStatic) {
             FieldReference fr = (FieldReference) expr.getOperand();
+            FieldDefinition fd = fr.resolve();
+            if(fd != null && fd.isSynthetic())
+                return;
             int priority = 0;
             if(md.isPrivate() || td.isPrivate())
                 priority += 20;
