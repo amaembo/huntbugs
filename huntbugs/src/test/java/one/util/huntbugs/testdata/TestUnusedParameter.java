@@ -27,7 +27,7 @@ public abstract class TestUnusedParameter {
     public TestUnusedParameter(int x, int y) {
         this(x, y, "other");
     }
-    
+
     @AssertNoWarning("*")
     public TestUnusedParameter() {
         this(1, 2, "other");
@@ -59,6 +59,25 @@ public abstract class TestUnusedParameter {
         print("test", 0);
     }
 
+    @AssertNoWarning("*")
+    public String test(int x, int y) {
+        return null;
+    }
+    
+    @AssertNoWarning("*")
+    public int test2(int x, int y) {
+        return 0;
+    }
+    
+    @AssertNoWarning("*")
+    public boolean test3(int x, int y) {
+        return false;
+    }
+    
+    @AssertNoWarning("*")
+    public void test4(int x, int y) {
+    }
+    
     public static void printStatic(String info, int x) {
         System.out.println(info+" "+x);
     }

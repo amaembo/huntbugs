@@ -52,7 +52,7 @@ public class UnusedParameter {
     @AstVisitor(nodes = AstNodes.ROOT)
     public void visitBody(Block block, MethodContext mc, MethodDefinition md, TypeDefinition td, Hierarchy h) {
         if (md.isSynthetic() || !mc.isAnnotated() || Methods.isSerializationMethod(md) || Methods.isMain(md)
-                || block.getBody().isEmpty() || Nodes.isThrow(block))
+                || isEmpty(block.getBody()) || Nodes.isThrow(block))
             return;
         for (ParameterDefinition pd : md.getParameters()) {
             if (!pd.hasName())
@@ -115,6 +115,28 @@ public class UnusedParameter {
                 mc.report("MethodParameterIsNotUsed", priority, Roles.VARIABLE.create(pd.getName()));
             }
         }
+    }
+
+    private boolean isEmpty(List<Node> body) {
+        if(body.isEmpty())
+            return true;
+        if(body.size() == 1) {
+            Node n = body.get(0);
+            if(Nodes.isOp(n, AstCode.Return)) {
+                Expression e = (Expression) n;
+                if(e.getArguments().size() == 1) {
+                    Expression arg = e.getArguments().get(0);
+                    if(arg.getCode() == AstCode.AConstNull)
+                        return true;
+                    if(arg.getCode() == AstCode.LdC) {
+                        Object value = arg.getOperand();
+                        if(value != null && (value.equals(Boolean.FALSE) || value instanceof Number && ((Number)value).doubleValue() == 0.0))
+                            return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     private Expression findOverloadCall(MethodDefinition md, Block block) {
