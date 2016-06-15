@@ -1,4 +1,4 @@
-HuntBugs 0.0.5
+HuntBugs 0.0.6
 ===
 
 [![Join the chat at https://gitter.im/amaembo/huntbugs](https://badges.gitter.im/amaembo/huntbugs.svg)](https://gitter.im/amaembo/huntbugs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -9,7 +9,7 @@ HuntBugs 0.0.5
 New Java bytecode static analyzer tool based on [Procyon Compiler Tools](https://bitbucket.org/mstrobel/procyon/overview) aimed to supersede the [FindBugs](http://findbugs.sourceforge.net/).
 Currently in early development stage, though already could be tried.
 
-Currently 172 FindBugs warnings reimplemented and several new warnings added.
+Currently 190 FindBugs warnings reimplemented and several new warnings added.
 
 ### Use with Maven
 
