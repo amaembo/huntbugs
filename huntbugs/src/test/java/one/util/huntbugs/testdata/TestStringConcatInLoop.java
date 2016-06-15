@@ -47,7 +47,7 @@ public class TestStringConcatInLoop {
             for(int i=0; i<10; i++)
                 result+=row;
         }
-        return result;
+        return result+ParseException.r;
     }
     
     @AssertWarning("StringConcatInLoop")
@@ -71,5 +71,18 @@ public class TestStringConcatInLoop {
             n+=result.length();
         }
         return n;
+    }
+    
+    @AssertNoWarning("*")
+    static class ParseException extends Exception {
+        public static final String r = initialise(new String[] {"1", "2"});
+        
+        private static String initialise(String[] tokens) {
+            String retval = "";
+            for (String t : tokens) {
+                retval += t;
+            }
+            return retval;
+        }
     }
 }

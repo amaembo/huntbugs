@@ -141,6 +141,10 @@ public class Types {
         return isInstance(type, "java/util/stream/Stream");
     }
     
+    public static boolean isString(TypeReference type) {
+        return type.getInternalName().equals("java/lang/String");
+    }
+
     public static boolean isBaseStream(TypeReference type) {
         return isInstance(type, "java/util/stream/BaseStream");
     }
