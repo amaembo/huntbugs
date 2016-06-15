@@ -31,7 +31,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestWrongMapIterator {
-    @AssertWarning("WrongMapIterator")
+    @AssertWarning(value="WrongMapIterator", minScore=45)
     public void test(Map<String, String> m) {
         Iterator<String> it = m.keySet().iterator();
         while (it.hasNext()) {
@@ -41,6 +41,16 @@ public class TestWrongMapIterator {
         }
     }
 
+    @AssertWarning(value="WrongMapIterator", maxScore=35)
+    public void testNoLoop(Map<String, String> m) {
+        Iterator<String> it = m.keySet().iterator();
+        if (it.hasNext()) {
+            String name = it.next();
+            String value = m.get(name);
+            System.out.println(name + " = " + value);
+        }
+    }
+    
     @AssertWarning("WrongMapIteratorValues")
     public void testValues(Map<String, String> m) {
         Iterator<String> it = m.keySet().iterator();
@@ -116,13 +126,22 @@ public class TestWrongMapIterator {
         System.out.println(m.get(k));
     }
 
-    @AssertNoWarning("WrongMapIterator")
+    @AssertNoWarning("*")
     public void testEnumMap(EnumMap<TimeUnit, String> m) {
         for(TimeUnit key : m.keySet()) {
             System.out.println(m.get(key));
         }
     }
+    
+    Map<TimeUnit, String> enumField = new EnumMap<>(TimeUnit.class);
 
+    @AssertNoWarning("*")
+    public void testEnumMapField() {
+        for(TimeUnit key : enumField.keySet()) {
+            System.out.println(enumField.get(key));
+        }
+    }
+    
     @AssertNoWarning("WrongMapIterator")
     public void testRegisterReuseBug2(Map<Integer, String> m) {
         int maxKey = 0;

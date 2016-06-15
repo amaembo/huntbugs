@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.stream.Collectors;
 
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
@@ -28,6 +29,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
@@ -40,13 +42,13 @@ import one.util.huntbugs.warning.Roles;
 @WarningDefinition(category = "Performance", name = "WrongMapIteratorValues", maxScore = 55)
 public class WrongMapIterator {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
-    public void visit(Expression expr, MethodContext mc) {
+    public void visit(Expression expr, NodeChain nc, MethodContext mc) {
         MethodReference getMr = getCalledMethod(expr);
         if (getMr == null || !getMr.getName().equals("get"))
             return;
         Expression mapArg = Nodes.getChildNoSpecial(expr, 0);
-        if (!Types.isInstance(mapArg.getInferredType(), "java/util/Map") || Types.isInstance(mapArg.getInferredType(),
-            "java/util/EnumMap"))
+        TypeReference type = ValuesFlow.reduceType(Nodes.getChild(expr, 0));
+        if (!Types.isInstance(type, "java/util/Map") || Types.isInstance(type, "java/util/EnumMap"))
             return;
         Expression key = Nodes.getChild(expr, 1);
         while (key.getCode() == AstCode.CheckCast || Nodes.isBoxing(key) || Nodes.isUnboxing(key))
@@ -64,10 +66,11 @@ public class WrongMapIterator {
             return;
         if (!Nodes.isEquivalent(mapArg, Nodes.getChildNoSpecial(keySet, 0)))
             return;
+        int priority = nc.isInLoop() ? 0 : 15;
         if(mc.isAnnotated() && usedForGetOnly(key, mapArg)) {
-            mc.report("WrongMapIteratorValues", 0, expr, Roles.REPLACEMENT_METHOD.create("java/util/Map", "values", "()Ljava/util/Collection;"));
+            mc.report("WrongMapIteratorValues", priority, expr, Roles.REPLACEMENT_METHOD.create("java/util/Map", "values", "()Ljava/util/Collection;"));
         } else {
-            mc.report("WrongMapIterator", 0, expr, Roles.REPLACEMENT_METHOD.create("java/util/Map", "entrySet", "()Ljava/util/Set;"));
+            mc.report("WrongMapIterator", priority, expr, Roles.REPLACEMENT_METHOD.create("java/util/Map", "entrySet", "()Ljava/util/Set;"));
         }
     }
     

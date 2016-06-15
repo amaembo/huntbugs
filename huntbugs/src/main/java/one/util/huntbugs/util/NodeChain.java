@@ -24,6 +24,7 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.CatchBlock;
 import com.strobel.decompiler.ast.Lambda;
+import com.strobel.decompiler.ast.Loop;
 import com.strobel.decompiler.ast.Node;
 import com.strobel.decompiler.ast.TryCatchBlock;
 
@@ -122,5 +123,15 @@ public class NodeChain {
     public boolean isOnlyChild(Node node) {
         Iterator<Node> iterator = Nodes.getChildren(getNode()).iterator();
         return iterator.hasNext() && iterator.next() == node && !iterator.hasNext();
+    }
+
+    public boolean isInLoop() {
+        NodeChain chain = this;
+        while(chain != null) {
+            if(chain.getNode() instanceof Loop)
+                return true;
+            chain = chain.getParent();
+        }
+        return false;
     }
 }
