@@ -15,7 +15,9 @@
  */
 package one.util.huntbugs.detect;
 
+import com.strobel.assembler.metadata.Flags;
 import com.strobel.assembler.metadata.MemberReference;
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
@@ -41,7 +43,7 @@ public class AtomicConcurrent {
     private static final MemberRole SECOND_METHOD = MemberRole.forName("SECOND_METHOD"); 
     
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
-    public void visit(Expression expr, NodeChain nc, MethodContext mc) {
+    public void visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md) {
         if (expr.getCode() == AstCode.InvokeVirtual || expr.getCode() == AstCode.InvokeInterface) {
             MethodReference mr = (MethodReference) expr.getOperand();
             if (mr.getName().equals("put")) {
@@ -74,6 +76,9 @@ public class AtomicConcurrent {
                                 child -> isGetOrContains(self, key, child));
                             priority = 10;
                         }
+                    }
+                    if(nc != null && nc.isSynchronized() || Flags.testAny(md.getFlags(), Flags.SYNCHRONIZED)) {
+                        priority += 20;
                     }
                     if (prevCall != null) {
                         mc.report("NonAtomicOperationOnConcurrentMap", priority, self, FIRST_METHOD.create(
