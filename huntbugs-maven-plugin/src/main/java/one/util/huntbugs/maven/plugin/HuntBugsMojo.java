@@ -17,6 +17,8 @@ package one.util.huntbugs.maven.plugin;
 
 import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
+import one.util.huntbugs.analysis.HuntBugsResult;
+import one.util.huntbugs.input.XmlReportReader;
 import one.util.huntbugs.output.Reports;
 import one.util.huntbugs.repo.AuxRepository;
 import one.util.huntbugs.repo.CompositeRepository;
@@ -76,6 +78,12 @@ public class HuntBugsMojo extends AbstractMojo {
      */
     @Parameter(defaultValue = "false", property = "quiet", required = true)
     private boolean quiet;
+    
+    /**
+     * If true and report already exists, generate diff report with previous version
+     */
+    @Parameter(defaultValue = "true", property = "diff", required = true)
+    private boolean diff;
     
     @Parameter( defaultValue = "${project.compileClasspathElements}", readonly = true, required = true )
     private List<String> classpathElements;
@@ -158,13 +166,16 @@ public class HuntBugsMojo extends AbstractMojo {
         });
     }
     
-    private void writeReports(Context ctx) throws IOException {
+    private void writeReports(Context ctx) throws Exception {
         getLog().info("HuntBugs: Writing report (" + ctx.getStat("Warnings") + " warnings)");
         Path path = outputDirectory.toPath();
         Files.createDirectories(path);
         Path xmlFile = path.resolve("report.xml");
         Path htmlFile = path.resolve("report.html");
-        Reports.write(xmlFile, htmlFile, ctx);
+        HuntBugsResult res = ctx;
+        if(Files.isRegularFile(xmlFile)) {
+            res = Reports.diff(XmlReportReader.read(ctx, xmlFile), ctx);
+        }
+        Reports.write(xmlFile, htmlFile, res);
     }
-    
 }
