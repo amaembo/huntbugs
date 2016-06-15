@@ -15,10 +15,14 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.Set;
+
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -36,7 +40,7 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 @WarningDefinition(category = "Performance", name = "BooleanConstructor", maxScore = 55)
 public class NumberConstructor {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
-    public void visit(Expression expr, MethodContext ctx) {
+    public void visit(Expression expr, MethodContext ctx, MethodDefinition md) {
         if (expr.getCode() == AstCode.InitObject && expr.getArguments().size() == 1) {
             MethodReference ctor = (MethodReference) expr.getOperand();
             if (ctor.getDeclaringType().getPackageName().equals("java.lang")) {
@@ -49,13 +53,19 @@ public class NumberConstructor {
                 } else if (simpleName.equals("Integer") || simpleName.equals("Long") || simpleName.equals("Short")
                     || simpleName.equals("Byte") || simpleName.equals("Character")) {
                     Object val = Nodes.getConstant(expr.getArguments().get(0));
+                    int priority = 0;
+                    if(md.isTypeInitializer()) {
+                        // Static field initializer: only one object is created
+                        // not a big performance problem and probably intended
+                        Set<Expression> usages = ValuesFlow.findUsages(expr);
+                        if(usages.size() == 1 && usages.iterator().next().getCode() == AstCode.PutStatic) {
+                            priority = 15;
+                        }
+                    }
                     if (val instanceof Number) {
                         long value = ((Number) val).longValue();
-                        int priority;
-                        if (value >= -128 && value < 127)
-                            priority = 0;
-                        else
-                            priority = simpleName.equals("Integer") ? 15 : 35;
+                        if (value < -128 || value > 127)
+                            priority += simpleName.equals("Integer") ? 15 : 30;
                         ctx.report("NumberConstructor", priority, expr, Roles.NUMBER.create((Number) val), replacement,
                             Roles.TARGET_TYPE.create(ctor.getDeclaringType()));
                     } else {
