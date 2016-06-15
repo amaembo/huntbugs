@@ -107,11 +107,13 @@ public class ClassContext extends ElementContext {
         Warning w = new Warning(wt, priority, anno);
         if(!cdata.filter.test(w))
             return;
-        MemberAsserter ma = cdata.ca;
-        MemberInfo mi = w.getAnnotation(Roles.METHOD);
-        if(mi != null)
-            ma = cdata.getAsserter(mi);
-        ma.checkWarning(this::error, w);
+        if(cdata.hasAsserters()) {
+            MemberAsserter ma = cdata.ca;
+            MemberInfo mi = w.getAnnotation(Roles.METHOD);
+            if(mi != null)
+                ma = cdata.getAsserter(mi);
+            ma.checkWarning(this::error, w);
+        }
         ctx.addWarning(w);
     }
 

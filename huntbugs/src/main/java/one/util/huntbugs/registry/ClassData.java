@@ -76,4 +76,8 @@ public class ClassData {
         }
         return ma;
     }
+    
+    boolean hasAsserters() {
+        return mas != null || !ca.isEmpty();
+    }
 }

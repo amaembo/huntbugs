@@ -30,6 +30,7 @@ import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
+import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 import one.util.huntbugs.warning.WarningType;
 
 import com.strobel.assembler.metadata.FieldReference;
@@ -142,11 +143,7 @@ public class MethodContext extends ElementContext {
 
     void finalizeMethod() {
         if (lastWarning != null) {
-            Warning warn = lastWarning.build();
-            if(!cc.cdata.filter.test(warn))
-                return;
-            cc.getMemberAsserter(mdata.mainMethod).checkWarning(this::error, warn);
-            ctx.addWarning(warn);
+            reportWarning(lastWarning.build());
         }
     }
 
@@ -185,13 +182,21 @@ public class MethodContext extends ElementContext {
         if (lastWarning == null) {
             lastWarning = info;
         } else if (!lastWarning.tryMerge(info)) {
-            Warning warn = lastWarning.build();
-            if(!cc.cdata.filter.test(warn))
-                return;
-            cc.getMemberAsserter(mdata.mainMethod).checkWarning(this::error, warn);
-            ctx.addWarning(warn);
+            reportWarning(lastWarning.build());
             lastWarning = info;
         }
+    }
+
+    private void reportWarning(Warning warn) {
+        if(!cc.cdata.filter.test(warn))
+            return;
+        if(cc.cdata.hasAsserters()) {
+            MemberInfo field = warn.getAnnotation(Roles.FIELD);
+            if(field != null)
+                cc.cdata.getAsserter(field).checkWarning(this::error, warn);
+            cc.getMemberAsserter(mdata.mainMethod).checkWarning(this::error, warn);
+        }
+        ctx.addWarning(warn);
     }
 
     /**
