@@ -29,6 +29,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Role.TypeRole;
 
 /**
@@ -50,7 +51,12 @@ public class ReturnNull {
     }
 
     public boolean checkMethod(MethodDefinition md) {
-        return md.getReturnType().isArray() || TYPE_TO_WARNING.containsKey(md.getReturnType().getInternalName());
+        if(!md.getReturnType().isArray() && !TYPE_TO_WARNING.containsKey(md.getReturnType().getInternalName()))
+            return false;
+        if(md.getName().equals("getName") && md.getReturnType().getSignature().equals("[B") && md.getParameters().size() == 1
+                && Types.isInstance(md.getDeclaringType(), "java/sql/ResultSet"))
+            return false;
+        return true;
     }
 
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
