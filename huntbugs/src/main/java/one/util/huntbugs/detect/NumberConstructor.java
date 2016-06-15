@@ -48,20 +48,20 @@ public class NumberConstructor {
                 WarningAnnotation<MemberInfo> replacement = Roles.REPLACEMENT_METHOD.create(ctor.getDeclaringType()
                         .getInternalName(), "valueOf", ctor.getSignature().replaceFirst("V$", "L" + ctor
                                 .getDeclaringType().getInternalName() + ";"));
+                int priority = 0;
+                if(md.isTypeInitializer()) {
+                    // Static field initializer: only one object is created
+                    // not a big performance problem and probably intended
+                    Set<Expression> usages = ValuesFlow.findUsages(expr);
+                    if(usages.size() == 1 && usages.iterator().next().getCode() == AstCode.PutStatic) {
+                        priority = 15;
+                    }
+                }
                 if (simpleName.equals("Boolean")) {
-                    ctx.report("BooleanConstructor", 0, expr, replacement);
+                    ctx.report("BooleanConstructor", priority, expr, replacement);
                 } else if (simpleName.equals("Integer") || simpleName.equals("Long") || simpleName.equals("Short")
                     || simpleName.equals("Byte") || simpleName.equals("Character")) {
                     Object val = Nodes.getConstant(expr.getArguments().get(0));
-                    int priority = 0;
-                    if(md.isTypeInitializer()) {
-                        // Static field initializer: only one object is created
-                        // not a big performance problem and probably intended
-                        Set<Expression> usages = ValuesFlow.findUsages(expr);
-                        if(usages.size() == 1 && usages.iterator().next().getCode() == AstCode.PutStatic) {
-                            priority = 15;
-                        }
-                    }
                     if (val instanceof Number) {
                         long value = ((Number) val).longValue();
                         if (value < -128 || value > 127)
