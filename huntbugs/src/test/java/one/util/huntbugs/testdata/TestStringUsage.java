@@ -23,6 +23,10 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestStringUsage {
+    
+    @AssertWarning(value="StringConstructor", maxScore=35)
+    public static final String STRING = new String("abc");
+    
     @AssertWarning("StringConstructorEmpty")
     public String testStringCtor() {
         return new String();

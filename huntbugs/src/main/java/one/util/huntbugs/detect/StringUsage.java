@@ -15,10 +15,14 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.Set;
+
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -34,14 +38,24 @@ import one.util.huntbugs.warning.Roles;
 @WarningDefinition(category="RedundantCode", name="StringToString", maxScore=40)
 public class StringUsage {
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
-    public void visit(Expression node, MethodContext mc) {
+    public void visit(Expression node, MethodContext mc, MethodDefinition md) {
         if(node.getCode() == AstCode.InitObject) {
             MethodReference mr = (MethodReference) node.getOperand();
             if(mr.getDeclaringType().getInternalName().equals("java/lang/String")) {
+                int priority = 0;
+                if(md.isTypeInitializer()) {
+                    // Static field initializer: only one object is created
+                    // not a big performance problem and probably intended
+                    Set<Expression> usages = ValuesFlow.findUsages(node);
+                    if(usages.size() == 1 && usages.iterator().next().getCode() == AstCode.PutStatic) {
+                        priority = 15;
+                        node = usages.iterator().next();
+                    }
+                }
                 if(mr.getSignature().equals("()V")) {
-                    mc.report("StringConstructorEmpty", 0, node);
+                    mc.report("StringConstructorEmpty", priority, node);
                 } else if(mr.getSignature().equals("(Ljava/lang/String;)V")) {
-                    mc.report("StringConstructor", 0, node);
+                    mc.report("StringConstructor", priority, node);
                 }
             }
         } else if(node.getCode() == AstCode.InvokeVirtual) {
