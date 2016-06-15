@@ -1140,7 +1140,7 @@
     </Warning>
     <Warning Type="UnreadPrivateField">
       <Title>Private or package-private field is never read</Title>
-      <Description>Private or package-private field $FIELD$ is is written, but never read.</Description>
+      <Description>Private or package-private field $FIELD$ is written, but never read.</Description>
       <LongDescription><![CDATA[The field $FIELD$ is written, but never read, so probably it should be removed. 
       If it's intended to be read via reflection, consider annotating it with some annotation to avoid confusion.
       False-positive is possible if the field is used only to keep strong reference to the object.]]></LongDescription>
