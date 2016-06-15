@@ -375,6 +375,10 @@ public class FieldAccess {
             && !Flags.testAny(flags, FieldStats.READ_PACKAGE | FieldStats.READ_OUTSIDE | FieldStats.WRITE_PACKAGE
                 | FieldStats.WRITE_OUTSIDE) && fieldRecord != null && fieldRecord.usedInSingleMethod
             && fieldRecord.firstWrite != null) {
+            // javacc-generated
+            if(fd.getName().startsWith("jj_") && fd.getDeclaringType().getSimpleName().endsWith("Parser") &&
+                    fieldRecord.firstWrite.md.getName().equals("generateParseException"))
+                return;
             int priority = AccessLevel.of(fd).select(10, 3, 1, 0);
             if(!fd.isStatic())
                 priority += 5;
