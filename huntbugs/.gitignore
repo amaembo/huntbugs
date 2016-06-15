@@ -5,3 +5,5 @@
 /run.bat
 /procyon-decompiler-*.jar
 /dependency-reduced-pom.xml
+/dep
+/projects
