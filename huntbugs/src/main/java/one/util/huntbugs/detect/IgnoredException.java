@@ -26,14 +26,13 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
 
 /**
  * @author lan
  *
  */
-@WarningDefinition(category="BadPractice", name="IgnoredException", maxScore=40)
+@WarningDefinition(category="BadPractice", name="IgnoredException", maxScore=43)
 public class IgnoredException {
     @AstVisitor
     public void visit(Node node, MethodContext mc) {
@@ -41,11 +40,26 @@ public class IgnoredException {
             CatchBlock cb = (CatchBlock)node;
             TypeReference tr = cb.getExceptionType();
             if(tr != null && isTrivial(cb.getBody())) {
-                if(Types.is(tr, Throwable.class) || Types.is(tr, Exception.class) || Types.is(tr, RuntimeException.class) 
-                        || Types.is(tr, Error.class)) {
-                    mc.report("IgnoredException", 0, node, Roles.EXCEPTION.create(tr));
+                int priority = getExceptionPriority(tr);
+                if(priority >= 0) {
+                    mc.report("IgnoredException", priority, node, Roles.EXCEPTION.create(tr));
                 }
             }
+        }
+    }
+    
+    private static int getExceptionPriority(TypeReference tr) {
+        switch(tr.getInternalName()) {
+        case "java/lang/Throwable":
+            return 0;
+        case "java/lang/Error":
+            return 1;
+        case "java/lang/Exception":
+            return 5;
+        case "java/lang/RuntimeException":
+            return 7;
+        default:
+            return -1;
         }
     }
 
