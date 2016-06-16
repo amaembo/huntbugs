@@ -66,10 +66,12 @@ public class RandomUsage {
             }
         }
         if (node.getCode() == AstCode.InvokeVirtual && node.getArguments().get(0).getCode() == AstCode.InitObject) {
-            MethodReference mr = (MethodReference) node.getArguments().get(0).getOperand();
-            TypeReference type = mr.getDeclaringType();
+            MethodReference ctor = (MethodReference) node.getArguments().get(0).getOperand();
+            TypeReference type = ctor.getDeclaringType();
             if (Types.isRandomClass(type) && !type.getInternalName().equals("java/security/SecureRandom")) {
-                ctx.report("RandomUsedOnlyOnce", 0, node, RANDOM_TYPE.create(type));
+                MethodReference mr = (MethodReference) node.getOperand();
+                if(!mr.getReturnType().getPackageName().equals("java.util.stream"))
+                    ctx.report("RandomUsedOnlyOnce", 0, node, RANDOM_TYPE.create(type));
             }
         }
     }

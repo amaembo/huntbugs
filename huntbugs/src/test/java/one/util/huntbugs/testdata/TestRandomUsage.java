@@ -64,6 +64,11 @@ public class TestRandomUsage {
     }
     
     @AssertNoWarning("RandomUsedOnlyOnce")
+    public int[] testRndArr() {
+        return new Random().ints(100).toArray();
+    }
+    
+    @AssertNoWarning("RandomUsedOnlyOnce")
     public int testRndOnceSecure() {
         return new SecureRandom().nextInt();
     }
