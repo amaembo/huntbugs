@@ -147,7 +147,7 @@ public class ValuesFlow {
                         }
                         breakFrame = Frame.combine(breakFrame, passFrame);
                         passFrame = null;
-                        return;
+                        continue;
                     case LoopContinue:
                         if(expr.getOperand() instanceof Label) {
                             valid = false;
@@ -155,11 +155,11 @@ public class ValuesFlow {
                         }
                         continueFrame = Frame.combine(continueFrame, passFrame);
                         passFrame = null;
-                        return;
+                        continue;
                     case Return:
                         returnFrame = passFrame.processChildren(expr, targets);
                         passFrame = null;
-                        return;
+                        continue;
                     case AThrow: {
                         passFrame.processChildren(expr, targets);
                         TypeReference exc = expr.getInferredType();
@@ -167,7 +167,7 @@ public class ValuesFlow {
                         if(exc == null) exc = Frame.throwable;
                         targets.merge(exc, passFrame);
                         passFrame = null;
-                        return;
+                        continue;
                     }
                     case Goto:
                         if(expr.getOperand() instanceof Label) {
@@ -180,7 +180,7 @@ public class ValuesFlow {
                                 valid = false; // backward gotos are not supported yet
                             }
                         }
-                        return;
+                        continue;
                     case Ret:
                         valid = false;
                         return;
@@ -585,5 +585,9 @@ public class ValuesFlow {
     
     public static boolean isSpecial(Expression expr) {
         return expr.getCode() == Frame.PHI_TYPE || expr.getCode() == Frame.UPDATE_TYPE;
+    }
+
+    public static boolean hasUpdatedSource(Expression e) {
+        return ValuesFlow.getSource(e).getCode() == Frame.UPDATE_TYPE;
     }
 }

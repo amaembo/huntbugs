@@ -453,7 +453,7 @@ class Frame {
     }
 
     private static void link(Expression target, Expression source) {
-        if (source.getCode() == PHI_TYPE) {
+        if (source.getCode() == PHI_TYPE || source.getCode() == UPDATE_TYPE) {
             source.getArguments().forEach(arg -> link(target, arg));
             return;
         }
@@ -980,9 +980,9 @@ class Frame {
             return right;
         if (right == null || left == right)
             return left;
-        if (left.getCode() == AstCode.LdC && right.getCode() == AstCode.LdC && Objects.equals(left.getOperand(), right
-                .getOperand()))
-            return left;
+//        if (left.getCode() == AstCode.LdC && right.getCode() == AstCode.LdC && Objects.equals(left.getOperand(), right
+//                .getOperand()))
+//            return left;
         if (left.getCode() == UPDATE_TYPE) {
             Expression leftContent = left.getArguments().get(0);
             if (leftContent == right || right.getCode() == UPDATE_TYPE && leftContent == right.getArguments().get(0))

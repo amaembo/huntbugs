@@ -77,6 +77,65 @@ public class TestDeadLocalStore {
         System.out.println(i);
     }
     
+    @AssertWarning("DeadParameterStore")
+    public void testDeadParameterStore(int i) {
+        if(i > 0) {
+            i = 0;
+        }
+    }
+    
+    @AssertWarning("DeadLocalStore")
+    public void testDeadLocalStore(int i) {
+        int x = 0;
+        if(i > x) {
+            x = 1;
+        }
+        System.out.println(i);
+    }
+    
+    @AssertNoWarning("*")
+    public void testDeadLocalStoreSame(int i) {
+        int x = 1;
+        if(i > x) {
+            x = 1;
+        }
+        System.out.println(x);
+    }
+    
+    @AssertNoWarning("*")
+    public void testDeadLocalStoreConst(int i) {
+        final int x = 123456;
+        if(i > x) {
+            System.out.println(i);
+        }
+    }
+    
+    @AssertNoWarning("*")
+    public void testDeadLocalStoreConstStr(int i) {
+        final String x = "test";
+        if(i > x.length()) {
+            System.out.println(i);
+        }
+    }
+    
+    @AssertNoWarning("*")
+    public void testDeadLocalStoreCatch(String i) {
+        try {
+            System.out.println(Integer.parseInt(i));
+        }
+        catch(NumberFormatException | NullPointerException ex) {
+            System.out.println("none");
+        }
+    }
+    
+    @AssertNoWarning("*")
+    public void testDeadLocalStoreLabel(boolean x, String a) {
+        if(x ? !a.equals("x") : !a.equals("y"))
+            return;
+        int i = 1;
+        System.out.println(i);
+    }
+    
     public void testLocalClass() {
         class X {
             @AssertWarning("ParameterOverwritten")

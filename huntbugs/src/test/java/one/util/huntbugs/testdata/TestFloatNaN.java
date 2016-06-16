@@ -22,6 +22,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestFloatNaN {
+    @AssertWarning("UnusedLocalVariable")
     void testLambda() {
         Runnable r = () -> System.out.println();
         Runnable r2 = System.out::println;

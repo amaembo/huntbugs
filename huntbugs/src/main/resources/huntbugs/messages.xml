@@ -1288,5 +1288,24 @@
       user tries to negate comparison result. Comparison method can return any negative number here,
       so better to use something else like <code>-1</code>.]]></LongDescription>
     </Warning>
+    <Warning Type="DeadParameterStore">
+      <Title>Parameter is assigned to a value which is never used</Title>
+      <Description>Parameter $VARIABLE$ is assigned to a value which is never used.</Description>
+      <LongDescription><![CDATA[This code assigns a new value to the parameter <code>$VARIABLE$</code> and this value
+      is never used subsequently. Note that the assigned value will not be returned to the caller as 
+      Java is pass-by-value language.]]></LongDescription>
+    </Warning>
+    <Warning Type="DeadLocalStore">
+      <Title>Local variable is assigned to a value which is never used</Title>
+      <Description>Local variable $VARIABLE$ is assigned to a value which is never used.</Description>
+      <LongDescription><![CDATA[This code assigns a new value to the local variable <code>$VARIABLE$</code> and this value
+      is never used subsequently. Probably something else was meant or the assignment could be removed.]]></LongDescription>
+    </Warning>
+    <Warning Type="UnusedLocalVariable">
+      <Title>Local variable is never used</Title>
+      <Description>Local variable $VARIABLE$ is never used.</Description>
+      <LongDescription><![CDATA[This code contains a local variable <code>$VARIABLE$</code> which is assigned but never used.
+      Probably it could be removed.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

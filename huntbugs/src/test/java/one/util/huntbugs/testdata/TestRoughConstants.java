@@ -26,30 +26,44 @@ public class TestRoughConstants {
     private static final float PI_FLOAT = 3.14159f;
     private static final double PI_DOUBLE = 3.14159;
 
-    @AssertNoWarning("RoughConstantValue")
+    @AssertNoWarning("*")
     public void testNan() {
         double a;
         a = Double.NaN;
+        System.out.println(a);
         a = Double.POSITIVE_INFINITY;
+        System.out.println(a);
         a = Double.NEGATIVE_INFINITY;
+        System.out.println(a);
         float b;
         b = Float.NaN;
+        System.out.println(b);
         b = Float.POSITIVE_INFINITY;
+        System.out.println(b);
         b = Float.NEGATIVE_INFINITY;
+        System.out.println(b);
     }
 
-    @AssertNoWarning("RoughConstantValue")
+    @AssertNoWarning("*")
     public void testNoWarning() {
         double a;
         a = Math.PI; // Exact
+        System.out.println(a);
         a = 3.141512345; // Explicitly specified something different from PI
+        System.out.println(a);
         a = 3.1417;
+        System.out.println(a);
         a = 3.1414;
+        System.out.println(a);
         float b;
         b = (float)Math.PI; // Exact value converted to float
+        System.out.println(b);
         b = 3.141512345f; // Explicitly specified something different from PI
+        System.out.println(b);
         b = 3.1417f;
+        System.out.println(b);
         b = 3.1414f;
+        System.out.println(b);
     }
 
     @AssertWarning(value="RoughConstantValue", minScore=50)

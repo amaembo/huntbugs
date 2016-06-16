@@ -124,7 +124,8 @@ public class FieldAccess {
                     if(fieldRecord.firstRead == null) {
                         fieldRecord.firstRead = new MethodLocation(md, mc.getLocation(expr));
                     }
-                    if(ValuesFlow.findTransitiveUsages(expr, true).anyMatch(e -> e.getCode() == AstCode.Return)) {
+                    if(ValuesFlow.findTransitiveUsages(expr, true).anyMatch(e -> e.getCode() == AstCode.Return
+                            && !ValuesFlow.hasUpdatedSource(e.getArguments().get(0)))) {
                         fieldRecord.expose = new MethodLocation(md, mc.getLocation(expr));
                     }
                 } else {
@@ -219,7 +220,7 @@ public class FieldAccess {
         if(Flags.testAny(flags, FieldStats.UNRESOLVED) || Annotations.hasAnnotation(fd, false)) {
             return;
         }
-        boolean isConstantType = fd.getFieldType().isPrimitive() || Types.is(fd.getFieldType(), String.class);
+        boolean isConstantType = fd.getFieldType().isPrimitive() || Types.isString(fd.getFieldType());
         if(!Flags.testAny(flags, FieldStats.ACCESS)) {
             if(fd.isStatic() && fd.isFinal() && isConstantType)
                 return;

@@ -259,4 +259,18 @@ public class TestFieldAccess {
     public void setExpose(int[] expose) {
         this.expose = expose;
     }
+    
+    @AssertNoWarning("*")
+    private int[] expose2 = {1};
+    
+    @AssertNoWarning("*")
+    public int[] getExpose2() {
+        int[] data = expose2;
+        expose2 = new int[] {3};
+        return data;
+    }
+    
+    public void updateExpose2() {
+        expose2 = new int[] {2};
+    }
 }

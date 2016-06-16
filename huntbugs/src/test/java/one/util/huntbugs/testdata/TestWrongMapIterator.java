@@ -109,6 +109,7 @@ public class TestWrongMapIterator {
     }
 
     @AssertNoWarning("WrongMapIterator")
+    @AssertWarning("UnusedLocalVariable")
     public void testIteratorLoadBug(Map<String, String> m1, List<String> list) {
         Set<String> keys = m1.keySet();
         //int a = 0;
