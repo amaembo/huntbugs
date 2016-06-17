@@ -99,7 +99,7 @@ class Frame {
         return initial.get(var.getOriginalParameter());
     }
 
-    Frame(FrameContext fc, Iterable<Expression> closure) {
+    Frame(FrameContext fc, Frame closure) {
         this.sources = new IdentityHashMap<>();
         this.fieldValues = fc.getInitialFields();
         this.fc = fc;
@@ -111,8 +111,9 @@ class Frame {
         if(thisParam != null) {
             putInitial(thisParam);
         }
-        for(Expression c : closure) {
-            initial.put((ParameterDefinition) c.getOperand(), c);
+        if(closure != null) {
+            initial.putAll(closure.initial);
+            sources.putAll(closure.sources);
         }
     }
 

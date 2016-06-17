@@ -42,7 +42,7 @@ import one.util.huntbugs.warning.Role.StringRole;
 @WarningDefinition(category="RedundantCode", name="DeadIncrementInAssignment", maxScore=60)
 @WarningDefinition(category="RedundantCode", name="DeadParameterStore", maxScore=60)
 @WarningDefinition(category="RedundantCode", name="DeadLocalStore", maxScore=50)
-@WarningDefinition(category="RedundantCode", name="UnusedLocalVariable", maxScore=50)
+@WarningDefinition(category="RedundantCode", name="UnusedLocalVariable", maxScore=35)
 public class DeadLocalStore {
     private static final StringRole EXPRESSION = StringRole.forName("EXPRESSION");
     
@@ -97,8 +97,10 @@ public class DeadLocalStore {
                         } else {
                             boolean unusedLocal = Nodes.find(nc.getRoot(), n -> n instanceof Expression
                                 && ((Expression) n).getOperand() == var && ((Expression) n).getCode() != AstCode.Store) == null;
-                            if(arg.getCode() == AstCode.AConstNull || arg.getCode() == AstCode.LdC &&
-                                    arg.getOperand() instanceof Number && ((Number)arg.getOperand()).doubleValue() == 0.0)
+                            if (!unusedLocal
+                                && (arg.getCode() == AstCode.AConstNull || arg.getCode() == AstCode.LdC
+                                    && arg.getOperand() instanceof Number
+                                    && ((Number) arg.getOperand()).doubleValue() == 0.0))
                                 priority = 20;
                             String type = unusedLocal ? "UnusedLocalVariable" : "DeadLocalStore";
                             mc.report(type, priority, expr);

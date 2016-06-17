@@ -101,6 +101,6 @@ public class DatabaseRegistry {
         @SuppressWarnings("unchecked")
         DatabaseInfo<? extends AbstractTypeDatabase<T>> parentInfo = getDatabaseInfo((Class<AbstractTypeDatabase<T>>) tdi
                 .parentDatabase());
-        return new DatabaseInfo<T>(null, parentInfo.db);
+        return new DatabaseInfo<>(null, parentInfo.db);
     }
 }

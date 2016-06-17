@@ -30,7 +30,6 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import one.util.huntbugs.analysis.Context;
-import one.util.huntbugs.util.Iterables;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 
@@ -417,7 +416,7 @@ public class ValuesFlow {
                 initBackLinks(child, lambdas);
     }
 
-    public static List<Expression> annotate(Context ctx, MethodDefinition md, ClassFields cf, Block method, Iterable<Expression> closure) {
+    public static List<Expression> annotate(Context ctx, MethodDefinition md, ClassFields cf, Block method, Frame closure) {
         ctx.incStat("ValuesFlow.Total");
         List<Lambda> lambdas = new ArrayList<>();
         initBackLinks(method, lambdas);
@@ -431,8 +430,7 @@ public class ValuesFlow {
             fc.makeFieldsFrom(exitFrame);
             boolean valid = true;
             for(Lambda lambda : lambdas) {
-                valid &= annotate(ctx, Nodes.getLambdaMethod(lambda), cf, lambda.getBody(), Iterables.concat(origParams,
-                    closure)) != null;
+                valid &= annotate(ctx, Nodes.getLambdaMethod(lambda), cf, lambda.getBody(), exitFrame) != null;
             }
             if (valid) {
                 ctx.incStat("ValuesFlow");

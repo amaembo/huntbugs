@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.util.Random;
+
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -100,6 +102,12 @@ public class TestDeadLocalStore {
             x = 1;
         }
         System.out.println(x);
+    }
+    
+    @AssertNoWarning("*")
+    public void testDeadLocalStoreLambda() {
+        double x = Math.random();
+        System.out.println(new Random().doubles(1000).filter(d -> d > x).count());
     }
     
     @AssertNoWarning("*")

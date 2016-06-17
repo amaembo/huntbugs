@@ -232,7 +232,7 @@ public class DetectorRegistry {
                     try {
                         methodAst.getBody().addAll(AstBuilder.build(body, true, context));
                         AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
-                        mdata.origParams = ValuesFlow.annotate(ctx, md, cf, methodAst, Collections.emptyList());
+                        mdata.origParams = ValuesFlow.annotate(ctx, md, cf, methodAst, null);
                         mdata.fullyAnalyzed = true;
                     } catch (Throwable t) {
                         ctx.addError(new ErrorMessage(null, type.getFullName(), md.getFullName(), md.getSignature(),

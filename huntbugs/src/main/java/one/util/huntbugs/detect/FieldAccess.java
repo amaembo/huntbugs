@@ -124,8 +124,10 @@ public class FieldAccess {
                     if(fieldRecord.firstRead == null) {
                         fieldRecord.firstRead = new MethodLocation(md, mc.getLocation(expr));
                     }
-                    if(ValuesFlow.findTransitiveUsages(expr, true).anyMatch(e -> e.getCode() == AstCode.Return
-                            && !ValuesFlow.hasUpdatedSource(e.getArguments().get(0)))) {
+                    if (ValuesFlow.findTransitiveUsages(expr, true).anyMatch(
+                        e -> e.getCode() == AstCode.Return
+                            && (e.getArguments().get(0).getCode() == AstCode.GetField || !ValuesFlow.hasUpdatedSource(e
+                                    .getArguments().get(0))))) {
                         fieldRecord.expose = new MethodLocation(md, mc.getLocation(expr));
                     }
                 } else {
