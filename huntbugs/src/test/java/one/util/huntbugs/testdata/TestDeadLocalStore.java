@@ -109,6 +109,16 @@ public class TestDeadLocalStore {
         double x = Math.random();
         System.out.println(new Random().doubles(1000).filter(d -> d > x).count());
     }
+
+    @AssertNoWarning("*")
+    public int testDeadLocalStoreLambda2(boolean b) {
+        if (b) {
+            double x = Math.random();
+            System.out.println(new Random().doubles(1000).filter(d -> d > x).count());
+            return 1;
+        }
+        return 0;
+    }
     
     @AssertNoWarning("*")
     public void testDeadLocalStoreConst(int i) {

@@ -157,7 +157,7 @@ public class ValuesFlow {
                         passFrame = null;
                         continue;
                     case Return:
-                        returnFrame = passFrame.processChildren(expr, targets);
+                        returnFrame = Frame.combine(returnFrame, passFrame.processChildren(expr, targets));
                         passFrame = null;
                         continue;
                     case AThrow: {
