@@ -18,7 +18,8 @@ package one.util.huntbugs.flow;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -71,7 +72,7 @@ public class ValuesFlow {
             if(exceptions.isEmpty())
                 targets = Collections.emptyMap();
             else {
-                targets = new HashMap<>();
+                targets = new LinkedHashMap<>();
                 exceptions.forEach(e -> targets.put(e, null));
             }
         }
@@ -223,7 +224,7 @@ public class ValuesFlow {
                         continue;
                     }
                     if (tryCatch.getFinallyBlock() == null) {
-                        Set<TypeReference> exceptions = new HashSet<>();
+                        Set<TypeReference> exceptions = new LinkedHashSet<>();
                         for(CatchBlock catchBlock : tryCatch.getCatchBlocks()) {
                             exceptions.addAll(catchBlock.getCaughtTypes());
                             exceptions.add(catchBlock.getExceptionType());

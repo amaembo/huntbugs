@@ -135,6 +135,20 @@ public class TestDeadLocalStore {
             System.out.println("none");
         }
     }
+
+    @AssertNoWarning("DeadParameterStore")
+    public void testDeadLocalStoreCatch2(String i) {
+        try {
+            System.out.println(Integer.parseInt(i));
+        }
+        catch(NumberFormatException ex) {
+            i = "abc";
+        }
+        catch(Exception ex) {
+            return;
+        }
+        System.out.println(i);
+    }
     
     @AssertNoWarning("*")
     public void testDeadLocalStoreLabel(boolean x, String a) {
