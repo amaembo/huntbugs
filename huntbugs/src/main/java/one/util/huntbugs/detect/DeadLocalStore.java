@@ -60,6 +60,8 @@ public class DeadLocalStore {
         }
         if(expr.getCode() == AstCode.Store) {
             Variable var = (Variable) expr.getOperand();
+            if(var.isGenerated())
+                return;
             Expression arg = expr.getArguments().get(0);
             if(arg.getCode() == AstCode.PostIncrement) { // XXX: bug in Procyon? Seems that should be PreIncrement
                 Expression load = arg.getArguments().get(0);
@@ -97,12 +99,21 @@ public class DeadLocalStore {
                         } else {
                             boolean unusedLocal = Nodes.find(nc.getRoot(), n -> n instanceof Expression
                                 && ((Expression) n).getOperand() == var && ((Expression) n).getCode() != AstCode.Store) == null;
-                            if (!unusedLocal
-                                && (arg.getCode() == AstCode.AConstNull || arg.getCode() == AstCode.LdC
-                                    && arg.getOperand() instanceof Number
-                                    && ((Number) arg.getOperand()).doubleValue() == 0.0))
-                                priority = 20;
-                            String type = unusedLocal ? "UnusedLocalVariable" : "DeadLocalStore";
+                            String type;
+                            if (!unusedLocal) {
+                                type = "DeadLocalStore";
+                                if(arg.getCode() == AstCode.AConstNull)
+                                    priority = 20;
+                                else if(arg.getCode() == AstCode.LdC) {
+                                    if (arg.getOperand() instanceof Number
+                                        && ((Number) arg.getOperand()).doubleValue() == 0.0)
+                                        priority = 20;
+                                    else if ("".equals(arg.getOperand()))
+                                        priority = 10;
+                                }
+                            } else {
+                                type = "UnusedLocalVariable";
+                            }
                             mc.report(type, priority, expr);
                         }
                     }
