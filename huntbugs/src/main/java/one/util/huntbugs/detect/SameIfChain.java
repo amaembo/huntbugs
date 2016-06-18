@@ -74,6 +74,9 @@ public class SameIfChain {
                                     cond1.getTrueBlock().getBody().get(0) instanceof Condition) {
                                 priority += 15;
                             }
+                            if(!cond2.getFalseBlock().getBody().isEmpty()) {
+                                priority += 10;
+                            }
                             mc.report("SameConditionChain", priority, c1, SAME_CONDITION_AT.create(mc, c2));
                         }
                     }

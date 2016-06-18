@@ -86,11 +86,20 @@ public class TestDeadLocalStore {
         }
     }
     
-    @AssertWarning("DeadLocalStore")
+    @AssertWarning(value = "DeadLocalStore", maxScore=45)
     public void testDeadLocalStore(int i) {
         int x = 0;
         if(i > x) {
             x = 1;
+        }
+        System.out.println(i);
+    }
+    
+    @AssertWarning(value = "DeadLocalStore", minScore=46)
+    public void testDeadLocalStore2(int i) {
+        int x = 1;
+        if(i > x) {
+            x = 2;
         }
         System.out.println(i);
     }
@@ -143,6 +152,14 @@ public class TestDeadLocalStore {
         }
         catch(NumberFormatException | NullPointerException ex) {
             System.out.println("none");
+        }
+    }
+
+    @AssertNoWarning("*")
+    public void testThrow(String i) {
+        if (i.length() > 2) {
+            final String s = "exception message";
+            throw new RuntimeException(i + s);
         }
     }
 

@@ -26,8 +26,9 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  */
 public class TestAtomicConcurrent {
     Map<String, Integer> chm = new ConcurrentHashMap<>();
+    Map<String, Integer[]> chm2 = new ConcurrentHashMap<>();
     
-    @AssertWarning("NonAtomicOperationOnConcurrentMap")
+    @AssertWarning(value="NonAtomicOperationOnConcurrentMap", minScore=40, maxScore=60)
     public void testAtomic(String str) {
         if(!chm.containsKey(str)) {
             chm.put(str, 1);
@@ -36,6 +37,15 @@ public class TestAtomicConcurrent {
         }
     }
 
+    @AssertWarning(value="NonAtomicOperationOnConcurrentMap", minScore=61)
+    public void testAtomicArray(String str) {
+        if(!chm2.containsKey(str)) {
+            chm2.put(str, new Integer[1]);
+        } else {
+            chm2.put(str, new Integer[2]);
+        }
+    }
+    
     @AssertWarning("NonAtomicOperationOnConcurrentMap")
     public void testAtomic2(String str) {
         Integer oldVal = chm.get(str);

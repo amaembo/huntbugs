@@ -191,7 +191,9 @@ public class ValuesFlow {
                     default:
                     }
                     if(passFrame == null) {
-                        throw new IllegalStateException(expr.toString());
+                        valid = false;
+                        return;
+                        //throw new IllegalStateException(expr.toString());
                     }
                     passFrame = passFrame.process(expr, targets);
                 } else if (n instanceof Condition) {

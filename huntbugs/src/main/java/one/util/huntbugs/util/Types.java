@@ -125,6 +125,18 @@ public class Types {
         return MUTABLE_TYPES.contains(type.getInternalName());
     }
 
+    /**
+     * @param type
+     * @return true if type is known to be immutable
+     */
+    public static boolean isImmutable(TypeReference type) {
+        if (type == null) 
+            return false;
+        if(BOXED_TYPES.contains(type.getInternalName()) || isString(type))
+            return true;
+        return false;
+    }
+    
     public static boolean isBoxed(TypeReference type) {
         return BOXED_TYPES.contains(type.getInternalName());
     }
@@ -150,9 +162,13 @@ public class Types {
     }
     
     public static boolean is(TypeReference type, Class<?> clazz) {
-        return type.getFullName().equals(clazz.getName());
+        return type != null && type.getFullName().equals(clazz.getName());
     }
 
+    public static boolean is(TypeReference type, String internalName) {
+        return type != null && type.getInternalName().equals(internalName);
+    }
+    
     /**
      * @param type type to check
      * @return true if all superclasses and superinterfaces could be loaded

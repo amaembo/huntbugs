@@ -31,6 +31,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Role.MemberRole;
 
 /**
@@ -53,6 +54,7 @@ public class AtomicConcurrent {
                             .equals("java/util/concurrent/ConcurrentSkipListMap")) {
                     Expression self = expr.getArguments().get(0);
                     Expression key = expr.getArguments().get(1);
+                    Expression value = expr.getArguments().get(2);
                     Expression prevCall = null;
                     int priority = 0;
                     while (prevCall == null && nc != null) {
@@ -78,6 +80,9 @@ public class AtomicConcurrent {
                         }
                     }
                     if(nc != null && nc.isSynchronized() || Flags.testAny(md.getFlags(), Flags.SYNCHRONIZED)) {
+                        priority += 20;
+                    }
+                    if(Types.isImmutable(value.getInferredType())) {
                         priority += 20;
                     }
                     if (prevCall != null) {

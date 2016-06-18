@@ -74,7 +74,7 @@ public class CloneContract {
                     priority += 20;
                 mc.report("NotCloneableHasClone", priority, body);
             }
-            if(isCloneable && !md.isFinal() && !onlyThrows) {
+            if(isCloneable && !md.isFinal() && !td.isFinal() && !onlyThrows) {
                 boolean invokesSuperClone = Nodes.find(body, n -> {
                     if(Nodes.isOp(n, AstCode.InvokeSpecial)) {
                         MethodReference mr = (MethodReference) ((Expression)n).getOperand();
