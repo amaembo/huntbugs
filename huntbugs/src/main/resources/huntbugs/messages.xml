@@ -1307,5 +1307,12 @@
       <LongDescription><![CDATA[This code contains a local variable <code>$VARIABLE$</code> which is assigned but never used.
       Probably it could be removed.]]></LongDescription>
     </Warning>
+    <Warning Type="SameConditionChain">
+      <Title>The same condition is checked twice in a row</Title>
+      <Description>The same condition is checked twice in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code contains two consequtive <code>if</code> statements like <code>if (cond) {...} if (cond) {...}</code>.
+      Analysis found that both conditions are equivalent. Probably there is some typo. If such logic is intended, consider
+      merging both <code>if</code> statements into one to avoid confusion.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

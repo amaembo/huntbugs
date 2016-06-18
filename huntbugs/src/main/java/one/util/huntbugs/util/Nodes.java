@@ -18,6 +18,7 @@ package one.util.huntbugs.util;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -111,6 +112,19 @@ public class Nodes {
                 }
             }
         }
+    }
+    
+    public static boolean isWriteTo(Node node, Set<Variable> vars) {
+        if (!(node instanceof Expression))
+            return false;
+        Expression expr = (Expression) node;
+        if (expr.getOperand() instanceof Variable && vars.contains(expr.getOperand()) && (expr
+                .getCode() == AstCode.Store || expr.getCode() == AstCode.Inc))
+            return true;
+        if ((expr.getCode() == AstCode.PreIncrement || expr.getCode() == AstCode.PostIncrement) && vars.contains(expr
+                .getArguments().get(0).getOperand()))
+            return true;
+        return false;
     }
 
     public static boolean isComparison(Node node) {
