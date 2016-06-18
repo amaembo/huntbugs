@@ -80,11 +80,11 @@ public class ValuesFlow {
         public void merge(TypeReference exception, Frame frame) {
             if(!targets.isEmpty()) {
                 for(Entry<TypeReference, Frame> entry : targets.entrySet()) {
-                    // TODO: support exceptions with inconsistent hierarchy
                     if(Types.isInstance(exception, entry.getKey())) {
                         entry.setValue(Frame.combine(entry.getValue(), frame));
                         return;
-                    } else if(Types.isInstance(entry.getKey(), exception)) {
+                    } else if(Types.isInstance(entry.getKey(), exception) ||
+                            !Types.hasCompleteHierarchy(entry.getKey().resolve())) {
                         entry.setValue(Frame.combine(entry.getValue(), frame));
                     }
                 }

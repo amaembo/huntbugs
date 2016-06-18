@@ -160,6 +160,34 @@ public class TestDeadLocalStore {
         System.out.println(i);
     }
     
+    static class MyException extends Exception {
+        private static final long serialVersionUID = 1L;
+    };
+    
+    private int convert(String s) throws MyException {
+        if(s.isEmpty())
+            throw new MyException();
+        return Integer.parseInt(s);
+    }
+
+    @AssertNoWarning("*")
+    public void testDeadLocalStoreCatch3(String i) {
+        boolean flag = false;
+        try {
+            if(i != null) {
+                System.out.println(convert(i));
+            } else {
+                flag = true;
+            }
+        }
+        catch(MyException ex) {
+            flag = true;
+        }
+        if(flag) {
+            throw new RuntimeException();
+        }
+    }
+    
     @AssertNoWarning("*")
     public void testDeadLocalStoreLabel(boolean x, String a) {
         if(x ? !a.equals("x") : !a.equals("y"))
