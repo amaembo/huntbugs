@@ -15,8 +15,10 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
@@ -262,6 +264,36 @@ public class TestEqualsContract {
                 return false;
             EqualsWrongField other = (EqualsWrongField) obj;
             return x == other.y && Arrays.equals(arr1, other.arr2);
+        }
+    }
+
+    @AssertNoWarning("*")
+    public static class EqualsFieldsOk {
+        private final int x;
+        private final int y;
+        
+        public EqualsFieldsOk(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
+        
+        public Point getPoint() {
+            return new Point(x, y);
+        }
+        
+        @Override
+        public int hashCode() {
+            return Objects.hash(x, y);
+        }
+        
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null || getClass() != obj.getClass())
+                return false;
+            Point pt = ((EqualsFieldsOk) obj).getPoint();
+            return x == pt.x && y == pt.y;
         }
     }
 }

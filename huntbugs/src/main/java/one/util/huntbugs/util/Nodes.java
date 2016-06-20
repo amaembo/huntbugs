@@ -214,6 +214,17 @@ public class Nodes {
             return true;
         return false;
     }
+    
+    public static boolean bothMatch(Expression e1, Expression e2, Predicate<Expression> p1, Predicate<Expression> p2) {
+        return p1.test(e1) && p2.test(e2) || p1.test(e2) && p2.test(e1);
+    }
+    
+    public static boolean bothChildrenMatch(Expression e, Predicate<Expression> p1, Predicate<Expression> p2) {
+        List<Expression> args = e.getArguments();
+        if(args.size() != 2)
+            throw new IllegalArgumentException("Children size = "+args.size()+"; expr = "+e);
+        return bothMatch(ValuesFlow.getSource(args.get(0)), ValuesFlow.getSource(args.get(1)), p1, p2);
+    }
 
     public static Expression getThis(Expression node) {
         if (node.getCode() == AstCode.GetField || node.getCode() == AstCode.PutField)

@@ -242,8 +242,8 @@ public class EqualsContract {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS, methodName = "equals", methodSignature = "(Ljava/lang/Object;)Z")
     public void visitEqualsExpression(Expression expr, MethodContext mc) {
         if(isComparison(expr)) {
-            Expression left = Nodes.getChild(expr, 0);
-            Expression right = Nodes.getChild(expr, 1);
+            Expression left = expr.getArguments().get(0);
+            Expression right = expr.getArguments().get(1);
             if(left.getCode() == AstCode.GetField && right.getCode() == AstCode.GetField) {
                 FieldReference lfr = ((FieldReference) left.getOperand());
                 FieldReference rfr = ((FieldReference) right.getOperand());
@@ -251,7 +251,10 @@ public class EqualsContract {
                     lfr = lfr.resolve();
                     rfr = rfr.resolve();
                     if(lfr != null && rfr != null && !lfr.isEquivalentTo(rfr)) {
-                        mc.report("EqualsSuspiciousFieldComparison", 0, left, OTHER_FIELD.create(rfr));
+                        if (Nodes.bothMatch(Nodes.getChild(left, 0), Nodes.getChild(right, 0), Nodes::isThis,
+                            EqualsContract::isParameter)) {
+                            mc.report("EqualsSuspiciousFieldComparison", 0, left, OTHER_FIELD.create(rfr));
+                        }
                     }
                 }
             }
@@ -260,6 +263,13 @@ public class EqualsContract {
                 checkGetName(expr, mc, right);
             }
         }
+    }
+    
+    private static boolean isParameter(Expression expr) {
+        if(expr.getCode() == AstCode.CheckCast) {
+            expr = Nodes.getChild(expr, 0);
+        }
+        return Nodes.isParameter(expr);
     }
 
     private static boolean isComparison(Expression expr) {
