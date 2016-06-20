@@ -16,6 +16,7 @@
 package one.util.huntbugs.testdata;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
@@ -234,6 +235,33 @@ public class TestEqualsContract {
                 return false;
             EqualsList other = (EqualsList) obj;
             return f == other.f;
+        }
+    }
+    
+    public static class EqualsWrongField {
+        private int x;
+        private int y;
+        private int[] arr1;
+        private int[] arr2;
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + x;
+            result = prime * result + y;
+            return result;
+        }
+        
+        @Override
+        @AssertWarning("EqualsSuspiciousFieldComparison")
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null || getClass() != obj.getClass())
+                return false;
+            EqualsWrongField other = (EqualsWrongField) obj;
+            return x == other.y && Arrays.equals(arr1, other.arr2);
         }
     }
 }

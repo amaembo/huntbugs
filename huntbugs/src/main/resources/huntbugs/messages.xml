@@ -1314,5 +1314,12 @@
       Analysis found that both conditions are equivalent. Probably there is some typo. If such logic is intended, consider
       merging both <code>if</code> statements into one to avoid confusion.]]></LongDescription>
     </Warning>
+    <Warning Type="EqualsSuspiciousFieldComparison">
+      <Title>Suspicious field comparison in equals method.</Title>
+      <Description>Field $FIELD$ is compared with $OTHER_FIELD$ in equals method.</Description>
+      <LongDescription><![CDATA[This equals method compares different fields: $FIELD$ and $OTHER_FIELD$.
+      Usually <code>equals()</code> method compares the same field of this and other object. 
+      Probably there's some mistake.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

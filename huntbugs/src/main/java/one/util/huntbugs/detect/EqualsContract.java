@@ -15,8 +15,11 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
+import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.Flags;
 import com.strobel.assembler.metadata.JvmType;
 import com.strobel.assembler.metadata.MethodDefinition;
@@ -57,14 +60,16 @@ import one.util.huntbugs.warning.Role.MemberRole;
 @WarningDefinition(category = "BadPractice", name = "HashCodeNoEquals", maxScore = 55)
 @WarningDefinition(category = "BadPractice", name = "EqualsObjectHashCode", maxScore = 45)
 @WarningDefinition(category = "BadPractice", name = "EqualsNoHashCode", maxScore = 55)
+@WarningDefinition(category = "Correctness", name = "EqualsSuspiciousFieldComparison", maxScore = 60)
 public class EqualsContract {
     private static final MemberRole NORMAL_EQUALS = MemberRole.forName("NORMAL_EQUALS");
+    private static final MemberRole OTHER_FIELD = MemberRole.forName("OTHER_FIELD");
 
     boolean alwaysFalse = false;
     boolean instanceCheckingEquals = false;
 
     @AstVisitor(nodes = AstNodes.ROOT, methodName = "equals", methodSignature = "(Ljava/lang/Object;)Z")
-    public void visitMethod(Block body, MethodContext mc, TypeDefinition td) {
+    public void visitEquals(Block body, MethodContext mc, TypeDefinition td) {
         List<Node> list = body.getBody();
         if (list.size() == 1) {
             Node node = list.get(0);
@@ -235,14 +240,39 @@ public class EqualsContract {
     }
 
     @AstVisitor(nodes = AstNodes.EXPRESSIONS, methodName = "equals", methodSignature = "(Ljava/lang/Object;)Z")
-    public void visitExpression(Expression expr, MethodContext mc) {
-        if (expr.getCode() == AstCode.InvokeVirtual) {
-            if (Methods.isEqualsMethod((MethodReference) expr.getOperand())) {
-                Expression left = Nodes.getChild(expr, 0);
+    public void visitEqualsExpression(Expression expr, MethodContext mc) {
+        if(isComparison(expr)) {
+            Expression left = Nodes.getChild(expr, 0);
+            Expression right = Nodes.getChild(expr, 1);
+            if(left.getCode() == AstCode.GetField && right.getCode() == AstCode.GetField) {
+                FieldReference lfr = (FieldReference) left.getOperand();
+                FieldReference rfr = (FieldReference) right.getOperand();
+                if(!lfr.isEquivalentTo(rfr)) {
+                    mc.report("EqualsSuspiciousFieldComparison", 0, left, OTHER_FIELD.create(rfr));
+                }
+            }
+            if (expr.getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod((MethodReference) expr.getOperand())) {
                 checkGetName(expr, mc, left);
-                Expression right = Nodes.getChild(expr, 1);
                 checkGetName(expr, mc, right);
             }
+        }
+    }
+
+    private static boolean isComparison(Expression expr) {
+        switch(expr.getCode()) {
+        case CmpEq:
+        case CmpNe:
+            return true;
+        case InvokeVirtual:
+            return Methods.isEqualsMethod((MethodReference) expr.getOperand());
+        case InvokeStatic: {
+            MethodReference mr = (MethodReference) expr.getOperand();
+            TypeReference tr = mr.getDeclaringType();
+            return (mr.getName().equals("equals") || mr.getName().equals("deepEquals")) &&
+                    (Types.is(tr, Arrays.class) || Types.is(tr, Objects.class));
+        }
+        default:
+            return false;
         }
     }
 
