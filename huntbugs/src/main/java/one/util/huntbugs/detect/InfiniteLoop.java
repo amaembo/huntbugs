@@ -54,7 +54,10 @@ public class InfiniteLoop {
     private void checkCondition(MethodContext mc, Loop loop, Expression expr, AstCode parent) {
         if((expr.getCode() == AstCode.LogicalAnd || expr.getCode() == AstCode.LogicalOr)
                 && (parent == null || expr.getCode() == parent)) {
-            checkCondition(mc, loop, expr.getArguments().get(0), expr.getCode());
+            // suppress warning for quite common scenario like "for(int x = 0; data != null && x < data.length; x++)"
+            if(!Nodes.isNullCheck(expr.getArguments().get(0))) {
+                checkCondition(mc, loop, expr.getArguments().get(0), expr.getCode());
+            }
             checkCondition(mc, loop, expr.getArguments().get(1), expr.getCode());
             return;
         }

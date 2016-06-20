@@ -82,4 +82,11 @@ public class TestInfiniteLoop {
         }
         System.out.println(x);
     }
+
+    @AssertNoWarning("*")
+    public void dump(int[] data) {
+        for(int i=0; data != null && i < data.length; i++) {
+            System.out.println(data[i]);
+        }
+    }
 }
