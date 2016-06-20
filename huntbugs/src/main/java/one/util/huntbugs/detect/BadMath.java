@@ -72,8 +72,9 @@ public class BadMath {
         case Xor:
             if (exprType == JvmType.Long || exprType == JvmType.Integer) {
                 Nodes.ifBinaryWithConst(expr, (child, constant) -> {
-                    if (constant instanceof Number && ((Number) constant).longValue() == 0 && !Nodes
-                            .isCompoundAssignment(nc.getNode())) {
+                    if (constant instanceof Number && ((Number) constant).longValue() == 0
+                        && !Nodes.isCompoundAssignment(nc.getNode())
+                        && (nc.getParent() == null || !Nodes.isCompoundAssignment(nc.getParent().getNode()))) {
                         mc.report("UselessOrWithZero", 0, child, Roles.OPERATION.create(expr));
                     }
                 });

@@ -160,10 +160,25 @@ public class TestBadMath {
     }
     
     int flags;
+    byte byteFlags;
+    
+    static final int NOTHING = 0;
     
     @AssertNoWarning("UselessOrWithZero")
     public TestBadMath(int x) {
         flags |= x;
+    }
+    
+    @AssertNoWarning("*")
+    public void setNothingField() {
+        byteFlags |= NOTHING;
+    }
+    
+    @AssertNoWarning("*")
+    public void setNothingLocal() {
+        byte f = byteFlags;
+        f |= NOTHING;
+        System.out.println(f);
     }
     
     static long sFlags, sFlags2;

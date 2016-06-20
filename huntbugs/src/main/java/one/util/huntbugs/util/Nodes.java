@@ -352,14 +352,14 @@ public class Nodes {
         Expression store = (Expression) node;
         switch (store.getCode()) {
         case Store: {
-            Expression expr = store.getArguments().get(0);
+            Expression expr = dropNarrowing(store.getArguments().get(0));
             if (!isBinaryMath(expr))
                 return false;
             Expression load = expr.getArguments().get(0);
             return load.getCode() == AstCode.Load && Objects.equals(load.getOperand(), store.getOperand());
         }
         case PutField: {
-            Expression expr = store.getArguments().get(1);
+            Expression expr = dropNarrowing(store.getArguments().get(1));
             if (!isBinaryMath(expr))
                 return false;
             Expression load = expr.getArguments().get(0);
@@ -368,7 +368,7 @@ public class Nodes {
                 && Equi.equiExpressions(store.getArguments().get(0), load.getArguments().get(0));
         }
         case PutStatic: {
-            Expression expr = store.getArguments().get(0);
+            Expression expr = dropNarrowing(store.getArguments().get(0));
             if (!isBinaryMath(expr))
                 return false;
             Expression load = expr.getArguments().get(0);
@@ -377,6 +377,20 @@ public class Nodes {
         }
         default:
             return false;
+        }
+    }
+
+    private static Expression dropNarrowing(Expression expression) {
+        switch(expression.getCode()) {
+        case I2B:
+        case I2C:
+        case I2S:
+        case L2I:
+        case D2F:
+        case D2I:
+            return expression.getArguments().get(0);
+        default:
+            return expression;
         }
     }
 
