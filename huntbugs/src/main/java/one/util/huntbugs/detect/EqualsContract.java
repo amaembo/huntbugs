@@ -245,10 +245,14 @@ public class EqualsContract {
             Expression left = Nodes.getChild(expr, 0);
             Expression right = Nodes.getChild(expr, 1);
             if(left.getCode() == AstCode.GetField && right.getCode() == AstCode.GetField) {
-                FieldReference lfr = (FieldReference) left.getOperand();
-                FieldReference rfr = (FieldReference) right.getOperand();
+                FieldReference lfr = ((FieldReference) left.getOperand());
+                FieldReference rfr = ((FieldReference) right.getOperand());
                 if(!lfr.isEquivalentTo(rfr)) {
-                    mc.report("EqualsSuspiciousFieldComparison", 0, left, OTHER_FIELD.create(rfr));
+                    lfr = lfr.resolve();
+                    rfr = rfr.resolve();
+                    if(lfr != null && rfr != null && !lfr.isEquivalentTo(rfr)) {
+                        mc.report("EqualsSuspiciousFieldComparison", 0, left, OTHER_FIELD.create(rfr));
+                    }
                 }
             }
             if (expr.getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod((MethodReference) expr.getOperand())) {

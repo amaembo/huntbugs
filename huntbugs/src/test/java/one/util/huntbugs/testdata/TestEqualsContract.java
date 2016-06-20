@@ -56,7 +56,7 @@ public class TestEqualsContract {
                 return true;
             if (!super.equals(obj) || getClass() != obj.getClass())
                 return false;
-            SubClass other = (SubClass) obj;
+            SubClass2 other = (SubClass2) obj;
             return f == other.f;
         }
     }
