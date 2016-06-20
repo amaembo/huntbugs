@@ -139,14 +139,24 @@ public class Methods {
         if(isEqualsMethod(mr))
             return true;
         TypeReference tr = mr.getDeclaringType();
-        if(Types.isObject(tr) && mr.isConstructor())
-            return true;
         String sig = mr.getErasedSignature();
         String name = mr.getName();
         if(name.equals("hashCode") && sig.equals("()I"))
             return true;
         if(name.equals("toString") && sig.equals("()Ljava/lang/String;"))
             return true;
+        switch(tr.getInternalName()) {
+        case "java/util/Arrays":
+            return name.equals("hashCode") || name.equals("equals") || name.equals("toString")
+                || name.equals("binarySearch") || name.equals("stream")
+                || name.equals("spliterator") || name.startsWith("deep")
+                || name.startsWith("copyOf") || name.equals("asList");
+        case "java/lang/Object":
+            return mr.isConstructor();
+        case "java/util/Collections":
+            return name.equals("min") || name.equals("max") || name.startsWith("unmodifiable") || name.startsWith("synchronized")
+                    || name.startsWith("empty");
+        }
         if(Types.isCollection(tr)) {
             if(name.equals("contains") && sig.equals("(Ljava/lang/Object;)Z"))
                 return true;
@@ -157,7 +167,8 @@ public class Methods {
             if(name.equals("size") && sig.equals("()I"))
                 return true;
             if(Types.isInstance(tr, "java/util/List")) {
-                if(name.equals("get") && sig.equals("(I)Ljava/lang/Object;"))
+                if (name.equals("get") && sig.equals("(I)Ljava/lang/Object;") || name.equals("subList")
+                    && sig.equals("(II)Ljava/util/List;"))
                     return true;
             }
             return false;
