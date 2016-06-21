@@ -110,6 +110,14 @@ public final class Roles {
      */
     public static final ExpressionRole EXPRESSION = new ExpressionRole("EXPRESSION");
     /**
+     * Left argument associated with warning
+     */
+    public static final ExpressionRole LEFT_ARGUMENT = new ExpressionRole("LEFT_ARGUMENT");
+    /**
+     * Right argument associated with warning
+     */
+    public static final ExpressionRole RIGHT_ARGUMENT = new ExpressionRole("RIGHT_ARGUMENT");
+    /**
      * Regular expression associated with the warning
      */
     public static final StringRole REGEXP = new StringRole("REGEXP");

@@ -137,11 +137,13 @@ public class ExpressionFormatter {
         case F2D:
             return formatUnary(sb, expr, "", "");
         case CheckCast:
-            return formatUnary(sb, expr, "("+((TypeReference)expr.getOperand()).getSimpleName()+")", "");
+            return formatUnary(sb, expr, "("+((TypeReference)expr.getOperand()).getSimpleName()+")(", ")");
         case InstanceOf:
             return formatUnary(sb, expr, "", " instanceof "+((TypeReference)expr.getOperand()).getSimpleName());
         case InvokeStatic: {
             MethodReference mr = (MethodReference) expr.getOperand();
+            if(Nodes.isBoxing(expr))
+                return formatUnary(sb, expr, "("+mr.getDeclaringType().getSimpleName()+")(", ")");
             sb.append(mr.getDeclaringType().getSimpleName()).append(".").append(mr.getName()).append("(");
             boolean firstArg = true;
             for(Expression child : expr.getArguments()) {
@@ -173,6 +175,8 @@ public class ExpressionFormatter {
         case InvokeSpecial:
         case InvokeInterface:
         case InvokeVirtual: {
+            if(Nodes.isUnboxing(expr))
+                return format(sb, expr.getArguments().get(0));
             MethodReference mr = (MethodReference) expr.getOperand();
             format(sb, expr.getArguments().get(0));
             sb.append(".").append(mr.getName()).append("(");

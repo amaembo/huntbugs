@@ -188,9 +188,7 @@ public class BadMath {
             return;
         if (ValuesFlow.findUsages(expr).stream().allMatch(e -> e.getCode() == AstCode.I2B))
             return;
-        Expression left = Nodes.getChild(expr, 0);
-        Expression right = Nodes.getChild(expr, 1);
-        if (isByte(left) && isLow8BitsClear(right) || isByte(right) && isLow8BitsClear(left)) {
+        if (Nodes.bothChildrenMatch(expr, BadMath::isByte, BadMath::isLow8BitsClear)) {
             mc.report(expr.getCode() == AstCode.Add ? "BitAddSignedByte" : "BitOrSignedByte", 0, expr);
         }
     }

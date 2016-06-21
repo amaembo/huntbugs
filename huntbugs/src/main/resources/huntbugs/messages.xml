@@ -96,7 +96,7 @@
     <Warning Type="NonShortCircuitDangerous">
       <Title>Potentially dangerous use of non-short-circuit logic</Title>
       <Description>Potentially dangerous use of non-short-circuit operation $OPERATION$ in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code uses non-short-circuit operation <code>$OPERATION$</code> rather than short-circuit equivalent <code>$REPLACEMENT$</code>. 
+      <LongDescription><![CDATA[This code uses non-short-circuit operation <code>$LEFT_ARGUMENT$ $OPERATION$ $RIGHT_ARGUMENT$</code> rather than short-circuit equivalent <code>$LEFT_ARGUMENT$ $REPLACEMENT$ $RIGHT_ARGUMENT$</code>. 
    In addition, it seem possible that, depending on the value of the left hand side, you might not want to evaluate the right hand side (because it would have side effects), could cause an exception or could be expensive.<br>
    Non-short-circuit logic causes both sides of the expression to be evaluated even when the result can be inferred from knowing the left-hand side. This can be less efficient and can result in errors if the left-hand side guards cases when evaluating the right-hand side can generate an error. 
    ]]></LongDescription>
@@ -104,7 +104,7 @@
     <Warning Type="NonShortCircuit">
       <Title>Questionable use of non-short-circuit logic</Title>
       <Description>Questionable use of non-short-circuit operation $OPERATION$ in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code uses non-short-circuit operation <code>$OPERATION$</code> rather than short-circuit equivalent <code>$REPLACEMENT$</code>.<br>
+      <LongDescription><![CDATA[This code uses non-short-circuit operation <code>$LEFT_ARGUMENT$ $OPERATION$ $RIGHT_ARGUMENT$</code> rather than short-circuit equivalent <code>$LEFT_ARGUMENT$ $REPLACEMENT$ $RIGHT_ARGUMENT$</code>.<br>
    Non-short-circuit logic causes both sides of the expression to be evaluated even when the result can be inferred from knowing the left-hand side. This can be less efficient and can result in errors if the left-hand side guards cases when evaluating the right-hand side can generate an error. 
    ]]></LongDescription>
     </Warning>

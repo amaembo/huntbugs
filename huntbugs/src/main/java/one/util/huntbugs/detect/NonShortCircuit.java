@@ -47,6 +47,7 @@ public class NonShortCircuit {
             Expression right = node.getArguments().get(1);
             WarningAnnotation<String> op = Roles.OPERATION.create(node);
             WarningAnnotation<String> repl = Roles.REPLACEMENT_STRING.create(op.getValue()+op.getValue());
+            WarningAnnotation<?>[] anno = {op, repl, Roles.LEFT_ARGUMENT.create(left), Roles.RIGHT_ARGUMENT.create(right)};
             if(left.getInferredType().getSimpleType() == JvmType.Boolean &&
                     right.getInferredType().getSimpleType() == JvmType.Boolean) {
                 if(left.getCode() == AstCode.InstanceOf || Nodes.isNullCheck(left)) {
@@ -56,18 +57,18 @@ public class NonShortCircuit {
                     List<Expression> list = Nodes.stream(right).filter(e -> Equi.equiExpressions(e, target)).collect(Collectors.toList());
                     if(!list.isEmpty()) {
                         if(list.stream().flatMap(e -> ValuesFlow.findUsages(e).stream()).anyMatch(e -> Nodes.isInvoke(e) || e.getCode() == AstCode.GetField || e.getCode() == AstCode.CheckCast)) {
-                            ctx.report("NonShortCircuitDangerous", 0, node, op, repl);
+                            ctx.report("NonShortCircuitDangerous", 0, node, anno);
                             return;
                         }
                     }
                 }
                 if (Nodes.find(left, n -> Nodes.isInvoke(n) && !Nodes.isSideEffectFreeMethod(n)) != null)
-                    ctx.report("NonShortCircuitDangerous", 20, node, op, repl);
+                    ctx.report("NonShortCircuitDangerous", 20, node, anno);
                 else {
                     int priority = 0;
                     if(Nodes.estimateCodeSize(node) < 4)
                         priority = 10;
-                    ctx.report("NonShortCircuit", priority, node, op, repl);
+                    ctx.report("NonShortCircuit", priority, node, anno);
                 }
             }
         }
