@@ -215,7 +215,12 @@ public class Role<T> {
         }
         
         public WarningAnnotation<String> create(Expression expr) {
-            return create(ExpressionFormatter.formatExpression(expr));
+            String str = ExpressionFormatter.formatExpression(expr);
+            return create(str.length() > 100 ? str.substring(0, 99)+"..." : str);
+        }
+        
+        public static ExpressionRole forName(String name) {
+            return new ExpressionRole(name);
         }
     }
 }

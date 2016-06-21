@@ -110,6 +110,10 @@ public final class Roles {
      */
     public static final ExpressionRole EXPRESSION = new ExpressionRole("EXPRESSION");
     /**
+     * Argument associated with warning
+     */
+    public static final ExpressionRole ARGUMENT = new ExpressionRole("ARGUMENT");
+    /**
      * Left argument associated with warning
      */
     public static final ExpressionRole LEFT_ARGUMENT = new ExpressionRole("LEFT_ARGUMENT");

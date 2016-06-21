@@ -29,6 +29,7 @@ import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.Roles;
 
 /**
  * @author Tagir Valeev
@@ -64,7 +65,7 @@ public class UnsafeGetResource {
                                         priority += 10;
                                 }
                             }
-                            mc.report("UnsafeGetResource", priority, expr);
+                            mc.report("UnsafeGetResource", priority, expr, Roles.ARGUMENT.create(expr.getArguments().get(1)));
                         }
                     }
                 }

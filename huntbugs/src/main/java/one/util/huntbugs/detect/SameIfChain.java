@@ -33,6 +33,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Equi;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.Role.ExpressionRole;
 import one.util.huntbugs.warning.Role.LocationRole;
 
 /**
@@ -42,6 +43,7 @@ import one.util.huntbugs.warning.Role.LocationRole;
 @WarningDefinition(category = "RedundantCode", name = "SameConditionChain", maxScore = 50)
 public class SameIfChain {
     private static final LocationRole SAME_CONDITION_AT = LocationRole.forName("SAME_CONDITION_AT");
+    private static final ExpressionRole SAME_EXPRESSION = ExpressionRole.forName("SAME_EXPRESSION");
     
     @AstVisitor
     public boolean visit(Node node, MethodContext mc, MethodDefinition md, TypeDefinition td) {
@@ -77,7 +79,8 @@ public class SameIfChain {
                             if(!cond2.getFalseBlock().getBody().isEmpty()) {
                                 priority += 10;
                             }
-                            mc.report("SameConditionChain", priority, c1, SAME_CONDITION_AT.create(mc, c2));
+                            mc.report("SameConditionChain", priority, c1, SAME_CONDITION_AT.create(mc, c2),
+                                SAME_EXPRESSION.create(c2));
                         }
                     }
                 }

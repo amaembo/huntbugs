@@ -96,7 +96,7 @@
     <Warning Type="NonShortCircuitDangerous">
       <Title>Potentially dangerous use of non-short-circuit logic</Title>
       <Description>Potentially dangerous use of non-short-circuit operation $OPERATION$ in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code uses non-short-circuit operation <code>$LEFT_ARGUMENT$ $OPERATION$ $RIGHT_ARGUMENT$</code> rather than short-circuit equivalent <code>$LEFT_ARGUMENT$ $REPLACEMENT$ $RIGHT_ARGUMENT$</code>. 
+      <LongDescription><![CDATA[This code uses non-short-circuit operation <code>$LEFT_ARGUMENT$ <b>$OPERATION$</b> $RIGHT_ARGUMENT$</code> rather than short-circuit equivalent <code>$LEFT_ARGUMENT$ <b>$REPLACEMENT$</b> $RIGHT_ARGUMENT$</code>. 
    In addition, it seem possible that, depending on the value of the left hand side, you might not want to evaluate the right hand side (because it would have side effects), could cause an exception or could be expensive.<br>
    Non-short-circuit logic causes both sides of the expression to be evaluated even when the result can be inferred from knowing the left-hand side. This can be less efficient and can result in errors if the left-hand side guards cases when evaluating the right-hand side can generate an error. 
    ]]></LongDescription>
@@ -104,7 +104,7 @@
     <Warning Type="NonShortCircuit">
       <Title>Questionable use of non-short-circuit logic</Title>
       <Description>Questionable use of non-short-circuit operation $OPERATION$ in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code uses non-short-circuit operation <code>$LEFT_ARGUMENT$ $OPERATION$ $RIGHT_ARGUMENT$</code> rather than short-circuit equivalent <code>$LEFT_ARGUMENT$ $REPLACEMENT$ $RIGHT_ARGUMENT$</code>.<br>
+      <LongDescription><![CDATA[This code uses non-short-circuit operation <code>$LEFT_ARGUMENT$ <b>$OPERATION$</b> $RIGHT_ARGUMENT$</code> rather than short-circuit equivalent <code>$LEFT_ARGUMENT$ <b>$REPLACEMENT$</b> $RIGHT_ARGUMENT$</code>.<br>
    Non-short-circuit logic causes both sides of the expression to be evaluated even when the result can be inferred from knowing the left-hand side. This can be less efficient and can result in errors if the left-hand side guards cases when evaluating the right-hand side can generate an error. 
    ]]></LongDescription>
     </Warning>
@@ -193,12 +193,12 @@
     <Warning Type="SameConditionsExcluding">
       <Title>The same condition is repeatedly checked resulting in dead code</Title>
       <Description>The same condition is repeatedly checked resulting in dead code in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code checks the same condition twice. As a result some branch is never executed. Probably there's logical error or typo in the code.]]></LongDescription>
+      <LongDescription><![CDATA[This code checks the same condition <code>$EXPRESSION$</code> twice. As a result some branch is never executed. Probably there's logical error or typo in the code.]]></LongDescription>
     </Warning>
     <Warning Type="SameConditions">
       <Title>The same condition is repeatedly checked</Title>
       <Description>The same condition is repeatedly checked in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code checks the same condition twice. Probably there's logical error or typo in the code.]]></LongDescription>
+      <LongDescription><![CDATA[This code checks the same condition <code>$EXPRESSION$</code> twice. Probably there's logical error or typo in the code.]]></LongDescription>
     </Warning>
     <Warning Type="SelfComparison">
       <Title>The expression is compared with itself</Title>
@@ -617,9 +617,9 @@
     <Warning Type="UnsafeGetResource">
       <Title>Class.getResource() may return unexpected results in subclasses</Title>
       <Description>$RETURN_VALUE_OF$ method may return unexpected results in subclasses.</Description>
-      <LongDescription><![CDATA[This code calls <code>this.getClass().$RETURN_VALUE_OF:name$(resource)</code>. If this class is extended in another package,
+      <LongDescription><![CDATA[This code calls <code>this.getClass().$RETURN_VALUE_OF:name$($ARGUMENT$)</code>. If this class is extended in another package,
       <code>this.getClass()</code> will return another class and this call will likely to fail.<br>
-      Consider replacing this code with <code>$TYPE:plain$.class.$RETURN_VALUE_OF:name$(resource)</code>. If this class is not supposed to be extended, declare it as <code>final</code>.]]></LongDescription>
+      Consider replacing this code with <code>$TYPE:plain$.class.$RETURN_VALUE_OF:name$($ARGUMENT$)</code>. If this class is not supposed to be extended, declare it as <code>final</code>.]]></LongDescription>
     </Warning>
     <Warning Type="HashCodeRemainder">
       <Title>Remainder of hashCode() is used as index</Title>
@@ -874,17 +874,19 @@
     <Warning Type="SynchronizationOnBoolean">
       <Title>Synchronization on Boolean</Title>
       <Description>Synchronization on $MONITOR_TYPE$ in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code synchronizes on a boxed $MONITOR_TYPE$ value. Since there normally exist only two Boolean objects, this code could be synchronizing on the same object as other, unrelated code, leading to unresponsiveness and possible deadlock.]]></LongDescription>
+      <LongDescription><![CDATA[This code synchronizes on a boxed $MONITOR_TYPE$ value: <code>synchronized($EXPRESSION$)</code>. 
+      Since there normally exist only two Boolean objects, this code could be synchronizing on the same object as other, unrelated code, leading to unresponsiveness and possible deadlock.]]></LongDescription>
     </Warning>
     <Warning Type="SynchronizationOnBoxedNumber">
       <Title>Synchronization on boxed number</Title>
       <Description>Synchronization on $MONITOR_TYPE$ in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code synchronizes on a boxed $MONITOR_TYPE$ value. Since $MONITOR_TYPE$ objects can be cached and shared, this code could be synchronizing on the same object as other, unrelated code, leading to unresponsiveness and possible deadlock.]]></LongDescription>
+      <LongDescription><![CDATA[This code synchronizes on a boxed $MONITOR_TYPE$ value: <code>synchronized($EXPRESSION$)</code>. 
+      Since $MONITOR_TYPE$ objects can be cached and shared, this code could be synchronizing on the same object as other, unrelated code, leading to unresponsiveness and possible deadlock.]]></LongDescription>
     </Warning>
     <Warning Type="SynchronizationOnUnsharedBoxed">
       <Title>Synchronization on unshared boxed value</Title>
       <Description>Synchronization on newly-created $MONITOR_TYPE$ in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code synchronizes on a newly-created $MONITOR_TYPE$ value. 
+      <LongDescription><![CDATA[This code synchronizes on a newly-created $MONITOR_TYPE$ value: <code>synchronized($EXPRESSION$)</code>. 
       This may work correctly, but confusing and prone to errors. For example, applying automatic refactoring IDE feature like 'Remove unnecessary boxing'
       may silently break your code. It's much better to use <code>new Object()</code> as a lock variable.]]></LongDescription>
     </Warning>
@@ -1310,7 +1312,7 @@
     <Warning Type="SameConditionChain">
       <Title>The same condition is checked twice in a row</Title>
       <Description>The same condition is checked twice in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code contains two consequtive <code>if</code> statements like <code>if (cond) {...} if (cond) {...}</code>.
+      <LongDescription><![CDATA[This code contains two consequtive <code>if</code> statements like <code>if ($EXPRESSION$) {...} if ($SAME_EXPRESSION$) {...}</code>.
       Analysis found that both conditions are equivalent. Probably there is some typo. If such logic is intended, consider
       merging both <code>if</code> statements into one to avoid confusion.]]></LongDescription>
     </Warning>
