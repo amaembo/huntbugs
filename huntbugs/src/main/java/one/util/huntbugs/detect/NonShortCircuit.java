@@ -15,14 +15,19 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.strobel.assembler.metadata.JvmType;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Equi;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Roles;
@@ -44,10 +49,20 @@ public class NonShortCircuit {
             WarningAnnotation<String> repl = Roles.REPLACEMENT_STRING.create(op.getValue()+op.getValue());
             if(left.getInferredType().getSimpleType() == JvmType.Boolean &&
                     right.getInferredType().getSimpleType() == JvmType.Boolean) {
-                if(left.getCode() == AstCode.InstanceOf || Nodes.isNullCheck(left))
-                    ctx.report("NonShortCircuitDangerous", 0, node, op, repl);
-                else if (Nodes.find(left, n -> Nodes.isInvoke(n) && !Nodes.isSideEffectFreeMethod(n)) != null)
-                    ctx.report("NonShortCircuitDangerous", 10, node, op, repl);
+                if(left.getCode() == AstCode.InstanceOf || Nodes.isNullCheck(left)) {
+                    Expression target = left.getArguments().get(
+                        left.getCode() == AstCode.InstanceOf
+                            || left.getArguments().get(1).getCode() == AstCode.AConstNull ? 0 : 1);
+                    List<Expression> list = Nodes.stream(right).filter(e -> Equi.equiExpressions(e, target)).collect(Collectors.toList());
+                    if(!list.isEmpty()) {
+                        if(list.stream().flatMap(e -> ValuesFlow.findUsages(e).stream()).anyMatch(e -> Nodes.isInvoke(e) || e.getCode() == AstCode.GetField || e.getCode() == AstCode.CheckCast)) {
+                            ctx.report("NonShortCircuitDangerous", 0, node, op, repl);
+                            return;
+                        }
+                    }
+                }
+                if (Nodes.find(left, n -> Nodes.isInvoke(n) && !Nodes.isSideEffectFreeMethod(n)) != null)
+                    ctx.report("NonShortCircuitDangerous", 20, node, op, repl);
                 else {
                     int priority = 0;
                     if(Nodes.estimateCodeSize(node) < 4)

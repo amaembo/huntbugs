@@ -101,4 +101,12 @@ public class TestNonShortCircuit {
             return 1;
         return 2;
     }
+    
+    @AssertWarning("NonShortCircuit") 
+    @AssertNoWarning("NonShortCircuitDangerous") 
+    public int testInstanceOf(Object s, boolean b) {
+        if(s instanceof String & b)
+            return 1;
+        return 2;
+    }
 }
