@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.util.Arrays;
+
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -33,6 +35,13 @@ public class TestCovariantArrays {
         array[1] = 2;
     }
 
+    @AssertNoWarning("*")
+    public void test2d() {
+        Number[][] arr = new Number[1][];
+        arr[0] = new Integer[10];
+        System.out.println(Arrays.deepToString(arr));
+    }
+    
     @AssertWarning("ContravariantArrayStore")
     public void caaStore(boolean b) {
         Object[] numbers = new Integer[10];

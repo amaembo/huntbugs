@@ -50,9 +50,14 @@ public class ClassFields {
 
     public boolean isKnownFinal(MemberInfo field) {
         FieldDefinition fd = fields.get(field);
-        return fd != null && (fd.isFinal() || initializedInCtor.contains(fd));
+        return fd != null && fd.isFinal();
     }
 
+    public boolean isKnownEffectivelyFinal(MemberInfo field) {
+        FieldDefinition fd = fields.get(field);
+        return fd != null && (fd.isFinal() || initializedInCtor.contains(fd));
+    }
+    
     void mergeFinalFields(Frame frame) {
         if(frame == null)
             return;

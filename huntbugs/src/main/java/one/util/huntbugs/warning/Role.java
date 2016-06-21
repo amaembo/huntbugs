@@ -25,6 +25,7 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
+import one.util.huntbugs.util.ExpressionFormatter;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation.Location;
@@ -201,6 +202,20 @@ public class Role<T> {
             if(expr.getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod((MethodReference) expr.getOperand()))
                 return create("equals");
             return create(Nodes.getOperation(expr.getCode()));
+        }
+    }
+    
+    public static class ExpressionRole extends StringRole {
+        public ExpressionRole(String name, Count count) {
+            super(name, count);
+        }
+        
+        public ExpressionRole(String name) {
+            super(name);
+        }
+        
+        public WarningAnnotation<String> create(Expression expr) {
+            return create(ExpressionFormatter.formatExpression(expr));
         }
     }
 }

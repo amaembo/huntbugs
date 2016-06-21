@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.warning;
 
+import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.core.StringUtilities;
 
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
@@ -83,7 +84,7 @@ public class Formatter {
         return result.toString();
     }
 
-    public String formatValue(Object value, String format) {
+    public static String formatValue(Object value, String format) {
         if (value instanceof MemberInfo) {
             return formatMemberInfo((MemberInfo) value, format);
         }
@@ -108,14 +109,14 @@ public class Formatter {
         return String.valueOf(value);
     }
 
-    private String formatString(String value, String format) {
+    private static String formatString(String value, String format) {
         if (format.equals("const")) {
             return StringUtilities.escape(value, true);
         }
         return value;
     }
 
-    private String formatLong(long value, String format) {
+    private static String formatLong(long value, String format) {
         if (format.equals(FORMAT_HEX)) {
             return "0x" + Long.toHexString(value);
         }
@@ -142,7 +143,7 @@ public class Formatter {
         return Long.toString(value);
     }
 
-    private String formatInteger(int value, String format) {
+    private static String formatInteger(int value, String format) {
         if (format.equals(FORMAT_HEX)) {
             return "0x" + Integer.toHexString(value);
         }
@@ -158,7 +159,7 @@ public class Formatter {
         return Integer.toString(value);
     }
 
-    public String formatFloat(float val) {
+    private static String formatFloat(float val) {
         if (Float.isNaN(val))
             return "Float.NaN";
         if (val == Float.POSITIVE_INFINITY)
@@ -176,7 +177,7 @@ public class Formatter {
         return Float.toString(val);
     }
 
-    public String formatDouble(double val) {
+    private static String formatDouble(double val) {
         if (Double.isNaN(val))
             return "Double.NaN";
         if (val == Double.POSITIVE_INFINITY)
@@ -194,7 +195,7 @@ public class Formatter {
         return Double.toString(val);
     }
 
-    public String formatTypeInfo(TypeInfo ti, String format) {
+    private static String formatTypeInfo(TypeInfo ti, String format) {
         String simpleName = ti.getSimpleName();
         String result = simpleName;
         if (format.equals(FORMAT_HTML))
@@ -202,7 +203,7 @@ public class Formatter {
         return result;
     }
 
-    public String formatMemberInfo(MemberInfo mi, String format) {
+    private static String formatMemberInfo(MemberInfo mi, String format) {
         if (format.equals(FORMAT_NAME))
             return mi.getName();
         if(format.startsWith("type."))
@@ -230,6 +231,12 @@ public class Formatter {
     public static String formatConstant(Object constant) {
         if(constant instanceof String) {
             return StringUtilities.escape((String)constant, true);
+        }
+        if(constant instanceof TypeReference) {
+            return ((TypeReference)constant).getSimpleName()+".class";
+        }
+        if(constant instanceof Number) {
+            return formatValue(constant, FORMAT_PLAIN);
         }
         return String.valueOf(constant);
     }

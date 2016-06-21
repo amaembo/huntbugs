@@ -16,6 +16,7 @@
 package one.util.huntbugs.warning;
 
 import one.util.huntbugs.warning.Role.Count;
+import one.util.huntbugs.warning.Role.ExpressionRole;
 import one.util.huntbugs.warning.Role.LocationRole;
 import one.util.huntbugs.warning.Role.MemberRole;
 import one.util.huntbugs.warning.Role.NumberRole;
@@ -104,6 +105,10 @@ public final class Roles {
      * Operation related to the warning like "<" or "+" or "||"
      */
     public static final OperationRole OPERATION = new OperationRole("OPERATION");
+    /**
+     * Expression associated with warning
+     */
+    public static final ExpressionRole EXPRESSION = new ExpressionRole("EXPRESSION");
     /**
      * Regular expression associated with the warning
      */

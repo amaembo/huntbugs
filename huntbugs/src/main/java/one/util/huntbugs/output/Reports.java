@@ -253,7 +253,7 @@ public final class Reports {
                     classElement.setAttribute("Name", ((TypeInfo) anno.getValue()).getTypeName());
                     break;
                 case "FILE":
-                    classElement.setAttribute("SourceFile", formatter.formatValue(anno.getValue(),
+                    classElement.setAttribute("SourceFile", Formatter.formatValue(anno.getValue(),
                         Formatter.FORMAT_PLAIN));
                     break;
                 case "LOCATION": {
@@ -308,7 +308,7 @@ public final class Reports {
                         attribute.setAttribute("Value", n.toString());
                     } else {
                         attribute = doc.createElement("Annotation");
-                        attribute.appendChild(doc.createTextNode(formatter.formatValue(anno.getValue(),
+                        attribute.appendChild(doc.createTextNode(Formatter.formatValue(anno.getValue(),
                             Formatter.FORMAT_PLAIN)));
                     }
                     attribute.setAttribute("Role", anno.getRole().toString());

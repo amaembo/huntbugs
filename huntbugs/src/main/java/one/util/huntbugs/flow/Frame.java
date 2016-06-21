@@ -619,7 +619,17 @@ class Frame {
     private Frame deleteAllFields() {
         if(fieldValues.isEmpty())
             return this;
-        return new Frame(this, this.sources, Collections.emptyMap());
+        Map<MemberInfo, Expression> res = new HashMap<>();
+        fieldValues.forEach((mi, expr) -> {
+            if(!fc.cf.isKnownFinal(mi)) {
+                if(expr.getCode() == UPDATE_TYPE) {
+                    res.put(mi, expr);
+                } else {
+                    res.put(mi, fc.makeUpdatedNode(expr));
+                }
+            }
+        });
+        return new Frame(this, this.sources, Maps.compactify(res));
     }
     
     private Frame deleteFields() {
@@ -627,7 +637,7 @@ class Frame {
             return this;
         Map<MemberInfo, Expression> res = new HashMap<>();
         fieldValues.forEach((mi, expr) -> {
-            if(expr.getCode() == UPDATE_TYPE || fc.cf.isKnownFinal(mi)) {
+            if(expr.getCode() == UPDATE_TYPE || fc.cf.isKnownEffectivelyFinal(mi)) {
                 res.put(mi, expr);
             } else {
                 res.put(mi, fc.makeUpdatedNode(expr));

@@ -176,6 +176,7 @@ public class MethodContext extends ElementContext {
                 else
                     anno.add(Roles.CALLED_METHOD.create(mr));
             }
+            anno.add(Roles.EXPRESSION.create(expr));
         }
         anno.addAll(Arrays.asList(annotations));
         WarningInfo info = new WarningInfo(wt, priority, loc, anno);

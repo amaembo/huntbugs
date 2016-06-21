@@ -16,6 +16,7 @@
 package one.util.huntbugs.testdata;
 
 import java.util.List;
+
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -459,6 +460,29 @@ public class TestKnownComparison {
         static {
             if(x < 1) {
                 System.out.println("Cannot be");
+            }
+        }
+    }
+    
+    @AssertNoWarning("*")
+    public static class TestFieldAssignment {
+        private int x = 1;
+        
+        public TestFieldAssignment(String s) {
+            this();
+            try {
+                x = Integer.parseInt(s);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+            }
+        }
+        
+        public TestFieldAssignment() {
+        }
+
+        public void test() {
+            if(x > 0) {
+                System.out.println("!!!");
             }
         }
     }
