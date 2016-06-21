@@ -192,6 +192,7 @@ abbrev="UMAC" type="UMAC_UNCALLABLE_METHOD_OF_ANONYMOUS_CLASS" category="CORRECT
 abbrev="DLS" type="DLS_DEAD_LOCAL_STORE" category="STYLE" --> DeadLocalStore, DeadParameterStore, UnusedLocalVariable
 abbrev="DLS" type="DLS_DEAD_LOCAL_STORE_OF_NULL" category="STYLE" --> DeadLocalStore, DeadParameterStore, UnusedLocalVariable
 abbrev="BSHIFT" type="BSHIFT_WRONG_ADD_PRIORITY" category="CORRECTNESS" --> BitShiftWrongPriority
+abbrev="JCIP" type="JCIP_FIELD_ISNT_FINAL_IN_IMMUTABLE_CLASS" category="BAD_PRACTICE" --> NonFinalFieldInImmutableClass
 
 ==== Not reimplemented
 
@@ -216,7 +217,6 @@ abbrev="DP" type="DP_CREATE_CLASSLOADER_INSIDE_DO_PRIVILEGED" category="MALICIOU
 abbrev="DE" type="DE_MIGHT_DROP" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_FUTURE_KEYWORD_USED_AS_IDENTIFIER" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_FUTURE_KEYWORD_USED_AS_MEMBER_IDENTIFIER" category="BAD_PRACTICE"
-abbrev="JCIP" type="JCIP_FIELD_ISNT_FINAL_IN_IMMUTABLE_CLASS" category="BAD_PRACTICE"
 abbrev="Dm" type="DMI_CONSTANT_DB_PASSWORD" category="SECURITY" cweid="259"
 abbrev="Dm" type="DMI_EMPTY_DB_PASSWORD" category="SECURITY" cweid="259"
 abbrev="Dm" type="DMI_UNSUPPORTED_METHOD" category="STYLE"
