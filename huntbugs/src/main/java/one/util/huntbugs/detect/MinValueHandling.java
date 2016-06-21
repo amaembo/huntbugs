@@ -23,6 +23,7 @@ import com.strobel.decompiler.ast.Node;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
@@ -69,7 +70,7 @@ public class MinValueHandling {
 					    if(forget)
 					        mc.forgetLastBug();
 					    mc.report("AbsoluteValueOfRandomInt", priority, source);
-		            } else if(methodName.equals("hashCode") && methodSig.equals("()I")) {
+		            } else if(Methods.isHashCodeMethod(sourceCall)) {
 		                if(Nodes.isOp(parent, AstCode.TernaryOp)) {
 		                    Node comparison = Nodes.getChild(parent, 0);
 		                    Integer minValue = Integer.MIN_VALUE;

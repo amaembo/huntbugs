@@ -155,8 +155,8 @@ public class BadMethodCalls {
                 else if(Types.isInstance(type, "java/util/stream/Stream"))
                     ctx.report("StreamToString", 0, lastArg);
             }
-        } else if (name.equals("hashCode") && signature.equals("()I") || typeName.equals("java/util/Objects") && name
-                .equals("hashCode") && signature.equals("(Ljava/lang/Object;)I")) {
+        } else if (Methods.isHashCodeMethod(mr) || typeName.equals("java/util/Objects") && name.equals("hashCode")
+            && signature.equals("(Ljava/lang/Object;)I")) {
             Expression arg = Nodes.getChild(node, 0);
             TypeReference type = ValuesFlow.reduceType(arg);
             if (type != null && type.isArray()) {

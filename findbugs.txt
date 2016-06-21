@@ -191,6 +191,7 @@ abbrev="Co" type="CO_COMPARETO_RESULTS_MIN_VALUE" category="BAD_PRACTICE" --> Co
 abbrev="UMAC" type="UMAC_UNCALLABLE_METHOD_OF_ANONYMOUS_CLASS" category="CORRECTNESS" --> UncalledMethodOfAnonymousClass
 abbrev="DLS" type="DLS_DEAD_LOCAL_STORE" category="STYLE" --> DeadLocalStore, DeadParameterStore, UnusedLocalVariable
 abbrev="DLS" type="DLS_DEAD_LOCAL_STORE_OF_NULL" category="STYLE" --> DeadLocalStore, DeadParameterStore, UnusedLocalVariable
+abbrev="BSHIFT" type="BSHIFT_WRONG_ADD_PRIORITY" category="CORRECTNESS" --> BitShiftWrongPriority
 
 ==== Not reimplemented
 
@@ -399,7 +400,6 @@ abbrev="BC" type="BC_IMPOSSIBLE_DOWNCAST" category="CORRECTNESS" cweid="570"
 abbrev="BC" type="BC_IMPOSSIBLE_INSTANCEOF" category="CORRECTNESS" cweid="570"
 abbrev="BC" type="BC_VACUOUS_INSTANCEOF" category="STYLE" cweid="571"
 abbrev="BC" type="BC_BAD_CAST_TO_ABSTRACT_COLLECTION" category="STYLE"
-abbrev="BSHIFT" type="BSHIFT_WRONG_ADD_PRIORITY" category="CORRECTNESS"
 abbrev="BSHIFT" type="ICAST_QUESTIONABLE_UNSIGNED_RIGHT_SHIFT" category="STYLE"
 abbrev="DMI" type="DMI_HARDCODED_ABSOLUTE_FILENAME" category="STYLE"
 abbrev="SWL" type="SWL_SLEEP_WITH_LOCK_HELD" category="MT_CORRECTNESS"

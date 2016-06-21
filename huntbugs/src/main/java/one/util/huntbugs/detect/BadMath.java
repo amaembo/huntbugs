@@ -16,6 +16,7 @@
 package one.util.huntbugs.detect;
 
 import com.strobel.assembler.metadata.JvmType;
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
@@ -25,6 +26,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Role.NumberRole;
@@ -42,14 +44,45 @@ import one.util.huntbugs.warning.Roles;
 @WarningDefinition(category = "RedundantCode", name = "UselessAndWithZero", maxScore = 70)
 @WarningDefinition(category = "Correctness", name = "BitCheckGreaterNegative", maxScore = 80)
 @WarningDefinition(category = "Correctness", name = "BitShiftInvalidAmount", maxScore = 75)
+@WarningDefinition(category = "Correctness", name = "BitShiftWrongPriority", maxScore = 70)
 @WarningDefinition(category = "BadPractice", name = "BitCheckGreater", maxScore = 35)
 @WarningDefinition(category = "Correctness", name = "BitOrSignedByte", maxScore = 50)
 @WarningDefinition(category = "Correctness", name = "BitAddSignedByte", maxScore = 35)
-// TODO: procyon optimizes too hard to detect "UselessAndWithZero"
 public class BadMath {
     private static final NumberRole COMPARED_TO = NumberRole.forName("COMPARED_TO");
     private static final NumberRole AND_OPERAND = NumberRole.forName("AND_OPERAND");
     private static final NumberRole OR_OPERAND = NumberRole.forName("OR_OPERAND");
+    
+    @AstVisitor(nodes = AstNodes.EXPRESSIONS)
+    public void checkWrongPriority(Expression expr, MethodContext mc, MethodDefinition md) {
+        if(expr.getCode() == AstCode.Shl) {
+            Expression leftOp = expr.getArguments().get(0);
+            Expression rightOp = expr.getArguments().get(1);
+            if(rightOp.getCode() == AstCode.Add) {
+                Expression leftAddend = rightOp.getArguments().get(0);
+                Object leftConst = Nodes.getConstant(leftAddend);
+                Expression rightAddend = rightOp.getArguments().get(1);
+                if(leftConst instanceof Integer && !Integer.valueOf(1).equals(Nodes.getConstant(leftOp))) {
+                    int priority = 0;
+                    int c = (Integer)leftConst;
+                    if(c < 32 || (c < 64 && leftOp.getExpectedType().getSimpleType() == JvmType.Long)) {
+                        if(!Methods.isHashCodeMethod(md) || !ValuesFlow.findTransitiveUsages(expr, false).allMatch(e -> e.getCode() == AstCode.Return)) {
+                            priority += 10;
+                            if(c == 16) {
+                                priority += 5;
+                            } else if(c != 8) {
+                                priority += 10;
+                            }
+                            if(rightAddend.getCode() != AstCode.And) {
+                                priority += 10;
+                            }
+                        }
+                        mc.report("BitShiftWrongPriority", priority, expr, Roles.NUMBER.create(c));
+                    }
+                }
+            }
+        }
+    }
     
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, NodeChain nc, MethodContext mc) {

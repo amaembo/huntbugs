@@ -169,8 +169,7 @@ public class EqualsContract {
                     equalsOther = md;
                 }
             }
-            if (!md.isStatic() && !md.isBridgeMethod() && md.getName().equals("hashCode")
-                && md.getSignature().equals("()I")) {
+            if (!md.isStatic() && !md.isBridgeMethod() && Methods.isHashCodeMethod(md)) {
                 hashCode = md;
             }
         }

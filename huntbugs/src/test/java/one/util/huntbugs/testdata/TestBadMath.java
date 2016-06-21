@@ -364,4 +364,20 @@ public class TestBadMath {
     public int bitOr(int src, byte add) {
         return (src << 8) | add;
     }
+    
+    @Override
+    @AssertWarning(value="BitShiftWrongPriority", minScore=70)
+    public int hashCode() {
+        return flags << 16 + byteFlags;
+    }
+
+    @AssertWarning(value="BitShiftWrongPriority", minScore=45, maxScore=45)
+    public int testShiftPriority() {
+        return flags << 16 + byteFlags;
+    }
+
+    @AssertWarning(value="BitShiftWrongPriority", minScore=55, maxScore=55)
+    public int testShiftPriorityAnd() {
+        return flags << 16 + (byteFlags & 0xFF);
+    }
 }

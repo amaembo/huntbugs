@@ -44,6 +44,10 @@ public class Methods {
         return mr.getName().equals("equals") && mr.getSignature().equals("(Ljava/lang/Object;)Z");
     }
 
+    public static boolean isHashCodeMethod(MethodReference mr) {
+        return mr.getName().equals("hashCode") && mr.getSignature().equals("()I");
+    }
+    
     public static boolean isGetClass(MethodReference mr) {
         return mr.getName().equals("getClass") && mr.getErasedSignature().equals("()Ljava/lang/Class;");
     }
@@ -136,13 +140,11 @@ public class Methods {
     public static boolean isSideEffectFree(MethodReference mr) {
         if(isPure(mr))
             return true;
-        if(isEqualsMethod(mr))
+        if(isEqualsMethod(mr) || isHashCodeMethod(mr))
             return true;
         TypeReference tr = mr.getDeclaringType();
         String sig = mr.getErasedSignature();
         String name = mr.getName();
-        if(name.equals("hashCode") && sig.equals("()I"))
-            return true;
         if(name.equals("toString") && sig.equals("()Ljava/lang/String;"))
             return true;
         switch(tr.getInternalName()) {

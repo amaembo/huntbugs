@@ -23,6 +23,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 
@@ -58,7 +59,7 @@ public class NegativeRemainder {
             Expression target = Nodes.getChild(expr, 0);
             if(target.getCode() == AstCode.InvokeVirtual) {
                 MethodReference mr = (MethodReference) target.getOperand();
-                if(mr.getName().equals("hashCode") && mr.getSignature().equals("()I")) {
+                if(Methods.isHashCodeMethod(mr)) {
                     mc.report("HashCodeRemainder", 0, target);
                 } else if(Types.isRandomClass(mr.getDeclaringType()) && mr.getName().equals("nextInt") && mr.getSignature().equals("()I")) {
                     mc.report("RandomIntRemainder", 0, target);

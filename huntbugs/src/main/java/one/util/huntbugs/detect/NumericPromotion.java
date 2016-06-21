@@ -30,6 +30,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Role.LocationRole;
@@ -57,7 +58,7 @@ public class NumericPromotion {
             if (arg.getCode() == AstCode.Mul) {
                 BigInteger res = getMultiplicationConstant(arg);
                 int priority = 0;
-                if (md.getName().equals("hashCode"))
+                if (Methods.isHashCodeMethod(md))
                     priority += 30;
                 try {
                     int factor = Math.abs(res.intValueExact());

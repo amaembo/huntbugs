@@ -257,8 +257,14 @@ public class Nodes {
     public static boolean isSideEffectFree(Node node) {
         if (node == null)
             return true;
-        if (!(node instanceof Expression))
-            return false;
+        if (!(node instanceof Expression)) {
+            for(Node child : getChildren(node)) {
+                if(!isSideEffectFree(child)) {
+                    return false;
+                }
+            }
+            return true;
+        }
         Expression expr = (Expression) node;
         switch (expr.getCode()) {
         case PreIncrement:
