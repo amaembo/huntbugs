@@ -988,13 +988,15 @@ class Frame {
         return target;
     }
     
-    static Stream<Expression> children(Expression parent) {
+    static Stream<Expression> children(Set<Expression> visited, Expression parent) {
         if(parent.getCode() == PHI_TYPE) {
             return parent.getArguments().stream();
         } else if(parent.getCode() == AstCode.TernaryOp) {
+            if(!visited.add(parent))
+                return Stream.empty();
             return IntStream.of(1, 2).mapToObj(i -> ValuesFlow.getSource(parent.getArguments().get(i)))
-                    .flatMap(Frame::children);
-        } else 
+                    .flatMap(ch -> children(visited, ch));
+        } else
             return Stream.of(parent);
     }
 
@@ -1011,9 +1013,9 @@ class Frame {
             return right;
         }
         List<Expression> children = new ArrayList<>();
-        children(left).forEach(children::add);
+        children(new HashSet<>(), left).forEach(children::add);
         int baseSize = children.size();
-        children(right).forEach(child -> {
+        children(new HashSet<>(), right).forEach(child -> {
             if(!children.contains(child))
                 children.add(child);
         });
