@@ -23,6 +23,8 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestSameIfChain {
+    int f = 3;
+    
     @AssertWarning("SameConditionChain")
     public void testSimple(int x) {
         if(x > 0) {
@@ -33,6 +35,16 @@ public class TestSameIfChain {
         }
     }
 
+    @AssertWarning("SameConditionChain")
+    public void testField(int x) {
+        if(x > f) {
+            System.out.println(1);
+        }
+        if(f < x) {
+            System.out.println(2);
+        }
+    }
+    
     @AssertNoWarning("*")
     public void testOk(int x) {
         if(x > 0) {

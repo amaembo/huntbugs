@@ -266,6 +266,8 @@ public class Nodes {
             return true;
         }
         Expression expr = (Expression) node;
+        if(ValuesFlow.getValue(expr) != null) // statically known constant
+            return true;
         switch (expr.getCode()) {
         case PreIncrement:
         case PostIncrement:
@@ -300,6 +302,8 @@ public class Nodes {
         if (!(node instanceof Expression))
             return false;
         Expression expr = (Expression) node;
+        if(ValuesFlow.getValue(expr) != null) // statically known constant
+            return true;
         switch (expr.getCode()) {
         case PreIncrement:
         case PostIncrement:
