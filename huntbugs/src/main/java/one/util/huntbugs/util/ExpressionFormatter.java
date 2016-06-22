@@ -31,8 +31,10 @@ import com.strobel.decompiler.ast.Variable;
  *
  */
 public class ExpressionFormatter {
+    public static final int DEF_PRECEDENCE = 100;
+
     public static String formatExpression(Expression expr) {
-        return format(new StringBuilder(), expr, 100).toString();
+        return format(new StringBuilder(), expr, DEF_PRECEDENCE).toString();
     }
 
     private static StringBuilder format(StringBuilder sb, Expression expr, int outerPrecedence) {
@@ -99,9 +101,9 @@ public class ExpressionFormatter {
                 outerPrecedence);
         }
         case Return:
-            return formatUnary(sb, expr, "return ", "", 100, outerPrecedence);
+            return formatUnary(sb, expr, "return ", "", DEF_PRECEDENCE, outerPrecedence);
         case AThrow:
-            return formatUnary(sb, expr, "throw ", "", 100, outerPrecedence);
+            return formatUnary(sb, expr, "throw ", "", DEF_PRECEDENCE, outerPrecedence);
         case ArrayLength:
             return formatUnary(sb, expr, "", ".length", 1, outerPrecedence);
         case LoadElement:
@@ -153,7 +155,7 @@ public class ExpressionFormatter {
                 } else {
                     firstArg = false;
                 }
-                format(sb, child, 100);
+                format(sb, child, DEF_PRECEDENCE);
             }
             return sb.append(")");
         }
@@ -167,7 +169,7 @@ public class ExpressionFormatter {
                 } else {
                     firstArg = false;
                 }
-                format(sb, child, 100);
+                format(sb, child, DEF_PRECEDENCE);
             }
             return sb.append(")");
         }
@@ -189,7 +191,7 @@ public class ExpressionFormatter {
                 } else {
                     firstArg = false;
                 }
-                format(sb, child, 100);
+                format(sb, child, DEF_PRECEDENCE);
             }
             return sb.append(")");
         }
@@ -204,22 +206,44 @@ public class ExpressionFormatter {
         case LdC: {
             return sb.append(Formatter.formatConstant(expr.getOperand()));
         }
+        case PreIncrement: {
+            Object op = expr.getOperand();
+            if(op instanceof Integer) {
+                int amount = (int)op;
+                if(amount == 1) {
+                    return formatUnary(sb, expr, "++", "", 2, outerPrecedence);
+                } else if(amount == -1) {
+                    return formatUnary(sb, expr, "--", "", 2, outerPrecedence);
+                }
+            }
+            return sb.append(expr.toString());
+        }
+        case PostIncrement: {
+            Object op = expr.getOperand();
+            if(op instanceof Integer) {
+                int amount = (int)op;
+                if(amount == 1) {
+                    return formatUnary(sb, expr, "", "++", 2, outerPrecedence);
+                } else if(amount == -1) {
+                    return formatUnary(sb, expr, "", "--", 2, outerPrecedence);
+                }
+            }
+            return sb.append(expr.toString());
+        }
         default: 
             return sb.append(expr.toString());
         }
     }
 
     private static StringBuilder formatUnary(StringBuilder sb, Expression expr, String prefix, String postfix, int precedence, int outerPrecedence) {
-        if(precedence < outerPrecedence) {
-            precedence = 100;
+        if(precedence > outerPrecedence) {
             return format(sb.append("(").append(prefix), expr.getArguments().get(0), precedence).append(postfix).append(")");
         }
         return format(sb.append(prefix), expr.getArguments().get(0), precedence).append(postfix);
     }
 
     private static StringBuilder formatBinary(StringBuilder sb, Expression expr, String op, int precedence, int outerPrecedence) {
-        if(precedence < outerPrecedence) {
-            precedence = 100;
+        if(precedence > outerPrecedence) {
             return format(
                 format(sb.append("("), expr.getArguments().get(0), precedence).append(op),
                 expr.getArguments().get(1), precedence).append(")");
