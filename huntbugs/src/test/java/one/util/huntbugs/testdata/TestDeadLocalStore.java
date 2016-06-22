@@ -156,6 +156,15 @@ public class TestDeadLocalStore {
     }
 
     @AssertNoWarning("*")
+    public void testDeadLocalStoreTernary(int b) {
+        int x = 2;
+        if(b > 0) {
+            x = b % 2 == 0 ? 3 : 4;
+        }
+        System.out.println(x);
+    }
+    
+    @AssertNoWarning("*")
     public void testThrow(String i) {
         if (i.length() > 2) {
             final String s = "exception message";
