@@ -268,7 +268,7 @@ public class EqualsContract {
         if(expr.getCode() == AstCode.CheckCast) {
             expr = Nodes.getChild(expr, 0);
         }
-        return Nodes.isParameter(expr);
+        return Nodes.isParameter(expr) && !Nodes.isThis(expr);
     }
 
     private static boolean isComparison(Expression expr) {
