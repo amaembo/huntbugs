@@ -26,6 +26,7 @@ import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Role.TypeRole;
+import one.util.huntbugs.warning.Roles;
 
 /**
  * @author Tagir Valeev
@@ -51,7 +52,7 @@ public class BadMonitorObject {
                 } else {
                     warningType = "SynchronizationOnBoxedNumber";
                 }
-                mc.report(warningType, 0, arg, MONITOR_TYPE.create(type));
+                mc.report(warningType, 0, arg, MONITOR_TYPE.create(type), Roles.EXPRESSION.create(expr));
             }
         }
     }

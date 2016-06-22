@@ -35,6 +35,7 @@ import one.util.huntbugs.util.Equi;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Role.ExpressionRole;
 import one.util.huntbugs.warning.Role.LocationRole;
+import one.util.huntbugs.warning.Roles;
 
 /**
  * @author lan
@@ -80,7 +81,7 @@ public class SameIfChain {
                                 priority += 10;
                             }
                             mc.report("SameConditionChain", priority, c1, SAME_CONDITION_AT.create(mc, c2),
-                                SAME_EXPRESSION.create(c2));
+                                Roles.EXPRESSION.create(c1), SAME_EXPRESSION.create(c2));
                         }
                     }
                 }

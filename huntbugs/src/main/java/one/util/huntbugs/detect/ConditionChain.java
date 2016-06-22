@@ -28,6 +28,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Role.LocationRole;
 
 /**
@@ -79,8 +80,8 @@ public class ConditionChain {
                     excluding = !excluding;
                     priority = 10;
                 }
-                mc.report(excluding ? "SameConditionsExcluding" : "SameConditions", priority, expr, SAME_CONDITION
-                        .create(mc, condition));
+                mc.report(excluding ? "SameConditionsExcluding" : "SameConditions", priority, expr, Roles.EXPRESSION
+                        .create(condition), SAME_CONDITION.create(mc, condition));
                 return;
             }
             if (expr.getCode() == AstCode.LogicalAnd && !excluding && Nodes.isSideEffectFree(expr)) {
