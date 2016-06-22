@@ -19,6 +19,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -53,6 +54,7 @@ public class Context implements HuntBugsResult {
     private final List<ErrorMessage> errors = Collections.synchronizedList(new ArrayList<>());
     private final List<Warning> warnings = Collections.synchronizedList(new ArrayList<>());
     private final Set<String> missingClasses = ConcurrentHashMap.newKeySet();
+    private final Set<String> classes = ConcurrentHashMap.newKeySet();
     private final DetectorRegistry registry;
     private final Repository repository;
     private final AtomicInteger classesCount = new AtomicInteger();
@@ -128,7 +130,7 @@ public class Context implements HuntBugsResult {
         for (String className : classes) {
             if (!fireEvent("Reading classes", className, count, classes.size()))
                 return false;
-            if(++count % 1000 == 0) {
+            if(++count % options.classesPerFlush == 0) {
                 ms = createMetadataSystem();
             }
             TypeDefinition type;
@@ -156,7 +158,7 @@ public class Context implements HuntBugsResult {
         for (String className : auxClasses) {
             if (!fireEvent("Reading dep classes", className, count, auxClasses.size()))
                 return false;
-            if(++count % 1000 == 0) {
+            if(++count % options.classesPerFlush == 0) {
                 ms = createMetadataSystem();
             }
             TypeDefinition type;
@@ -174,12 +176,18 @@ public class Context implements HuntBugsResult {
 
     MetadataSystem createMetadataSystem() {
         return new MetadataSystem(loader) {
+            Set<String> loadedTypes = new HashSet<>();
+            
             @Override
             protected TypeDefinition resolveType(String descriptor, boolean mightBePrimitive) {
                 if(missingClasses.contains(descriptor)) {
                     return null;
                 }
                 try {
+                    if(loadedTypes.add(descriptor))
+                        incStat("ClassLoadingEfficiency.Total");
+                    if(classes.add(descriptor))
+                        incStat("ClassLoadingEfficiency");
                     return super.resolveType(descriptor, mightBePrimitive);
                 } catch (Throwable t) {
                     addError(new ErrorMessage(null, descriptor, null, null, -1, t));
@@ -203,7 +211,7 @@ public class Context implements HuntBugsResult {
         MetadataSystem ms = createMetadataSystem();
         classesCount.set(0);
         for (String className : classes) {
-            if(classesCount.get() % 1000 == 0)
+            if(classesCount.get() % options.classesPerFlush == 0)
                 ms = createMetadataSystem();
             if (!fireEvent("Analyzing classes", className, classesCount.get(), classes.size()))
                 return;

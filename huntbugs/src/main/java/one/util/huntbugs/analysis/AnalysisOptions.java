@@ -29,6 +29,7 @@ import one.util.huntbugs.warning.rule.Rule;
 public class AnalysisOptions {
     public boolean addBootClassPath = true;
     public int maxMethodSize = 8000;
+    public int classesPerFlush = 1000;
     public int minScore = 1;
     public int loopTraversalIterations = 5;
     private Rule rule = Rule.NULL;
