@@ -32,61 +32,62 @@ import com.strobel.decompiler.ast.Variable;
  */
 public class ExpressionFormatter {
     public static String formatExpression(Expression expr) {
-        return format(new StringBuilder(), expr).toString();
+        return format(new StringBuilder(), expr, 100).toString();
     }
 
-    private static StringBuilder format(StringBuilder sb, Expression expr) {
+    private static StringBuilder format(StringBuilder sb, Expression expr, int outerPrecedence) {
         switch(expr.getCode()) {
         case And:
-            return formatBinary(sb, expr, "&");
+            return formatBinary(sb, expr, " & ", 9, outerPrecedence);
         case Or:
-            return formatBinary(sb, expr, "|");
+            return formatBinary(sb, expr, " | ", 11, outerPrecedence);
         case Xor:
-            return formatBinary(sb, expr, "^");
+            return formatBinary(sb, expr, " ^ ", 10, outerPrecedence);
         case Not:
-            return formatBinary(sb, expr, "~");
+            return formatUnary(sb, expr, "~", "", 2, outerPrecedence);
         case Neg:
-            return formatUnary(sb, expr, "-", "");
+            return formatUnary(sb, expr, "-", "", 2, outerPrecedence);
         case LogicalAnd:
-            return formatBinary(sb, expr, "&&");
+            return formatBinary(sb, expr, " && ", 12, outerPrecedence);
         case LogicalOr:
-            return formatBinary(sb, expr, "||");
+            return formatBinary(sb, expr, " || ", 13, outerPrecedence);
         case LogicalNot:
-            return formatUnary(sb, expr, "!", "");
+            return formatUnary(sb, expr, "!", "", 2, outerPrecedence);
         case Add:
-            return formatBinary(sb, expr, "+");
+            return formatBinary(sb, expr, " + ", 5, outerPrecedence);
         case Sub:
-            return formatBinary(sb, expr, "-");
+            return formatBinary(sb, expr, " - ", 5, outerPrecedence);
         case Mul:
-            return formatBinary(sb, expr, "*");
+            return formatBinary(sb, expr, " * ", 4, outerPrecedence);
         case Div:
-            return formatBinary(sb, expr, "/");
+            return formatBinary(sb, expr, " / ", 4, outerPrecedence);
+        case Rem:
+            return formatBinary(sb, expr, " % ", 4, outerPrecedence);
         case Shr:
-            return formatBinary(sb, expr, ">>");
+            return formatBinary(sb, expr, " >> ", 6, outerPrecedence);
         case Shl:
-            return formatBinary(sb, expr, "<<");
+            return formatBinary(sb, expr, " << ", 6, outerPrecedence);
         case UShr:
-            return formatBinary(sb, expr, ">>>");
+            return formatBinary(sb, expr, " >>> ", 6, outerPrecedence);
         case CmpEq:
-            return formatBinary(sb, expr, "==");
+            return formatBinary(sb, expr, " == ", 8, outerPrecedence);
         case CmpNe:
-            return formatBinary(sb, expr, "!=");
+            return formatBinary(sb, expr, " != ", 8, outerPrecedence);
         case CmpLt:
-            return formatBinary(sb, expr, "<");
+            return formatBinary(sb, expr, " < ", 7, outerPrecedence);
         case CmpLe:
-            return formatBinary(sb, expr, "<=");
+            return formatBinary(sb, expr, " <= ", 7, outerPrecedence);
         case CmpGt:
-            return formatBinary(sb, expr, ">");
+            return formatBinary(sb, expr, " > ", 7, outerPrecedence);
         case CmpGe:
-            return formatBinary(sb, expr, ">=");
+            return formatBinary(sb, expr, " >= ", 7, outerPrecedence);
         case GetField: {
             FieldReference fr = (FieldReference) expr.getOperand();
-            return formatUnary(sb, expr, "", "."+fr.getName());
+            return formatUnary(sb, expr, "", "."+fr.getName(), 1, outerPrecedence);
         }
         case PutField: {
             FieldReference fr = (FieldReference) expr.getOperand();
-            return format(format(sb, expr.getArguments().get(0)).append(".").append(fr.getName()).append(" = "), expr
-                    .getArguments().get(1));
+            return formatBinary(sb, expr, "."+fr.getName()+" = ", 15, outerPrecedence);
         }
         case GetStatic: {
             FieldReference fr = (FieldReference) expr.getOperand();
@@ -94,56 +95,56 @@ public class ExpressionFormatter {
         }
         case PutStatic: {
             FieldReference fr = (FieldReference) expr.getOperand();
-            return format(sb.append(fr.getDeclaringType().getSimpleName()).append(".").append(fr.getName()).append(" = "), expr
-                .getArguments().get(0));
+            return formatUnary(sb, expr, fr.getDeclaringType().getSimpleName() + "." + fr.getName() + " = ", "", 15,
+                outerPrecedence);
         }
         case Return:
-            return formatUnary(sb, expr, "return ", "");
+            return formatUnary(sb, expr, "return ", "", 100, outerPrecedence);
         case AThrow:
-            return formatUnary(sb, expr, "throw ", "");
+            return formatUnary(sb, expr, "throw ", "", 100, outerPrecedence);
         case ArrayLength:
-            return formatUnary(sb, expr, "", ".length");
+            return formatUnary(sb, expr, "", ".length", 1, outerPrecedence);
         case LoadElement:
-            return format(format(sb, expr.getArguments().get(0)).append("["), expr.getArguments().get(1)).append("]");
+            return format(format(sb, expr.getArguments().get(0), outerPrecedence).append("["), expr.getArguments().get(1), outerPrecedence).append("]");
         case StoreElement:
-            return format(format(format(sb, expr.getArguments().get(0)).append("["), expr.getArguments().get(1))
-                    .append("] = "), expr.getArguments().get(2));
+            return format(format(format(sb, expr.getArguments().get(0), outerPrecedence).append("["), expr.getArguments().get(1), outerPrecedence)
+                    .append("] = "), expr.getArguments().get(2), outerPrecedence);
         case Load: {
             Object op = expr.getOperand();
             return sb.append(op instanceof Variable ? ((Variable) op).getName() : ((ParameterDefinition) op).getName());
         }
         case Store:
-            return format(sb.append(((Variable)expr.getOperand()).getName()).append(" = "), expr.getArguments().get(0));
+            return formatUnary(sb, expr, ((Variable)expr.getOperand()).getName()+ " = ", "", 15, outerPrecedence);
         case I2B:
-            return formatUnary(sb, expr, "(byte)", "");
+            return formatUnary(sb, expr, "(byte)", "", 3, outerPrecedence);
         case I2C:
-            return formatUnary(sb, expr, "(char)", "");
+            return formatUnary(sb, expr, "(char)", "", 3, outerPrecedence);
         case I2S:
-            return formatUnary(sb, expr, "(short)", "");
+            return formatUnary(sb, expr, "(short)", "", 3, outerPrecedence);
         case I2F:
         case L2F:
         case D2F:
-            return formatUnary(sb, expr, "(float)", "");
+            return formatUnary(sb, expr, "(float)", "", 3, outerPrecedence);
         case F2I:
         case D2I:
         case L2I:
-            return formatUnary(sb, expr, "(int)", "");
+            return formatUnary(sb, expr, "(int)", "", 3, outerPrecedence);
         case F2L:
         case D2L:
-            return formatUnary(sb, expr, "(long)", "");
+            return formatUnary(sb, expr, "(long)", "", 3, outerPrecedence);
         case I2D:
         case I2L:
         case L2D:
         case F2D:
-            return formatUnary(sb, expr, "", "");
+            return format(sb, expr.getArguments().get(0), outerPrecedence);
         case CheckCast:
-            return formatUnary(sb, expr, "("+((TypeReference)expr.getOperand()).getSimpleName()+")(", ")");
+            return formatUnary(sb, expr, "("+((TypeReference)expr.getOperand()).getSimpleName()+")(", ")", 3, outerPrecedence);
         case InstanceOf:
-            return formatUnary(sb, expr, "", " instanceof "+((TypeReference)expr.getOperand()).getSimpleName());
+            return formatUnary(sb, expr, "", " instanceof "+((TypeReference)expr.getOperand()).getSimpleName(), 7, outerPrecedence);
         case InvokeStatic: {
             MethodReference mr = (MethodReference) expr.getOperand();
             if(Nodes.isBoxing(expr))
-                return formatUnary(sb, expr, "("+mr.getDeclaringType().getSimpleName()+")(", ")");
+                return formatUnary(sb, expr, "("+mr.getDeclaringType().getSimpleName()+")(", ")", 3, outerPrecedence);
             sb.append(mr.getDeclaringType().getSimpleName()).append(".").append(mr.getName()).append("(");
             boolean firstArg = true;
             for(Expression child : expr.getArguments()) {
@@ -152,7 +153,7 @@ public class ExpressionFormatter {
                 } else {
                     firstArg = false;
                 }
-                format(sb, child);
+                format(sb, child, 100);
             }
             return sb.append(")");
         }
@@ -166,7 +167,7 @@ public class ExpressionFormatter {
                 } else {
                     firstArg = false;
                 }
-                format(sb, child);
+                format(sb, child, 100);
             }
             return sb.append(")");
         }
@@ -176,9 +177,9 @@ public class ExpressionFormatter {
         case InvokeInterface:
         case InvokeVirtual: {
             if(Nodes.isUnboxing(expr))
-                return format(sb, expr.getArguments().get(0));
+                return format(sb, expr.getArguments().get(0), outerPrecedence);
             MethodReference mr = (MethodReference) expr.getOperand();
-            format(sb, expr.getArguments().get(0));
+            format(sb, expr.getArguments().get(0), 1);
             sb.append(".").append(mr.getName()).append("(");
             boolean firstArg = true;
             for(int i=1; i<expr.getArguments().size(); i++) {
@@ -188,7 +189,7 @@ public class ExpressionFormatter {
                 } else {
                     firstArg = false;
                 }
-                format(sb, child);
+                format(sb, child, 100);
             }
             return sb.append(")");
         }
@@ -208,12 +209,22 @@ public class ExpressionFormatter {
         }
     }
 
-    private static StringBuilder formatUnary(StringBuilder sb, Expression expr, String prefix, String postfix) {
-        return format(sb.append(prefix), expr.getArguments().get(0)).append(postfix);
+    private static StringBuilder formatUnary(StringBuilder sb, Expression expr, String prefix, String postfix, int precedence, int outerPrecedence) {
+        if(precedence < outerPrecedence) {
+            precedence = 100;
+            return format(sb.append("(").append(prefix), expr.getArguments().get(0), precedence).append(postfix).append(")");
+        }
+        return format(sb.append(prefix), expr.getArguments().get(0), precedence).append(postfix);
     }
 
-    private static StringBuilder formatBinary(StringBuilder sb, Expression expr, String op) {
-        return format(format(sb, expr.getArguments().get(0)).append(" ").append(op).append(" "), expr.getArguments()
-                .get(1));
+    private static StringBuilder formatBinary(StringBuilder sb, Expression expr, String op, int precedence, int outerPrecedence) {
+        if(precedence < outerPrecedence) {
+            precedence = 100;
+            return format(
+                format(sb.append("("), expr.getArguments().get(0), precedence).append(op),
+                expr.getArguments().get(1), precedence).append(")");
+        }
+        return format(format(sb, expr.getArguments().get(0), precedence).append(op), expr
+                .getArguments().get(1), precedence);
     }
 }
