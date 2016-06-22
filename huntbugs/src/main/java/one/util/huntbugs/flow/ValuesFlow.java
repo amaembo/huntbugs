@@ -39,7 +39,6 @@ import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
-import com.strobel.componentmodel.Key;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.CaseBlock;
@@ -58,10 +57,6 @@ import com.strobel.decompiler.ast.TryCatchBlock;
  *
  */
 public class ValuesFlow {
-    static final Key<Expression> SOURCE_KEY = Key.create("hb.valueSource");
-    static final Key<Object> VALUE_KEY = Key.create("hb.value");
-    static final Key<Set<Expression>> BACK_LINKS_KEY = Key.create("hb.backlinks");
-    
     static final ThrowTargets EMPTY_TARGETS = new ThrowTargets(null, Collections.emptySet());
     
     static class ThrowTargets {
@@ -392,10 +387,8 @@ public class ValuesFlow {
             for(Node child : node.getChildrenAndSelfRecursive()) {
                 if(child instanceof Expression) {
                     Expression expr = (Expression)child;
-                    if(expr.getUserData(SOURCE_KEY) != null)
-                        expr.putUserData(SOURCE_KEY, null);
-                    if(expr.getUserData(VALUE_KEY) != null)
-                        expr.putUserData(VALUE_KEY, null);
+                    Annotators.SOURCE.remove(expr);
+                    Annotators.CONST.remove(expr);
                 }
             }
         }
@@ -404,7 +397,7 @@ public class ValuesFlow {
     private static void initBackLinks(Expression expr, List<Lambda> lambdas) {
         Set<Expression> backLink = Collections.singleton(expr);
         for(Expression child : expr.getArguments()) {
-            child.putUserData(BACK_LINKS_KEY, backLink);
+            Annotators.BACKLINK.put(child, backLink);
             initBackLinks(child, lambdas);
         }
         if(expr.getOperand() instanceof Lambda) {
@@ -438,10 +431,12 @@ public class ValuesFlow {
             }
             if (valid) {
                 ctx.incStat("ValuesFlow");
-                return origParams;
             }
+        } else {
+            origParams = null;
         }
-        return null;
+        Annotators.PURITY.annotatePurity(method, cf);
+        return origParams;
     }
 
     public static <T> T reduce(Expression input, Function<Expression, T> mapper, BinaryOperator<T> reducer,
@@ -501,18 +496,18 @@ public class ValuesFlow {
     }
 
     public static Expression getSource(Expression input) {
-        Expression source = input.getUserData(SOURCE_KEY);
+        Expression source = Annotators.SOURCE.get(input);
         return source == null ? input : source;
     }
     
     public static Set<Expression> findUsages(Expression input) {
-        Set<Expression> set = input.getUserData(BACK_LINKS_KEY);
-        return set == null ? Collections.emptySet() : Collections.unmodifiableSet(set);
+        Set<Expression> set = Annotators.BACKLINK.get(input);
+        return set.isEmpty() ? set : Collections.unmodifiableSet(set);
     }
 
     public static Object getValue(Expression input) {
-        Object value = input.getUserData(VALUE_KEY);
-        return value == Frame.UNKNOWN_VALUE ? null : value;
+        Object value = Annotators.CONST.get(input);
+        return value == ConstAnnotator.UNKNOWN_VALUE ? null : value;
     }
 
     public static boolean allMatch(Expression src, Predicate<Expression> pred) {
@@ -544,7 +539,7 @@ public class ValuesFlow {
     }
 
     public static boolean hasPhiSource(Expression input) {
-        Expression source = input.getUserData(SOURCE_KEY);
+        Expression source = Annotators.SOURCE.get(input);
         return source != null && source.getCode() == Frame.PHI_TYPE;
     }
 

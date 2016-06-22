@@ -89,7 +89,7 @@ class FrameContext {
     
     private static Expression constant(Object val) {
         Expression expr = new Expression(AstCode.LdC, val, 0);
-        expr.putUserData(ValuesFlow.VALUE_KEY, val);
+        Annotators.CONST.put(expr, val);
         return expr;
     }
 

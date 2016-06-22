@@ -23,6 +23,8 @@ import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import one.util.huntbugs.flow.Annotators;
+import one.util.huntbugs.flow.PurityAnnotator.Purity;
 import one.util.huntbugs.flow.ValuesFlow;
 
 import com.strobel.assembler.metadata.DynamicCallSite;
@@ -240,7 +242,8 @@ public class Nodes {
         if (expr1 == null)
             return expr2 == null;
         if (expr1 instanceof Expression && expr2 instanceof Expression)
-            return Equi.equiExpressions((Expression) expr1, (Expression) expr2) && isSideEffectFree(expr1);
+            return Equi.equiExpressions((Expression) expr1, (Expression) expr2) && 
+                    Annotators.PURITY.get((Expression)expr1).atLeast(Purity.HEAP_DEP);
         return false;
     }
 
@@ -265,35 +268,7 @@ public class Nodes {
             }
             return true;
         }
-        Expression expr = (Expression) node;
-        if(ValuesFlow.getValue(expr) != null) // statically known constant
-            return true;
-        switch (expr.getCode()) {
-        case PreIncrement:
-        case PostIncrement:
-        case InvokeDynamic:
-        case Store:
-        case StoreElement:
-        case CompoundAssignment:
-        case PutField:
-        case PutStatic:
-        case NewArray:
-        case InitArray:
-        case InitObject:
-            return false;
-        case InvokeSpecial:
-        case InvokeStatic:
-        case InvokeVirtual:
-        case InvokeInterface:
-            if (!Methods.isSideEffectFree((MethodReference) expr.getOperand()))
-                return false;
-        default:
-            for (Expression child : expr.getArguments()) {
-                if (!isSideEffectFree(child))
-                    return false;
-            }
-        }
-        return true;
+        return Annotators.PURITY.isSideEffectFree((Expression) node);
     }
 
     public static boolean isPure(Node node) {
@@ -301,38 +276,7 @@ public class Nodes {
             return true;
         if (!(node instanceof Expression))
             return false;
-        Expression expr = (Expression) node;
-        if(ValuesFlow.getValue(expr) != null) // statically known constant
-            return true;
-        switch (expr.getCode()) {
-        case PreIncrement:
-        case PostIncrement:
-        case InvokeDynamic:
-        case Store:
-        case StoreElement:
-        case CompoundAssignment:
-        case PutField:
-        case PutStatic:
-        case NewArray:
-        case InitArray:
-        case InitObject:
-        case GetField:
-        case GetStatic:
-        case LoadElement:
-            return false;
-        case InvokeSpecial:
-        case InvokeStatic:
-        case InvokeVirtual:
-        case InvokeInterface:
-            if (!Methods.isPure((MethodReference) expr.getOperand()))
-                return false;
-        default:
-            for (Expression child : expr.getArguments()) {
-                if (!isPure(child))
-                    return false;
-            }
-        }
-        return true;
+        return Annotators.PURITY.isPure((Expression) node);
     }
 
     public static boolean isSynchorizedBlock(Node node) {
@@ -592,5 +536,11 @@ public class Nodes {
         Expression expr = (Expression) node;
         return expr.getCode() == AstCode.I2F || expr.getCode() == AstCode.I2D || expr.getCode() == AstCode.L2F
                 || expr.getCode() == AstCode.L2D;
+    }
+    
+    public static String facts(Node node) {
+        if(node instanceof Expression)
+            return Annotators.facts((Expression) node);
+        return "{}";
     }
 }

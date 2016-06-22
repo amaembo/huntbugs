@@ -92,7 +92,6 @@ class Frame {
     final Map<ParameterDefinition, Expression> initial;
     static final AstCode PHI_TYPE = AstCode.Wrap;
     static final AstCode UPDATE_TYPE = AstCode.Nop;
-    static final Object UNKNOWN_VALUE = new Object();
     
     Expression get(Variable var) {
         Expression expr = sources.get(var);
@@ -150,17 +149,17 @@ class Frame {
             Variable var = ((Variable) expr.getOperand());
             Expression arg = expr.getArguments().get(0);
             Expression source = ValuesFlow.getSource(arg);
-            Object val = arg.getUserData(ValuesFlow.VALUE_KEY);
-            storeValue(expr, val);
+            Object val = Annotators.CONST.get(arg);
+            Annotators.CONST.storeValue(expr, val);
             return target.replace(var, source);
         }
         case LdC: {
-            storeValue(expr, expr.getOperand());
+            Annotators.CONST.storeValue(expr, expr.getOperand());
             return target;
         }
         case ArrayLength:
             targets.merge(nullPointerException, target);
-            storeValue(expr, getArrayLength(expr.getArguments().get(0)));
+            Annotators.CONST.storeValue(expr, getArrayLength(expr.getArguments().get(0)));
             return target;
         case CmpEq:
             return processCmpEq(expr, target);
@@ -281,10 +280,10 @@ class Frame {
             // TODO: support transferring variables from outer method to lambda
             Expression source = get(var);
             if (source != null) {
-                expr.putUserData(ValuesFlow.SOURCE_KEY, source);
-                link(expr, source);
-                Object val = source.getUserData(ValuesFlow.VALUE_KEY);
-                storeValue(expr, val);
+                Annotators.SOURCE.put(expr, source);
+                Annotators.BACKLINK.link(expr, source);
+                Object val = Annotators.CONST.get(source);
+                Annotators.CONST.storeValue(expr, val);
             }
             return this;
         }
@@ -295,10 +294,10 @@ class Frame {
                 target = target.replace(var, expr);
                 if(source == null)
                     return target;
-                link(expr, source);
-                Object val = source.getUserData(ValuesFlow.VALUE_KEY);
-                if (val == UNKNOWN_VALUE)
-                    expr.putUserData(ValuesFlow.VALUE_KEY, UNKNOWN_VALUE);
+                Annotators.BACKLINK.link(expr, source);
+                Object val = Annotators.CONST.get(source);
+                if (val == ConstAnnotator.UNKNOWN_VALUE)
+                    Annotators.CONST.put(expr, ConstAnnotator.UNKNOWN_VALUE);
                 else if (val instanceof Integer)
                     return target.processUnaryOp(expr, Integer.class, inc -> ((int) val) + inc);
                 else if (val instanceof Long)
@@ -311,7 +310,7 @@ class Frame {
             if (arg.getOperand() instanceof Variable) {
                 Variable var = ((Variable) arg.getOperand());
                 Expression source = get(var);
-                link(expr, source);
+                Annotators.BACKLINK.link(expr, source);
                 // TODO: pass values
                 return target.replace(var, expr);
             }
@@ -374,16 +373,16 @@ class Frame {
                 targets.merge(linkageError, target);
             FieldDefinition fd = fr.resolve();
             if (fd != null && fd.isEnumConstant()) {
-                storeValue(expr, new EnumConstant(fd.getDeclaringType().getInternalName(), fd.getName()));
+                Annotators.CONST.storeValue(expr, new EnumConstant(fd.getDeclaringType().getInternalName(), fd.getName()));
             } else {
                 Expression source = fieldValues.get(new MemberInfo(fr));
                 if (source != null) {
-                    expr.putUserData(ValuesFlow.SOURCE_KEY, source);
-                    link(expr, source);
-                    Object val = source.getUserData(ValuesFlow.VALUE_KEY);
-                    storeValue(expr, val);
+                    Annotators.SOURCE.put(expr, source);
+                    Annotators.BACKLINK.link(expr, source);
+                    Object val = Annotators.CONST.get(source);
+                    Annotators.CONST.storeValue(expr, val);
                 } else {
-                    storeValue(expr, UNKNOWN_VALUE);
+                    Annotators.CONST.storeValue(expr, ConstAnnotator.UNKNOWN_VALUE);
                 }
             }
             return target;
@@ -393,12 +392,12 @@ class Frame {
             if(fc.isThis(Nodes.getChild(expr, 0))) {
                 Expression source = fieldValues.get(new MemberInfo(fr));
                 if (source != null) {
-                    expr.putUserData(ValuesFlow.SOURCE_KEY, source);
-                    link(expr, source);
-                    Object val = source.getUserData(ValuesFlow.VALUE_KEY);
-                    storeValue(expr, val);
+                    Annotators.SOURCE.put(expr, source);
+                    Annotators.BACKLINK.link(expr, source);
+                    Object val = Annotators.CONST.get(source);
+                    Annotators.CONST.storeValue(expr, val);
                 } else {
-                    storeValue(expr, UNKNOWN_VALUE);
+                    Annotators.CONST.storeValue(expr, ConstAnnotator.UNKNOWN_VALUE);
                 }
             } else {
                 targets.merge(nullPointerException, target);
@@ -453,32 +452,6 @@ class Frame {
                 return null;
             }
         }, (a, b) -> Objects.equals(a, b) ? a : null, Objects::isNull);
-    }
-
-    private static void link(Expression target, Expression source) {
-        if (source.getCode() == PHI_TYPE || source.getCode() == UPDATE_TYPE) {
-            source.getArguments().forEach(arg -> link(target, arg));
-            return;
-        }
-        Set<Expression> set = source.getUserData(ValuesFlow.BACK_LINKS_KEY);
-        if (set == null) {
-            set = new HashSet<>();
-            source.putUserData(ValuesFlow.BACK_LINKS_KEY, set);
-        } else if (!(set instanceof HashSet)) {
-            set = new HashSet<>(set);
-            source.putUserData(ValuesFlow.BACK_LINKS_KEY, set);
-        }
-        set.add(target);
-    }
-
-    private static void storeValue(Expression expr, Object val) {
-        Object curValue = expr.getUserData(ValuesFlow.VALUE_KEY);
-        if (Objects.equals(val, curValue) || curValue == UNKNOWN_VALUE)
-            return;
-        if (curValue == null)
-            expr.putUserData(ValuesFlow.VALUE_KEY, val);
-        else
-            expr.putUserData(ValuesFlow.VALUE_KEY, UNKNOWN_VALUE);
     }
 
     Frame merge(Frame other) {
@@ -662,48 +635,12 @@ class Frame {
     }
 
     private <A, B> Frame processBinaryOp(Expression expr, Class<A> leftType, Class<B> rightType, BiFunction<A, B, ?> op) {
-        if (expr.getArguments().size() != 2)
-            return this;
-        Object left = expr.getArguments().get(0).getUserData(ValuesFlow.VALUE_KEY);
-        if (left == UNKNOWN_VALUE) {
-            storeValue(expr, left);
-            return this;
-        }
-        if (!leftType.isInstance(left))
-            return this;
-        Object right = expr.getArguments().get(1).getUserData(ValuesFlow.VALUE_KEY);
-        if (right == UNKNOWN_VALUE) {
-            storeValue(expr, right);
-            return this;
-        }
-        if (!rightType.isInstance(right))
-            return this;
-        Object result = UNKNOWN_VALUE;
-        try {
-            result = op.apply(leftType.cast(left), rightType.cast(right));
-        } catch (Exception e) {
-            // ignore
-        }
-        storeValue(expr, result);
+        Annotators.CONST.processBinaryOp(expr, leftType, rightType, op);
         return this;
     }
 
     private <A> Frame processUnaryOp(Expression expr, Class<A> type, Function<A, ?> op) {
-        if (expr.getArguments().size() != 1)
-            return this;
-        Object arg = expr.getArguments().get(0).getUserData(ValuesFlow.VALUE_KEY);
-        if (arg == UNKNOWN_VALUE) {
-            storeValue(expr, arg);
-            return this;
-        }
-        if (!type.isInstance(arg)) {
-            if(type == Boolean.class && arg instanceof Integer)
-                arg = Integer.valueOf(1).equals(arg);
-            else
-                return this;
-        }
-        Object result = op.apply(type.cast(arg));
-        storeValue(expr, result);
+        Annotators.CONST.processUnaryOp(expr, type, op);
         return this;
     }
 
@@ -1027,9 +964,9 @@ class Frame {
         Object rightValue = ValuesFlow.getValue(right);
         if (leftValue != null || rightValue != null) {
             if (Objects.equals(leftValue, rightValue))
-                storeValue(phi, leftValue);
+                Annotators.CONST.storeValue(phi, leftValue);
             else
-                storeValue(phi, UNKNOWN_VALUE);
+                Annotators.CONST.storeValue(phi, ConstAnnotator.UNKNOWN_VALUE);
         }
         return phi;
     }
