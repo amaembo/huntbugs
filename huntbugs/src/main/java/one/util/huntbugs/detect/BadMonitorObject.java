@@ -52,7 +52,7 @@ public class BadMonitorObject {
                 } else {
                     warningType = "SynchronizationOnBoxedNumber";
                 }
-                mc.report(warningType, 0, arg, MONITOR_TYPE.create(type), Roles.EXPRESSION.create(expr));
+                mc.report(warningType, 0, arg, MONITOR_TYPE.create(type), Roles.EXPRESSION.create(arg));
             }
         }
     }
