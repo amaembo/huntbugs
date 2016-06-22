@@ -34,6 +34,7 @@ import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 
+import com.strobel.assembler.metadata.BuiltinTypes;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
@@ -473,6 +474,10 @@ public class ValuesFlow {
     private static TypeReference mergeTypes(TypeReference t1, TypeReference t2) {
         if (t1 == null || t2 == null)
             return null;
+        if (t1 == BuiltinTypes.Null)
+            return t2;
+        if (t2 == BuiltinTypes.Null)
+            return t1;
         if (t1.isEquivalentTo(t2))
             return t1;
         if(t1.isArray() ^ t2.isArray())
@@ -491,7 +496,8 @@ public class ValuesFlow {
     }
 
     public static TypeReference reduceType(Expression input) {
-        return reduce(input, Types::getExpressionType, ValuesFlow::mergeTypes, Objects::isNull);
+        return reduce(input, e -> e.getCode() == AstCode.AConstNull ?
+                BuiltinTypes.Null : Types.getExpressionType(e), ValuesFlow::mergeTypes, Objects::isNull);
     }
 
     public static Expression getSource(Expression input) {
