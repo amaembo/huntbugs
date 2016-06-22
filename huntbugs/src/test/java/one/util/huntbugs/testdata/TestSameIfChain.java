@@ -23,7 +23,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestSameIfChain {
-    int f = 3;
+    int f = Math.random() > 0.5 ? 3 : 2;
     
     @AssertWarning("SameConditionChain")
     public void testSimple(int x) {

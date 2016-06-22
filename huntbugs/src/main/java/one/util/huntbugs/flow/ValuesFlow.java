@@ -435,7 +435,7 @@ public class ValuesFlow {
         } else {
             origParams = null;
         }
-        Annotators.PURITY.annotatePurity(method, cf);
+        Annotators.PURITY.annotatePurity(method, fc);
         return origParams;
     }
 

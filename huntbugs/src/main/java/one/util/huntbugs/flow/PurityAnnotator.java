@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.flow;
 
+import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
@@ -22,6 +23,7 @@ import com.strobel.decompiler.ast.Node;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
+import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 /**
  * @author lan
@@ -69,17 +71,17 @@ public class PurityAnnotator extends Annotator<PurityAnnotator.Purity> {
         }
     }
 
-    void annotatePurity(Node node, ClassFields cf) {
+    void annotatePurity(Node node, FrameContext fc) {
         for(Node child : Nodes.getChildren(node)) {
             if(child instanceof Expression) {
-                annotatePurity((Expression)child, cf);
+                annotatePurity((Expression)child, fc);
             } else {
-                annotatePurity(child, cf);
+                annotatePurity(child, fc);
             }
         }
     }
     
-    private Purity getOwnPurity(Expression expr, ClassFields cf) {
+    private Purity getOwnPurity(Expression expr, FrameContext fc) {
         switch (expr.getCode()) {
             case PreIncrement:
             case PostIncrement:
@@ -103,7 +105,17 @@ public class PurityAnnotator extends Annotator<PurityAnnotator.Purity> {
             case InitArray:
                 return Purity.SIDE_EFFECT_FREE;
             case GetField:
+                if(fc.cf.isKnownEffectivelyFinal(new MemberInfo((MemberReference) expr.getOperand()))
+                        && !fc.md.isConstructor()) {
+                    return Purity.CONST;
+                }
+                return Purity.HEAP_DEP;
             case GetStatic:
+                if(fc.cf.isKnownEffectivelyFinal(new MemberInfo((MemberReference) expr.getOperand()))
+                        && !fc.md.isTypeInitializer()) {
+                    return Purity.CONST;
+                }
+                return Purity.HEAP_DEP;
             case LoadElement:
                 return Purity.HEAP_DEP;
             case InvokeSpecial:
@@ -128,16 +140,16 @@ public class PurityAnnotator extends Annotator<PurityAnnotator.Purity> {
         }
     }
 
-    private Purity annotatePurity(Expression expr, ClassFields cf) {
+    private Purity annotatePurity(Expression expr, FrameContext fc) {
         Purity purity = Purity.CONST;
         for(Expression child : expr.getArguments()) {
-            purity = purity.merge(annotatePurity(child, cf));
+            purity = purity.merge(annotatePurity(child, fc));
         }
         if(ValuesFlow.getValue(expr) != null) {
             // statically known constant
             purity = Purity.CONST;
         } else {
-            purity = purity.merge(getOwnPurity(expr, cf));
+            purity = purity.merge(getOwnPurity(expr, fc));
         }
         putIfAbsent(expr, purity);
         return purity;
