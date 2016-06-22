@@ -98,12 +98,15 @@ public class InfiniteLoop {
         });
         if(parent == null) {
             if(!ls.hasControlFlow && !ls.hasStores) {
-                mc.report("InfiniteLoop", 0, loop, Roles.VARIABLE.create(vars.iterator().next().getName()));
+                mc.report("InfiniteLoop", 0, loop, Roles.VARIABLE.create(vars.iterator().next().getName()),
+                    Roles.EXPRESSION.create(expr));
             } else if(!ls.hasLoads) {
-                mc.report("InvariantLoopCondition", 0, expr, Roles.VARIABLE.create(vars.iterator().next().getName()));
+                mc.report("InvariantLoopCondition", 0, expr, Roles.VARIABLE.create(vars.iterator().next().getName()),
+                    Roles.EXPRESSION.create(expr));
             }
         } else if((!ls.hasControlFlow && !ls.hasStores) || !ls.hasLoads) {
-            mc.report("InvariantLoopConditionPart", 0, expr, Roles.VARIABLE.create(vars.iterator().next().getName()));
+            mc.report("InvariantLoopConditionPart", 0, expr, Roles.VARIABLE.create(vars.iterator().next().getName()),
+                Roles.EXPRESSION.create(expr));
         }
     }
 }

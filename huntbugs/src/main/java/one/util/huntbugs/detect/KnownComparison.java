@@ -57,13 +57,14 @@ public class KnownComparison {
                 if (left != null && right != null) {
                     Node deadCode = getDeadCode(expr, nc, (boolean) result);
                     if (deadCode == null) {
-                        mc.report("ResultOfComparisonIsStaticallyKnown", 0, expr, LEFT_OPERAND.createFromConst(left),
-                            RIGHT_OPERAND.createFromConst(right), Roles.OPERATION.create(expr), RESULT.create(result
-                                    .toString()));
+                        mc.report("ResultOfComparisonIsStaticallyKnown", 0, expr, Roles.EXPRESSION.create(expr),
+                            LEFT_OPERAND.createFromConst(left), RIGHT_OPERAND.createFromConst(right), Roles.OPERATION
+                                    .create(expr), RESULT.create(result.toString()));
                     } else if (!Nodes.isThrow(deadCode)) {
-                        mc.report("ResultOfComparisonIsStaticallyKnownDeadCode", 0, expr, LEFT_OPERAND.createFromConst(
-                            left), RIGHT_OPERAND.createFromConst(right), Roles.OPERATION.create(expr),
-                            DEAD_CODE_LOCATION.create(mc, deadCode), RESULT.create(result.toString()));
+                        mc.report("ResultOfComparisonIsStaticallyKnownDeadCode", 0, expr,
+                            Roles.EXPRESSION.create(expr), LEFT_OPERAND.createFromConst(left), RIGHT_OPERAND
+                                    .createFromConst(right), Roles.OPERATION.create(expr), DEAD_CODE_LOCATION.create(
+                                mc, deadCode), RESULT.create(result.toString()));
                     }
                 }
             }

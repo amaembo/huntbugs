@@ -180,14 +180,16 @@
     <Warning Type="ResultOfComparisonIsStaticallyKnownDeadCode">
       <Title>Result of comparison is statically known resulting in dead code</Title>
       <Description>A comparison $LEFT_OPERAND$ $OPERATION$ $RIGHT_OPERAND$ is always $RESULT$ which results in dead code.</Description>
-      <LongDescription><![CDATA[This code performs a comparison <code>$LEFT_OPERAND$ $OPERATION$ $RIGHT_OPERAND$</code> which is statically known to be $RESULT$.
+      <LongDescription><![CDATA[This code performs a comparison <code>$EXPRESSION$</code> which can be statically evaluated to 
+         <code>$LEFT_OPERAND$ $OPERATION$ $RIGHT_OPERAND$</code>, thus always $RESULT$.
         As a result some branch or the next condition in short-circuiting chain will never be executed. Probably something else was meant or 
         this comparison along with the dead branch could be deleted.]]></LongDescription>
     </Warning>
     <Warning Type="ResultOfComparisonIsStaticallyKnown">
       <Title>Result of comparison is statically known</Title>
       <Description>A comparison $LEFT_OPERAND$ $OPERATION$ $RIGHT_OPERAND$ is always $RESULT$.</Description>
-      <LongDescription><![CDATA[This code performs a comparison <code>$LEFT_OPERAND$ $OPERATION$ $RIGHT_OPERAND$</code> which is statically known to be $RESULT$.
+      <LongDescription><![CDATA[This code performs a comparison <code>$EXPRESSION$</code> which can be statically evaluated to 
+         <code>$LEFT_OPERAND$ $OPERATION$ $RIGHT_OPERAND$</code>, thus always $RESULT$.
         Probably something else was meant or this comparison could be deleted.]]></LongDescription>
     </Warning>
     <Warning Type="SameConditionsExcluding">
@@ -940,21 +942,21 @@
     <Warning Type="InfiniteLoop">
       <Title>Infinite loop is detected</Title>
       <Description>Infinite loop is detected in $METHOD$.</Description>
-      <LongDescription><![CDATA[This method defines a loop with non-trivial condition which is unlikely to change.
+      <LongDescription><![CDATA[This method defines a loop with non-trivial condition <code>$EXPRESSION$</code> which is unlikely to change.
       So this loop can finish only exceptionally. Probably there's some error in the code. If such behavior is intended 
       consider defining infinite loop more explicitly like <code>while(true)</code> or <code>for(;;)</code>.]]></LongDescription>
     </Warning>
     <Warning Type="InvariantLoopCondition">
       <Title>Invariant loop condition</Title>
       <Description>Invariant loop condition in $METHOD$.</Description>
-      <LongDescription><![CDATA[This non-trivial condition defined in a loop is unlikely to change over the loop iterations.
+      <LongDescription><![CDATA[This non-trivial condition <code>$EXPRESSION$</code> defined in a loop is unlikely to change over the loop iterations.
       Probably there's some error in the code. If such behavior is intended 
       consider moving the condition out of the loop or using explicitly infinite loop like <code>while(true)</code>.]]></LongDescription>
     </Warning>
     <Warning Type="InvariantLoopConditionPart">
       <Title>Invariant part of loop condition</Title>
       <Description>Invariant part of loop condition in $METHOD$.</Description>
-      <LongDescription><![CDATA[The part of loop condition which involves variable <code>$VARIABLE$</code> is unlikely to change over the loop iterations.
+      <LongDescription><![CDATA[The part of loop condition <code>$EXPRESSION$</code> is unlikely to change over the loop iterations.
       Probably there's some error in the code. If such behavior is intended 
       consider moving the condition out of the loop for code clarity.]]></LongDescription>
     </Warning>
