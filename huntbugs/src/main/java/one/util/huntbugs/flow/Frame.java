@@ -28,6 +28,8 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import one.util.huntbugs.flow.ValuesFlow.ThrowTargets;
 import one.util.huntbugs.util.Maps;
@@ -985,15 +987,22 @@ class Frame {
         }
         return target;
     }
+    
+    static Stream<Expression> children(Expression parent) {
+        if(parent.getCode() == PHI_TYPE) {
+            return parent.getArguments().stream();
+        } else if(parent.getCode() == AstCode.TernaryOp) {
+            return IntStream.of(1, 2).mapToObj(i -> ValuesFlow.getSource(parent.getArguments().get(i)))
+                    .flatMap(Frame::children);
+        } else 
+            return Stream.of(parent);
+    }
 
     static Expression makePhiNode(Expression left, Expression right) {
         if (left == null)
             return right;
         if (right == null || left == right)
             return left;
-//        if (left.getCode() == AstCode.LdC && right.getCode() == AstCode.LdC && Objects.equals(left.getOperand(), right
-//                .getOperand()))
-//            return left;
         if (left.getCode() == UPDATE_TYPE) {
             Expression leftContent = left.getArguments().get(0);
             if (leftContent == right || right.getCode() == UPDATE_TYPE && leftContent == right.getArguments().get(0))
@@ -1002,21 +1011,12 @@ class Frame {
             return right;
         }
         List<Expression> children = new ArrayList<>();
-        if (left.getCode() == PHI_TYPE) {
-            children.addAll(left.getArguments());
-        } else {
-            children.add(left);
-        }
+        children(left).forEach(children::add);
         int baseSize = children.size();
-        if (right.getCode() == PHI_TYPE) {
-            for (Expression arg : right.getArguments()) {
-                if (!children.contains(arg))
-                    children.add(arg);
-            }
-        } else {
-            if (!children.contains(right))
-                children.add(right);
-        }
+        children(right).forEach(child -> {
+            if(!children.contains(child))
+                children.add(child);
+        });
         if (children.size() == baseSize) {
             return left;
         }

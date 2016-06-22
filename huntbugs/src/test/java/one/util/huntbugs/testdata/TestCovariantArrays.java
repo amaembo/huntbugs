@@ -69,4 +69,15 @@ public class TestCovariantArrays {
         Parent[] parents = new Child[10];
         parents[0] = p;
     }
+    
+    @AssertNoWarning("*")
+    public void testTernaryPhi() {
+        Object[] e = new String[10];
+        Object a = "1";
+        for(int i=0; i<e.length; i++) {
+            a = i % 2 == 0 ? a : 123;
+            e[i] = a;
+        }
+        System.out.println(Arrays.toString(e));
+    }
 }
