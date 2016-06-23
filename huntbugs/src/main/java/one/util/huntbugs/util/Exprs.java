@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.util;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -99,22 +100,26 @@ public class Exprs {
     }
 
     public static Expression findExpressionWithSources(Expression node, Predicate<Expression> predicate) {
+        return findExpressionWithSources(node, new HashSet<>(), predicate);
+    }
+
+    private static Expression findExpressionWithSources(Expression node, Set<Expression> visited, Predicate<Expression> predicate) {
         if (predicate.test(node))
             return node;
         for (Expression child : node.getArguments()) {
-            Expression result = findExpressionWithSources(child, predicate);
+            Expression result = findExpressionWithSources(child, visited, predicate);
             if (result != null)
                 return result;
         }
         Expression source = ValuesFlow.getSource(node);
-        if (source != node) {
-            Expression result = findExpressionWithSources(source, predicate);
+        if (source != node && visited.add(source)) {
+            Expression result = findExpressionWithSources(source, visited, predicate);
             if (result != null)
                 return result;
         }
         return null;
     }
-
+    
     public static boolean isThis(Expression self) {
         if (self.getCode() != AstCode.Load)
             return false;
