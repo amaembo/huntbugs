@@ -28,6 +28,7 @@ import com.strobel.decompiler.ast.CatchBlock;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Variable;
 
+import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
@@ -79,9 +80,9 @@ public class DeadLocalStore {
                 // exclude AstCode.Store (chaining assignment) as procyon sometimes reorders locals assignments
                 if (mc.isAnnotated() && ValuesFlow.getSource(arg) == arg && arg.getCode() != AstCode.Store
                     && arg.getCode() != AstCode.PutField && arg.getCode() != AstCode.PutStatic) {
-                    Set<Expression> usages = ValuesFlow.findUsages(arg);
+                    Set<Expression> usages = Inf.BACKLINK.findUsages(arg);
                     if(usages.size() == 1 && usages.iterator().next() == expr) {
-                        Set<Expression> storeUsages = ValuesFlow.findUsages(expr);
+                        Set<Expression> storeUsages = Inf.BACKLINK.findUsages(expr);
                         if(storeUsages.isEmpty()) {
                             if(nc.getNode() instanceof CatchBlock && nc.getNode().getChildren().get(0) == expr
                                     && ((CatchBlock)nc.getNode()).getCaughtTypes().size() > 1) {

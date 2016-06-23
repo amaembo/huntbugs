@@ -28,6 +28,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Roles;
 
@@ -45,12 +46,12 @@ public class SelfAssignment {
         if(expr.getCode() == AstCode.PutField) {
             FieldDefinition frPut = ((FieldReference) expr.getOperand()).resolve();
             if(frPut != null) {
-                Expression getField = Nodes.getChild(expr, 1);
+                Expression getField = Exprs.getChild(expr, 1);
                 if(getField.getCode() == AstCode.GetField) {
                     FieldReference frGet = (FieldReference) getField.getOperand();
                     if(frPut.equals(frGet.resolve())) {
-                        Node selfPut = Nodes.getChildNoSpecial(expr, 0);
-                        Node selfGet = Nodes.getChildNoSpecial(getField, 0);
+                        Node selfPut = Exprs.getChildNoSpecial(expr, 0);
+                        Node selfGet = Exprs.getChildNoSpecial(getField, 0);
                         if(Nodes.isEquivalent(selfGet, selfPut)) {
                             mc.report("SelfAssignmentField", 0, expr);
                         }
@@ -60,7 +61,7 @@ public class SelfAssignment {
         } else if(expr.getCode() == AstCode.PutStatic) {
             FieldDefinition frPut = ((FieldReference) expr.getOperand()).resolve();
             if(frPut != null) {
-                Expression getStatic = Nodes.getChild(expr, 0);
+                Expression getStatic = Exprs.getChild(expr, 0);
                 if(getStatic.getCode() == AstCode.GetStatic) {
                     FieldReference frGet = (FieldReference) getStatic.getOperand();
                     if(frPut.equals(frGet.resolve())) {
@@ -69,12 +70,12 @@ public class SelfAssignment {
                 }
             }
         } else if(expr.getCode() == AstCode.StoreElement) {
-            Expression sourceRef = Nodes.getChild(expr, 2);
+            Expression sourceRef = Exprs.getChild(expr, 2);
             if(sourceRef.getCode() == AstCode.LoadElement) {
-                Expression storeArrayRef = Nodes.getChildNoSpecial(expr, 0);
-                Expression storeIndexRef = Nodes.getChildNoSpecial(expr, 1);
-                Expression loadArrayRef = Nodes.getChildNoSpecial(sourceRef, 0);
-                Expression loadIndexRef = Nodes.getChildNoSpecial(sourceRef, 1);
+                Expression storeArrayRef = Exprs.getChildNoSpecial(expr, 0);
+                Expression storeIndexRef = Exprs.getChildNoSpecial(expr, 1);
+                Expression loadArrayRef = Exprs.getChildNoSpecial(sourceRef, 0);
+                Expression loadIndexRef = Exprs.getChildNoSpecial(sourceRef, 1);
                 if(Nodes.isEquivalent(storeArrayRef, loadArrayRef) && Nodes.isEquivalent(storeIndexRef, loadIndexRef)) {
                     mc.report("SelfAssignmentArrayElement", 0, expr);
                 }

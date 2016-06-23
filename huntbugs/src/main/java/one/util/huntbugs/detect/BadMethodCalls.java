@@ -30,6 +30,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
@@ -147,7 +148,7 @@ public class BadMethodCalls {
         } else if (typeName.equals("java/net/URL") && (name.equals("equals") || name.equals("hashCode"))) {
             ctx.report("URLBlockingMethod", 0, node);
         } else if (isToStringCall(typeName, name, signature)) {
-            Expression lastArg = Nodes.getChild(node, node.getArguments().size() - 1);
+            Expression lastArg = Exprs.getChild(node, node.getArguments().size() - 1);
             TypeReference type = ValuesFlow.reduceType(lastArg);
             if (type != null) {
                 if(type.isArray())
@@ -157,7 +158,7 @@ public class BadMethodCalls {
             }
         } else if (Methods.isHashCodeMethod(mr) || typeName.equals("java/util/Objects") && name.equals("hashCode")
             && signature.equals("(Ljava/lang/Object;)I")) {
-            Expression arg = Nodes.getChild(node, 0);
+            Expression arg = Exprs.getChild(node, 0);
             TypeReference type = ValuesFlow.reduceType(arg);
             if (type != null && type.isArray()) {
                 ctx.report("ArrayHashCode", 0, arg);
@@ -174,7 +175,7 @@ public class BadMethodCalls {
                 }
             }
         } else if (typeName.equals("java/lang/Double") && name.equals("longBitsToDouble")) {
-            Expression arg = Nodes.getChild(node, 0);
+            Expression arg = Exprs.getChild(node, 0);
             if (arg.getCode() == AstCode.I2L) {
                 ctx.report("DoubleLongBitsToDoubleOnInt", 0, arg, Roles.RETURN_VALUE_OF.create(mr));
             }
@@ -193,7 +194,7 @@ public class BadMethodCalls {
             }
         } else if (name.equals("add") && mr.getErasedSignature().equals("(Ljava/lang/Object;)Z") && Types.isCollection(
             mr.getDeclaringType())) {
-            if (Nodes.isEquivalent(Nodes.getChild(node, 0), Nodes.getChild(node, 1))) {
+            if (Nodes.isEquivalent(Exprs.getChild(node, 0), Exprs.getChild(node, 1))) {
                 ctx.report("CollectionAddedToItself", 0, node);
             }
         } else if (node.getCode() == AstCode.InvokeStatic && (typeName.endsWith("/Assert") && name.equals(

@@ -22,11 +22,11 @@ import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
-import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
@@ -51,7 +51,7 @@ public class KnownComparison {
         if (expr.getCode().isComparison() || (expr.getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod(
             (MethodReference) expr.getOperand()))) {
             Object result = Nodes.getConstant(expr);
-            if (result instanceof Boolean && !ValuesFlow.isAssertion(expr)) {
+            if (result instanceof Boolean && !Exprs.isAssertion(expr)) {
                 Object left = Nodes.getConstant(expr.getArguments().get(0));
                 Object right = Nodes.getConstant(expr.getArguments().get(1));
                 if (left != null && right != null) {

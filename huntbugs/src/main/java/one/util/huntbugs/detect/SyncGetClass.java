@@ -29,6 +29,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 
@@ -49,7 +50,7 @@ public class SyncGetClass {
             Expression syncObject = Nodes.getSyncObject((TryCatchBlock) node);
             if(syncObject != null) {
                 if(syncObject.getCode() == AstCode.InvokeVirtual && Methods.isGetClass((MethodReference) syncObject.getOperand())
-                        && Nodes.isThis(Nodes.getChild(syncObject, 0))) {
+                        && Exprs.isThis(Exprs.getChild(syncObject, 0))) {
                     int priority = 0;
                     if(th != null && !th.hasSubClasses())
                         priority += 10;

@@ -21,9 +21,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import one.util.huntbugs.flow.Annotators;
+import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.flow.PurityAnnotator.Purity;
 import one.util.huntbugs.flow.ValuesFlow;
 
@@ -33,9 +33,7 @@ import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodHandle;
 import com.strobel.assembler.metadata.MethodReference;
-import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.assembler.metadata.TypeReference;
-import com.strobel.assembler.metadata.VariableDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.Expression;
@@ -45,8 +43,10 @@ import com.strobel.decompiler.ast.TryCatchBlock;
 import com.strobel.decompiler.ast.Variable;
 
 /**
+ * Nodes-related utility methods
+ * 
  * @author Tagir Valeev
- *
+ * @see Exprs
  */
 public class Nodes {
     public static boolean isOp(Node node, AstCode op) {
@@ -79,25 +79,13 @@ public class Nodes {
         return node.getChildren().get(i);
     }
 
-    public static Expression getChild(Expression node, int i) {
-        return ValuesFlow.getSource(node.getArguments().get(i));
-    }
-
-    public static Expression getChildNoSpecial(Expression node, int i) {
-        Expression arg = node.getArguments().get(i);
-        Expression src = ValuesFlow.getSource(arg);
-        if(ValuesFlow.isSpecial(src))
-            return arg;
-        return src;
-    }
-
     public static Object getConstant(Node node) {
         if (!(node instanceof Expression))
             return null;
         Expression expr = (Expression) node;
         if (expr.getCode() == AstCode.LdC)
             return expr.getOperand();
-        return Annotators.CONST.getValue(expr);
+        return Inf.CONST.getValue(expr);
     }
 
     public static void ifBinaryWithConst(Expression expr, BiConsumer<Expression, Object> consumer) {
@@ -217,25 +205,6 @@ public class Nodes {
         return false;
     }
     
-    public static boolean bothMatch(Expression e1, Expression e2, Predicate<Expression> p1, Predicate<Expression> p2) {
-        return p1.test(e1) && p2.test(e2) || p1.test(e2) && p2.test(e1);
-    }
-    
-    public static boolean bothChildrenMatch(Expression e, Predicate<Expression> p1, Predicate<Expression> p2) {
-        List<Expression> args = e.getArguments();
-        if(args.size() != 2)
-            throw new IllegalArgumentException("Children size = "+args.size()+"; expr = "+e);
-        return bothMatch(ValuesFlow.getSource(args.get(0)), ValuesFlow.getSource(args.get(1)), p1, p2);
-    }
-
-    public static Expression getThis(Expression node) {
-        if (node.getCode() == AstCode.GetField || node.getCode() == AstCode.PutField)
-            return node.getArguments().get(0);
-        if (node.getCode() == AstCode.GetStatic || node.getCode() == AstCode.PutStatic)
-            return null;
-        throw new IllegalArgumentException(node + ": expected field operation");
-    }
-
     public static boolean isEquivalent(Node expr1, Node expr2) {
         if (expr1 == expr2)
             return true;
@@ -243,7 +212,7 @@ public class Nodes {
             return expr2 == null;
         if (expr1 instanceof Expression && expr2 instanceof Expression)
             return Equi.equiExpressions((Expression) expr1, (Expression) expr2) && 
-                    Annotators.PURITY.get((Expression)expr1).atLeast(Purity.HEAP_DEP);
+                    Inf.PURITY.get((Expression)expr1).atLeast(Purity.HEAP_DEP);
         return false;
     }
 
@@ -268,7 +237,7 @@ public class Nodes {
             }
             return true;
         }
-        return Annotators.PURITY.isSideEffectFree((Expression) node);
+        return Inf.PURITY.isSideEffectFree((Expression) node);
     }
 
     public static boolean isPure(Node node) {
@@ -276,7 +245,7 @@ public class Nodes {
             return true;
         if (!(node instanceof Expression))
             return false;
-        return Annotators.PURITY.isPure((Expression) node);
+        return Inf.PURITY.isPure((Expression) node);
     }
 
     public static boolean isSynchorizedBlock(Node node) {
@@ -297,7 +266,7 @@ public class Nodes {
         Node n = list.get(0);
         if (!Nodes.isOp(n, AstCode.MonitorExit))
             return null;
-        return Nodes.getChild((Expression) n, 0);
+        return Exprs.getChild((Expression) n, 0);
     }
 
     public static boolean isCompoundAssignment(Node node) {
@@ -381,34 +350,6 @@ public class Nodes {
         return node.getChildren();
     }
 
-    public static Expression findExpression(Expression node, Predicate<Expression> predicate) {
-        if (predicate.test(node))
-            return node;
-        for (Expression child : node.getArguments()) {
-            Expression result = findExpression(child, predicate);
-            if (result != null)
-                return result;
-        }
-        return null;
-    }
-
-    public static Expression findExpressionWithSources(Expression node, Predicate<Expression> predicate) {
-        if (predicate.test(node))
-            return node;
-        for (Expression child : node.getArguments()) {
-            Expression result = findExpressionWithSources(child, predicate);
-            if (result != null)
-                return result;
-        }
-        Expression source = ValuesFlow.getSource(node);
-        if (source != node) {
-            Expression result = findExpressionWithSources(source, predicate);
-            if (result != null)
-                return result;
-        }
-        return null;
-    }
-
     public static boolean isEmptyOrBreak(Block block) {
         List<Node> body = block.getBody();
         if (body.isEmpty())
@@ -465,30 +406,6 @@ public class Nodes {
         }
     }
 
-    public static boolean isThis(Expression self) {
-        if (self.getCode() != AstCode.Load)
-            return false;
-        if (self.getOperand() instanceof Variable) {
-            VariableDefinition origVar = ((Variable) self.getOperand()).getOriginalVariable();
-            return origVar != null && origVar.getSlot() == 0;
-        }
-        if (self.getOperand() instanceof ParameterDefinition) {
-            ParameterDefinition pd = (ParameterDefinition) self.getOperand();
-            return pd.getSlot() == 0;
-        }
-        return false;
-    }
-
-    public static boolean isParameter(Expression self) {
-        if (self.getCode() == AstCode.Load) {
-            if (self.getOperand() instanceof ParameterDefinition)
-                return true;
-            if (self.getOperand() instanceof Variable && ((Variable) self.getOperand()).getOriginalParameter() != null)
-                return true;
-        }
-        return false;
-    }
-
     public static MethodDefinition getLambdaMethod(Lambda l) {
         Object arg = l.getCallSite().getBootstrapArguments().get(1);
         if (arg instanceof MethodHandle) {
@@ -501,10 +418,6 @@ public class Nodes {
 
     public static int estimateCodeSize(Node node) {
         return node.getChildrenAndSelfRecursive().size();
-    }
-
-    public static Stream<Expression> stream(Expression expr) {
-        return Stream.concat(Stream.of(expr), expr.getArguments().stream().flatMap(Nodes::stream));
     }
 
     public static MethodHandle getMethodHandle(DynamicCallSite dcs) {

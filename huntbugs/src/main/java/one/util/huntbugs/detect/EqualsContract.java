@@ -39,6 +39,7 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.ClassVisitor;
 import one.util.huntbugs.registry.anno.VisitOrder;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
@@ -142,8 +143,8 @@ public class EqualsContract {
         if(expr.getCode() == AstCode.CmpEq) {
             Expression left = expr.getArguments().get(0);
             Expression right = expr.getArguments().get(1);
-            return Nodes.isThis(left) && right.getCode() == AstCode.Load ||
-                    Nodes.isThis(right) && left.getCode() == AstCode.Load;
+            return Exprs.isThis(left) && right.getCode() == AstCode.Load ||
+                    Exprs.isThis(right) && left.getCode() == AstCode.Load;
         }
         return false;
     }
@@ -250,7 +251,7 @@ public class EqualsContract {
                     lfr = lfr.resolve();
                     rfr = rfr.resolve();
                     if(lfr != null && rfr != null && !lfr.isEquivalentTo(rfr)) {
-                        if (Nodes.bothMatch(Nodes.getChild(left, 0), Nodes.getChild(right, 0), Nodes::isThis,
+                        if (Exprs.bothMatch(Exprs.getChild(left, 0), Exprs.getChild(right, 0), Exprs::isThis,
                             EqualsContract::isParameter)) {
                             mc.report("EqualsSuspiciousFieldComparison", 0, left, OTHER_FIELD.create(rfr));
                         }
@@ -266,9 +267,9 @@ public class EqualsContract {
     
     private static boolean isParameter(Expression expr) {
         if(expr.getCode() == AstCode.CheckCast) {
-            expr = Nodes.getChild(expr, 0);
+            expr = Exprs.getChild(expr, 0);
         }
-        return Nodes.isParameter(expr) && !Nodes.isThis(expr);
+        return Exprs.isParameter(expr) && !Exprs.isThis(expr);
     }
 
     private static boolean isComparison(Expression expr) {
@@ -291,10 +292,10 @@ public class EqualsContract {
 
     private void checkGetName(Expression expr, MethodContext mc, Expression getName) {
         if (isClassGetName(getName)) {
-            Expression getClass = Nodes.getChild(getName, 0);
+            Expression getClass = Exprs.getChild(getName, 0);
             if (isGetClass(getClass)) {
-                Expression source = Nodes.getChild(getClass, 0);
-                if (Nodes.isThis(source) || Nodes.isParameter(source)) {
+                Expression source = Exprs.getChild(getClass, 0);
+                if (Exprs.isThis(source) || Exprs.isParameter(source)) {
                     mc.report("EqualsClassNames", 0, expr);
                 }
             }

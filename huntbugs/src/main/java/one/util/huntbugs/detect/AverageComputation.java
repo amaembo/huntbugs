@@ -22,6 +22,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Nodes;
 
 /**
@@ -34,10 +35,10 @@ public class AverageComputation {
     public void visitExpression(Expression expr, MethodContext mc) {
         if (expr.getCode() != AstCode.LoadElement && expr.getCode() != AstCode.StoreElement)
             return;
-        Expression idx = Nodes.getChild(expr, 1);
+        Expression idx = Exprs.getChild(expr, 1);
         if (!isDiv2(idx))
             return;
-        Expression orig = Nodes.getChild(idx, 0);
+        Expression orig = Exprs.getChild(idx, 0);
         if (orig.getCode() != AstCode.Add)
             return;
         mc.report("AverageComputationCouldOverflow", 0, idx);

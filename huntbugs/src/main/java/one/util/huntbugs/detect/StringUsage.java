@@ -22,6 +22,7 @@ import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
@@ -46,7 +47,7 @@ public class StringUsage {
                 if(md.isTypeInitializer()) {
                     // Static field initializer: only one object is created
                     // not a big performance problem and probably intended
-                    Set<Expression> usages = ValuesFlow.findUsages(node);
+                    Set<Expression> usages = Inf.BACKLINK.findUsages(node);
                     if(usages.size() == 1 && usages.iterator().next().getCode() == AstCode.PutStatic) {
                         priority = 15;
                         node = usages.iterator().next();

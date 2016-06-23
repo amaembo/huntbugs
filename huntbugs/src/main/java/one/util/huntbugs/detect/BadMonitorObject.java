@@ -23,7 +23,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
-import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Role.TypeRole;
 import one.util.huntbugs.warning.Roles;
@@ -41,7 +41,7 @@ public class BadMonitorObject {
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
         if(expr.getCode() == AstCode.MonitorEnter) {
-            Expression arg = Nodes.getChild(expr, 0);
+            Expression arg = Exprs.getChild(expr, 0);
             TypeReference type = arg.getInferredType();
             if(type != null && Types.isBoxed(type)) {
                 String warningType;

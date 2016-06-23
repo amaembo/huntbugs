@@ -24,6 +24,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
@@ -113,12 +114,12 @@ public class ArrayRangeCheck {
             case InvokeVirtual: {
                 MethodReference mr = (MethodReference) expr.getOperand();
                 if (mr.getName().equals("clone") && mr.getErasedSignature().startsWith("()")) {
-                    return getMaxLength(Nodes.getChild(expr, 0));
+                    return getMaxLength(Exprs.getChild(expr, 0));
                 }
                 break;
             }
             case CheckCast:
-                return getMaxLength(Nodes.getChild(expr, 0));
+                return getMaxLength(Exprs.getChild(expr, 0));
             default:
                 break;
             }

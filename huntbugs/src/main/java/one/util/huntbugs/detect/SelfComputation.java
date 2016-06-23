@@ -20,11 +20,11 @@ import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
-import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Roles;
@@ -50,7 +50,7 @@ public class SelfComputation {
                 mc.report("SelfComparison", 0, expr.getArguments().get(0), Roles.OPERATION.create(expr.getCode()));
         } else if (expr.getCode() == AstCode.InvokeVirtual
             && Methods.isEqualsMethod((MethodReference) expr.getOperand()) && sameArgs(expr) &&
-            !ValuesFlow.isAssertion(expr)) {
+            !Exprs.isAssertion(expr)) {
             mc.report("SelfEquals", 0, expr.getArguments().get(0));
         }
     }

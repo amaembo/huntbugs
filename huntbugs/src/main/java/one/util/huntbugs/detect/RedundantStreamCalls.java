@@ -24,7 +24,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
-import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
 
@@ -40,7 +40,7 @@ public class RedundantStreamCalls {
         if(expr.getCode() == AstCode.InvokeInterface || expr.getCode() == AstCode.InvokeVirtual) {
             MethodReference mr = (MethodReference) expr.getOperand();
             if(isStreamForEach(mr)) {
-                Expression stream = Nodes.getChild(expr, 0);
+                Expression stream = Exprs.getChild(expr, 0);
                 if(stream.getCode() == AstCode.InvokeInterface || stream.getCode() == AstCode.InvokeVirtual) {
                     MethodReference mr2 = (MethodReference) stream.getOperand();
                     if(isCollectionStream(mr2)) {
@@ -54,7 +54,7 @@ public class RedundantStreamCalls {
                 if(opt.getCode() == AstCode.InvokeInterface || opt.getCode() == AstCode.InvokeVirtual) {
                     MethodReference mr2 = (MethodReference) opt.getOperand();
                     if(isStreamFind(mr2)) {
-                        Expression stream = Nodes.getChild(opt, 0);
+                        Expression stream = Exprs.getChild(opt, 0);
                         MethodReference mr3 = (MethodReference) stream.getOperand();
                         if(isStreamFilter(mr3)) {
                             mc.report("RedundantStreamFind", 0, expr, Roles.REPLACEMENT_METHOD.create(mr3.getDeclaringType().getInternalName(), "anyMatch",

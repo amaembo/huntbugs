@@ -21,11 +21,13 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
@@ -66,7 +68,7 @@ public class BadMath {
                     int priority = 0;
                     int c = (Integer)leftConst;
                     if(c < 32 || (c < 64 && leftOp.getExpectedType().getSimpleType() == JvmType.Long)) {
-                        if(!Methods.isHashCodeMethod(md) || !ValuesFlow.findTransitiveUsages(expr, false).allMatch(e -> e.getCode() == AstCode.Return)) {
+                        if(!Methods.isHashCodeMethod(md) || !Inf.BACKLINK.findTransitiveUsages(expr, false).allMatch(e -> e.getCode() == AstCode.Return)) {
                             priority += 10;
                             if(c == 16) {
                                 priority += 5;
@@ -126,7 +128,7 @@ public class BadMath {
             break;
         case CmpGt:
         case CmpLt: {
-            Expression bitAnd = Nodes.getChild(expr, expr.getCode() == AstCode.CmpGt ? 0 : 1);
+            Expression bitAnd = Exprs.getChild(expr, expr.getCode() == AstCode.CmpGt ? 0 : 1);
             Object zero = Nodes.getConstant(expr.getArguments().get(expr.getCode() == AstCode.CmpGt ? 1 : 0));
             if (isIntegral(zero) && ((Number) zero).longValue() == 0 && bitAnd.getCode() == AstCode.And) {
                 Nodes.ifBinaryWithConst(bitAnd, (flags, mask) -> {
@@ -186,16 +188,16 @@ public class BadMath {
         JvmType type = expr.getInferredType().getSimpleType();
         if (type != JvmType.Integer && type != JvmType.Long)
             return;
-        if (ValuesFlow.findUsages(expr).stream().allMatch(e -> e.getCode() == AstCode.I2B))
+        if (Inf.BACKLINK.findUsages(expr).stream().allMatch(e -> e.getCode() == AstCode.I2B))
             return;
-        if (Nodes.bothChildrenMatch(expr, BadMath::isByte, BadMath::isLow8BitsClear)) {
+        if (Exprs.bothChildrenMatch(expr, BadMath::isByte, BadMath::isLow8BitsClear)) {
             mc.report(expr.getCode() == AstCode.Add ? "BitAddSignedByte" : "BitOrSignedByte", 0, expr);
         }
     }
 
     private static boolean isByte(Expression expr) {
         if (expr.getCode() == AstCode.I2L)
-            return isByte(Nodes.getChild(expr, 0));
+            return isByte(Exprs.getChild(expr, 0));
         TypeReference type = expr.getInferredType();
         return type != null && type.getInternalName().equals("B");
     }

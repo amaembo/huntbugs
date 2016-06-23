@@ -30,7 +30,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
-import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
 
@@ -43,8 +43,8 @@ public class CovariantArrays {
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc, Hierarchy h) {
         if(expr.getCode() == AstCode.StoreElement) {
-            TypeReference arrayType = ValuesFlow.reduceType(Nodes.getChild(expr, 0));
-            TypeReference valueType = ValuesFlow.reduceType(Nodes.getChild(expr, 2));
+            TypeReference arrayType = ValuesFlow.reduceType(Exprs.getChild(expr, 0));
+            TypeReference valueType = ValuesFlow.reduceType(Exprs.getChild(expr, 2));
             if (arrayType == null || valueType == null || arrayType == BuiltinTypes.Null
                 || valueType == BuiltinTypes.Null || valueType.isPrimitive())
                 return;

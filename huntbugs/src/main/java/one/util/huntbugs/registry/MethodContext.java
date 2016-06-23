@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
+import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Warning;
@@ -232,7 +233,7 @@ public class MethodContext extends ElementContext {
             return null;
         for(Expression expr : mdata.origParams) {
             if(expr.getOperand() == pd)
-                return ValuesFlow.findUsages(expr);
+                return Inf.BACKLINK.findUsages(expr);
         }
         return null;
     }

@@ -29,6 +29,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 
@@ -52,7 +53,7 @@ public class VolatileIncrement {
         if (node.getCode() == AstCode.PutField || node.getCode() == AstCode.PutStatic) {
             FieldDefinition field = ((FieldReference) node.getOperand()).resolve();
             if (field != null && Flags.testAny(field.getFlags(), Flags.VOLATILE)) {
-                Expression self = Nodes.getThis(node);
+                Expression self = Exprs.getThis(node);
                 Expression op = node.getArguments().get(node.getCode() == AstCode.PutStatic ? 0 : 1);
                 if (Nodes.isBinaryMath(op)) {
                     List<Expression> opArgs = op.getArguments();
@@ -60,14 +61,14 @@ public class VolatileIncrement {
                     Expression right = opArgs.get(1);
                     if (left.getCode() == AstCode.GetField || left.getCode() == AstCode.GetStatic) {
                         if (((FieldReference) left.getOperand()).resolve() == field
-                            && Nodes.isEquivalent(self, Nodes.getThis(left))) {
+                            && Nodes.isEquivalent(self, Exprs.getThis(left))) {
                             ctx.report(op.getCode() == AstCode.Add ? "VolatileIncrement" : "VolatileMath",
                                 computePriority(field, md, parents), node);
                         }
                     }
                     if (right.getCode() == AstCode.GetField || right.getCode() == AstCode.GetStatic) {
                         if (((FieldReference) right.getOperand()).resolve() == field
-                            && Nodes.isEquivalent(self, Nodes.getThis(right))) {
+                            && Nodes.isEquivalent(self, Exprs.getThis(right))) {
                             ctx.report(op.getCode() == AstCode.Add ? "VolatileIncrement" : "VolatileMath",
                                 computePriority(field, md, parents), node);
                         }

@@ -25,11 +25,13 @@ import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Variable;
 
+import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
@@ -92,7 +94,7 @@ public class NumericPromotion {
             }
             Expression arg = ValuesFlow.getSource(expr.getArguments().get(0));
             if (arg.getCode() == AstCode.Div) {
-                if(!ValuesFlow.findTransitiveUsages(arg, true).allMatch(NumericPromotion::isToFloatingPointConversion))
+                if(!Inf.BACKLINK.findTransitiveUsages(arg, true).allMatch(NumericPromotion::isToFloatingPointConversion))
                     return;
                 Object constant = Nodes.getConstant(arg.getArguments().get(1));
                 int priority = 0;
@@ -128,13 +130,13 @@ public class NumericPromotion {
                         }
                     }
                 }
-                if (ValuesFlow.findTransitiveUsages(expr, true).allMatch(Nodes::isComparison)) {
+                if (Inf.BACKLINK.findTransitiveUsages(expr, true).allMatch(Nodes::isComparison)) {
                     priority += 15;
                 }
-                if (ValuesFlow.findTransitiveUsages(expr, true).allMatch(e ->
+                if (Inf.BACKLINK.findTransitiveUsages(expr, true).allMatch(e ->
                         e.getCode() == AstCode.InvokeStatic && 
                         Methods.is((MethodReference) e.getOperand(), "java/lang/Math", "pow", "(DD)D") &&
-                        Nodes.getChild(e, 1) == expr)) {
+                        Exprs.getChild(e, 1) == expr)) {
                     priority += 15;
                 }
                 List<WarningAnnotation<?>> anno = new ArrayList<>();
@@ -208,7 +210,7 @@ public class NumericPromotion {
         if(Nodes.isToFloatingPointConversion(expr))
             return true;
         if(expr.getCode() == AstCode.Neg)
-            return ValuesFlow.findTransitiveUsages(expr, true).allMatch(NumericPromotion::isToFloatingPointConversion);
+            return Inf.BACKLINK.findTransitiveUsages(expr, true).allMatch(NumericPromotion::isToFloatingPointConversion);
         return false;
     }
 }

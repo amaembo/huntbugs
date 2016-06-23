@@ -29,6 +29,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Role.StringRole;
@@ -52,14 +53,14 @@ public class RegexProblems {
             String sig = mr.getSignature();
             if (type.equals("java/util/regex/Pattern") && (name.equals("compile") && sig.equals("(Ljava/lang/String;)") ||
                     name.equals("matches"))) {
-                checkRegexp(mc, Nodes.getChild(expr, 0), 0);
+                checkRegexp(mc, Exprs.getChild(expr, 0), 0);
             } else if(type.equals("java/util/regex/Pattern") && name.equals("compile") && sig.equals("(Ljava/lang/String;I)")) {
                 Object flags = Nodes.getConstant(expr.getArguments().get(1));
-                checkRegexp(mc, Nodes.getChild(expr, 0), flags instanceof Integer ? (int)flags: 0);
+                checkRegexp(mc, Exprs.getChild(expr, 0), flags instanceof Integer ? (int)flags: 0);
             } else if(type.equals("java/lang/String") && (name.equals("replaceAll") || name.equals("replaceFirst")
                     || name.equals("matches") || name.equals("split"))) {
-                checkRegexp(mc, Nodes.getChild(expr, 1), 0);
-                checkBadPatterns(mc, Nodes.getChild(expr, 1), name.equals("replaceAll") ? Nodes.getConstant(expr.getArguments().get(2)) : null);
+                checkRegexp(mc, Exprs.getChild(expr, 1), 0);
+                checkBadPatterns(mc, Exprs.getChild(expr, 1), name.equals("replaceAll") ? Nodes.getConstant(expr.getArguments().get(2)) : null);
             }
         }
     }

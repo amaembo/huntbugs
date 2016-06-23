@@ -22,26 +22,19 @@ import com.strobel.componentmodel.Key;
 import com.strobel.decompiler.ast.Expression;
 
 /**
- * @author shustkost
- *
+ * Annotators registry
+ * 
+ * @author Tagir Valeev
  */
 public class Annotators {
     private Annotators() {
     }
-
+    
     private static final List<String> names = new ArrayList<>();
     private static final Key<Object[]> hbData = Key.create("hb.data");
     
     // Order of declaration might be important
     
-    public static final SourceAnnotator SOURCE = new SourceAnnotator();
-    
-    public static final ConstAnnotator CONST = new ConstAnnotator();
-
-    public static final BackLinkAnnotator BACKLINK = new BackLinkAnnotator();
-    
-    public static final PurityAnnotator PURITY = new PurityAnnotator();
-
     static int register(String name) {
         if(names.contains(name))
             throw new IllegalStateException(name);
@@ -84,7 +77,7 @@ public class Annotators {
      * Debug output of all facts known for expression
      * 
      * @param expr
-     * @return
+     * @return String describing the annotators
      */
     public static String facts(Expression expr) {
         Object[] data = expr.getUserData(hbData);

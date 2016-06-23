@@ -29,6 +29,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
@@ -48,7 +49,7 @@ public class AtomicConcurrent {
         if (expr.getCode() == AstCode.InvokeVirtual || expr.getCode() == AstCode.InvokeInterface) {
             MethodReference mr = (MethodReference) expr.getOperand();
             if (mr.getName().equals("put")) {
-                TypeReference tr = ValuesFlow.reduceType(Nodes.getChild(expr, 0));
+                TypeReference tr = ValuesFlow.reduceType(Exprs.getChild(expr, 0));
                 String typeName = tr == null ? mr.getDeclaringType().getInternalName() : tr.getInternalName();
                 if (typeName.equals("java/util/concurrent/ConcurrentHashMap") || typeName
                             .equals("java/util/concurrent/ConcurrentSkipListMap")) {
@@ -60,9 +61,9 @@ public class AtomicConcurrent {
                     while (prevCall == null && nc != null) {
                         if (nc.getNode() instanceof Condition) {
                             Expression cond = ((Condition) nc.getNode()).getCondition();
-                            prevCall = Nodes.findExpression(cond, child -> isGetOrContains(self, key, child));
+                            prevCall = Exprs.findExpression(cond, child -> isGetOrContains(self, key, child));
                             if (prevCall == null) {
-                                prevCall = Nodes
+                                prevCall = Exprs
                                         .findExpressionWithSources(cond, child -> isGetOrContains(self, key, child));
                                 priority = 10;
                             }
@@ -71,10 +72,10 @@ public class AtomicConcurrent {
                     }
                     if (prevCall == null) {
                         priority = 0;
-                        prevCall = Nodes.findExpression(expr.getArguments().get(2), child -> isGetOrContains(self, key,
+                        prevCall = Exprs.findExpression(expr.getArguments().get(2), child -> isGetOrContains(self, key,
                             child));
                         if (prevCall == null) {
-                            prevCall = Nodes.findExpressionWithSources(expr.getArguments().get(2),
+                            prevCall = Exprs.findExpressionWithSources(expr.getArguments().get(2),
                                 child -> isGetOrContains(self, key, child));
                             priority = 10;
                         }

@@ -21,6 +21,7 @@ import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
@@ -54,7 +55,7 @@ public class CompareContract {
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
         if(MIN_VALUE.equals(Nodes.getConstant(expr))) {
-            if(ValuesFlow.findTransitiveUsages(expr, true).anyMatch(e -> e.getCode() == AstCode.Return)) {
+            if(Inf.BACKLINK.findTransitiveUsages(expr, true).anyMatch(e -> e.getCode() == AstCode.Return)) {
                 mc.report("CompareReturnsMinValue", 0, expr);
             }
         }

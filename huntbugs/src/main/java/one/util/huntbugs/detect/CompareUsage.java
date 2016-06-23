@@ -26,6 +26,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
@@ -40,7 +41,7 @@ public class CompareUsage {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
         if (expr.getCode() == AstCode.Neg) {
-            Expression child = ValuesFlow.findFirst(Nodes.getChild(expr, 0), this::isCompare);
+            Expression child = ValuesFlow.findFirst(Exprs.getChild(expr, 0), this::isCompare);
             if (child != null) {
                 mc.report("NegatingComparatorResult", 0, expr, Roles.CALLED_METHOD.create((MethodReference) child
                         .getOperand()));

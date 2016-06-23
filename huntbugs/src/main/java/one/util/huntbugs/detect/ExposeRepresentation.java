@@ -31,8 +31,8 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.ClassVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.NodeChain;
-import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
 
@@ -58,7 +58,7 @@ public class ExposeRepresentation {
         FieldDefinition fd = getField(expr, md);
         if (fd == null)
             return;
-        Expression value = Nodes.getChild(expr, expr.getArguments().size() - 1);
+        Expression value = Exprs.getChild(expr, expr.getArguments().size() - 1);
         ParameterDefinition pd = getParameter(value);
         if (pd == null)
             return;
@@ -83,8 +83,8 @@ public class ExposeRepresentation {
             if (fd != null && !fd.isSynthetic() && (fd.isPrivate() || fd.isPackagePrivate() || fd.isProtected())) {
                 if (md.isProtected() && fd.isProtected())
                     return null;
-                Expression self = Nodes.getChild(expr, 0);
-                if (!Nodes.isThis(self))
+                Expression self = Exprs.getChild(expr, 0);
+                if (!Exprs.isThis(self))
                     return null;
                 return fd;
             }

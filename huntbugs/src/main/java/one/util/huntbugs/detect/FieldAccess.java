@@ -34,8 +34,10 @@ import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.core.ArrayUtilities;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
+
 import one.util.huntbugs.db.FieldStats;
 import one.util.huntbugs.db.Mutability;
+import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.FieldContext;
 import one.util.huntbugs.registry.MethodContext;
@@ -47,6 +49,7 @@ import one.util.huntbugs.registry.anno.VisitOrder;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.AccessLevel;
 import one.util.huntbugs.util.Annotations;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
@@ -124,14 +127,14 @@ public class FieldAccess {
                     if(fieldRecord.firstRead == null) {
                         fieldRecord.firstRead = new MethodLocation(md, mc.getLocation(expr));
                     }
-                    if (ValuesFlow.findTransitiveUsages(expr, true).anyMatch(
+                    if (Inf.BACKLINK.findTransitiveUsages(expr, true).anyMatch(
                         e -> e.getCode() == AstCode.Return
                             && (e.getArguments().get(0).getCode() == AstCode.GetField || !ValuesFlow.hasUpdatedSource(e
                                     .getArguments().get(0))))) {
                         fieldRecord.expose = new MethodLocation(md, mc.getLocation(expr));
                     }
                 } else {
-                    Expression value = Nodes.getChild(expr, expr.getArguments().size()-1);
+                    Expression value = Exprs.getChild(expr, expr.getArguments().size()-1);
                     if(fieldRecord.firstWrite == null) {
                         fieldRecord.firstWrite = new MethodLocation(md, mc.getLocation(expr));
                         fieldRecord.constant = Nodes.getConstant(value);
@@ -179,7 +182,7 @@ public class FieldAccess {
                         fieldRecord.usedInSingleMethod = false;
                     }
                     if((expr.getCode() == AstCode.PutField || expr.getCode() == AstCode.GetField) && 
-                            (md.isStatic() || !Nodes.isThis(Nodes.getChild(expr, 0)))) {
+                            (md.isStatic() || !Exprs.isThis(Exprs.getChild(expr, 0)))) {
                         fieldRecord.usedInSingleMethod = false;
                     }
                     if(fieldRecord.firstWrite != null && fieldRecord.firstWrite.md != md || 
@@ -193,7 +196,7 @@ public class FieldAccess {
 
     private boolean isMutableCollectionFactory(Expression value, MethodReference mr) {
         if (mr.getName().equals("asList") && mr.getDeclaringType().getInternalName().equals("java/util/Arrays")
-            && value.getArguments().size() == 1 && !isEmptyArray(Nodes.getChild(value, 0)))
+            && value.getArguments().size() == 1 && !isEmptyArray(Exprs.getChild(value, 0)))
             return true;
         if ((mr.getName().equals("newArrayList") || mr.getName().equals("newLinkedList"))
             && mr.getDeclaringType().getInternalName().equals("com/google/common/collect/Lists"))

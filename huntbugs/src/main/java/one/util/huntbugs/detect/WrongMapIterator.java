@@ -24,11 +24,13 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
@@ -46,25 +48,25 @@ public class WrongMapIterator {
         MethodReference getMr = getCalledMethod(expr);
         if (getMr == null || !getMr.getName().equals("get"))
             return;
-        Expression mapArg = Nodes.getChildNoSpecial(expr, 0);
-        TypeReference type = ValuesFlow.reduceType(Nodes.getChild(expr, 0));
+        Expression mapArg = Exprs.getChildNoSpecial(expr, 0);
+        TypeReference type = ValuesFlow.reduceType(Exprs.getChild(expr, 0));
         if (!Types.isInstance(type, "java/util/Map") || Types.isInstance(type, "java/util/EnumMap"))
             return;
-        Expression key = Nodes.getChild(expr, 1);
+        Expression key = Exprs.getChild(expr, 1);
         while (key.getCode() == AstCode.CheckCast || Nodes.isBoxing(key) || Nodes.isUnboxing(key))
-            key = Nodes.getChild(key, 0);
+            key = Exprs.getChild(key, 0);
         MethodReference nextMr = getCalledMethod(key);
         if (nextMr == null || !nextMr.getName().equals("next") || !Types.is(nextMr.getDeclaringType(), Iterator.class))
             return;
-        Expression iter = Nodes.getChild(key, 0);
+        Expression iter = Exprs.getChild(key, 0);
         MethodReference iterMr = getCalledMethod(iter);
         if (iterMr == null || !iterMr.getName().equals("iterator"))
             return;
-        Expression keySet = Nodes.getChild(iter, 0);
+        Expression keySet = Exprs.getChild(iter, 0);
         MethodReference keySetMr = getCalledMethod(keySet);
         if (keySetMr == null || !keySetMr.getName().equals("keySet"))
             return;
-        if (!Nodes.isEquivalent(mapArg, Nodes.getChildNoSpecial(keySet, 0)))
+        if (!Nodes.isEquivalent(mapArg, Exprs.getChildNoSpecial(keySet, 0)))
             return;
         int priority = nc.isInLoop() ? 0 : 15;
         if(mc.isAnnotated() && usedForGetOnly(key, mapArg)) {
@@ -75,17 +77,17 @@ public class WrongMapIterator {
     }
     
     private static boolean usedForGetOnly(Expression key, Expression mapArg) {
-        HashSet<Expression> usages = ValuesFlow.findTransitiveUsages(key, true).collect(Collectors.toCollection(HashSet::new));
+        HashSet<Expression> usages = Inf.BACKLINK.findTransitiveUsages(key, true).collect(Collectors.toCollection(HashSet::new));
         while(!usages.isEmpty()) {
             Expression usage = usages.iterator().next();
             usages.remove(usage);
             if(usage.getCode() == AstCode.CheckCast || Nodes.isBoxing(usage) || Nodes.isUnboxing(usage)) {
-                ValuesFlow.findTransitiveUsages(usage, true).forEach(usages::add);
+                Inf.BACKLINK.findTransitiveUsages(usage, true).forEach(usages::add);
             } else {
                 MethodReference getMr = getCalledMethod(usage);
                 if (getMr == null || !getMr.getName().equals("get"))
                     return false;
-                if(!Nodes.isEquivalent(Nodes.getChildNoSpecial(usage, 0), mapArg))
+                if(!Nodes.isEquivalent(Exprs.getChildNoSpecial(usage, 0), mapArg))
                     return false;
             }
         }

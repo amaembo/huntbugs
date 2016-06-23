@@ -28,6 +28,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.ClassVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Nodes;
 
 /**
@@ -49,7 +50,7 @@ public class EasyMockProblems {
             if (mr.getDeclaringType().getInternalName().equals("org/easymock/EasyMock")
                 && (mr.getName().equals("replay") || mr.getName().equals("verify") || mr.getName().startsWith("reset"))
                 && mr.getErasedSignature().equals("([Ljava/lang/Object;)V")) {
-                Expression child = Nodes.getChild(expr, 0);
+                Expression child = Exprs.getChild(expr, 0);
                 if (child.getCode() == AstCode.InitArray && child.getArguments().isEmpty()
                     || child.getCode() == AstCode.NewArray
                     && Integer.valueOf(0).equals(Nodes.getConstant(child.getArguments().get(0)))) {

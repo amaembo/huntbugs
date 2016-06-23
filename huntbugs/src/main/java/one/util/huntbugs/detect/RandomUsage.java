@@ -25,6 +25,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
@@ -45,7 +46,7 @@ public class RandomUsage {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression node, MethodContext ctx) {
         if (node.getCode() == AstCode.D2I) {
-            Expression child = Nodes.getChild(node, 0);
+            Expression child = Exprs.getChild(node, 0);
             if (isRandomDouble(child)) {
                 ctx.report("RandomDoubleToInt", 0, child, getReplacement(((MethodReference) child.getOperand())
                         .getDeclaringType().getInternalName()));

@@ -31,8 +31,8 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.NodeChain;
-import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 
 /**
@@ -62,7 +62,7 @@ public class StaticFieldFromInstanceMethod {
                 priority += 5;
             if(nc.isSynchronized() || Flags.testAny(md.getFlags(), Flags.SYNCHRONIZED))
                 priority += 15;
-            if(Nodes.getChild(expr, 0).getCode() == AstCode.AConstNull)
+            if(Exprs.getChild(expr, 0).getCode() == AstCode.AConstNull)
                 priority += 5;
             
             String name = fr.getName().toLowerCase(Locale.ENGLISH);

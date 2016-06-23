@@ -27,6 +27,7 @@ import com.strobel.decompiler.ast.Variable;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Roles;
 
@@ -71,7 +72,7 @@ public class InfiniteLoop {
             return;
         if (!Nodes.isPure(expr))
             return;
-        Set<Variable> vars = Nodes.stream(expr).filter(e -> e.getCode() == AstCode.Load).map(
+        Set<Variable> vars = Exprs.stream(expr).filter(e -> e.getCode() == AstCode.Load).map(
             e -> (Variable) e.getOperand()).collect(Collectors.toSet());
         if(vars.isEmpty())
             return;

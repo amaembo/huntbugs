@@ -27,7 +27,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
-import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
@@ -89,7 +89,7 @@ public class Internationalization {
                 MemberInfo mi = new MemberInfo(mr);
                 if(defEncodingMethods.containsKey(mi)) {
                     if(!expr.getArguments().isEmpty()) {
-                        Expression arg = Nodes.getChild(expr, 0);
+                        Expression arg = Exprs.getChild(expr, 0);
                         if(arg.getCode() == AstCode.GetStatic) {
                             FieldReference fr = (FieldReference) arg.getOperand();
                             if(fr.getDeclaringType().getInternalName().equals("java/lang/System")) {

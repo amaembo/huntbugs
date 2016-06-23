@@ -32,6 +32,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import one.util.huntbugs.flow.ValuesFlow.ThrowTargets;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Maps;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
@@ -149,17 +150,17 @@ class Frame {
             Variable var = ((Variable) expr.getOperand());
             Expression arg = expr.getArguments().get(0);
             Expression source = ValuesFlow.getSource(arg);
-            Object val = Annotators.CONST.get(arg);
-            Annotators.CONST.storeValue(expr, val);
+            Object val = Inf.CONST.get(arg);
+            Inf.CONST.storeValue(expr, val);
             return target.replace(var, source);
         }
         case LdC: {
-            Annotators.CONST.storeValue(expr, expr.getOperand());
+            Inf.CONST.storeValue(expr, expr.getOperand());
             return target;
         }
         case ArrayLength:
             targets.merge(nullPointerException, target);
-            Annotators.CONST.storeValue(expr, getArrayLength(expr.getArguments().get(0)));
+            Inf.CONST.storeValue(expr, getArrayLength(expr.getArguments().get(0)));
             return target;
         case CmpEq:
             return processCmpEq(expr, target);
@@ -280,9 +281,9 @@ class Frame {
             // TODO: support transferring variables from outer method to lambda
             Expression source = get(var);
             if (source != null) {
-                Annotators.SOURCE.put(expr, source);
-                Object val = Annotators.CONST.get(source);
-                Annotators.CONST.storeValue(expr, val);
+                Inf.SOURCE.put(expr, source);
+                Object val = Inf.CONST.get(source);
+                Inf.CONST.storeValue(expr, val);
             }
             return this;
         }
@@ -291,12 +292,12 @@ class Frame {
                 Variable var = ((Variable) expr.getOperand());
                 Expression source = get(var);
                 target = target.replace(var, expr);
-                Annotators.SOURCE.put(expr, fc.makeUpdatedNode(source));
+                Inf.SOURCE.put(expr, fc.makeUpdatedNode(source));
                 if(source == null)
                     return target;
-                Object val = Annotators.CONST.get(source);
+                Object val = Inf.CONST.get(source);
                 if (val == ConstAnnotator.UNKNOWN_VALUE)
-                    Annotators.CONST.put(expr, ConstAnnotator.UNKNOWN_VALUE);
+                    Inf.CONST.put(expr, ConstAnnotator.UNKNOWN_VALUE);
                 else if (val instanceof Integer)
                     return target.processUnaryOp(expr, Integer.class, inc -> ((int) val) + inc);
                 else if (val instanceof Long)
@@ -309,7 +310,7 @@ class Frame {
             if (arg.getOperand() instanceof Variable) {
                 Variable var = ((Variable) arg.getOperand());
                 Expression source = get(var);
-                Annotators.SOURCE.put(expr, fc.makeUpdatedNode(source));
+                Inf.SOURCE.put(expr, fc.makeUpdatedNode(source));
                 // TODO: pass values
                 return target.replace(var, expr);
             }
@@ -331,7 +332,7 @@ class Frame {
                         || src.getCode() == AstCode.LoadElement ? fc.makeUpdatedNode(src) : src);
                 // calling another constructor from current constructor will initialize all final fields
                 if(expr.getCode() == AstCode.InvokeSpecial && fc.md.isConstructor() && mr.isConstructor() && 
-                        Nodes.isThis(expr.getArguments().get(0)) && mr.getDeclaringType().isEquivalentTo(fc.md.getDeclaringType()))
+                        Exprs.isThis(expr.getArguments().get(0)) && mr.getDeclaringType().isEquivalentTo(fc.md.getDeclaringType()))
                     target = target.deleteAllFields();
                 else
                     target = target.deleteFields();
@@ -372,29 +373,29 @@ class Frame {
                 targets.merge(linkageError, target);
             FieldDefinition fd = fr.resolve();
             if (fd != null && fd.isEnumConstant()) {
-                Annotators.CONST.storeValue(expr, new EnumConstant(fd.getDeclaringType().getInternalName(), fd.getName()));
+                Inf.CONST.storeValue(expr, new EnumConstant(fd.getDeclaringType().getInternalName(), fd.getName()));
             } else {
                 Expression source = fieldValues.get(new MemberInfo(fr));
                 if (source != null) {
-                    Annotators.SOURCE.put(expr, source);
-                    Object val = Annotators.CONST.get(source);
-                    Annotators.CONST.storeValue(expr, val);
+                    Inf.SOURCE.put(expr, source);
+                    Object val = Inf.CONST.get(source);
+                    Inf.CONST.storeValue(expr, val);
                 } else {
-                    Annotators.CONST.storeValue(expr, ConstAnnotator.UNKNOWN_VALUE);
+                    Inf.CONST.storeValue(expr, ConstAnnotator.UNKNOWN_VALUE);
                 }
             }
             return target;
         }
         case GetField: {
             FieldReference fr = ((FieldReference) expr.getOperand());
-            if(fc.isThis(Nodes.getChild(expr, 0))) {
+            if(fc.isThis(Exprs.getChild(expr, 0))) {
                 Expression source = fieldValues.get(new MemberInfo(fr));
                 if (source != null) {
-                    Annotators.SOURCE.put(expr, source);
-                    Object val = Annotators.CONST.get(source);
-                    Annotators.CONST.storeValue(expr, val);
+                    Inf.SOURCE.put(expr, source);
+                    Object val = Inf.CONST.get(source);
+                    Inf.CONST.storeValue(expr, val);
                 } else {
-                    Annotators.CONST.storeValue(expr, ConstAnnotator.UNKNOWN_VALUE);
+                    Inf.CONST.storeValue(expr, ConstAnnotator.UNKNOWN_VALUE);
                 }
             } else {
                 targets.merge(nullPointerException, target);
@@ -404,8 +405,8 @@ class Frame {
         }
         case PutField: {
             FieldReference fr = ((FieldReference) expr.getOperand());
-            if(fc.isThis(Nodes.getChild(expr, 0))) {
-                target = target.replaceField(fr, Nodes.getChild(expr, 1));
+            if(fc.isThis(Exprs.getChild(expr, 0))) {
+                target = target.replaceField(fr, Exprs.getChild(expr, 1));
             } else {
                 targets.merge(nullPointerException, target);
                 targets.merge(linkageError, target);
@@ -417,7 +418,7 @@ class Frame {
             FieldReference fr = ((FieldReference) expr.getOperand());
             if(!fr.getDeclaringType().isEquivalentTo(fc.md.getDeclaringType()))
                 targets.merge(linkageError, target);
-            return target.replaceField(fr, Nodes.getChild(expr, 0)).replaceAll(src -> src
+            return target.replaceField(fr, Exprs.getChild(expr, 0)).replaceAll(src -> src
                     .getCode() == AstCode.GetStatic && fr.isEquivalentTo((FieldReference) src.getOperand())
                             ? fc.makeUpdatedNode(src) : src);
         }
@@ -432,16 +433,16 @@ class Frame {
             case InvokeVirtual: {
                 MethodReference mr = (MethodReference) e.getOperand();
                 if (mr.getName().equals("clone") && mr.getErasedSignature().startsWith("()")) {
-                    return getArrayLength(Nodes.getChild(e, 0));
+                    return getArrayLength(Exprs.getChild(e, 0));
                 }
                 return null;
             }
             case CheckCast:
-                return getArrayLength(Nodes.getChild(e, 0));
+                return getArrayLength(Exprs.getChild(e, 0));
             case InitArray:
                 return e.getArguments().size();
             case NewArray:
-                Object constant = Annotators.CONST.getValue(e.getArguments().get(0));
+                Object constant = Inf.CONST.getValue(e.getArguments().get(0));
                 if(constant instanceof Integer)
                     return (Integer)constant;
                 return null;
@@ -632,12 +633,12 @@ class Frame {
     }
 
     private <A, B> Frame processBinaryOp(Expression expr, Class<A> leftType, Class<B> rightType, BiFunction<A, B, ?> op) {
-        Annotators.CONST.processBinaryOp(expr, leftType, rightType, op);
+        Inf.CONST.processBinaryOp(expr, leftType, rightType, op);
         return this;
     }
 
     private <A> Frame processUnaryOp(Expression expr, Class<A> type, Function<A, ?> op) {
-        Annotators.CONST.processUnaryOp(expr, type, op);
+        Inf.CONST.processUnaryOp(expr, type, op);
         return this;
     }
 
@@ -957,13 +958,13 @@ class Frame {
             return left;
         }
         Expression phi = new Expression(PHI_TYPE, null, 0, children);
-        Object leftValue = Annotators.CONST.getValue(left);
-        Object rightValue = Annotators.CONST.getValue(right);
+        Object leftValue = Inf.CONST.getValue(left);
+        Object rightValue = Inf.CONST.getValue(right);
         if (leftValue != null || rightValue != null) {
             if (Objects.equals(leftValue, rightValue))
-                Annotators.CONST.storeValue(phi, leftValue);
+                Inf.CONST.storeValue(phi, leftValue);
             else
-                Annotators.CONST.storeValue(phi, ConstAnnotator.UNKNOWN_VALUE);
+                Inf.CONST.storeValue(phi, ConstAnnotator.UNKNOWN_VALUE);
         }
         return phi;
     }

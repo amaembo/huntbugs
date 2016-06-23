@@ -27,8 +27,8 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.NodeChain;
-import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Role.TypeRole;
 
@@ -62,7 +62,7 @@ public class ReturnNull {
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression expr, NodeChain nc, MethodContext mc, MethodDefinition md, TypeDefinition td) {
         if (expr.getCode() == AstCode.Return && !expr.getArguments().isEmpty()) {
-            Expression child = Nodes.getChild(expr, 0);
+            Expression child = Exprs.getChild(expr, 0);
             if (child.getCode() == AstCode.AConstNull) {
                 MethodDefinition curMethod = nc.getLambdaMethod();
                 if (curMethod == null)

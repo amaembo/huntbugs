@@ -32,6 +32,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
@@ -136,7 +137,7 @@ public class NumericComparison {
                     return; // Will be covered by KnownComparison
                 }
                 constant = ((Number) left).longValue();
-                arg = Nodes.getChild(expr, 1);
+                arg = Exprs.getChild(expr, 1);
                 jvmType = getIntegralType(expr.getArguments().get(1));
                 switch (code) {
                 case CmpGe:
@@ -157,7 +158,7 @@ public class NumericComparison {
                 if (!(right instanceof Number))
                     return;
                 constant = ((Number) right).longValue();
-                arg = Nodes.getChild(expr, 0);
+                arg = Exprs.getChild(expr, 0);
                 jvmType = getIntegralType(expr.getArguments().get(0));
             }
             if(jvmType == null)
@@ -175,7 +176,7 @@ public class NumericComparison {
             } else if (cmpRange.isFalseEmpty(realRange)) {
                 result = true;
             }
-            if (result == null || ValuesFlow.isAssertion(expr))
+            if (result == null || Exprs.isAssertion(expr))
                 return;
             int priority = 0;
             if (realRange.minValue == constant || realRange.maxValue == constant)
@@ -230,7 +231,7 @@ public class NumericComparison {
 
     private void checkRem2Eq1(MethodContext mc, JvmType jvmType, AstCode code, Expression arg, long constant) {
         if(constant == 1 && (code == AstCode.CmpEq || code == AstCode.CmpNe) && arg.getCode() == AstCode.Rem && Integer.valueOf(2).equals(Nodes.getConstant(arg.getArguments().get(1)))) {
-            Expression remInput = Nodes.getChild(arg, 0);
+            Expression remInput = Exprs.getChild(arg, 0);
             if(remInput.getCode() == AstCode.InvokeStatic) {
                 MethodReference mr = (MethodReference) remInput.getOperand();
                 if(mr.getName().equals("abs") && mr.getDeclaringType().getInternalName().equals("java/lang/Math")) {
@@ -260,7 +261,7 @@ public class NumericComparison {
             if (type == JvmType.Integer)
                 return intRange(e, visited);
             if (e.getCode() == AstCode.I2L)
-                return intRange(Nodes.getChild(e, 0), visited);
+                return intRange(Exprs.getChild(e, 0), visited);
             return getTypeRange(type);
         }, (r1, r2) -> r1 == null || r2 == null ? null : r1.union(r2), r -> r == getTypeRange(type));
     }
@@ -287,8 +288,8 @@ public class NumericComparison {
         case ArrayLength:
             return new LongRange(0, Integer.MAX_VALUE);
         case And: {
-            LongRange r1 = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 0), visited);
-            LongRange r2 = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 1), visited);
+            LongRange r1 = getExpressionRange(JvmType.Integer, Exprs.getChild(arg, 0), visited);
+            LongRange r2 = getExpressionRange(JvmType.Integer, Exprs.getChild(arg, 1), visited);
             int maxBit1 = r1.minValue < 0 ? 0x80000000 : Integer.highestOneBit((int) r1.maxValue);
             int maxBit2 = r2.minValue < 0 ? 0x80000000 : Integer.highestOneBit((int) r2.maxValue);
             int totalMax = ((maxBit1 << 1) - 1) & ((maxBit2 << 1) - 1);
@@ -297,10 +298,10 @@ public class NumericComparison {
             break;
         }
         case Rem: {
-            LongRange remRange = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 1), visited).absInt();
+            LongRange remRange = getExpressionRange(JvmType.Integer, Exprs.getChild(arg, 1), visited).absInt();
             if(remRange.minValue < 0 || remRange.maxValue == 0)
                 break;
-            LongRange divRange = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 0), visited);
+            LongRange divRange = getExpressionRange(JvmType.Integer, Exprs.getChild(arg, 0), visited);
             if(divRange.minValue >= 0)
                 return new LongRange(0, remRange.maxValue-1);
             return new LongRange(1 - remRange.maxValue, remRange.maxValue - 1);
@@ -343,7 +344,7 @@ public class NumericComparison {
             }
             if (mr.getName().equals("nextInt") && mr.getSignature().equals("(I)I") &&
                     Types.isRandomClass(mr.getDeclaringType())) {
-                LongRange argRange = getExpressionRange(JvmType.Integer, Nodes.getChild(arg, 1), visited);
+                LongRange argRange = getExpressionRange(JvmType.Integer, Exprs.getChild(arg, 1), visited);
                 if(argRange.maxValue > 0) {
                     return new LongRange(0, argRange.maxValue - 1);
                 }

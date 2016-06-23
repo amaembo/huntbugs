@@ -39,8 +39,9 @@ import com.strobel.decompiler.ast.TryCatchBlock;
 import com.strobel.decompiler.ast.Variable;
 
 /**
+ * Utility methods to check the equivalence of nodes/expressions
+ * 
  * @author Tagir Valeev
- *
  */
 public class Equi {
     static class EquiContext {

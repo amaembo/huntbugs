@@ -35,6 +35,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 
@@ -88,7 +89,7 @@ public class InfiniteRecursion {
             return md.isConstructor();
         case InvokeVirtual:
         case InvokeInterface:
-            return !md.isStatic() && Nodes.isThis(expr.getArguments().get(0));
+            return !md.isStatic() && Exprs.isThis(expr.getArguments().get(0));
         default:
             return false;
         }
@@ -113,7 +114,7 @@ public class InfiniteRecursion {
     private boolean checkArgs(Expression expr) {
         List<Expression> args = expr.getArguments();
         if ((expr.getCode() == AstCode.InvokeInterface || expr.getCode() == AstCode.InvokeVirtual)
-            && !Nodes.isThis(expr.getArguments().get(0)))
+            && !Exprs.isThis(expr.getArguments().get(0)))
             return false;
         int base = (expr.getCode() == AstCode.InvokeStatic || expr.getCode() == AstCode.InitObject) ? 0 : 1;
         for (int i = base; i < args.size(); i++) {

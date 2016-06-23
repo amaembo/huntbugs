@@ -24,7 +24,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
-import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Role.TypeRole;
@@ -44,13 +44,13 @@ public class ToArrayDowncast {
         TypeReference targetType = (TypeReference) expr.getOperand();
         if (!targetType.isArray() || Types.isObject(targetType.getElementType()))
             return;
-        Expression arg = Nodes.getChild(expr, 0);
+        Expression arg = Exprs.getChild(expr, 0);
         if (arg.getCode() != AstCode.InvokeVirtual && arg.getCode() != AstCode.InvokeInterface)
             return;
         MethodReference mr = (MethodReference) arg.getOperand();
         if (!mr.getName().equals("toArray") || !mr.getSignature().equals("()[Ljava/lang/Object;"))
             return;
-        Expression target = Nodes.getChild(arg, 0);
+        Expression target = Exprs.getChild(arg, 0);
         if (!Types.isInstance(target.getInferredType(), "java/util/Collection"))
             return;
         mc.report("ImpossibleToArrayDowncast", 0, target, Roles.TARGET_TYPE.create(targetType),

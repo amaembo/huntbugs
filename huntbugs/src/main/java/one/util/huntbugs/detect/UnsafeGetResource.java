@@ -27,6 +27,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Roles;
@@ -48,11 +49,11 @@ public class UnsafeGetResource {
             MethodReference getResourceCall = (MethodReference) expr.getOperand();
             if((getResourceCall.getName().equals("getResource") || getResourceCall.getName().equals("getResourceAsStream")) &&
                     getResourceCall.getDeclaringType().getInternalName().equals("java/lang/Class")) {
-                Expression classObj = Nodes.getChild(expr, 0);
+                Expression classObj = Exprs.getChild(expr, 0);
                 if(classObj.getCode() == AstCode.InvokeVirtual) {
                     MethodReference getClassCall = (MethodReference) classObj.getOperand();
                     if(Methods.isGetClass(getClassCall)) {
-                        if(Nodes.isThis(Nodes.getChild(classObj, 0))) {
+                        if(Exprs.isThis(Exprs.getChild(classObj, 0))) {
                             Object resource = Nodes.getConstant(expr.getArguments().get(1));
                             int priority = 0;
                             if (resource instanceof String && ((String)resource).startsWith("/"))

@@ -22,12 +22,14 @@ import com.strobel.assembler.metadata.JvmType;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Equi;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Roles;
@@ -54,9 +56,9 @@ public class NonShortCircuit {
                     Expression target = left.getArguments().get(
                         left.getCode() == AstCode.InstanceOf
                             || left.getArguments().get(1).getCode() == AstCode.AConstNull ? 0 : 1);
-                    List<Expression> list = Nodes.stream(right).filter(e -> Equi.equiExpressions(e, target)).collect(Collectors.toList());
+                    List<Expression> list = Exprs.stream(right).filter(e -> Equi.equiExpressions(e, target)).collect(Collectors.toList());
                     if(!list.isEmpty()) {
-                        if(list.stream().flatMap(e -> ValuesFlow.findUsages(e).stream()).anyMatch(e -> Nodes.isInvoke(e) || e.getCode() == AstCode.GetField || e.getCode() == AstCode.CheckCast)) {
+                        if(list.stream().flatMap(e -> Inf.BACKLINK.findUsages(e).stream()).anyMatch(e -> Nodes.isInvoke(e) || e.getCode() == AstCode.GetField || e.getCode() == AstCode.CheckCast)) {
                             ctx.report("NonShortCircuitDangerous", 0, node, anno);
                             return;
                         }

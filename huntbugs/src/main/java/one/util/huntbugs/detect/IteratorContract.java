@@ -31,6 +31,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 
@@ -50,7 +51,7 @@ public class IteratorContract {
     public void visitHasNext(Expression expr, MethodContext mc, TypeDefinition td) {
         if (expr.getCode() == AstCode.InvokeVirtual) {
             MethodReference mr = (MethodReference) expr.getOperand();
-            if (mr.getName().equals("next") && mr.getParameters().isEmpty() && Nodes.isThis(Nodes.getChild(expr, 0))) {
+            if (mr.getName().equals("next") && mr.getParameters().isEmpty() && Exprs.isThis(Exprs.getChild(expr, 0))) {
                 mc.report("IteratorHasNextCallsNext", td.isPublic() ? 0 : 30, expr);
             }
         }
@@ -71,7 +72,7 @@ public class IteratorContract {
                     if (expr.getCode() == AstCode.InvokeSpecial || expr.getCode() == AstCode.InvokeInterface
                         || expr.getCode() == AstCode.InvokeVirtual) {
                         MethodReference mr = (MethodReference) expr.getOperand();
-                        if (Nodes.isThis(Nodes.getChild(expr, 0)) || mr.getName().contains("next") || mr.getName().contains("previous"))
+                        if (Exprs.isThis(Exprs.getChild(expr, 0)) || mr.getName().contains("next") || mr.getName().contains("previous"))
                             return true;
                         if (!sawCall.get() && !Nodes.isSideEffectFreeMethod(expr)) {
                             sawCall.set(true);

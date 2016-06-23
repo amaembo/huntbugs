@@ -22,9 +22,11 @@ import java.util.Map;
 
 
 
+
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Maps;
-import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
+
 
 
 
@@ -50,7 +52,7 @@ class FrameContext {
     }
     
     boolean isThis(Expression expr) {
-        return !md.isStatic() && Nodes.isThis(expr);
+        return !md.isStatic() && Exprs.isThis(expr);
     }
     
     Map<MemberInfo, Expression> getInitialFields() {
@@ -89,7 +91,7 @@ class FrameContext {
     
     private static Expression constant(Object val) {
         Expression expr = new Expression(AstCode.LdC, val, 0);
-        Annotators.CONST.put(expr, val);
+        Inf.CONST.put(expr, val);
         return expr;
     }
 

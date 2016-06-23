@@ -141,7 +141,7 @@ public class PurityAnnotator extends Annotator<PurityAnnotator.Purity> {
         for(Expression child : expr.getArguments()) {
             purity = purity.merge(annotatePurity(child, fc));
         }
-        if(Annotators.CONST.getValue(expr) != null) {
+        if(Inf.CONST.getValue(expr) != null) {
             // statically known constant
             purity = Purity.CONST;
         } else {

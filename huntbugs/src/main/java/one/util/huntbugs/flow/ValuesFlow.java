@@ -28,16 +28,13 @@ import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 
 import com.strobel.assembler.metadata.BuiltinTypes;
-import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodDefinition;
-import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
@@ -388,8 +385,8 @@ public class ValuesFlow {
             for(Node child : node.getChildrenAndSelfRecursive()) {
                 if(child instanceof Expression) {
                     Expression expr = (Expression)child;
-                    Annotators.SOURCE.remove(expr);
-                    Annotators.CONST.remove(expr);
+                    Inf.SOURCE.remove(expr);
+                    Inf.CONST.remove(expr);
                 }
             }
         }
@@ -428,8 +425,8 @@ public class ValuesFlow {
                 ctx.incStat("ValuesFlow");
             }
         }
-        Annotators.PURITY.annotate(method, fc);
-        Annotators.BACKLINK.annotate(method);
+        Inf.PURITY.annotate(method, fc);
+        Inf.BACKLINK.annotate(method);
         return valid ? origParams : null;
     }
 
@@ -490,27 +487,10 @@ public class ValuesFlow {
     }
 
     public static Expression getSource(Expression input) {
-        Expression source = Annotators.SOURCE.get(input);
+        Expression source = Inf.SOURCE.get(input);
         return source == null ? input : source;
     }
     
-    public static Set<Expression> findUsages(Expression input) {
-        return Annotators.BACKLINK.findUsages(input);
-    }
-
-    public static Stream<Expression> findTransitiveUsages(Expression expr, boolean includePhi) {
-        return findUsages(expr).stream().filter(includePhi ? x -> true : x -> !hasPhiSource(x))
-            .flatMap(x -> {
-                if(x.getCode() == AstCode.Store)
-                    return null;
-                if(x.getCode() == AstCode.Load)
-                    return findTransitiveUsages(x, includePhi);
-                if(x.getCode() == AstCode.TernaryOp && includePhi)
-                    return findTransitiveUsages(x, includePhi);
-                return Stream.of(x);
-            });
-    }
-
     public static boolean allMatch(Expression src, Predicate<Expression> pred) {
         if(src.getCode() == Frame.PHI_TYPE)
             return src.getArguments().stream().allMatch(pred);
@@ -540,39 +520,10 @@ public class ValuesFlow {
     }
 
     public static boolean hasPhiSource(Expression input) {
-        Expression source = Annotators.SOURCE.get(input);
+        Expression source = Inf.SOURCE.get(input);
         return source != null && source.getCode() == Frame.PHI_TYPE;
     }
 
-    private static boolean isAssertionStatusCheck(Expression expr) {
-        if(expr.getCode() != AstCode.LogicalNot)
-            return false;
-        Expression arg = expr.getArguments().get(0);
-        if(arg.getCode() != AstCode.GetStatic)
-            return false;
-        FieldReference fr = (FieldReference) arg.getOperand();
-        return fr.getName().startsWith("$assertions");
-    }
-    
-    private static boolean isAssertionCondition(Expression expr) {
-        if(expr.getCode() != AstCode.LogicalAnd)
-            return false;
-        return expr.getArguments().stream().anyMatch(ValuesFlow::isAssertionStatusCheck);
-    }
-    
-    private static boolean isAssertionMethod(Expression expr) {
-        if(expr.getCode() != AstCode.InvokeStatic)
-            return false;
-        MethodReference mr = (MethodReference) expr.getOperand();
-        String name = mr.getName();
-        return name.equals("isTrue") || name.equals("assertTrue");
-    }
-
-    public static boolean isAssertion(Expression expr) {
-        Set<Expression> usages = findUsages(expr);
-        return !usages.isEmpty() && usages.stream().allMatch(parent -> isAssertionCondition(parent) || isAssertion(parent) || isAssertionMethod(parent));
-    }
-    
     public static boolean isSpecial(Expression expr) {
         return expr.getCode() == Frame.PHI_TYPE || expr.getCode() == Frame.UPDATE_TYPE;
     }

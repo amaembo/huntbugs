@@ -25,6 +25,7 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
@@ -53,7 +54,7 @@ public class UnnecessaryBoxing {
     public void visit(Expression expr, MethodContext mc) {
         if (Nodes.isUnboxing(expr)) {
             Expression arg = expr.getArguments().get(0);
-            List<Expression> usages = ValuesFlow.findTransitiveUsages(expr, false).collect(Collectors.toList());
+            List<Expression> usages = Inf.BACKLINK.findTransitiveUsages(expr, false).collect(Collectors.toList());
             if (!usages.isEmpty()) {
                 TypeReference type = ((MethodReference) expr.getOperand()).getDeclaringType();
                 List<WarningAnnotation<?>> annotations = usages.stream().filter(
@@ -68,7 +69,7 @@ public class UnnecessaryBoxing {
             }
         } else if (isBoxing(expr)) {
             Expression arg = expr.getArguments().get(0);
-            List<Expression> usages = ValuesFlow.findTransitiveUsages(expr, false).collect(Collectors.toList());
+            List<Expression> usages = Inf.BACKLINK.findTransitiveUsages(expr, false).collect(Collectors.toList());
             if (!usages.isEmpty()) {
                 if (usages.stream().allMatch(ex -> Nodes.isUnboxing(ex) || isBoxedToString(ex))) {
                     TypeReference type = ((MethodReference) expr.getOperand()).getDeclaringType();

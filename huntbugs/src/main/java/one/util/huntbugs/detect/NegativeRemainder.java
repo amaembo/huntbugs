@@ -23,8 +23,8 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Methods;
-import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 
 /**
@@ -39,7 +39,7 @@ public class NegativeRemainder {
         switch(expr.getCode()) {
         case StoreElement:
         case LoadElement:
-            check(Nodes.getChild(expr, 1), mc);
+            check(Exprs.getChild(expr, 1), mc);
             break;
         case InvokeInterface:
         case InvokeVirtual:
@@ -47,7 +47,7 @@ public class NegativeRemainder {
             if(Types.isInstance(mr.getDeclaringType(), "java/util/List")) {
                 if((mr.getName().equals("add") || mr.getName().equals("set")) && mr.getSignature().startsWith("(I") ||
                         (mr.getName().equals("get") || mr.getName().equals("remove")) && mr.getSignature().startsWith("(I)"))
-                    check(Nodes.getChild(expr, 1), mc);
+                    check(Exprs.getChild(expr, 1), mc);
             }
             break;
         default:
@@ -56,7 +56,7 @@ public class NegativeRemainder {
 
     private void check(Expression expr, MethodContext mc) {
         if(expr.getCode() == AstCode.Rem) {
-            Expression target = Nodes.getChild(expr, 0);
+            Expression target = Exprs.getChild(expr, 0);
             if(target.getCode() == AstCode.InvokeVirtual) {
                 MethodReference mr = (MethodReference) target.getOperand();
                 if(Methods.isHashCodeMethod(mr)) {

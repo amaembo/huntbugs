@@ -31,6 +31,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Roles;
 
@@ -51,8 +52,8 @@ public class FloatingPointComparison {
         JvmType type = inferredType.getSimpleType();
         if (type != JvmType.Double && type != JvmType.Float)
             return;
-        Expression leftArg = Nodes.getChild(node, 0);
-        Expression rightArg = Nodes.getChild(node, 1);
+        Expression leftArg = Exprs.getChild(node, 0);
+        Expression rightArg = Exprs.getChild(node, 1);
         Object left = Nodes.getConstant(leftArg);
         Object right = Nodes.getConstant(rightArg);
         int priority = tweakPriority(args.get(0)) + tweakPriority(args.get(1));

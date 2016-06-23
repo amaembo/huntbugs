@@ -18,6 +18,7 @@ package one.util.huntbugs.flow;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
@@ -60,7 +61,7 @@ public class BackLinkAnnotator extends Annotator<Set<Expression>> {
             doLink(expr, child);
             annotateBackLinks(child);
         }
-        Expression source = Annotators.SOURCE.get(expr);
+        Expression source = Inf.SOURCE.get(expr);
         if(source != null) {
             link(expr, source);
         }
@@ -92,4 +93,16 @@ public class BackLinkAnnotator extends Annotator<Set<Expression>> {
         return set instanceof HashSet ? Collections.unmodifiableSet(set) : set;
     }
 
+    public Stream<Expression> findTransitiveUsages(Expression expr, boolean includePhi) {
+        return findUsages(expr).stream().filter(includePhi ? x -> true : x -> !ValuesFlow.hasPhiSource(x))
+            .flatMap(x -> {
+                if(x.getCode() == AstCode.Store)
+                    return null;
+                if(x.getCode() == AstCode.Load)
+                    return findTransitiveUsages(x, includePhi);
+                if(x.getCode() == AstCode.TernaryOp && includePhi)
+                    return findTransitiveUsages(x, includePhi);
+                return Stream.of(x);
+            });
+    }
 }

@@ -24,6 +24,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Role.LocationRole;
 import one.util.huntbugs.warning.Role.TypeRole;
@@ -45,9 +46,9 @@ public class AppendObjectOutputStream {
         if (!ctor.getDeclaringType().getInternalName().equals("java/io/ObjectOutputStream")
             || !ctor.getSignature().equals("(Ljava/io/OutputStream;)V"))
             return;
-        Expression outStream = Nodes.getChild(expr, 0);
+        Expression outStream = Exprs.getChild(expr, 0);
         while (isBufferedStream(outStream))
-            outStream = Nodes.getChild(outStream, 0);
+            outStream = Exprs.getChild(outStream, 0);
         Expression target = ValuesFlow.findFirst(outStream, AppendObjectOutputStream::isAppendOutput);
         if (target != null) {
             mc.report("AppendObjectOutputStream", 0, expr, STREAM_CREATED_AT.create(mc, target), OOS_TYPE.create(ctor

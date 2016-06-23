@@ -32,6 +32,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Equi;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Role.ExpressionRole;
 import one.util.huntbugs.warning.Role.LocationRole;
@@ -65,7 +66,7 @@ public class SameIfChain {
                         Expression c1 = cond1.getCondition();
                         Expression c2 = cond2.getCondition();
                         if (Nodes.isPure(c1) && Equi.equiExpressions(c1, c2)) {
-                            Set<Variable> vars = Nodes.stream(c1).filter(e -> e.getCode() == AstCode.Load).map(
+                            Set<Variable> vars = Exprs.stream(c1).filter(e -> e.getCode() == AstCode.Load).map(
                                 e -> (Variable) e.getOperand()).collect(Collectors.toSet());
                             if (Nodes.find(cond1.getTrueBlock(), n -> Nodes.isWriteTo(n, vars)) != null)
                                 continue;
