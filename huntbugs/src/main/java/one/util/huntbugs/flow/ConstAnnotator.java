@@ -31,6 +31,15 @@ public class ConstAnnotator extends Annotator<Object> {
     ConstAnnotator() {
         super("value", null);
     }
+    
+    public Object getValue(Expression input) {
+        Object value = get(input);
+        return value == ConstAnnotator.UNKNOWN_VALUE ? null : value;
+    }
+    
+    public boolean isConst(Expression input, Object constant) {
+        return constant.equals(get(input));
+    }
 
     void storeValue(Expression expr, Object val) {
         Object curValue = get(expr);

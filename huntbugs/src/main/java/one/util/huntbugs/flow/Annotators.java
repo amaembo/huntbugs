@@ -32,14 +32,16 @@ public class Annotators {
     private static final List<String> names = new ArrayList<>();
     private static final Key<Object[]> hbData = Key.create("hb.data");
     
-    public static final PurityAnnotator PURITY = new PurityAnnotator();
-
+    // Order of declaration might be important
+    
     public static final SourceAnnotator SOURCE = new SourceAnnotator();
     
     public static final ConstAnnotator CONST = new ConstAnnotator();
 
     public static final BackLinkAnnotator BACKLINK = new BackLinkAnnotator();
     
+    public static final PurityAnnotator PURITY = new PurityAnnotator();
+
     static int register(String name) {
         if(names.contains(name))
             throw new IllegalStateException(name);

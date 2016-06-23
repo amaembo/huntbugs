@@ -281,7 +281,6 @@ class Frame {
             Expression source = get(var);
             if (source != null) {
                 Annotators.SOURCE.put(expr, source);
-                Annotators.BACKLINK.link(expr, source);
                 Object val = Annotators.CONST.get(source);
                 Annotators.CONST.storeValue(expr, val);
             }
@@ -292,9 +291,9 @@ class Frame {
                 Variable var = ((Variable) expr.getOperand());
                 Expression source = get(var);
                 target = target.replace(var, expr);
+                Annotators.SOURCE.put(expr, fc.makeUpdatedNode(source));
                 if(source == null)
                     return target;
-                Annotators.BACKLINK.link(expr, source);
                 Object val = Annotators.CONST.get(source);
                 if (val == ConstAnnotator.UNKNOWN_VALUE)
                     Annotators.CONST.put(expr, ConstAnnotator.UNKNOWN_VALUE);
@@ -310,7 +309,7 @@ class Frame {
             if (arg.getOperand() instanceof Variable) {
                 Variable var = ((Variable) arg.getOperand());
                 Expression source = get(var);
-                Annotators.BACKLINK.link(expr, source);
+                Annotators.SOURCE.put(expr, fc.makeUpdatedNode(source));
                 // TODO: pass values
                 return target.replace(var, expr);
             }
@@ -378,7 +377,6 @@ class Frame {
                 Expression source = fieldValues.get(new MemberInfo(fr));
                 if (source != null) {
                     Annotators.SOURCE.put(expr, source);
-                    Annotators.BACKLINK.link(expr, source);
                     Object val = Annotators.CONST.get(source);
                     Annotators.CONST.storeValue(expr, val);
                 } else {
@@ -393,7 +391,6 @@ class Frame {
                 Expression source = fieldValues.get(new MemberInfo(fr));
                 if (source != null) {
                     Annotators.SOURCE.put(expr, source);
-                    Annotators.BACKLINK.link(expr, source);
                     Object val = Annotators.CONST.get(source);
                     Annotators.CONST.storeValue(expr, val);
                 } else {
@@ -444,7 +441,7 @@ class Frame {
             case InitArray:
                 return e.getArguments().size();
             case NewArray:
-                Object constant = ValuesFlow.getValue(e.getArguments().get(0));
+                Object constant = Annotators.CONST.getValue(e.getArguments().get(0));
                 if(constant instanceof Integer)
                     return (Integer)constant;
                 return null;
@@ -960,8 +957,8 @@ class Frame {
             return left;
         }
         Expression phi = new Expression(PHI_TYPE, null, 0, children);
-        Object leftValue = ValuesFlow.getValue(left);
-        Object rightValue = ValuesFlow.getValue(right);
+        Object leftValue = Annotators.CONST.getValue(left);
+        Object rightValue = Annotators.CONST.getValue(right);
         if (leftValue != null || rightValue != null) {
             if (Objects.equals(leftValue, rightValue))
                 Annotators.CONST.storeValue(phi, leftValue);

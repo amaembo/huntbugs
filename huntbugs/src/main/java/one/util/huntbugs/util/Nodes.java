@@ -97,7 +97,7 @@ public class Nodes {
         Expression expr = (Expression) node;
         if (expr.getCode() == AstCode.LdC)
             return expr.getOperand();
-        return ValuesFlow.getValue(expr);
+        return Annotators.CONST.getValue(expr);
     }
 
     public static void ifBinaryWithConst(Expression expr, BiConsumer<Expression, Object> consumer) {

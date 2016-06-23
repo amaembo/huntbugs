@@ -314,6 +314,7 @@ public class ValuesFlow {
                     } else {
                         switch(loop.getLoopType()) {
                         case PreCondition: {
+                            Frame loopStart = passFrame;
                             Frame loopEnd = passFrame.process(loop.getCondition(), targets);
                             int iter = 0;
                             while(true) {
@@ -324,7 +325,7 @@ public class ValuesFlow {
                                     valid = false;
                                     return;
                                 }
-                                Frame newLoopStart = Frame.combine(loopBody.passFrame, loopBody.continueFrame);
+                                Frame newLoopStart = Frame.combine(loopStart, Frame.combine(loopBody.passFrame, loopBody.continueFrame));
                                 Frame newLoopEnd = newLoopStart == null ? null : newLoopStart.process(loop.getCondition(), targets);
                                 newLoopEnd = Frame.combine(loopBody.breakFrame, newLoopEnd);
                                 newLoopEnd = Frame.combine(loopEnd, newLoopEnd);
@@ -358,7 +359,7 @@ public class ValuesFlow {
                                 Frame newLoopEnd = beforeCondition == null ? null : beforeCondition.process(loop.getCondition(), targets);
                                 mergeLabels(loopBody);
                                 newLoopEnd = Frame.combine(loopEnd, newLoopEnd);
-                                loopStart = newLoopEnd;
+                                loopStart = Frame.combine(loopStart, newLoopEnd);
                                 newLoopEnd = Frame.combine(loopBody.breakFrame, newLoopEnd);
                                 if(Frame.isEqual(loopEnd, newLoopEnd))
                                     break;
@@ -394,49 +395,42 @@ public class ValuesFlow {
         }
     }
 
-    private static void initBackLinks(Expression expr, List<Lambda> lambdas) {
-        Set<Expression> backLink = Collections.singleton(expr);
+    private static void collectLambdas(Expression expr, List<Lambda> lambdas) {
         for(Expression child : expr.getArguments()) {
-            Annotators.BACKLINK.put(child, backLink);
-            initBackLinks(child, lambdas);
+            collectLambdas(child, lambdas);
         }
         if(expr.getOperand() instanceof Lambda) {
             lambdas.add((Lambda) expr.getOperand());
         }
     }
     
-    private static void initBackLinks(Node node, List<Lambda> lambdas) {
-        if(node instanceof Expression)
-            initBackLinks((Expression)node, lambdas);
-        else
-            for(Node child : Nodes.getChildren(node))
-                initBackLinks(child, lambdas);
+    private static void collectLambdas(Node node, List<Lambda> lambdas) {
+        Annotator.forExpressions(node, expr -> collectLambdas(expr, lambdas));
     }
 
     public static List<Expression> annotate(Context ctx, MethodDefinition md, ClassFields cf, Block method, Frame closure) {
         ctx.incStat("ValuesFlow.Total");
         List<Lambda> lambdas = new ArrayList<>();
-        initBackLinks(method, lambdas);
+        collectLambdas(method, lambdas);
         FrameContext fc = new FrameContext(md, cf);
         Frame origFrame = new Frame(fc, closure);
         List<Expression> origParams = new ArrayList<>(origFrame.initial.values());
         FrameSet fs = new FrameSet(origFrame, EMPTY_TARGETS);
         fs.process(ctx, method);
+        boolean valid = fs.valid;
         if (fs.valid) {
             Frame exitFrame = Frame.combine(fs.returnFrame, fs.passFrame);
             fc.makeFieldsFrom(exitFrame);
-            boolean valid = true;
             for(Lambda lambda : lambdas) {
                 valid &= annotate(ctx, Nodes.getLambdaMethod(lambda), cf, lambda.getBody(), exitFrame) != null;
             }
             if (valid) {
                 ctx.incStat("ValuesFlow");
             }
-        } else {
-            origParams = null;
         }
-        Annotators.PURITY.annotatePurity(method, fc);
-        return origParams;
+        Annotators.PURITY.annotate(method, fc);
+        Annotators.BACKLINK.annotate(method);
+        return valid ? origParams : null;
     }
 
     public static <T> T reduce(Expression input, Function<Expression, T> mapper, BinaryOperator<T> reducer,
@@ -501,13 +495,20 @@ public class ValuesFlow {
     }
     
     public static Set<Expression> findUsages(Expression input) {
-        Set<Expression> set = Annotators.BACKLINK.get(input);
-        return set.isEmpty() ? set : Collections.unmodifiableSet(set);
+        return Annotators.BACKLINK.findUsages(input);
     }
 
-    public static Object getValue(Expression input) {
-        Object value = Annotators.CONST.get(input);
-        return value == ConstAnnotator.UNKNOWN_VALUE ? null : value;
+    public static Stream<Expression> findTransitiveUsages(Expression expr, boolean includePhi) {
+        return findUsages(expr).stream().filter(includePhi ? x -> true : x -> !hasPhiSource(x))
+            .flatMap(x -> {
+                if(x.getCode() == AstCode.Store)
+                    return null;
+                if(x.getCode() == AstCode.Load)
+                    return findTransitiveUsages(x, includePhi);
+                if(x.getCode() == AstCode.TernaryOp && includePhi)
+                    return findTransitiveUsages(x, includePhi);
+                return Stream.of(x);
+            });
     }
 
     public static boolean allMatch(Expression src, Predicate<Expression> pred) {
@@ -543,19 +544,6 @@ public class ValuesFlow {
         return source != null && source.getCode() == Frame.PHI_TYPE;
     }
 
-    public static Stream<Expression> findTransitiveUsages(Expression expr, boolean includePhi) {
-        return findUsages(expr).stream().filter(includePhi ? x -> true : x -> !hasPhiSource(x))
-            .flatMap(x -> {
-                if(x.getCode() == AstCode.Store)
-                    return null;
-                if(x.getCode() == AstCode.Load)
-                    return findTransitiveUsages(x, includePhi);
-                if(x.getCode() == AstCode.TernaryOp && includePhi)
-                    return findTransitiveUsages(x, includePhi);
-                return Stream.of(x);
-            });
-    }
-    
     private static boolean isAssertionStatusCheck(Expression expr) {
         if(expr.getCode() != AstCode.LogicalNot)
             return false;

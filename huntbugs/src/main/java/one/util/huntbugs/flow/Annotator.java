@@ -15,8 +15,12 @@
  */
 package one.util.huntbugs.flow;
 
-import com.strobel.componentmodel.Key;
+import java.util.function.Consumer;
+
+import one.util.huntbugs.util.Nodes;
+
 import com.strobel.decompiler.ast.Expression;
+import com.strobel.decompiler.ast.Node;
 
 /**
  * @author shustkost
@@ -29,6 +33,16 @@ abstract class Annotator<T> {
     protected Annotator(String name, T defValue) {
         this.defValue = defValue;
         this.idx = Annotators.register(name);
+    }
+    
+    protected static void forExpressions(Node node, Consumer<Expression> cons) {
+        for(Node child : Nodes.getChildren(node)) {
+            if(child instanceof Expression) {
+                cons.accept((Expression)child);
+            } else {
+                forExpressions(child, cons);
+            }
+        }
     }
 
     protected T get(Expression expr) {

@@ -21,7 +21,6 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.util.Methods;
-import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
@@ -71,18 +70,13 @@ public class PurityAnnotator extends Annotator<PurityAnnotator.Purity> {
         }
     }
 
-    void annotatePurity(Node node, FrameContext fc) {
-        for(Node child : Nodes.getChildren(node)) {
-            if(child instanceof Expression) {
-                annotatePurity((Expression)child, fc);
-            } else {
-                annotatePurity(child, fc);
-            }
-        }
+    void annotate(Node node, FrameContext fc) {
+        forExpressions(node, expr -> annotatePurity(expr, fc));
     }
     
     private Purity getOwnPurity(Expression expr, FrameContext fc) {
         switch (expr.getCode()) {
+            case Inc:
             case PreIncrement:
             case PostIncrement:
             case Store:
@@ -135,6 +129,8 @@ public class PurityAnnotator extends Annotator<PurityAnnotator.Purity> {
                 }
                 return Purity.HEAP_MOD;
             }
+            case Load:
+                return Purity.LOCAL_DEP;
             default:
                 return Purity.CONST;
         }
@@ -145,7 +141,7 @@ public class PurityAnnotator extends Annotator<PurityAnnotator.Purity> {
         for(Expression child : expr.getArguments()) {
             purity = purity.merge(annotatePurity(child, fc));
         }
-        if(ValuesFlow.getValue(expr) != null) {
+        if(Annotators.CONST.getValue(expr) != null) {
             // statically known constant
             purity = Purity.CONST;
         } else {
