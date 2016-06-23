@@ -22,7 +22,6 @@ import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
 import one.util.huntbugs.flow.Inf;
-import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -147,25 +146,27 @@ public class BadMath {
         case CmpEq:
         case CmpNe:
             Nodes.ifBinaryWithConst(expr, (child, outerConst) -> {
-                if (isIntegral(outerConst) && (child.getCode() == AstCode.And || child.getCode() == AstCode.Or)) {
-                    long outerVal = ((Number) outerConst).longValue();
-                    Nodes.ifBinaryWithConst(child, (grandChild, innerConst) -> {
-                        if (isIntegral(innerConst)) {
-                            long innerVal = ((Number) innerConst).longValue();
-                            if (child.getCode() == AstCode.And) {
-                                if ((outerVal & ~innerVal) != 0) {
-                                    mc.report("CompareBitAndIncompatible", 0, expr, AND_OPERAND.create(innerVal),
-                                        COMPARED_TO.create(outerVal));
-                                }
-                            } else {
-                                if ((~outerVal & innerVal) != 0) {
-                                    mc.report("CompareBitOrIncompatible", 0, expr, OR_OPERAND.create(innerVal),
-                                        COMPARED_TO.create(outerVal));
-                                }
-                            }
+                if (!isIntegral(outerConst))
+                    return;
+                if (child.getCode() != AstCode.And && child.getCode() != AstCode.Or)
+                    return;
+                long outerVal = ((Number) outerConst).longValue();
+                Nodes.ifBinaryWithConst(child, (grandChild, innerConst) -> {
+                    if (!isIntegral(innerConst)) 
+                        return;
+                    long innerVal = ((Number) innerConst).longValue();
+                    if (child.getCode() == AstCode.And) {
+                        if ((outerVal & ~innerVal) != 0) {
+                            mc.report("CompareBitAndIncompatible", 0, expr, AND_OPERAND.create(innerVal),
+                                COMPARED_TO.create(outerVal));
                         }
-                    });
-                }
+                    } else {
+                        if ((~outerVal & innerVal) != 0) {
+                            mc.report("CompareBitOrIncompatible", 0, expr, OR_OPERAND.create(innerVal),
+                                COMPARED_TO.create(outerVal));
+                        }
+                    }
+                });
             });
             break;
         case Shl:
