@@ -292,9 +292,9 @@ class Frame {
                 Variable var = ((Variable) expr.getOperand());
                 Expression source = get(var);
                 target = target.replace(var, expr);
-                Inf.SOURCE.put(expr, fc.makeUpdatedNode(source));
                 if(source == null)
                     return target;
+                Inf.SOURCE.put(expr, fc.makeUpdatedNode(source));
                 Object val = Inf.CONST.get(source);
                 if (val == ConstAnnotator.UNKNOWN_VALUE)
                     Inf.CONST.put(expr, ConstAnnotator.UNKNOWN_VALUE);
