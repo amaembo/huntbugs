@@ -75,7 +75,7 @@ public class IteratorContract {
                         MethodReference mr = (MethodReference) expr.getOperand();
                         if (Exprs.isThis(Exprs.getChild(expr, 0)) || mr.getName().contains("next") || mr.getName().contains("previous"))
                             return true;
-                        if (!sawCall.get() && Inf.PURITY.isSideEffectFree(expr)) {
+                        if (!sawCall.get() && !Inf.PURITY.isSideEffectFree(expr)) {
                             sawCall.set(true);
                         }
                     }
