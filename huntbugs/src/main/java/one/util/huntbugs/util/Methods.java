@@ -52,6 +52,11 @@ public class Methods {
         return mr.getName().equals("getClass") && mr.getErasedSignature().equals("()Ljava/lang/Class;");
     }
     
+    public static boolean is(MethodReference mr, String internalTypeName, String methodName, String methodSig) {
+        return mr.getName().equals(methodName) && mr.getErasedSignature().equals(methodSig) &&
+                mr.getDeclaringType().getInternalName().equals(internalTypeName);
+    }
+    
     public static MethodDefinition findSuperMethod(MethodReference mr) {
         MethodDefinition md = mr.resolve();
         if(md == null)

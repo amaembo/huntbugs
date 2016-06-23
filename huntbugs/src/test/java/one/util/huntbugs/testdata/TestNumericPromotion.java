@@ -73,6 +73,11 @@ public class TestNumericPromotion {
         return val / 10;
     }
     
+    @AssertWarning(value="IntegerDivisionPromotedToFloat", maxScore = 45, minScore = 35)
+    public double pow(double x, int val) {
+        return Math.pow(x, val/2);
+    }
+    
     @AssertNoWarning("*")
     public String format(int length) {
         return String.valueOf((length / 100) / 10.0);

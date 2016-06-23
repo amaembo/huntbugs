@@ -131,6 +131,12 @@ public class NumericPromotion {
                 if (ValuesFlow.findTransitiveUsages(expr, true).allMatch(Nodes::isComparison)) {
                     priority += 15;
                 }
+                if (ValuesFlow.findTransitiveUsages(expr, true).allMatch(e ->
+                        e.getCode() == AstCode.InvokeStatic && 
+                        Methods.is((MethodReference) e.getOperand(), "java/lang/Math", "pow", "(DD)D") &&
+                        Nodes.getChild(e, 1) == expr)) {
+                    priority += 15;
+                }
                 List<WarningAnnotation<?>> anno = new ArrayList<>();
                 anno.add(SOURCE_TYPE.create(getSourceType(expr)));
                 anno.add(TARGET_TYPE.create(getTargetType(expr)));
