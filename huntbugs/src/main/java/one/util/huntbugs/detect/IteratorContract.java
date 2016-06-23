@@ -26,6 +26,7 @@ import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
+import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -74,7 +75,7 @@ public class IteratorContract {
                         MethodReference mr = (MethodReference) expr.getOperand();
                         if (Exprs.isThis(Exprs.getChild(expr, 0)) || mr.getName().contains("next") || mr.getName().contains("previous"))
                             return true;
-                        if (!sawCall.get() && !Nodes.isSideEffectFreeMethod(expr)) {
+                        if (!sawCall.get() && Inf.PURITY.isSideEffectFree(expr)) {
                             sawCall.set(true);
                         }
                     }

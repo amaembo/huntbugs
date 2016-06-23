@@ -17,6 +17,7 @@ package one.util.huntbugs.flow;
 
 import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
@@ -89,7 +90,7 @@ public class PurityAnnotator extends Annotator<PurityAnnotator.Purity> {
                 return Purity.HEAP_MOD;
             case InitObject: {
                 MethodReference mr = (MethodReference) expr.getOperand();
-                if (!Methods.isSideEffectFree(mr))
+                if (!fc.cf.isSideEffectFree(mr, true))
                     return Purity.HEAP_MOD;
                 if (Types.isImmutable(mr.getDeclaringType()))
                     return Purity.CONST;
@@ -124,7 +125,7 @@ public class PurityAnnotator extends Annotator<PurityAnnotator.Purity> {
                     }
                     return Purity.SIDE_EFFECT_FREE;
                 }
-                if (Methods.isSideEffectFree(mr)) {
+                if (fc.cf.isSideEffectFree(mr, expr.getCode() == AstCode.InvokeSpecial)) {
                     return Purity.SIDE_EFFECT_FREE;
                 }
                 return Purity.HEAP_MOD;

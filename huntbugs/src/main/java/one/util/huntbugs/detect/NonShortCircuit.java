@@ -23,7 +23,6 @@ import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
 import one.util.huntbugs.flow.Inf;
-import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -64,7 +63,7 @@ public class NonShortCircuit {
                         }
                     }
                 }
-                if (Nodes.find(left, n -> Nodes.isInvoke(n) && !Nodes.isSideEffectFreeMethod(n)) != null)
+                if (!Inf.PURITY.isSideEffectFree(right))
                     ctx.report("NonShortCircuitDangerous", 20, node, anno);
                 else {
                     int priority = 0;

@@ -216,16 +216,6 @@ public class Nodes {
         return false;
     }
 
-    public static boolean isSideEffectFreeMethod(Node node) {
-        if (!(node instanceof Expression))
-            return false;
-        Object operand = ((Expression) node).getOperand();
-        if (!(operand instanceof MethodReference))
-            return false;
-        MethodReference mr = (MethodReference) operand;
-        return Methods.isSideEffectFree(mr);
-    }
-
     public static boolean isSideEffectFree(Node node) {
         if (node == null)
             return true;

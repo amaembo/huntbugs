@@ -62,7 +62,7 @@ public class InfiniteRecursion {
             || expr.getCode() == AstCode.PutStatic) {
             stateChange = true;
         }
-        if ((Nodes.isInvoke(expr) || expr.getCode() == AstCode.InitObject) && !Nodes.isSideEffectFreeMethod(expr)) {
+        if ((Nodes.isInvoke(expr) || expr.getCode() == AstCode.InitObject) && !Nodes.isSideEffectFree(expr)) {
             stateChange = true;
         }
         if (expr.getCode() == AstCode.Return || expr.getCode() == AstCode.AThrow

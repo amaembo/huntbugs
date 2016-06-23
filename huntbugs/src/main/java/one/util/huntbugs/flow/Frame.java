@@ -327,7 +327,7 @@ class Frame {
         case InvokeVirtual: {
             MethodReference mr = (MethodReference) expr.getOperand();
             target.processKnownMethods(expr, mr);
-            if (!Methods.isSideEffectFree(mr)) {
+            if (!fc.cf.isSideEffectFree(mr, expr.getCode() == AstCode.InitObject || expr.getCode() == AstCode.InvokeSpecial)) {
                 target = target.replaceAll(src -> src.getCode() == AstCode.GetField || src.getCode() == AstCode.GetStatic
                         || src.getCode() == AstCode.LoadElement ? fc.makeUpdatedNode(src) : src);
                 // calling another constructor from current constructor will initialize all final fields

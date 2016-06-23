@@ -63,9 +63,17 @@ public class TestNonShortCircuit {
         return 2;
     }
     
-    @AssertWarning(value="NonShortCircuit", minScore=40, maxScore=60) 
+    @AssertNoWarning("NonShortCircuit") 
+    @AssertWarning(value="NonShortCircuitDangerous", minScore=40, maxScore=60) 
     public int testOrBoxing(Integer a, Integer b) {
         if(a > 0 | ++b > 0)
+            return 1;
+        return 2;
+    }
+    
+    @AssertWarning(value="NonShortCircuit", minScore=40, maxScore=60) 
+    public int testOrBoxing2(Integer a, Integer b) {
+        if(++b > 0 | a > 0)
             return 1;
         return 2;
     }

@@ -43,6 +43,7 @@ import com.strobel.decompiler.ast.Node;
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.db.FieldStats;
+import one.util.huntbugs.db.MethodStats;
 import one.util.huntbugs.flow.ClassFields;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.anno.WarningDefinition;
@@ -72,6 +73,7 @@ public class DetectorRegistry {
 
     private final DatabaseRegistry databases;
     private final Function<TypeReference, FieldStats> fieldStatsDb;
+    private final Function<TypeReference, MethodStats> methodStatsDb;
 
     public static class SystemDetector {
     }
@@ -87,6 +89,7 @@ public class DetectorRegistry {
             throw new InternalError(e);
         }
         this.fieldStatsDb = databases.queryDatabase(FieldStats.class);
+        this.methodStatsDb = databases.queryDatabase(MethodStats.class);
         init();
     }
 
@@ -192,7 +195,7 @@ public class DetectorRegistry {
         ctx.incStat("TotalClasses");
         
         ClassData cdata = new ClassData(type);
-        ClassFields cf = new ClassFields(type, fieldStatsDb.apply(type));
+        ClassFields cf = new ClassFields(type, fieldStatsDb.apply(type), methodStatsDb.apply(type));
         
         List<MethodDefinition> declMethods = new ArrayList<>(type.getDeclaredMethods());
         declMethods.sort(Comparator.comparingInt(md ->

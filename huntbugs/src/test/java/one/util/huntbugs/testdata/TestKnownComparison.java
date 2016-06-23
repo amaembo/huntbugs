@@ -47,6 +47,19 @@ public class TestKnownComparison {
     }
     
     @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testSideEffectFree() {
+        f = 10;
+        int x = getFinalField();
+        if(f != 10) {
+            System.out.println("Never: "+x);
+        }
+    }
+    
+    private int getFinalField() {
+        return finalField;
+    }
+
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public TestKnownComparison(boolean b) {
         if(ch + 1 == 5) {
             System.out.println("Never! "+b);

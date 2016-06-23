@@ -21,10 +21,14 @@ import java.util.Map;
 import java.util.Set;
 
 import one.util.huntbugs.db.FieldStats;
+import one.util.huntbugs.db.MethodStats;
+import one.util.huntbugs.db.MethodStats.MethodData;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.Flags;
+import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.ast.Expression;
 
@@ -36,8 +40,10 @@ public class ClassFields {
     Map<MemberInfo, FieldDefinition> fields = new HashMap<>();
     Map<MemberInfo, Expression> values = new HashMap<>();
     Set<FieldDefinition> initializedInCtor = new HashSet<>();
+    MethodStats ms;
 
-    public ClassFields(TypeDefinition td, FieldStats fieldStats) {
+    public ClassFields(TypeDefinition td, FieldStats fieldStats, MethodStats methodStats) {
+        this.ms = methodStats;
         for (FieldDefinition fd : td.getDeclaredFields()) {
             fields.put(new MemberInfo(fd), fd);
             int flags = fieldStats.getFlags(fd);
@@ -46,6 +52,15 @@ public class ClassFields {
                 initializedInCtor.add(fd);
             }
         }
+    }
+    
+    public boolean isSideEffectFree(MethodReference mr, boolean exact) {
+        if(Methods.isSideEffectFree(mr))
+            return true;
+        MethodData stats = ms.getStats(mr);
+        if(stats == null)
+            return false;
+        return !stats.mayHaveSideEffect(exact);
     }
 
     public boolean isKnownFinal(MemberInfo field) {
