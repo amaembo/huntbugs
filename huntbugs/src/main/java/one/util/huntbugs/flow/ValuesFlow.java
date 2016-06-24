@@ -401,14 +401,10 @@ public class ValuesFlow {
         }
     }
     
-    private static void collectLambdas(Node node, List<Lambda> lambdas) {
-        Annotator.forExpressions(node, expr -> collectLambdas(expr, lambdas));
-    }
-
     public static List<Expression> annotate(Context ctx, MethodDefinition md, ClassFields cf, Block method, Frame closure) {
         ctx.incStat("ValuesFlow.Total");
         List<Lambda> lambdas = new ArrayList<>();
-        collectLambdas(method, lambdas);
+        Annotator.forExpressions(method, expr -> collectLambdas(expr, lambdas));
         FrameContext fc = new FrameContext(md, cf);
         Frame origFrame = new Frame(fc, closure);
         List<Expression> origParams = new ArrayList<>(origFrame.initial.values());

@@ -16,20 +16,27 @@
 package one.util.huntbugs.registry;
 
 import java.io.PrintStream;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.strobel.assembler.ir.Instruction;
+import com.strobel.assembler.ir.OpCode;
 import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.MethodBody;
 import com.strobel.assembler.metadata.MethodDefinition;
+import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.DecompilerContext;
@@ -198,9 +205,7 @@ public class DetectorRegistry {
         ClassFields cf = new ClassFields(type, fieldStatsDb.apply(type), methodStatsDb.apply(type));
         
         List<MethodDefinition> declMethods = new ArrayList<>(type.getDeclaredMethods());
-        declMethods.sort(Comparator.comparingInt(md ->
-                md.isTypeInitializer() ? 0 :
-                    md.isConstructor() ? 1 : 2));
+        sortMethods(declMethods);
         List<FieldData> fields = type.getDeclaredFields().stream().map(FieldData::new).collect(Collectors.toList());
 
         type.getDeclaredMethods().forEach(cdata::registerAsserter);
@@ -210,6 +215,9 @@ public class DetectorRegistry {
             ClassContext::visitClass).toArray(ClassContext[]::new);
         
         for (MethodDefinition md : declMethods) {
+            if(!md.isSpecialName()) {
+                cf.clearCtorData();
+            }
             if(md.isSynthetic() && md.getName().startsWith("lambda$"))
                 continue;
             MethodData mdata = new MethodData(md);
@@ -266,6 +274,61 @@ public class DetectorRegistry {
 
         for (TypeDefinition subType : type.getDeclaredTypes()) {
             analyzeClass(subType);
+        }
+    }
+
+    private void sortMethods(List<MethodDefinition> declMethods) {
+        declMethods.sort(Comparator.comparingInt(md ->
+                md.isTypeInitializer() ? 0 :
+                    md.isConstructor() ? 1 : 2));
+        int start = -1, end = declMethods.size();
+        for (int i = 0; i < end; i++) {
+            if(start == -1) {
+                if(declMethods.get(i).isConstructor())
+                    start = i;
+            } else 
+                if(!declMethods.get(i).isConstructor()) {
+                    end = i;
+            }
+        }
+        if(start >= 0) {
+            sortConstructors(declMethods.subList(start, end));
+        }
+    }
+
+    private void sortConstructors(List<MethodDefinition> ctors) {
+        if(ctors.size() < 2)
+            return;
+        Map<MethodDefinition, MethodDefinition> deps = new HashMap<>();
+        for(MethodDefinition ctor : ctors) {
+            MethodBody body = ctor.getBody();
+            if(body != null) {
+                for(Instruction instr : body.getInstructions()) {
+                    if(instr.getOpCode() == OpCode.INVOKESPECIAL) {
+                        MethodReference mr = (MethodReference)instr.getOperand(0);
+                        if(mr.getDeclaringType().isEquivalentTo(ctor.getDeclaringType()) && mr.isConstructor()) {
+                            deps.put(ctor, mr.resolve());
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        Set<MethodDefinition> result = new LinkedHashSet<>();
+        for(MethodDefinition ctor : ctors) {
+            Deque<MethodDefinition> chain = new ArrayDeque<>();
+            MethodDefinition cur = ctor;
+            while(cur != null && !result.contains(cur)) {
+                chain.addFirst(cur);
+                cur = deps.get(cur);
+            }
+            result.addAll(chain);
+        }
+        if(result.size() != ctors.size())
+            throw new InternalError();
+        int i=0;
+        for(MethodDefinition ctor : result) {
+            ctors.set(i++, ctor);
         }
     }
 

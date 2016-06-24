@@ -25,6 +25,8 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestArrayRangeCheck {
+    private static final int size = 4;
+    
     @AssertWarning("ArrayIndexNegative")
     public int get(int[] arr) {
         int idx = -1;
@@ -128,5 +130,22 @@ public class TestArrayRangeCheck {
         }
         System.out.println(Arrays.toString(b));
     }
-    
+
+    public class SubArrayCheck {
+        String[] data;
+        
+        SubArrayCheck(String s) {
+            this();
+            System.out.println(s);
+        }
+
+        SubArrayCheck() {
+            data = new String[size];
+        }
+        
+        @AssertWarning("ArrayIndexOutOfRange")
+        public void set(String a) {
+            data[size] = a;
+        }
+    }
 }

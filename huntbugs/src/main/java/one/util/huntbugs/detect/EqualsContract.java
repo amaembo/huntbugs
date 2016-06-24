@@ -250,6 +250,7 @@ public class EqualsContract {
                 if(!lfr.isEquivalentTo(rfr)) {
                     lfr = lfr.resolve();
                     rfr = rfr.resolve();
+                    // TODO: do not warn about comparisons like if(a == o.a && b == o.b || a == o.b && b == o.a)
                     if(lfr != null && rfr != null && !lfr.isEquivalentTo(rfr)) {
                         if (Exprs.bothMatch(Exprs.getChild(left, 0), Exprs.getChild(right, 0), Exprs::isThis,
                             EqualsContract::isParameter)) {

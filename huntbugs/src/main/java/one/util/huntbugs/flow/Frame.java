@@ -332,8 +332,18 @@ class Frame {
                         || src.getCode() == AstCode.LoadElement ? fc.makeUpdatedNode(src) : src);
                 // calling another constructor from current constructor will initialize all final fields
                 if(expr.getCode() == AstCode.InvokeSpecial && fc.md.isConstructor() && mr.isConstructor() && 
-                        Exprs.isThis(expr.getArguments().get(0)) && mr.getDeclaringType().isEquivalentTo(fc.md.getDeclaringType()))
-                    target = target.deleteAllFields();
+                        Exprs.isThis(expr.getArguments().get(0)) && mr.getDeclaringType().isEquivalentTo(fc.md.getDeclaringType())) {
+                    Map<MemberInfo, Expression> ctorFields = fc.getCtorFields(mr);
+                    if(ctorFields != null) {
+                        if(!ctorFields.isEmpty()) {
+                            Map<MemberInfo,Expression> newFields = new HashMap<>(fieldValues);
+                            newFields.putAll(ctorFields);
+                            target = new Frame(target, sources, Maps.compactify(newFields));
+                        }
+                    }
+                    else
+                        target = target.deleteAllFields();
+                }
                 else
                     target = target.deleteFields();
             }
@@ -454,7 +464,7 @@ class Frame {
 
     Frame merge(Frame other) {
         Map<Variable, Expression> res = mergeSources(other);
-        Map<MemberInfo, Expression> resFields = mergeFields(other);
+        Map<MemberInfo, Expression> resFields = mergeFields(other.fieldValues);
         if(resFields == null && res == null)
             return this;
         if(resFields == null)
@@ -464,11 +474,11 @@ class Frame {
         return new Frame(this, res, resFields);
     }
 
-    private Map<MemberInfo, Expression> mergeFields(Frame other) {
+    private Map<MemberInfo, Expression> mergeFields(Map<MemberInfo, Expression> other) {
         Map<MemberInfo, Expression> resFields = null;
         for (Entry<MemberInfo, Expression> e : fieldValues.entrySet()) {
             Expression left = e.getValue();
-            Expression right = other.fieldValues.get(e.getKey());
+            Expression right = other.get(e.getKey());
             Expression phi = left == null || right == null ? null : makePhiNode(left, right);
             if (phi == left)
                 continue;

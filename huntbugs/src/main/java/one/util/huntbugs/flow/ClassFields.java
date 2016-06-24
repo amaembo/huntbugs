@@ -41,6 +41,7 @@ public class ClassFields {
     Map<MemberInfo, Expression> values = new HashMap<>();
     Set<FieldDefinition> initializedInCtor = new HashSet<>();
     MethodStats ms;
+    Map<MemberInfo, Map<MemberInfo, Expression>> ctorFields = new HashMap<>();
 
     public ClassFields(TypeDefinition td, FieldStats fieldStats, MethodStats methodStats) {
         this.ms = methodStats;
@@ -96,5 +97,9 @@ public class ClassFields {
                 values.put(mi, expr);
             }
         });
+    }
+
+    public void clearCtorData() {
+        ctorFields = null;
     }
 }

@@ -23,6 +23,7 @@ import java.util.Map;
 
 
 
+
 import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Maps;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
@@ -32,7 +33,9 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 
 
+
 import com.strobel.assembler.metadata.JvmType;
+import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
@@ -53,6 +56,10 @@ class FrameContext {
     
     boolean isThis(Expression expr) {
         return !md.isStatic() && Exprs.isThis(expr);
+    }
+    
+    Map<MemberInfo, Expression> getCtorFields(MemberReference ctor) {
+        return cf.ctorFields.get(new MemberInfo(ctor));
     }
     
     Map<MemberInfo, Expression> getInitialFields() {
@@ -126,6 +133,7 @@ class FrameContext {
         if(md.isTypeInitializer()) {
             cf.setStaticFinalFields(frame);
         } else if(md.isConstructor()) {
+            cf.ctorFields.put(new MemberInfo(md), frame.fieldValues);
             cf.mergeFinalFields(frame);
         }
     }
