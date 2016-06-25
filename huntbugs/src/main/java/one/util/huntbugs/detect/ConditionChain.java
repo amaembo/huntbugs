@@ -58,7 +58,7 @@ public class ConditionChain {
 
     private void check(Expression left, Expression right, AstCode condCode, MethodContext mc) {
         if (Nodes.isEquivalent(left, right)) {
-            mc.report("SameConditions", 0, left, SAME_CONDITION.create(mc, right));
+            mc.report("SameConditions", 0, left, SAME_CONDITION.create(mc, right), Roles.EXPRESSION.create(left));
         } else if (left.getCode() == condCode && Nodes.isSideEffectFree(right)) {
             if (Nodes.isSideEffectFree(left))
                 check(left.getArguments().get(0), right, condCode, mc);
