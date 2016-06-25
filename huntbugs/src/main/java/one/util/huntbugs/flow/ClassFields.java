@@ -28,6 +28,7 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.Flags;
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.decompiler.ast.Expression;
@@ -74,9 +75,8 @@ public class ClassFields {
         return fd != null && (fd.isFinal() || initializedInCtor.contains(fd));
     }
     
-    void mergeFinalFields(Frame frame) {
-        if(frame == null)
-            return;
+    void mergeConstructor(MethodDefinition md, Frame frame) {
+        ctorFields.put(new MemberInfo(md), frame.fieldValues);
         frame.fieldValues.forEach((mi, expr) -> {
             FieldDefinition fd = fields.get(mi);
             if (fd != null && !fd.isStatic() && (fd.isFinal() || (fd.isPrivate() || fd.isPackagePrivate())
@@ -88,8 +88,6 @@ public class ClassFields {
     }
 
     void setStaticFinalFields(Frame frame) {
-        if(frame == null)
-            return;
         frame.fieldValues.forEach((mi, expr) -> {
             FieldDefinition fd = fields.get(mi);
             if(fd != null && fd.isStatic() && (fd.isFinal() || (fd.isPrivate() || fd.isPackagePrivate())

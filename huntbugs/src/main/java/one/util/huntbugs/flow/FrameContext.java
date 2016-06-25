@@ -130,11 +130,12 @@ class FrameContext {
     }
 
     public void makeFieldsFrom(Frame frame) {
+        if(frame == null)
+            return;
         if(md.isTypeInitializer()) {
             cf.setStaticFinalFields(frame);
         } else if(md.isConstructor()) {
-            cf.ctorFields.put(new MemberInfo(md), frame.fieldValues);
-            cf.mergeFinalFields(frame);
+            cf.mergeConstructor(md, frame);
         }
     }
 }
