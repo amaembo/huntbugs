@@ -16,7 +16,6 @@
 package one.util.huntbugs.testdata;
 
 import java.util.Random;
-
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -156,13 +155,30 @@ public class TestDeadLocalStore {
     }
 
     @AssertNoWarning("*")
-    public void testDeadLocalStoreTernary(int b) {
+    public void testDeadLocalStoreTernaryOk(int b) {
         int x = 2;
         if(b > 0) {
             x = b % 2 == 0 ? 3 : 4;
         }
         System.out.println(x);
     }
+    
+    @AssertNoWarning("*")
+    public void testDeadLocalStoreTernaryOk2(int b) {
+        int c;
+        if(b > 0)
+            c = b % 2 == 0 ? 1 : 2;
+        else
+            c = b % 2 == 0 ? 3 : 4;
+        System.out.println(c);
+    }
+    
+//    @AssertWarning("UnusedLocalVariable")
+//    public void testDeadLocalStoreTernary(boolean flag, int a, int b) {
+//        int c = flag ? a : b;
+//        System.out.println(a);
+//        System.out.println(b);
+//    }
     
     @AssertNoWarning("*")
     public void testThrow(String i) {
