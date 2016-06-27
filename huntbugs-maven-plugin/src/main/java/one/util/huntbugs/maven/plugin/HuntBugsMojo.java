@@ -173,7 +173,7 @@ public class HuntBugsMojo extends AbstractMojo {
         Path xmlFile = path.resolve("report.xml");
         Path htmlFile = path.resolve("report.html");
         HuntBugsResult res = ctx;
-        if(Files.isRegularFile(xmlFile)) {
+        if(diff && Files.isRegularFile(xmlFile)) {
             res = Reports.diff(XmlReportReader.read(ctx, xmlFile), ctx);
         }
         Reports.write(xmlFile, htmlFile, res);
