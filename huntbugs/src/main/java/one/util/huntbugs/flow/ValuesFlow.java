@@ -215,6 +215,7 @@ public class ValuesFlow {
                     TryCatchBlock tryCatch = (TryCatchBlock) n;
                     if (wasMonitor && tryCatch.getCatchBlocks().isEmpty() && Nodes.isSynchorizedBlock(tryCatch)) {
                         process(ctx, tryCatch.getTryBlock());
+                        process(ctx, tryCatch.getFinallyBlock());
                         wasMonitor = false;
                         continue;
                     }
