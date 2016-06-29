@@ -25,6 +25,8 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 public class TestSelfAssignment {
     Object f;
     static Object st;
+    int pos;
+    static int staticPos;
     
     @AssertWarning("SelfAssignmentField")
     void test() {
@@ -67,6 +69,24 @@ public class TestSelfAssignment {
         TestSelfAssignment copy = this;
         Object a = f;
         copy.f = a;
+    }
+    
+    @AssertNoWarning("*")
+    void testIncrement(int[] data) {
+        int curPos = pos;
+        if(data[pos++] > 0) {
+            pos = curPos;
+        }
+        System.out.println("ok");
+    }
+    
+    @AssertNoWarning("*")
+    static void testIncrementStatic(int[] data) {
+        int curPos = staticPos;
+        if(data[staticPos++] > 0) {
+            staticPos = curPos;
+        }
+        System.out.println("ok");
     }
     
     @AssertNoWarning("SelfAssignmentField")

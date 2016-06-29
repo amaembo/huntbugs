@@ -175,6 +175,24 @@ class Frame {
                 Expression source = get(var);
                 Inf.SOURCE.put(expr, fc.makeUpdatedNode(source));
                 return target.replace(var, expr);
+            } else if (arg.getCode() == AstCode.GetField) {
+                FieldReference fr = ((FieldReference) arg.getOperand());
+                if(fc.isThis(Exprs.getChild(arg, 0))) {
+                    MemberInfo mi = new MemberInfo(fr);
+                    Expression prevExpr = fieldValues.get(mi);
+                    if(prevExpr != null)
+                        target = target.replaceField(fr, fc.makeUpdatedNode(prevExpr));
+                }
+                return target.replaceAll(src -> src.getCode() == AstCode.GetField
+                    && fr.isEquivalentTo((FieldReference) src.getOperand()) ? fc.makeUpdatedNode(src) : src);
+            } else if(arg.getCode() == AstCode.GetStatic) {
+                FieldReference fr = ((FieldReference) arg.getOperand());
+                MemberInfo mi = new MemberInfo(fr);
+                Expression prevExpr = fieldValues.get(mi);
+                if(prevExpr != null)
+                    target = target.replaceField(fr, fc.makeUpdatedNode(prevExpr));
+                return target.replaceAll(src -> src.getCode() == AstCode.GetStatic
+                    && fr.isEquivalentTo((FieldReference) src.getOperand()) ? fc.makeUpdatedNode(src) : src);
             }
             return target;
         }
