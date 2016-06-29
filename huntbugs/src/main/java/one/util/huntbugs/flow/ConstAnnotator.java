@@ -43,6 +43,18 @@ public class ConstAnnotator extends Annotator<Object> {
         super("value2", null);
     }
     
+    /**
+     * Returns statically known constant for given expression
+     * 
+     * @param input expression to text
+     * @return statically known constant value (if any) or null (if value is unknown)
+     * Possible return types are:
+     * - boxed primitives
+     * - String
+     * - TypeReference (when constant is class literal)
+     * - EnumConstant (which refers to enum type and enum constant name)
+     * Note that sometimes boolean is returned as Integer (0 = false, 1 = true)
+     */
     public Object getValue(Expression input) {
         Object value = get(input);
         return value == UNKNOWN_VALUE ? null : value;
