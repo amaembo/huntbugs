@@ -128,15 +128,13 @@ public class ConstAnnotator extends Annotator<Object> {
         contextValues = null;
         annotateNode(method);
         if(hasForwardLinks) {
-            isChanged = false;
-            annotateNode(method);
-            if(isChanged) {
+            for(int i=0; i<5; i++) {
                 isChanged = false;
                 annotateNode(method);
-                if(isChanged) {
-                    throw new InternalError("Const annotation is diverged");
-                }
+                if(!isChanged)
+                    return;
             }
+            throw new InternalError("Const annotation is diverged");
         }
     }
 
