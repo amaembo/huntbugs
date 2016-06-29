@@ -1344,5 +1344,11 @@
       <LongDescription><![CDATA[Analysis found that the expression <code>$EXPRESSION$</code>, when executed,
       will likely to throw $EXCEPTION$. Probably something else was intended here.]]></LongDescription>
     </Warning>
+    <Warning Type="AbandonedStream">
+      <Title>Java stream is abandoned</Title>
+      <Description>The $RETURN_VALUE_OF:return_type.plain$ is abandoned after calling $RETURN_VALUE_OF$.</Description>
+      <LongDescription><![CDATA[This code creates $RETURN_VALUE_OF:return_type.html$ and does not use it afterwards.
+      In most of the cases stream produces no effect unless you call a terminal operation. Probably there's some mistake.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

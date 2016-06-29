@@ -208,6 +208,8 @@ public class Formatter {
             return mi.getName();
         if(format.startsWith("type."))
             return formatTypeInfo(mi.getType(), format.substring("type.".length()));
+        if(format.startsWith("return_type."))
+            return formatTypeInfo(mi.getReturnType(), format.substring("return_type.".length()));
         String type = mi.getTypeName();
         int pos = type.lastIndexOf('/');
         if (pos > -1)

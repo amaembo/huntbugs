@@ -197,6 +197,15 @@ public class WarningAnnotation<T> {
             MemberInfo other = (MemberInfo) obj;
             return name.equals(other.name) && signature.equals(other.signature) && type.equals(other.type);
         }
+
+        public TypeInfo getReturnType() {
+            if(!isMethod())
+                throw new IllegalStateException("Must be called for method");
+            String returnType = signature.substring(signature.indexOf(')')+1);
+            if(returnType.startsWith("L"))
+                returnType = returnType.substring(1, returnType.length()-1);
+            return new TypeInfo(returnType);
+        }
     }
 
     public static class Location {
