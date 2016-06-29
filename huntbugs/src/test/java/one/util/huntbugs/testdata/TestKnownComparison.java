@@ -29,6 +29,7 @@ public class TestKnownComparison {
     private Integer f = 0;
     private final int finalField;
     private char ch;
+    private boolean flag;
     
     @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testFinalField() {
@@ -36,10 +37,22 @@ public class TestKnownComparison {
             System.out.println("Never!");
         }
     }
+
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testCompoundStore() {
+        int a, b;
+        a = b = 0;
+        if(a > 15) {
+            System.out.println(b);
+        }
+    }
     
     @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public TestKnownComparison() {
         finalField = 10;
+        if(Math.random() > 0.5) {
+            flag = true;
+        }
         testInstanceFieldOk2(true);
         if(finalField != 10) {
             System.out.println("Never!");
@@ -465,6 +478,20 @@ public class TestKnownComparison {
         }
     }
     
+    private int[] getArray() {
+        return new int[10];
+    }
+
+    @AssertNoWarning("*")
+    public void testArray(boolean b) {
+        int x = 0;
+        if(b)
+            x = getArray().length;
+        if(x > 0) {
+            System.out.println("a");
+        }
+    }
+    
     @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     @AssertNoWarning("ResultOfComparisonIsStaticallyKnown")
     static class TestInitial {
@@ -531,6 +558,13 @@ public class TestKnownComparison {
     private void doSomeProcessing() {
         f++;
         ch--;
+    }
+    
+    @AssertNoWarning("*")
+    public void testBooleanFlag() {
+        if(flag) {
+            System.out.println("a");
+        }
     }
 
     @AssertNoWarning("*")

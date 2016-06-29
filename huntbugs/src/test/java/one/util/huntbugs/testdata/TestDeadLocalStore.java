@@ -237,6 +237,17 @@ public class TestDeadLocalStore {
         int i = 1;
         System.out.println(i);
     }
+
+    @AssertWarning(value="DeadLocalStore", maxScore = 35)
+    public void testDeadLocalStoreInit(boolean x) {
+        int a = 0;
+        if(x) {
+            a = 1;
+        } else {
+            a = 2;
+        }
+        System.out.println(a);
+    }
     
     public void testLocalClass() {
         class X {

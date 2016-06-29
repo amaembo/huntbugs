@@ -387,7 +387,6 @@ public class ValuesFlow {
                 if(child instanceof Expression) {
                     Expression expr = (Expression)child;
                     Inf.SOURCE.remove(expr);
-                    Inf.CONST.remove(expr);
                 }
             }
         }
@@ -422,6 +421,7 @@ public class ValuesFlow {
                 ctx.incStat("ValuesFlow");
             }
         }
+        Inf.CONST.annotate(method);
         Inf.PURITY.annotate(method, fc);
         Inf.BACKLINK.annotate(method);
         return valid ? origParams : null;
