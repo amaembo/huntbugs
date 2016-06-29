@@ -134,11 +134,11 @@ public class Exprs {
         return false;
     }
 
-    public static boolean isParameter(Expression self) {
-        if (self.getCode() == AstCode.Load) {
-            if (self.getOperand() instanceof ParameterDefinition)
+    public static boolean isParameter(Expression expr) {
+        if (expr.getCode() == AstCode.Load) {
+            if (expr.getOperand() instanceof ParameterDefinition)
                 return true;
-            if (self.getOperand() instanceof Variable && ((Variable) self.getOperand()).getOriginalParameter() != null)
+            if (expr.getOperand() instanceof Variable && ((Variable) expr.getOperand()).getOriginalParameter() != null)
                 return true;
         }
         return false;
