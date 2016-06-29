@@ -30,7 +30,9 @@ import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
+import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
+import com.strobel.decompiler.ast.Node;
 
 /**
  * @author shustkost
@@ -64,21 +66,98 @@ public class ConstAnnotator extends Annotator<Object> {
         return constant.equals(get(input));
     }
     
+    private class ContextValues {
+        ContextValues parent;
+        Expression expr;
+        Object value;
+
+        ContextValues(ContextValues parent, Expression expr, Object value) {
+            this.parent = parent;
+            this.expr = expr;
+            this.value = value;
+        }
+        
+        Object resolve(Expression expr) {
+            if(this.expr == expr) {
+                return value;
+            }
+            if(parent != null) {
+                return parent.resolve(expr);
+            }
+            return UNKNOWN_VALUE;
+        }
+    }
+    
     private boolean hasForwardLinks;
     private boolean isChanged;
+    private ContextValues contextValues;
+    
+    private void push(Expression expr, Object value) {
+        if (expr.getCode() == AstCode.LdC || value == null || value == UNKNOWN_VALUE)
+            return;
+        // Zero is excluded as 0.0 == -0.0
+        if (value instanceof Double && ((double)value == 0.0 || Double.isNaN((double) value)))
+            return;
+        if (value instanceof Float && ((float)value == 0.0 || Float.isNaN((float) value)))
+            return;
+        Expression src = ValuesFlow.getSource(expr);
+        if(src == expr)
+            return;
+        contextValues = new ContextValues(contextValues, src, value);
+    }
+    
+    private Object resolve(Expression expr) {
+        if(expr.getCode() == AstCode.LdC) {
+            return expr.getOperand() == null ? UNKNOWN_VALUE : expr.getOperand();
+        }
+        Object val = get(expr);
+        if(val instanceof Exceptional) {
+            return UNKNOWN_VALUE;
+        }
+        if(val != UNKNOWN_VALUE && val != null) {
+            return val;
+        }
+        if(contextValues != null) {
+            return contextValues.resolve(expr);
+        }
+        return val;
+    }
 
     void annotate(Block method) {
         hasForwardLinks = isChanged = false;
-        forExpressions(method, this::update);
+        contextValues = null;
+        annotateNode(method);
         if(hasForwardLinks) {
             isChanged = false;
-            forExpressions(method, this::update);
+            annotateNode(method);
             if(isChanged) {
                 isChanged = false;
-                forExpressions(method, this::update);
+                annotateNode(method);
                 if(isChanged) {
                     throw new InternalError("Const annotation is diverged");
                 }
+            }
+        }
+    }
+
+    private void annotateNode(Node node) {
+        if(node instanceof Condition) {
+            Condition cond = (Condition)node;
+            update(cond.getCondition());
+            ContextValues curCtx = contextValues;
+            pushTrueContext(cond.getCondition());
+            annotateNode(cond.getTrueBlock());
+            contextValues = curCtx;
+            pushFalseContext(cond.getCondition());
+            annotateNode(cond.getFalseBlock());
+            contextValues = curCtx;
+            return;
+        }
+        for(Node child : Nodes.getChildren(node)) {
+            if(child instanceof Expression) {
+                update((Expression)child);
+            } else {
+                annotateNode(child);
             }
         }
     }
@@ -95,14 +174,38 @@ public class ConstAnnotator extends Annotator<Object> {
     }
     
     private Object computeValue(Expression expr) {
-        if (expr.getCode() == AstCode.TernaryOp) {
+        switch(expr.getCode()) {
+        case TernaryOp: {
             Expression cond = expr.getArguments().get(0);
             Expression left = expr.getArguments().get(1);
             Expression right = expr.getArguments().get(2);
             update(cond);
+            ContextValues curCtx = contextValues;
+            pushTrueContext(cond);
             Object leftVal = update(left);
+            contextValues = curCtx;
+            pushFalseContext(cond);
             Object rightVal = update(right);
+            contextValues = curCtx;
             return Objects.equals(leftVal, rightVal) ? leftVal : UNKNOWN_VALUE;
+        }
+        case LogicalAnd: {
+            update(expr.getArguments().get(0));
+            ContextValues curCtx = contextValues;
+            pushTrueContext(expr.getArguments().get(0));
+            update(expr.getArguments().get(1));
+            contextValues = curCtx;
+            return processBinaryOp(expr, Boolean.class, Boolean.class, Boolean::logicalAnd);
+        }
+        case LogicalOr: {
+            update(expr.getArguments().get(0));
+            ContextValues curCtx = contextValues;
+            pushFalseContext(expr.getArguments().get(0));
+            update(expr.getArguments().get(1));
+            contextValues = curCtx;
+            return processBinaryOp(expr, Boolean.class, Boolean.class, Boolean::logicalOr);
+        }
+        default:
         }
         for(Expression child : expr.getArguments()) {
             update(child);
@@ -112,7 +215,7 @@ public class ConstAnnotator extends Annotator<Object> {
         }
         switch (expr.getCode()) {
         case Store:
-            return get(expr.getArguments().get(0));
+            return resolve(expr.getArguments().get(0));
         case LdC:
             return expr.getOperand();
         case ArrayLength: {
@@ -272,19 +375,43 @@ public class ConstAnnotator extends Annotator<Object> {
         }
     }
 
+    private void pushTrueContext(Expression expr) {
+        if (expr.getCode() == AstCode.LogicalAnd || expr.getCode() == AstCode.And) {
+            pushTrueContext(expr.getArguments().get(0));
+            pushTrueContext(expr.getArguments().get(1));
+        } else if (expr.getCode() == AstCode.CmpEq
+            || (expr.getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod((MethodReference) expr.getOperand()))) {
+            Expression left = expr.getArguments().get(0);
+            Expression right = expr.getArguments().get(1);
+            push(left, resolve(right));
+            push(right, resolve(left));
+        } else if (expr.getCode() == AstCode.LogicalNot) {
+            pushFalseContext(expr.getArguments().get(0));
+        }
+    }
+
+    private void pushFalseContext(Expression expr) {
+        if(expr.getCode() == AstCode.LogicalOr || expr.getCode() == AstCode.Or) {
+            pushFalseContext(expr.getArguments().get(0));
+            pushFalseContext(expr.getArguments().get(1));
+        } else if(expr.getCode() == AstCode.CmpNe) {
+            Expression left = expr.getArguments().get(0);
+            Expression right = expr.getArguments().get(1);
+            push(left, resolve(right));
+            push(right, resolve(left));
+        } else if(expr.getCode() == AstCode.LogicalNot) {
+            pushTrueContext(expr.getArguments().get(0));
+        }
+    }
+
     private Object fromSource(Expression src) {
-        if(src.getCode() == AstCode.LdC && src.getOperand() != null)
-            return src.getOperand();
-        Object value = get(src);
+        Object value = resolve(src);
         if(value != null)
             return value;
         if(src.getCode() == Frame.PHI_TYPE) {
             Object val = null;
             for(Expression child : src.getArguments()) {
-                Object newVal = get(child);
-                if (newVal == null && child.getCode() == AstCode.LdC) {
-                    newVal = child.getOperand();
-                }
+                Object newVal = resolve(child);
                 if (newVal == null) {
                     if (Exprs.isParameter(child) || child.getCode() == Frame.UPDATE_TYPE) {
                         return UNKNOWN_VALUE;
@@ -611,7 +738,11 @@ public class ConstAnnotator extends Annotator<Object> {
             else
                 return UNKNOWN_VALUE;
         }
-        return op.apply(type.cast(arg));
+        try {
+            return op.apply(type.cast(arg));
+        } catch (Exception e) {
+            return new Exceptional(e);
+        }
     }
 
     private <A, B> Object processBinaryOp(Expression expr, Class<A> leftType, Class<B> rightType, BiFunction<A, B, ?> op) {
@@ -626,9 +757,8 @@ public class ConstAnnotator extends Annotator<Object> {
         try {
             return op.apply(leftType.cast(left), rightType.cast(right));
         } catch (Exception e) {
-            // ignore
+            return new Exceptional(e);
         }
-        return UNKNOWN_VALUE;
     }
 
     private static JvmType getType(Expression expr) {

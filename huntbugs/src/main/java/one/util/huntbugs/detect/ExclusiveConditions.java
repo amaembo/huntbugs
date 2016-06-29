@@ -100,15 +100,24 @@ public class ExclusiveConditions {
     private void checkEqual(Expression equality, Expression other, MethodContext mc) {
         Nodes.ifBinaryWithConst(equality, (arg, constant) -> {
             if (isEquality(other)) {
-                Nodes.ifBinaryWithConst(other, (arg2, constant2) -> {
-                    if (Equi.equiExpressions(arg, arg2) && !Objects.equals(constant, constant2)) {
-                        // non-short-circuit logic is intended
-                        if (reported.add(arg) & reported.add(arg2)) {
-                            mc.report("AndEqualsAlwaysFalse", 0, arg, CONST1.createFromConst(constant), CONST2
-                                    .createFromConst(constant2));
-                        }
+                Expression left = other.getArguments().get(0);
+                Expression right = other.getArguments().get(1);
+                Expression arg2 = null;
+                Object constant2 = null;
+                if(Equi.equiExpressions(arg, left)) {
+                    constant2 = Nodes.getConstant(right);
+                    arg2 = left;
+                } else if(Equi.equiExpressions(arg, right)) {
+                    constant2 = Nodes.getConstant(left);
+                    arg2 = right;
+                }
+                if(constant2 != null && !Objects.equals(constant, constant2)) {
+                    // non-short-circuit logic is intended
+                    if (reported.add(arg) & reported.add(arg2)) {
+                        mc.report("AndEqualsAlwaysFalse", 0, arg, CONST1.createFromConst(constant), CONST2
+                                .createFromConst(constant2));
                     }
-                });
+                }
             }
             if (other.getCode() == AstCode.LogicalAnd) {
                 checkEqual(equality, other.getArguments().get(0), mc);
@@ -120,15 +129,24 @@ public class ExclusiveConditions {
     private void checkNonEqual(Expression equality, Expression other, MethodContext mc) {
         Nodes.ifBinaryWithConst(equality, (arg, constant) -> {
             if (isNonEquality(other)) {
-                Nodes.ifBinaryWithConst(other, (arg2, constant2) -> {
-                    if (Equi.equiExpressions(arg, arg2) && !Objects.equals(constant, constant2)) {
-                        // non-short-circuit logic is intended
-                        if (reported.add(arg) & reported.add(arg2)) {
-                            mc.report("OrNotEqualsAlwaysTrue", 0, arg, CONST1.createFromConst(
-                                constant), CONST2.createFromConst(constant2));
-                        }
+                Expression left = other.getArguments().get(0);
+                Expression right = other.getArguments().get(1);
+                Expression arg2 = null;
+                Object constant2 = null;
+                if(Equi.equiExpressions(arg, left)) {
+                    constant2 = Nodes.getConstant(right);
+                    arg2 = left;
+                } else if(Equi.equiExpressions(arg, right)) {
+                    constant2 = Nodes.getConstant(left);
+                    arg2 = right;
+                }
+                if(constant2 != null && !Objects.equals(constant, constant2)) {
+                    // non-short-circuit logic is intended
+                    if (reported.add(arg) & reported.add(arg2)) {
+                        mc.report("OrNotEqualsAlwaysTrue", 0, arg, CONST1.createFromConst(constant), CONST2
+                                .createFromConst(constant2));
                     }
-                });
+                }
             }
             if (other.getCode() == AstCode.LogicalOr) {
                 checkNonEqual(equality, other.getArguments().get(0), mc);

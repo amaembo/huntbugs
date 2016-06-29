@@ -17,6 +17,7 @@ package one.util.huntbugs.testdata;
 
 import java.util.concurrent.TimeUnit;
 
+import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
 /**
@@ -31,6 +32,13 @@ public class TestExclusiveConditions {
         }
     }
 
+    @AssertNoWarning("*")
+    public void testDiff(int x, int y) {
+        if(x == 1 && y == 2) {
+            System.out.println("Possible");
+        }
+    }
+    
     @AssertWarning("OrNotEqualsAlwaysTrue")
     public void testOr(int x) {
         if(x != 1 || x != 2) {

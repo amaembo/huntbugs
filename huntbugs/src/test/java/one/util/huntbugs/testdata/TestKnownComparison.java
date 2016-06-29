@@ -88,7 +88,64 @@ public class TestKnownComparison {
             System.out.println("Always!");
         }
     }
+    
+    @AssertWarning("ResultOfComparisonIsStaticallyKnown")
+    public void testTernaryConstCompare(int a) {
+        int x = a == 5 ? a : 5;
+        if (x == 5) {
+            System.out.println("Ok");
+        }
+    }
 
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testIfConstCompare(int a) {
+        if (a == 5) {
+            System.out.println("A is 5");
+            if (a > 6) {
+                System.out.println("Cannot be");
+            }
+        }
+    }
+    
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testIfConstNotCompare(int a, int b) {
+        if (a != 5 || b != 10) {
+            System.out.println("A is 5 and B is 10");
+        } else {
+            if (a > 6) {
+                System.out.println("Cannot be");
+            }
+        }
+    }
+    
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testIfConstStrings(String x) {
+        if (x.equals("123")) {
+            if (x.length() == 4) {
+                System.out.println("Cannot be");
+            }
+        }
+    }
+    
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testIfConstStringsNot(String x) {
+        if (!x.equals("123") || Math.random() > 0.5) {
+            System.out.println("x is not 123 or random is big");
+        } else {
+            if (x.length() == 4) {
+                System.out.println("Cannot be");
+            }
+        }
+    }
+    
+    @AssertWarning("ResultOfComparisonIsStaticallyKnown")
+    public void testTernaryConstCompare2(int a) {
+        int x = a != 5 ? 7 : a + 2;
+        if (x == 7) {
+            System.out.println("Ok");
+        }
+    }
+    
     @AssertWarning("ResultOfComparisonIsStaticallyKnown")
     public void testIntegerStringCompare() {
         int x = 100;

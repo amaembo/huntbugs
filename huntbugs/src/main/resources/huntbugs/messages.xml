@@ -1338,5 +1338,11 @@
       <LongDescription><![CDATA[The class $TYPE$ is annotated as <code>@Immutable</code>. However it 
       declares the mutable field $FIELD$. Make this field either final or transient.]]></LongDescription>
     </Warning>
+    <Warning Type="ExceptionalExpression">
+      <Title>Expression execution will always fail</Title>
+      <Description>Execution of this code will always throw $EXCEPTION$.</Description>
+      <LongDescription><![CDATA[Analysis found that the expression <code>$EXPRESSION$</code>, when executed,
+      will likely to throw $EXCEPTION$. Probably something else was intended here.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>
