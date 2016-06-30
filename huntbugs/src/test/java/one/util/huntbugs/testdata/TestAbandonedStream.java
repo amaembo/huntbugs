@@ -32,6 +32,13 @@ public class TestAbandonedStream {
         list.stream().map(String::trim);
     }
     
+    @AssertNoWarning("AbandonedStream")
+    public Stream<String> testClose(List<String> list) {
+        Stream<String> stream = list.stream();
+        stream.onClose(() -> System.out.println("Closed!"));
+        return stream;
+    }
+    
     @AssertNoWarning("*")
     public void testSimpleOk(List<String> list) {
         list.stream().map(String::trim).forEach(System.out::println);

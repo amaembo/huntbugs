@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.stream.BaseStream;
+
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
@@ -36,8 +38,10 @@ public class AbandonedStream {
     public void visit(Expression expr, MethodContext mc) {
         if(expr.getCode() == AstCode.InvokeInterface) {
             MethodReference mr = (MethodReference) expr.getOperand();
-            if(mr.getReturnType().getPackageName().equals("java.util.stream") && 
-                    Types.isBaseStream(mr.getReturnType())) {
+            if(mr.getReturnType().getPackageName().equals("java.util.stream")
+                 // .parallel()/.sequential()/.onClose()/.unordered() excluded as may return itself
+                    && !Types.is(mr.getReturnType(), BaseStream.class) 
+                    && Types.isBaseStream(mr.getReturnType())) {
                 // intermediate stream operation
                 if(mc.isAnnotated() && !Inf.BACKLINK.findTransitiveUsages(expr, true).findAny().isPresent()) {
                     mc.report("AbandonedStream", 0, expr);
