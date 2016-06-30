@@ -81,10 +81,10 @@ public class AtomicConcurrent {
                         }
                     }
                     if(nc != null && nc.isSynchronized() || Flags.testAny(md.getFlags(), Flags.SYNCHRONIZED)) {
-                        priority += 20;
+                        priority += 40;
                     }
                     if(Types.isImmutable(value.getInferredType())) {
-                        priority += 20;
+                        priority += 30;
                     }
                     if (prevCall != null) {
                         mc.report("NonAtomicOperationOnConcurrentMap", priority, self, FIRST_METHOD.create(
