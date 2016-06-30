@@ -23,6 +23,7 @@ import java.util.Set;
 import one.util.huntbugs.db.FieldStats;
 import one.util.huntbugs.db.MethodStats;
 import one.util.huntbugs.db.MethodStats.MethodData;
+import one.util.huntbugs.util.Annotations;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
@@ -50,7 +51,8 @@ public class ClassFields {
             fields.put(new MemberInfo(fd), fd);
             int flags = fieldStats.getFlags(fd);
             if(Flags.testAny(flags, FieldStats.WRITE_CONSTRUCTOR) &&
-                    !Flags.testAny(flags, FieldStats.WRITE_CLASS | FieldStats.WRITE_PACKAGE | FieldStats.WRITE_OUTSIDE)) {
+                    !Flags.testAny(flags, FieldStats.WRITE_CLASS | FieldStats.WRITE_PACKAGE | FieldStats.WRITE_OUTSIDE) &&
+                    !Annotations.hasAnnotation(fd, true)) {
                 initializedInCtor.add(fd);
             }
         }
