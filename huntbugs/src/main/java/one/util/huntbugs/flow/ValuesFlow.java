@@ -131,6 +131,11 @@ public class ValuesFlow {
                     // Something unsupported occurred
                     return;
                 } else if (n instanceof Expression) {
+                    if(passFrame == null) {
+                        // strange case: expression is unreachable
+                        valid = false;
+                        return;
+                    }
                     Expression expr = (Expression) n;
                     switch (expr.getCode()) {
                     case LoopOrSwitchBreak:
@@ -182,11 +187,6 @@ public class ValuesFlow {
                         wasMonitor = true;
                         continue;
                     default:
-                    }
-                    if(passFrame == null) {
-                        valid = false;
-                        return;
-                        //throw new IllegalStateException(expr.toString());
                     }
                     passFrame = passFrame.process(expr, targets);
                 } else if (n instanceof Condition) {
