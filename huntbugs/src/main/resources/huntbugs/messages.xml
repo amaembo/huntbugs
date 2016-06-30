@@ -1356,5 +1356,17 @@
       <LongDescription><![CDATA[This code creates $RETURN_VALUE_OF:return_type.html$ and does not use it afterwards.
       In most of the cases stream produces no effect unless you call a terminal operation. Probably there's some mistake.]]></LongDescription>
     </Warning>
+    <Warning Type="UselessVoidMethod">
+      <Title>Useless void method</Title>
+      <Description>The method $METHOD$ seems to do nothing useful.</Description>
+      <LongDescription><![CDATA[Analysis discovers that void method $METHOD$ has non-trivial body, yet does nothing useful.
+      Probably there's some mistake.]]></LongDescription>
+    </Warning>
+    <Warning Type="MutableEnumField">
+      <Title>Mutable public enum field</Title>
+      <Description>The public enum field $FIELD$ can be modified by malicious code.</Description>
+      <LongDescription><![CDATA[The enum field $FIELD$ can be uncontrollably modified by anybody affecting the global state
+      of your application. Consider declaring it private or protect writes to it in some other way.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

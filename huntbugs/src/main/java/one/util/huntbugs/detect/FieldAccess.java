@@ -81,6 +81,7 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
 @WarningDefinition(category="MaliciousCode", name="StaticFieldShouldBeNonInterfacePackagePrivate", maxScore=30)
 @WarningDefinition(category = "MaliciousCode", name = "ExposeMutableFieldViaReturnValue", maxScore = 35)
 @WarningDefinition(category = "MaliciousCode", name = "ExposeMutableStaticFieldViaReturnValue", maxScore = 50)
+@WarningDefinition(category = "MaliciousCode", name = "MutableEnumField", maxScore = 55)
 public class FieldAccess {
     private static final Set<String> MUTABLE_COLLECTION_CLASSES = new HashSet<>(Arrays.asList("java/util/ArrayList",
         "java/util/HashSet", "java/util/HashMap", "java/util/Hashtable", "java/util/IdentityHashMap",
@@ -268,6 +269,13 @@ public class FieldAccess {
         if(checkNull(fc, fd, td, fieldRecord, flags))
             return;
         checkSingleMethod(fc, fd, fieldRecord, flags);
+        if(td.isEnum() && fieldRecord != null && !fd.isStatic()) {
+            boolean mutable = fieldRecord.mutable;
+            if(fd.isPublic() && (!fd.isFinal() || mutable)) {
+                fc.report("MutableEnumField", 0, getWriteAnnotations(fieldRecord));
+                return;
+            }
+        }
         if(fd.isStatic() && (fd.isPublic() || fd.isProtected()) && (td.isPublic() || td.isProtected())) {
             boolean mutable = fieldRecord != null && fieldRecord.mutable;
             if(!fd.isFinal() && Flags.testAny(flags, FieldStats.WRITE_CONSTRUCTOR) &&

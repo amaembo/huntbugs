@@ -94,11 +94,16 @@ public class MethodStats extends AbstractTypeDatabase<Boolean> {
             case INVOKEINTERFACE:
             case INVOKESPECIAL:
             case INVOKESTATIC:
-            case INVOKEVIRTUAL:
-                if(!Methods.isSideEffectFree(((MethodReference)instr.getOperand(0)))) {
+            case INVOKEVIRTUAL: {
+                MethodReference mr = (MethodReference)instr.getOperand(0);
+                if(!Methods.isSideEffectFree(mr)) {
                     mdata.flags |= METHOD_MAY_HAVE_SIDE_EFFECT;
                 }
+                if(Methods.knownToThrow(mr)) {
+                    mdata.flags |= METHOD_MAY_THROW;
+                }
                 break;
+            }
             case PUTFIELD:
             case PUTSTATIC:
             case INVOKEDYNAMIC:

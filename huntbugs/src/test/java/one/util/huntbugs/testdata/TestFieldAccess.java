@@ -18,6 +18,7 @@ package one.util.huntbugs.testdata;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
@@ -142,6 +143,26 @@ public class TestFieldAccess {
     @AssertNoWarning("*")
     public enum MyEnum {
         A, B, C;
+    }
+
+    public enum MyEnum2 {
+        A, B, C;
+        
+        @AssertWarning("StaticFieldShouldBeFinal")
+        public static String STATIC = "";
+        
+        @AssertWarning("MutableEnumField")
+        public String field;
+        
+        public final List<String> list = Arrays.asList("a", "b", "c");
+        
+        public void agg(String s) {
+            field += s;
+        }
+        
+        public String get(int i) {
+            return list.get(i);
+        }
     }
     
     @AssertWarning("FieldIsAlwaysNull")

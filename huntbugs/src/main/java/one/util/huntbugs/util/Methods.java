@@ -57,6 +57,15 @@ public class Methods {
                 mr.getDeclaringType().getInternalName().equals(internalTypeName);
     }
     
+    public static boolean knownToThrow(MethodReference mr) {
+        if (mr.getName().startsWith("assert") || mr.getName().startsWith("require")
+            || mr.getDeclaringType().getSimpleName().equals("Assert"))
+            return true;
+        if (Types.isBoxed(mr.getDeclaringType()) && mr.getName().startsWith("parse"))
+            return true;
+        return false;
+    }
+    
     public static MethodDefinition findSuperMethod(MethodReference mr) {
         MethodDefinition md = mr.resolve();
         if(md == null)
