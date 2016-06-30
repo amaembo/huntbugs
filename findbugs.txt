@@ -193,6 +193,7 @@ abbrev="DLS" type="DLS_DEAD_LOCAL_STORE" category="STYLE" --> DeadLocalStore, De
 abbrev="DLS" type="DLS_DEAD_LOCAL_STORE_OF_NULL" category="STYLE" --> DeadLocalStore, DeadParameterStore, UnusedLocalVariable
 abbrev="BSHIFT" type="BSHIFT_WRONG_ADD_PRIORITY" category="CORRECTNESS" --> BitShiftWrongPriority
 abbrev="JCIP" type="JCIP_FIELD_ISNT_FINAL_IN_IMMUTABLE_CLASS" category="BAD_PRACTICE" --> NonFinalFieldInImmutableClass
+abbrev="Se" type="SE_METHOD_MUST_BE_PRIVATE" category="CORRECTNESS" --> SerializationMethodMustBePrivate
 
 ==== Not reimplemented
 
@@ -280,7 +281,6 @@ abbrev="Se" type="SE_READ_RESOLVE_MUST_RETURN_OBJECT" category="BAD_PRACTICE"
 abbrev="Se" type="SE_TRANSIENT_FIELD_NOT_RESTORED" category="BAD_PRACTICE"
 abbrev="WS" type="WS_WRITEOBJECT_SYNC" category="MT_CORRECTNESS"
 abbrev="RS" type="RS_READOBJECT_SYNC" category="MT_CORRECTNESS"
-abbrev="Se" type="SE_METHOD_MUST_BE_PRIVATE" category="CORRECTNESS"
 abbrev="Se" type="SE_BAD_FIELD" category="BAD_PRACTICE"
 abbrev="Se" type="SE_INNER_CLASS" category="BAD_PRACTICE"
 abbrev="Se" type="SE_BAD_FIELD_INNER_CLASS" category="BAD_PRACTICE"

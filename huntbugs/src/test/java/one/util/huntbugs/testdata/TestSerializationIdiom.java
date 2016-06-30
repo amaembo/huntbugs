@@ -15,21 +15,31 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.Comparator;
 
+import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
 /**
  * @author Tagir Valeev
  *
  */
-public class TestSerializationIdiom {
+public class TestSerializationIdiom implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @AssertWarning("ComparatorIsNotSerializable")
     public class MyComparator implements Comparator<String> {
         @Override
         public int compare(String o1, String o2) {
             return o1.toLowerCase().compareTo(o2.toLowerCase());
+        }
+
+        @AssertNoWarning("SerializationMethodMustBePrivate")
+        void readObjectNoData() {
         }
     }
     
@@ -49,5 +59,19 @@ public class TestSerializationIdiom {
     public static class NonLongUid implements Serializable {
         @AssertWarning("SerialVersionUidNotLong")
         static final int serialVersionUID = 1;
+    }
+    
+    @AssertWarning("SerializationMethodMustBePrivate")
+    void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
+        ois.defaultReadObject();
+    }
+    
+    @AssertWarning("SerializationMethodMustBePrivate")
+    public void readObjectNoData() {
+    }
+    
+    @AssertWarning("SerializationMethodMustBePrivate")
+    protected void writeObject(ObjectOutputStream oos) throws IOException {
+        oos.defaultWriteObject();
     }
 }

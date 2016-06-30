@@ -794,6 +794,12 @@
       <LongDescription><![CDATA[This class defines a $FIELD$ which type is <code>int</code>.
        The field type should be changed to <code>long</code> if it is intended to specify the version UID for purposes of serialization.]]></LongDescription>
     </Warning>
+    <Warning Type="SerializationMethodMustBePrivate">
+      <Title>Serialization method must be private</Title>
+      <Description>Serialization method $METHOD$ must be private.</Description>
+      <LongDescription><![CDATA[This class is serializable and defines $METHOD$ for custom serialization or deserialization.
+      But since that method isn't declared private, it will be silently ignored by the serialization/deserialization API.]]></LongDescription>
+    </Warning>
     <Warning Type="RedundantInterface">
       <Title>Class implements the same interface as superclass</Title>
       <Description>Class $TYPE$ implements $INTERFACE$ which is already implemented by superclass.</Description>

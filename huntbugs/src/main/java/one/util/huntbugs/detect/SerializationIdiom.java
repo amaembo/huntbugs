@@ -17,13 +17,16 @@ package one.util.huntbugs.detect;
 
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.JvmType;
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 
 import one.util.huntbugs.registry.ClassContext;
 import one.util.huntbugs.registry.FieldContext;
+import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.ClassVisitor;
 import one.util.huntbugs.registry.anno.FieldVisitor;
+import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Role.TypeRole;
@@ -36,13 +39,17 @@ import one.util.huntbugs.warning.Role.TypeRole;
 @WarningDefinition(category="Serialization", name="SerialVersionUidNotFinal", maxScore=50)
 @WarningDefinition(category="Serialization", name="SerialVersionUidNotStatic", maxScore=50)
 @WarningDefinition(category="Serialization", name="SerialVersionUidNotLong", maxScore=40)
+@WarningDefinition(category="Serialization", name="SerializationMethodMustBePrivate", maxScore=60)
 public class SerializationIdiom {
     private static final TypeRole SHOULD_IMPLEMENT = TypeRole.forName("SHOULD_IMPLEMENT");
     
+    boolean isSerializable;
+    
     @ClassVisitor
     public void visitClass(TypeDefinition td, ClassContext cc) {
+        isSerializable = Types.isInstance(td, "java/io/Serializable");
         if(Types.isInstance(td, "java/util/Comparator") && !td.isAnonymous() && !td.isLocalClass()
-                && !Types.isInstance(td, "java/io/Serializable")) {
+                && !isSerializable) {
             int priority = 0;
             for(FieldDefinition fd : td.getDeclaredFields()) {
                 TypeReference fieldType = fd.getFieldType();
@@ -57,6 +64,26 @@ public class SerializationIdiom {
                 }
             }
             cc.report("ComparatorIsNotSerializable", priority, SHOULD_IMPLEMENT.create("java/io/Serializable"));
+        }
+    }
+    
+    @MethodVisitor
+    public void visitMethod(MethodDefinition md, MethodContext mc) {
+        if(isSerializable) {
+            switch(md.getName()) {
+            case "readObject":
+                if(md.getSignature().equals("(Ljava/io/ObjectInputStream;)V") && !md.isPrivate())
+                    mc.report("SerializationMethodMustBePrivate", 0);
+                break;
+            case "readObjectNoData":
+                if(md.getSignature().equals("()V") && !md.isPrivate())
+                    mc.report("SerializationMethodMustBePrivate", 0);
+                break;
+            case "writeObject":
+                if(md.getSignature().equals("(Ljava/io/ObjectOutputStream;)V") && !md.isPrivate())
+                    mc.report("SerializationMethodMustBePrivate", 0);
+                break;
+            }
         }
     }
     
