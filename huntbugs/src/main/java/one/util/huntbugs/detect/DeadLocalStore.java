@@ -56,7 +56,7 @@ public class DeadLocalStore {
             Expression arg = expr.getArguments().get(0);
             if(arg.getCode() == AstCode.Store) {
                 mc.report("DeadStoreInReturn", 0, arg);
-            } else if(arg.getCode() == AstCode.PreIncrement || arg.getCode() == AstCode.PostIncrement) {
+            } else if(arg.getCode() == AstCode.PostIncrement) {
                 Expression var = arg.getArguments().get(0);
                 if(var.getOperand() instanceof Variable)
                     mc.report("DeadIncrementInReturn", 0, var);
@@ -67,7 +67,7 @@ public class DeadLocalStore {
             if(var.isGenerated())
                 return;
             Expression child = expr.getArguments().get(0);
-            if(child.getCode() == AstCode.PostIncrement) { // XXX: bug in Procyon? Seems that should be PreIncrement
+            if(child.getCode() == AstCode.PostIncrement) {
                 Expression load = child.getArguments().get(0);
                 if(load.getCode() == AstCode.Load && var.equals(load.getOperand()) && Integer.valueOf(1).equals(child.getOperand())) {
                     mc.report("DeadIncrementInAssignment", 0, expr, Roles.EXPRESSION.create(var.getName() + " = " + var

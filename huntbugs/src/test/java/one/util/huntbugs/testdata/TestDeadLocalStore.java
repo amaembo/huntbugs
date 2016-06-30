@@ -53,6 +53,12 @@ public class TestDeadLocalStore {
         return x++;
     }
 
+    @AssertNoWarning("*")
+    public int testDeadIncrementOk(int x) {
+        x++;
+        return x;
+    }
+    
     @AssertNoWarning("DeadIncrementInReturn")
     public int testFieldIncrement() {
         return x++;
