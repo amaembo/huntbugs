@@ -1368,5 +1368,17 @@
       <LongDescription><![CDATA[The enum field $FIELD$ can be uncontrollably modified by anybody affecting the global state
       of your application. Consider declaring it private or protect writes to it in some other way.]]></LongDescription>
     </Warning>
+    <Warning Type="BadResultSetArgument">
+      <Title>ResultSet method is called with zero columnIndex</Title>
+      <Description>The $CALLED_METHOD$ is called with zero columnIndex.</Description>
+      <LongDescription><![CDATA[This code calls $CALLED_METHOD$ passing zero (or variable which could be zero
+      on some path) as columnIndex. This is incorrect as columns are numbered starting from 1.]]></LongDescription>
+    </Warning>
+    <Warning Type="BadPreparedStatementArgument">
+      <Title>PreparedStatement method is called with zero parameterIndex</Title>
+      <Description>The $CALLED_METHOD$ is called with zero parameterIndex.</Description>
+      <LongDescription><![CDATA[This code calls $CALLED_METHOD$ passing zero (or variable which could be zero
+      on some path) as parameterIndex. This is incorrect as parameters are numbered starting from 1.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

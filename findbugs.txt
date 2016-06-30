@@ -196,6 +196,8 @@ abbrev="JCIP" type="JCIP_FIELD_ISNT_FINAL_IN_IMMUTABLE_CLASS" category="BAD_PRAC
 abbrev="Se" type="SE_METHOD_MUST_BE_PRIVATE" category="CORRECTNESS" --> SerializationMethodMustBePrivate
 abbrev="UC" type="UC_USELESS_VOID_METHOD" category="STYLE" --> UselessVoidMethod
 abbrev="ME" type="ME_MUTABLE_ENUM_FIELD" category="BAD_PRACTICE" --> MutableEnumField
+abbrev="SQL" type="SQL_BAD_RESULTSET_ACCESS" category="CORRECTNESS" --> BadResultSetArgument
+abbrev="SQL" type="SQL_BAD_PREPARED_STATEMENT_ACCESS" category="CORRECTNESS" --> BadPreparedStatementArgument
 
 ==== Not reimplemented
 
