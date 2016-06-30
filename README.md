@@ -1,4 +1,4 @@
-HuntBugs 0.0.6
+HuntBugs 0.0.7
 ===
 
 [![Join the chat at https://gitter.im/amaembo/huntbugs](https://badges.gitter.im/amaembo/huntbugs.svg)](https://gitter.im/amaembo/huntbugs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -9,7 +9,7 @@ HuntBugs 0.0.6
 New Java bytecode static analyzer tool based on [Procyon Compiler Tools](https://bitbucket.org/mstrobel/procyon/overview) aimed to supersede the [FindBugs](http://findbugs.sourceforge.net/).
 Currently in early development stage, though already could be tried.
 
-Currently 190 FindBugs warnings reimplemented and several new warnings added.
+Currently 199 FindBugs warnings reimplemented and several new warnings added.
 
 ### Use with Maven
 
@@ -19,7 +19,7 @@ The output report is located in `target/huntbugs/report.html`
 
 ### Use with Ant
 
-* Build `huntbugs-ant-plugin`
+* Build `huntbugs-ant-plugin` via `mvn package` (or alternatively download from [here](https://oss.sonatype.org/content/repositories/releases/one/util/huntbugs-ant-plugin/))
 * Take the resulting `huntbugs-ant-plugin-<version>-nodeps.jar`
 * Define the task:
 
