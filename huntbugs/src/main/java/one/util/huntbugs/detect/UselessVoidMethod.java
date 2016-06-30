@@ -40,7 +40,7 @@ public class UselessVoidMethod {
     public void checkMethod(Block root, MethodDefinition md, MethodStats ms, MethodContext mc) {
         if(md.getReturnType().isVoid()) {
             MethodData stats = ms.getStats(md);
-            if (!stats.mayHaveSideEffect(true) && !stats.testAny(MethodStats.METHOD_MAY_THROW, true)) {
+            if (stats != null && !stats.mayHaveSideEffect(true) && !stats.testAny(MethodStats.METHOD_MAY_THROW, true)) {
                 List<Node> body = root.getBody();
                 if(body.isEmpty())
                     return;

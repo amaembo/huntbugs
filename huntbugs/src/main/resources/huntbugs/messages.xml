@@ -1380,5 +1380,12 @@
       <LongDescription><![CDATA[This code calls $CALLED_METHOD$ passing zero (or variable which could be zero
       on some path) as parameterIndex. This is incorrect as parameters are numbered starting from 1.]]></LongDescription>
     </Warning>
+    <Warning Type="UnsupportedCall">
+      <Title>Unsupported method call</Title>
+      <Description>The $CALLED_METHOD$ is unsupported.</Description>
+      <LongDescription><![CDATA[This code calls $CALLED_METHOD$. However analysis found that this method
+      as well as and its overrides (if applicable) unconditionally throw <code>UnsupportedOperationException</code>,
+      so it's likely that this call will fail.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

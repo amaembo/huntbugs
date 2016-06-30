@@ -198,6 +198,7 @@ abbrev="UC" type="UC_USELESS_VOID_METHOD" category="STYLE" --> UselessVoidMethod
 abbrev="ME" type="ME_MUTABLE_ENUM_FIELD" category="BAD_PRACTICE" --> MutableEnumField
 abbrev="SQL" type="SQL_BAD_RESULTSET_ACCESS" category="CORRECTNESS" --> BadResultSetArgument
 abbrev="SQL" type="SQL_BAD_PREPARED_STATEMENT_ACCESS" category="CORRECTNESS" --> BadPreparedStatementArgument
+abbrev="Dm" type="DMI_UNSUPPORTED_METHOD" category="STYLE" --> UnsupportedCall
 
 ==== Not reimplemented
 
@@ -224,7 +225,6 @@ abbrev="Nm" type="NM_FUTURE_KEYWORD_USED_AS_IDENTIFIER" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_FUTURE_KEYWORD_USED_AS_MEMBER_IDENTIFIER" category="BAD_PRACTICE"
 abbrev="Dm" type="DMI_CONSTANT_DB_PASSWORD" category="SECURITY" cweid="259"
 abbrev="Dm" type="DMI_EMPTY_DB_PASSWORD" category="SECURITY" cweid="259"
-abbrev="Dm" type="DMI_UNSUPPORTED_METHOD" category="STYLE"
 abbrev="Dm" type="DMI_THREAD_PASSED_WHERE_RUNNABLE_EXPECTED" category="STYLE"
 abbrev="Dm" type="DMI_COLLECTION_OF_URLS" category="PERFORMANCE"
 abbrev="Bx" type="DM_BOXED_PRIMITIVE_FOR_PARSING" category="PERFORMANCE"

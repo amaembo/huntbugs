@@ -26,6 +26,7 @@ import com.strobel.assembler.metadata.MethodBody;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeDefinition;
+import com.strobel.assembler.metadata.TypeReference;
 
 import one.util.huntbugs.registry.AbstractTypeDatabase;
 import one.util.huntbugs.registry.anno.TypeDatabase;
@@ -44,6 +45,7 @@ public class MethodStats extends AbstractTypeDatabase<Boolean> {
     public static final long METHOD_HAS_BODY = 0x8;
     public static final long METHOD_NON_TRIVIAL = 0x10;
     public static final long METHOD_FINAL = 0x20;
+    public static final long METHOD_SUPPORTED = 0x40;
     
     Map<MemberInfo, MethodData> data = new HashMap<>();
     
@@ -77,7 +79,8 @@ public class MethodStats extends AbstractTypeDatabase<Boolean> {
     private void visitMethod(MethodData mdata, MethodDefinition md) {
         MethodBody body = md.getBody();
         if(Flags.testAny(md.getFlags(), Flags.NATIVE)) {
-            mdata.flags |= METHOD_MAY_HAVE_SIDE_EFFECT | METHOD_MAY_RETURN_NORMALLY | METHOD_MAY_THROW | METHOD_NON_TRIVIAL;
+            mdata.flags |= METHOD_MAY_HAVE_SIDE_EFFECT | METHOD_MAY_RETURN_NORMALLY | METHOD_MAY_THROW | METHOD_NON_TRIVIAL
+                    | METHOD_SUPPORTED;
         }
         if(body != null) {
             visitBody(mdata, body);
@@ -89,8 +92,18 @@ public class MethodStats extends AbstractTypeDatabase<Boolean> {
         if(body.getInstructions().size() > 2) {
             mdata.flags |= METHOD_NON_TRIVIAL;
         }
+        boolean sawUnsupported = false, sawOtherNew = false;
         for(Instruction instr : body.getInstructions()) {
             switch(instr.getOpCode()) {
+            case NEW: {
+                TypeReference tr = (TypeReference)instr.getOperand(0);
+                if(tr.getInternalName().equals("java/lang/UnsupportedOperationException")) {
+                    sawUnsupported = true;
+                } else {
+                    sawOtherNew = true;
+                }
+                break;
+            }
             case INVOKEINTERFACE:
             case INVOKESPECIAL:
             case INVOKESTATIC:
@@ -130,6 +143,10 @@ public class MethodStats extends AbstractTypeDatabase<Boolean> {
                 break;
             default:
             }
+        }
+        if(!mdata.testAny(METHOD_MAY_THROW, true) || mdata.testAny(METHOD_MAY_RETURN_NORMALLY, true) ||
+                !sawUnsupported || sawOtherNew) {
+            mdata.flags |= METHOD_SUPPORTED;
         }
     }
 
