@@ -20,6 +20,7 @@ import java.util.List;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.CatchBlock;
+import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
 import one.util.huntbugs.registry.MethodContext;
@@ -68,8 +69,16 @@ public class IgnoredException {
             return true;
         if(body.size() == 1) {
             Node node = body.get(0);
-            if(Nodes.isOp(node, AstCode.Return) || Nodes.isOp(node, AstCode.LoopContinue) || Nodes.isOp(node, AstCode.LoopOrSwitchBreak))
+            if(Nodes.isOp(node, AstCode.LoopContinue) || Nodes.isOp(node, AstCode.LoopOrSwitchBreak))
                 return true;
+            if(Nodes.isOp(node, AstCode.Return)) {
+                Expression ret = (Expression) node;
+                if(ret.getArguments().isEmpty())
+                    return true;
+                Expression arg = ret.getArguments().get(0);
+                if(Nodes.getConstant(arg) != null || arg.getCode() == AstCode.AConstNull)
+                    return true;
+            }
         }
         return false;
     }

@@ -15,7 +15,6 @@
  */
 package one.util.huntbugs.detect;
 
-import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
@@ -24,7 +23,6 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
-import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Role.NumberRole;
@@ -40,14 +38,13 @@ public class StringIndex {
     private static final NumberRole INDEX = NumberRole.forName("INDEX");
 
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
-    public void visit(Expression node, NodeChain nc, MethodContext ctx, MethodDefinition curMethod) {
+    public void visit(Expression node, MethodContext ctx) {
         if (Nodes.isInvoke(node) && node.getCode() != AstCode.InvokeDynamic) {
-            check(node, (MethodReference) node.getOperand(), nc, ctx, curMethod);
+            check(node, (MethodReference) node.getOperand(), ctx);
         }
     }
 
-    private void check(Expression node, MethodReference mr, NodeChain nc, MethodContext mc,
-            MethodDefinition curMethod) {
+    private void check(Expression node, MethodReference mr, MethodContext mc) {
         String typeName = mr.getDeclaringType().getInternalName();
         String name = mr.getName();
         String signature = mr.getSignature();

@@ -229,9 +229,8 @@ public class HuntBugs {
         Runtime.getRuntime().addShutdownHook(
             new Thread(() -> {
                 try {
-                    ctx.reportErrors(new PrintStream("huntbugs.errors.txt"));
-                    ctx.reportWarnings(new PrintStream("huntbugs.warnings.txt"));
-                    ctx.reportStats(new PrintStream("huntbugs.stats.txt"));
+                    ctx.reportErrors(new PrintStream("huntbugs.errors.txt", "UTF-8"));
+                    ctx.reportStats(new PrintStream("huntbugs.stats.txt", "UTF-8"));
                     HuntBugsResult result = ctx;
                     if(compareTo != null) {
                         try {

@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.testdata;
 
+import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
 /**
@@ -32,6 +33,17 @@ public class TestIgnoredException {
         }
     }
 
+    @AssertNoWarning("IgnoredException")
+    public Exception testOk() {
+        try {
+            System.out.println("Test");
+        }
+        catch(Exception ex) {
+            return ex;
+        }
+        return null;
+    }
+    
     @AssertWarning("IgnoredException")
     public void test2() {
         try {
@@ -53,5 +65,17 @@ public class TestIgnoredException {
                 continue;
             }
         }
+    }
+
+    @AssertWarning("IgnoredException")
+    public Object test4() {
+        try {
+            System.out.println("Test");
+        }
+        catch(Throwable t) {
+            return null;
+        }
+        System.out.println("Passed");
+        return "";
     }
 }
