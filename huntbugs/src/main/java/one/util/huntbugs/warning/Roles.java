@@ -62,10 +62,6 @@ public final class Roles {
      */
     public static final LocationRole ANOTHER_INSTANCE = new LocationRole("ANOTHER_INSTANCE");
     /**
-     * Method which return value is associated with the warning
-     */
-    public static final MemberRole RETURN_VALUE_OF = new MemberRole("RETURN_VALUE_OF", Count.ZERO_ONE);
-    /**
      * Called method which is associated with the warning
      */
     public static final MemberRole CALLED_METHOD = new MemberRole("CALLED_METHOD", Count.ZERO_ONE);

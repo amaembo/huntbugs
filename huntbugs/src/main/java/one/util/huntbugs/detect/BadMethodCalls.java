@@ -180,7 +180,7 @@ public class BadMethodCalls {
         } else if (typeName.equals("java/lang/Double") && name.equals("longBitsToDouble")) {
             Expression arg = Exprs.getChild(node, 0);
             if (arg.getCode() == AstCode.I2L) {
-                ctx.report("DoubleLongBitsToDoubleOnInt", 0, arg, Roles.RETURN_VALUE_OF.create(mr));
+                ctx.report("DoubleLongBitsToDoubleOnInt", 0, arg, Roles.CALLED_METHOD.create(mr));
             }
         } else if (typeName.equals("java/util/concurrent/ThreadPoolExecutor") && name.equals("setMaximumPoolSize")) {
             TypeReference type = ValuesFlow.reduceType(node.getArguments().get(0));

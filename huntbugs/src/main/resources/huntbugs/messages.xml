@@ -116,8 +116,8 @@
     </Warning>
     <Warning Type="RandomDoubleToInt">
       <Title>Random value from 0 to 1 is coerced to the integer 0</Title>
-      <Description>Random value obtained via $RETURN_VALUE_OF$ is coerced to the integer 0 in $METHOD$.</Description>
-      <LongDescription><![CDATA[A double random value is generated via $RETURN_VALUE_OF$ and converted into integer. This method generates values from 0 to 1 (excluding), so the result of this conversion is always zero. 
+      <Description>Random value obtained via $CALLED_METHOD$ is coerced to the integer 0 in $METHOD$.</Description>
+      <LongDescription><![CDATA[A double random value is generated via $CALLED_METHOD$ and converted into integer. This method generates values from 0 to 1 (excluding), so the result of this conversion is always zero. 
       You probably want to multiply the random value by something else before coercing it to an integer, or use the $REPLACEMENT$ method. 
    ]]></LongDescription>
     </Warning>
@@ -163,7 +163,7 @@
     <Warning Type="DoubleLongBitsToDoubleOnInt">
       <Title>Double.longBitsToDouble invoked on an int</Title>
       <Description>Double.longBitsToDouble invoked on an int in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code invokes $RETURN_VALUE_OF$ method, but a 32 bit int value is passed as an argument. This almostly certainly is not intended and is unlikely to give the intended result.]]></LongDescription>
+      <LongDescription><![CDATA[This code invokes $CALLED_METHOD$ method, but a 32 bit int value is passed as an argument. This almostly certainly is not intended and is unlikely to give the intended result.]]></LongDescription>
     </Warning>
     <Warning Type="NonAtomicOperationOnConcurrentMap">
       <Title>Non-atomic sequence of operations on ConcurrentMap</Title>
@@ -313,9 +313,9 @@
     </Warning>
     <Warning Type="IntegerPromotionInCeilOrRound">
       <Title>An integer value is cast to float and passed to the rounding method</Title>
-      <Description>A value of $SOURCE_TYPE$ type is promoted to $TARGET_TYPE$ and passed into $RETURN_VALUE_OF$.</Description>
+      <Description>A value of $SOURCE_TYPE$ type is promoted to $TARGET_TYPE$ and passed into $CALLED_METHOD$.</Description>
       <LongDescription><![CDATA[This code tries to round the value which type is already integral, so the rounding operation will unlikely to have an effect. 
-      Check the argument of $RETURN_VALUE_OF$.]]></LongDescription>
+      Check the argument of $CALLED_METHOD$.]]></LongDescription>
     </Warning>
     <Warning Type="WaitNotInLoop">
       <Title>Wait not in loop</Title>
@@ -364,8 +364,8 @@
     </Warning>
     <Warning Type="URLBlockingMethod">
       <Title>The equals and hashCode methods of URL are blocking</Title>
-      <Description>A $RETURN_VALUE_OF$ is called which may unexpectedly perform a network request.</Description>
-      <LongDescription><![CDATA[This code calls $RETURN_VALUE_OF$ method. Such method may perform a DNS request to resolve the domain name which
+      <Description>A $CALLED_METHOD$ is called which may unexpectedly perform a network request.</Description>
+      <LongDescription><![CDATA[This code calls $CALLED_METHOD$ method. Such method may perform a DNS request to resolve the domain name which
       may result in unexpected performance hit. Consider using <code>java.net.URI</code> instead.]]></LongDescription>
     </Warning>
     <Warning Type="UselessAndWithMinusOne">
@@ -618,23 +618,23 @@
     </Warning>
     <Warning Type="UnsafeGetResource">
       <Title>Class.getResource() may return unexpected results in subclasses</Title>
-      <Description>$RETURN_VALUE_OF$ method may return unexpected results in subclasses.</Description>
-      <LongDescription><![CDATA[This code calls <code>this.getClass().$RETURN_VALUE_OF:name$($ARGUMENT$)</code>. If this class is extended in another package,
+      <Description>$CALLED_METHOD$ method may return unexpected results in subclasses.</Description>
+      <LongDescription><![CDATA[This code calls <code>this.getClass().$CALLED_METHOD:name$($ARGUMENT$)</code>. If this class is extended in another package,
       <code>this.getClass()</code> will return another class and this call will likely to fail.<br>
-      Consider replacing this code with <code>$TYPE:plain$.class.$RETURN_VALUE_OF:name$($ARGUMENT$)</code>. If this class is not supposed to be extended, declare it as <code>final</code>.]]></LongDescription>
+      Consider replacing this code with <code>$TYPE:plain$.class.$CALLED_METHOD:name$($ARGUMENT$)</code>. If this class is not supposed to be extended, declare it as <code>final</code>.]]></LongDescription>
     </Warning>
     <Warning Type="HashCodeRemainder">
       <Title>Remainder of hashCode() is used as index</Title>
-      <Description>Remainder of $RETURN_VALUE_OF$ is used as index in $METHOD$.</Description>
+      <Description>Remainder of $CALLED_METHOD$ is used as index in $METHOD$.</Description>
       <LongDescription><![CDATA[This code computes a hashCode, and then computes the remainder of that value modulo another value like <code>(x.hashCode() % n)</code>. Since the hashCode can be negative, the result of the remainder operation can also be negative.
       The result is then used as index which must be non-negative, so this code may fail with <code>IndexOutOfBoundsException</code>.<br>
       You may fix this code using <code>Math.abs(x.hashCode() % n)</code> instead.]]></LongDescription>
     </Warning>
     <Warning Type="RandomIntRemainder">
       <Title>Remainder of Random.nextInt() is used as index</Title>
-      <Description>Remainder of $RETURN_VALUE_OF$ is used as index in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code computes a random integer, and then computes the remainder of that value modulo another value like <code>($RETURN_VALUE_OF:plain$ % n)</code>. 
-      Since the $RETURN_VALUE_OF$ may return negative value, the result of the remainder operation can also be negative.
+      <Description>Remainder of $CALLED_METHOD$ is used as index in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code computes a random integer, and then computes the remainder of that value modulo another value like <code>($CALLED_METHOD:plain$ % n)</code>. 
+      Since the $CALLED_METHOD$ may return negative value, the result of the remainder operation can also be negative.
       The result is then used as index which must be non-negative, so this code may fail with <code>IndexOutOfBoundsException</code>.<br>
       You may fix this code using <code>nextInt(n)</code> instead.]]></LongDescription>
     </Warning>
@@ -755,19 +755,19 @@
     </Warning>
     <Warning Type="UselessStringSubstring">
       <Title>Useless String.substring(0)</Title>
-      <Description>Passing 0 to $RETURN_VALUE_OF$ is useless.</Description>
-      <LongDescription><![CDATA[A $RETURN_VALUE_OF$ is called like <code>str.$RETURN_VALUE_OF:name$(0)</code>. This is useless as the resulting string
+      <Description>Passing 0 to $CALLED_METHOD$ is useless.</Description>
+      <LongDescription><![CDATA[A $CALLED_METHOD$ is called like <code>str.$CALLED_METHOD:name$(0)</code>. This is useless as the resulting string
       will be the same as the original one. Remove this call.]]></LongDescription>
     </Warning>
     <Warning Type="StringIndexIsLessThanZero">
       <Title>String index is less than zero</Title>
-      <Description>Negative index or length $INDEX$ is passed to $RETURN_VALUE_OF$.</Description>
-      <LongDescription><![CDATA[Negative index or length $INDEX$ is passed to $RETURN_VALUE_OF$ which will result in <code>IndexOutOfBoundsException</code> at runtime.]]></LongDescription>
+      <Description>Negative index or length $INDEX$ is passed to $CALLED_METHOD$.</Description>
+      <LongDescription><![CDATA[Negative index or length $INDEX$ is passed to $CALLED_METHOD$ which will result in <code>IndexOutOfBoundsException</code> at runtime.]]></LongDescription>
     </Warning>
     <Warning Type="StringIndexIsGreaterThanAllowed">
       <Title>String index is too big</Title>
-      <Description>Index $INDEX$ passed to $RETURN_VALUE_OF$ exceeds maximum possible value of $MAX_VALUE$.</Description>
-      <LongDescription><![CDATA[Index or length $INDEX$ passed to $RETURN_VALUE_OF$ exceeds $MAX_VALUE$ which will result in <code>IndexOutOfBoundsException</code> at runtime.]]></LongDescription>
+      <Description>Index $INDEX$ passed to $CALLED_METHOD$ exceeds maximum possible value of $MAX_VALUE$.</Description>
+      <LongDescription><![CDATA[Index or length $INDEX$ passed to $CALLED_METHOD$ exceeds $MAX_VALUE$ which will result in <code>IndexOutOfBoundsException</code> at runtime.]]></LongDescription>
     </Warning>
     <Warning Type="ComparatorIsNotSerializable">
       <Title>Comparator is not serializable</Title>
@@ -807,8 +807,8 @@
     </Warning>
     <Warning Type="IteratorHasNextCallsNext">
       <Title>The hasNext() method invokes next()</Title>
-      <Description>Method $METHOD$ invokes $RETURN_VALUE_OF$.</Description>
-      <LongDescription><![CDATA[The iterator method $METHOD$ invokes $RETURN_VALUE_OF$. This is almost certainly wrong, since the <code>hasNext()</code> method is not supposed to change the state of the iterator, and the <code>next()</code> method is supposed to change the state of the iterator.]]></LongDescription>
+      <Description>Method $METHOD$ invokes $CALLED_METHOD$.</Description>
+      <LongDescription><![CDATA[The iterator method $METHOD$ invokes $CALLED_METHOD$. This is almost certainly wrong, since the <code>hasNext()</code> method is not supposed to change the state of the iterator, and the <code>next()</code> method is supposed to change the state of the iterator.]]></LongDescription>
     </Warning>
     <Warning Type="IteratorNoThrow">
       <Title>The next() iterator method does not throw NoSuchElementException</Title>
@@ -924,8 +924,8 @@
     </Warning>
     <Warning Type="ConvertCaseWithDefaultLocale">
       <Title>Case conversion is performed with system-default locale</Title>
-      <Description>Case conversion method $RETURN_VALUE_OF$ is called with system-default locale.</Description>
-      <LongDescription><![CDATA[This code calls $RETURN_VALUE_OF$. The result of this method may vary depending on system-default locale.
+      <Description>Case conversion method $CALLED_METHOD$ is called with system-default locale.</Description>
+      <LongDescription><![CDATA[This code calls $CALLED_METHOD$. The result of this method may vary depending on system-default locale.
       For example, in Turkish locale <code>"point".toUpperCase()</code> becomes <code>PO&#304;NT</code> which is undesired in many cases, especially in server
       environment.<br>
       Consider using the special method $REPLACEMENT$ which accepts a <code>Locale</code> argument. For example, if English case conversion rules are desired, use
@@ -934,8 +934,8 @@
     </Warning>
     <Warning Type="MethodReliesOnDefaultEncoding">
       <Title>Method relies on default encoding</Title>
-      <Description>The called constructor or method $RETURN_VALUE_OF$ relies on default encoding.</Description>
-      <LongDescription><![CDATA[This code calls $RETURN_VALUE_OF$. The called method or constructor relies on system-default encoding which
+      <Description>The called constructor or method $CALLED_METHOD$ relies on default encoding.</Description>
+      <LongDescription><![CDATA[This code calls $CALLED_METHOD$. The called method or constructor relies on system-default encoding which
       might be inappropriate, especially on server applications. Consider using another method which allows to specify the encoding explicitly
       either with string (like <code>"UTF-8"</code>) or with <code>Charset</code> object (like <code>StandardCharsets.UTF_8</code>).]]></LongDescription>
     </Warning>
@@ -993,8 +993,8 @@
     </Warning>
     <Warning Type="AnnotationNoRuntimeRetention">
       <Title>Useless reflection call for an annotation without RUNTIME retention</Title>
-      <Description>Call to $RETURN_VALUE_OF$ will have no effect as $ANNOTATION$ has no runtime retention.</Description>
-      <LongDescription><![CDATA[This code calls <code>$RETURN_VALUE_OF:name$($ANNOTATION:name$.class)</code>. However the annotation $ANNOTATION$ is
+      <Description>Call to $CALLED_METHOD$ will have no effect as $ANNOTATION$ has no runtime retention.</Description>
+      <LongDescription><![CDATA[This code calls <code>$CALLED_METHOD:name$($ANNOTATION:name$.class)</code>. However the annotation $ANNOTATION$ is
       not visible to reflection as it does not annotated with <code>@Retention(RetentionPolicy.RUNTIME)</code>.]]></LongDescription>
     </Warning>
     <Warning Type="DeadStoreInReturn">
@@ -1036,7 +1036,7 @@
     </Warning>
     <Warning Type="SyncOnGetClass">
       <Title>Synchronization on getClass() rather than class literal</Title>
-      <Description>Synchronization on $RETURN_VALUE_OF$ rather than class literal.</Description>
+      <Description>Synchronization on $CALLED_METHOD$ rather than class literal.</Description>
       <LongDescription><![CDATA[This instance method synchronizes like <code>synchronized(this.getClass()) {...}</code>. 
       If this class is subclassed, subclasses will synchronize on the class object for the subclass, which isn't likely what was intended.<br>
       Consider synchronizing on concrete class literal instead: <code>synchronized($TYPE:name$.class) {...}</code>.]]></LongDescription>
@@ -1048,15 +1048,15 @@
     </Warning>
     <Warning Type="ReturnValueOfRead">
       <Title>Return value of read() method is not checked</Title>
-      <Description>Return value of $RETURN_VALUE_OF$ is not checked.</Description>
-      <LongDescription><![CDATA[This code calls $RETURN_VALUE_OF$, but does not check its return value. By contract, this method may read less
+      <Description>Return value of $CALLED_METHOD$ is not checked.</Description>
+      <LongDescription><![CDATA[This code calls $CALLED_METHOD$, but does not check its return value. By contract, this method may read less
       data that requested and returns the number of bytes or characters which were actually read. Without checking the return value it's
       not possible to reliably tell how many bytes or characters were actually read.]]></LongDescription>
     </Warning>
     <Warning Type="ReturnValueOfSkip">
       <Title>Return value of skip() method is not checked</Title>
-      <Description>Return value of $RETURN_VALUE_OF$ is not checked.</Description>
-      <LongDescription><![CDATA[This code calls $RETURN_VALUE_OF$, but does not check its return value. By contract, this method may skip less
+      <Description>Return value of $CALLED_METHOD$ is not checked.</Description>
+      <LongDescription><![CDATA[This code calls $CALLED_METHOD$, but does not check its return value. By contract, this method may skip less
       data that requested and returns the number of bytes or characters which were actually skipped. Without checking the return value it's
       not possible to reliably tell how many bytes or characters were actually skipped.]]></LongDescription>
     </Warning>
@@ -1352,8 +1352,8 @@
     </Warning>
     <Warning Type="AbandonedStream">
       <Title>Java stream is abandoned</Title>
-      <Description>The $RETURN_VALUE_OF:return_type.plain$ is abandoned after calling $RETURN_VALUE_OF$.</Description>
-      <LongDescription><![CDATA[This code creates $RETURN_VALUE_OF:return_type.html$ and does not use it afterwards.
+      <Description>The $CALLED_METHOD:return_type.plain$ is abandoned after calling $CALLED_METHOD$.</Description>
+      <LongDescription><![CDATA[This code creates $CALLED_METHOD:return_type.html$ and does not use it afterwards.
       In most of the cases stream produces no effect unless you call a terminal operation. Probably there's some mistake.]]></LongDescription>
     </Warning>
     <Warning Type="UselessVoidMethod">
