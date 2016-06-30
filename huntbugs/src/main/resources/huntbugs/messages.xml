@@ -1356,6 +1356,13 @@
       <LongDescription><![CDATA[This code creates $CALLED_METHOD:return_type.html$ and does not use it afterwards.
       In most of the cases stream produces no effect unless you call a terminal operation. Probably there's some mistake.]]></LongDescription>
     </Warning>
+    <Warning Type="StreamMethodMayNotReturnItself">
+      <Title>Stream method may not return itself by specification</Title>
+      <Description>The $CALLED_METHOD:return_type.plain$ may not return itself by specification.</Description>
+      <LongDescription><![CDATA[This code calls $CALLED_METHOD$ and does not use its result.
+      While it works in current OpenJDK implementation as this Stream method always returns itself,
+      the specification does not guarantee such behavior. It's better to use the resulting stream.]]></LongDescription>
+    </Warning>
     <Warning Type="UselessVoidMethod">
       <Title>Useless void method</Title>
       <Description>The method $METHOD$ seems to do nothing useful.</Description>

@@ -33,18 +33,22 @@ import one.util.huntbugs.util.Types;
  *
  */
 @WarningDefinition(category="Correctness", name="AbandonedStream", maxScore=80)
+@WarningDefinition(category="BadPractice", name="StreamMethodMayNotReturnItself", maxScore=30)
 public class AbandonedStream {
     @AstVisitor(nodes=AstNodes.EXPRESSIONS, minVersion=8)
     public void visit(Expression expr, MethodContext mc) {
         if(expr.getCode() == AstCode.InvokeInterface) {
             MethodReference mr = (MethodReference) expr.getOperand();
             if(mr.getReturnType().getPackageName().equals("java.util.stream")
-                 // .parallel()/.sequential()/.onClose()/.unordered() excluded as may return itself
-                    && !Types.is(mr.getReturnType(), BaseStream.class) 
                     && Types.isBaseStream(mr.getReturnType())) {
                 // intermediate stream operation
                 if(mc.isAnnotated() && !Inf.BACKLINK.findTransitiveUsages(expr, true).findAny().isPresent()) {
-                    mc.report("AbandonedStream", 0, expr);
+                    // .parallel()/.sequential()/.onClose()/.unordered() excluded as may return itself
+                    if(Types.is(mr.getReturnType(), BaseStream.class)) {
+                        mc.report("StreamMethodMayNotReturnItself", 0, expr);
+                    } else {
+                        mc.report("AbandonedStream", 0, expr);
+                    }
                 }
             }
         }

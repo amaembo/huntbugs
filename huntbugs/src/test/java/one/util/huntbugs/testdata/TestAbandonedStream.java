@@ -33,6 +33,7 @@ public class TestAbandonedStream {
     }
     
     @AssertNoWarning("AbandonedStream")
+    @AssertWarning("StreamMethodMayNotReturnItself")
     public Stream<String> testClose(List<String> list) {
         Stream<String> stream = list.stream();
         stream.onClose(() -> System.out.println("Closed!"));
