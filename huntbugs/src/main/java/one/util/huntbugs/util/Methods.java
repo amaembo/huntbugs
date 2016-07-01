@@ -74,6 +74,40 @@ public class Methods {
         return findSuperMethod(td, new MemberInfo(resolveToBridge(md)));
     }
     
+    public static Set<MethodDefinition> findSuperMethods(MethodReference mr) {
+        MethodDefinition md = mr.resolve();
+        if(md == null)
+            return null;
+        TypeDefinition td = md.getDeclaringType();
+        Set<MethodDefinition> set = new HashSet<>();
+        collectSuperMethods(td, new MemberInfo(resolveToBridge(md)), set);
+        return set;
+    }
+    
+    private static void collectSuperMethods(TypeDefinition type, MemberInfo mi, Set<MethodDefinition> list) {
+        TypeReference superType = type.getBaseType();
+        if(superType != null) {
+            TypeDefinition superTd = superType.resolve();
+            if(superTd != null) {
+                MethodDefinition result = findMethod(superTd, mi);
+                if(result != null)
+                    list.add(result);
+                else
+                    collectSuperMethods(superTd, mi, list);
+            }
+        }
+        for(TypeReference iface : type.getExplicitInterfaces()) {
+            TypeDefinition ifaceTd = iface.resolve();
+            if(ifaceTd != null) {
+                MethodDefinition result = findMethod(ifaceTd, mi);
+                if(result != null)
+                    list.add(result);
+                else
+                    collectSuperMethods(ifaceTd, mi, list);
+            }
+        }
+    }
+
     public static MethodDefinition resolveToBridge(MethodDefinition md) {
         if (md.isBridgeMethod()) {
             return md;

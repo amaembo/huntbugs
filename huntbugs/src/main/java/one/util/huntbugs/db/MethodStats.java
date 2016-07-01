@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.strobel.assembler.ir.Instruction;
 import com.strobel.assembler.metadata.Flags;
@@ -56,13 +57,21 @@ public class MethodStats extends AbstractTypeDatabase<Boolean> {
     @Override
     protected void visitType(TypeDefinition td) {
         for(MethodDefinition md : td.getDeclaredMethods()) {
-            MethodData mdata = data.computeIfAbsent(new MemberInfo(md), k -> new MethodData());
+            Set<MethodDefinition> superMethods = Methods.findSuperMethods(md);
+            MemberInfo mi = new MemberInfo(md);
+            if(md.isAbstract() && !superMethods.isEmpty()) {
+                MethodDefinition superMd = superMethods.iterator().next();
+                if(!data.containsKey(mi)) {
+                    data.put(mi, data.computeIfAbsent(new MemberInfo(superMd), k -> new MethodData()));
+                }
+                continue;
+            }
+            MethodData mdata = data.computeIfAbsent(mi, k -> new MethodData());
             if(md.isFinal() || td.isFinal() || md.isStatic() || md.isPrivate()) {
                 mdata.flags |= METHOD_FINAL;
             }
             visitMethod(mdata, md);
-            MethodDefinition superMethod = Methods.findSuperMethod(md);
-            if(superMethod != null) {
+            for(MethodDefinition superMethod : superMethods) {
                 data.computeIfAbsent(new MemberInfo(superMethod), k -> new MethodData()).addSubMethod(mdata);
             }
         }
