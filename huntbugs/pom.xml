@@ -14,6 +14,10 @@
  <name>huntbugs</name>
  <description>Java bytecode static analysis tool</description>
 
+ <properties>
+  <project.mainClass>one.util.huntbugs.HuntBugs</project.mainClass>
+ </properties>
+
  <dependencies>
   <dependency>
    <groupId>org.bitbucket.mstrobel</groupId>
@@ -49,10 +53,18 @@
     <configuration>
      <archive>
       <manifest>
-       <mainClass>one.util.huntbugs.HuntBugs</mainClass>
+       <mainClass>${project.mainClass}</mainClass>
       </manifest>
      </archive>
     </configuration>
+   </plugin>
+   <plugin>
+     <groupId>org.codehaus.mojo</groupId>
+     <artifactId>exec-maven-plugin</artifactId>
+     <version>1.5.0</version>
+     <configuration>
+       <mainClass>${project.mainClass}</mainClass>
+     </configuration>
    </plugin>
    <plugin>
     <groupId>org.jacoco</groupId>

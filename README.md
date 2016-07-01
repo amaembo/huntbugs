@@ -45,3 +45,12 @@ Check the [Gradle plugin page](https://github.com/lavcraft/huntbugs-gradle-plugi
 ### Use with Eclipse
 
 Check the [Eclipse plugin page](https://github.com/aaasko/huntbugs-eclipse) (in early development stage)
+
+### Exec as command-line tool
+
+Command-line tool is mostly aimed to aid developers. Nevertheless you may use it if you like.
+To launch use `mvn exec:java -Dexec.args="...args..."` inside huntbugs subdirectory. Examples:
+
+* `mvn exec:java -Dexec.args="-lw"` will list all the warnings.
+* `mvn exec:java -Dexec.args="myfolder/*.jar"` will analyze all jars inside `myfolder` writing the report into `huntbugs.warnings.xml` and `huntbugs.warnings.html` in current directory.
+* `mvn exec:java` will show all the supported command line options.
