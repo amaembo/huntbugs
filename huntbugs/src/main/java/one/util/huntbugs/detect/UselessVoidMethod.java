@@ -46,7 +46,9 @@ public class UselessVoidMethod {
                     return;
                 if(md.isConstructor() && body.size() == 1 && Nodes.isOp(body.get(0), AstCode.InvokeSpecial))
                     return;
-                mc.report("UselessVoidMethod", 0);
+                int codeSize = Nodes.estimateCodeSize(root);
+                int priority = codeSize < 10 ? 20 : codeSize < 20 ? 10 : codeSize < 30 ? 5 : 0;
+                mc.report("UselessVoidMethod", priority);
             }
         }
     }
