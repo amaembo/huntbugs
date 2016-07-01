@@ -22,10 +22,12 @@ import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.CatchBlock;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
+import com.strobel.decompiler.ast.Variable;
 
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Roles;
 
@@ -40,7 +42,7 @@ public class IgnoredException {
         if(node instanceof CatchBlock) {
             CatchBlock cb = (CatchBlock)node;
             TypeReference tr = cb.getExceptionType();
-            if(tr != null && isTrivial(cb.getBody())) {
+            if(tr != null && isTrivial(cb.getBody(), cb.getExceptionVariable())) {
                 int priority = getExceptionPriority(tr);
                 if(priority >= 0) {
                     mc.report("IgnoredException", priority, node, Roles.EXCEPTION.create(tr));
@@ -64,7 +66,7 @@ public class IgnoredException {
         }
     }
 
-    private boolean isTrivial(List<Node> body) {
+    private boolean isTrivial(List<Node> body, Variable variable) {
         if(body.isEmpty())
             return true;
         if(body.size() == 1) {
@@ -72,12 +74,7 @@ public class IgnoredException {
             if(Nodes.isOp(node, AstCode.LoopContinue) || Nodes.isOp(node, AstCode.LoopOrSwitchBreak))
                 return true;
             if(Nodes.isOp(node, AstCode.Return)) {
-                Expression ret = (Expression) node;
-                if(ret.getArguments().isEmpty())
-                    return true;
-                Expression arg = ret.getArguments().get(0);
-                if(Nodes.getConstant(arg) != null || arg.getCode() == AstCode.AConstNull)
-                    return true;
+                return Exprs.stream((Expression) node).noneMatch(e -> e.getOperand() == variable);
             }
         }
         return false;

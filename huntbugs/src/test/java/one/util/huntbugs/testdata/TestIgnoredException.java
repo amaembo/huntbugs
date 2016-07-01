@@ -73,7 +73,7 @@ public class TestIgnoredException {
             System.out.println("Test");
         }
         catch(Throwable t) {
-            return null;
+            return "xyz".trim();
         }
         System.out.println("Passed");
         return "";
