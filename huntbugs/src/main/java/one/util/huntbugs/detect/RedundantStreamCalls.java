@@ -15,11 +15,14 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.function.Predicate;
+
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
+import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -51,6 +54,12 @@ public class RedundantStreamCalls {
             }
             if(isOptionalIsPresent(mr)) {
                 Expression opt = expr.getArguments().get(0);
+                if(opt.getCode() == AstCode.Load && mc.isAnnotated()) {
+                    opt = Exprs.getChild(expr, 0);
+                    if(!Inf.BACKLINK.findTransitiveUsages(opt, true).allMatch(Predicate.isEqual(expr))) {
+                        return;
+                    }
+                }
                 if(opt.getCode() == AstCode.InvokeInterface || opt.getCode() == AstCode.InvokeVirtual) {
                     MethodReference mr2 = (MethodReference) opt.getOperand();
                     if(isStreamFind(mr2)) {

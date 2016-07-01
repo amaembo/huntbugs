@@ -16,6 +16,7 @@
 package one.util.huntbugs.testdata;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -47,6 +48,21 @@ public class TestRedundantStreamCalls {
     public boolean testStreamFind(Set<Integer> x) {
         Stream<Integer> set = x.parallelStream();
         return set.filter(i -> i > 0).findAny().isPresent();
+    }
+    
+    @AssertWarning("RedundantStreamFind")
+    public boolean testStreamFindVar(Set<Integer> x) {
+        Optional<Integer> opt = x.parallelStream().filter(i -> i > 0).findAny();
+        return opt.isPresent();
+    }
+    
+    @AssertNoWarning("*")
+    public Integer testStreamFindOk(Set<Integer> x) {
+        Optional<Integer> opt = x.parallelStream().filter(i -> i > 0).findAny();
+        if(opt.isPresent()) {
+            return opt.get();
+        }
+        return null;
     }
     
     @AssertWarning("RedundantStreamFind")
