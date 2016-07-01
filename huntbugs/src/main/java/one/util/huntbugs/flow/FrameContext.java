@@ -126,6 +126,8 @@ class FrameContext {
     }
 
     Expression makeUpdatedNode(Expression src) {
+        if(src.getCode() == Frame.UPDATE_TYPE)
+            return src;
         return updatedNodes.computeIfAbsent(src, s -> new Expression(Frame.UPDATE_TYPE, null, s.getOffset(), s));
     }
 
