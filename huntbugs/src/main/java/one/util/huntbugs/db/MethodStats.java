@@ -77,7 +77,7 @@ public class MethodStats extends AbstractTypeDatabase<Boolean> {
             }
             visitMethod(mdata, md);
             for(MethodDefinition superMethod : Methods.findSuperMethods(md)) {
-                data.computeIfAbsent(new MemberInfo(superMethod), k -> new MethodData()).addSubMethod(mdata);
+                getMethodData(superMethod).addSubMethod(mdata);
             }
         }
     }
@@ -169,6 +169,8 @@ public class MethodStats extends AbstractTypeDatabase<Boolean> {
         long flags;
         
         void addSubMethod(MethodData md) {
+            if(md == this)
+                return;
             if(subMethods == null) {
                 subMethods = new ArrayList<>();
             }
