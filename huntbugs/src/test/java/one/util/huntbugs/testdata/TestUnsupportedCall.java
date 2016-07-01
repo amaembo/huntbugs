@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.util.Set;
+
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -39,6 +41,11 @@ public class TestUnsupportedCall {
     @AssertNoWarning("*")
     private void doHello(int i) {
         throw new UnsupportedOperationException();
+    }
+    
+    @AssertNoWarning("*")
+    public void addAll(Set<String> a, Set<String> b) {
+        a.addAll(b);
     }
     
     @AssertWarning("UnsupportedCall")

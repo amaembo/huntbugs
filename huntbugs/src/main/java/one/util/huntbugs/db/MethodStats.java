@@ -19,8 +19,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import com.strobel.assembler.ir.Instruction;
 import com.strobel.assembler.metadata.Flags;
 import com.strobel.assembler.metadata.MethodBody;
@@ -54,24 +52,31 @@ public class MethodStats extends AbstractTypeDatabase<Boolean> {
         super(type -> Boolean.TRUE);
     }
     
+    private MethodData getMethodData(MethodDefinition md) {
+        MemberInfo mi = new MemberInfo(md);
+        MethodData mdata = data.get(mi);
+        if(mdata != null) return mdata;
+        if(md.isAbstract()) {
+            MethodDefinition superMd = Methods.findSuperMethod(md);
+            if(superMd != null)
+                mdata = getMethodData(superMd);
+        }
+        if(mdata == null) {
+            mdata = new MethodData();
+        }
+        data.put(mi, mdata);
+        return mdata;
+    }
+    
     @Override
     protected void visitType(TypeDefinition td) {
         for(MethodDefinition md : td.getDeclaredMethods()) {
-            Set<MethodDefinition> superMethods = Methods.findSuperMethods(md);
-            MemberInfo mi = new MemberInfo(md);
-            if(md.isAbstract() && !superMethods.isEmpty()) {
-                MethodDefinition superMd = superMethods.iterator().next();
-                if(!data.containsKey(mi)) {
-                    data.put(mi, data.computeIfAbsent(new MemberInfo(superMd), k -> new MethodData()));
-                }
-                continue;
-            }
-            MethodData mdata = data.computeIfAbsent(mi, k -> new MethodData());
+            MethodData mdata = getMethodData(md);
             if(md.isFinal() || td.isFinal() || md.isStatic() || md.isPrivate()) {
                 mdata.flags |= METHOD_FINAL;
             }
             visitMethod(mdata, md);
-            for(MethodDefinition superMethod : superMethods) {
+            for(MethodDefinition superMethod : Methods.findSuperMethods(md)) {
                 data.computeIfAbsent(new MemberInfo(superMethod), k -> new MethodData()).addSubMethod(mdata);
             }
         }
