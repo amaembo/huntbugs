@@ -15,7 +15,11 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -26,7 +30,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 public class TestDeadLocalStore {
     int x;
 
-    @AssertWarning(value="ParameterOverwritten", minScore = 55)
+    @AssertWarning(value = "ParameterOverwritten", minScore = 55)
     public void testDeadLocalSimple(int x) {
         x = 10;
         System.out.println(x);
@@ -41,7 +45,7 @@ public class TestDeadLocalStore {
 
     class Extension extends TestDeadLocalStore {
         @Override
-        @AssertWarning(value="ParameterOverwritten", maxScore = 40)
+        @AssertWarning(value = "ParameterOverwritten", maxScore = 40)
         public void testDeadLocalSimple(int x) {
             x = 10;
             System.out.println(x);
@@ -58,7 +62,7 @@ public class TestDeadLocalStore {
         x++;
         return x;
     }
-    
+
     @AssertNoWarning("DeadIncrementInReturn")
     public int testFieldIncrement() {
         return x++;
@@ -83,41 +87,41 @@ public class TestDeadLocalStore {
         i = x;
         System.out.println(i);
     }
-    
+
     @AssertWarning("DeadParameterStore")
     public void testDeadParameterStore(int i) {
-        if(i > 0) {
+        if (i > 0) {
             i = 0;
         }
     }
-    
-    @AssertWarning(value = "DeadLocalStore", maxScore=45)
+
+    @AssertWarning(value = "DeadLocalStore", maxScore = 45)
     public void testDeadLocalStore(int i) {
         int x = 0;
-        if(i > x) {
+        if (i > x) {
             x = 1;
         }
         System.out.println(i);
     }
-    
-    @AssertWarning(value = "DeadLocalStore", minScore=46)
+
+    @AssertWarning(value = "DeadLocalStore", minScore = 46)
     public void testDeadLocalStore2(int i) {
         int x = 1;
-        if(i > x) {
+        if (i > x) {
             x = 2;
         }
         System.out.println(i);
     }
-    
+
     @AssertNoWarning("*")
     public void testDeadLocalStoreSame(int i) {
         int x = 1;
-        if(i > x) {
+        if (i > x) {
             x = 1;
         }
         System.out.println(x);
     }
-    
+
     @AssertNoWarning("*")
     public void testDeadLocalStoreLambda() {
         double x = Math.random();
@@ -133,29 +137,28 @@ public class TestDeadLocalStore {
         }
         return 0;
     }
-    
+
     @AssertNoWarning("*")
     public void testDeadLocalStoreConst(int i) {
         final int x = 123456;
-        if(i > x) {
+        if (i > x) {
             System.out.println(i);
         }
     }
-    
+
     @AssertNoWarning("*")
     public void testDeadLocalStoreConstStr(int i) {
         final String x = "test";
-        if(i > x.length()) {
+        if (i > x.length()) {
             System.out.println(i);
         }
     }
-    
+
     @AssertNoWarning("*")
     public void testDeadLocalStoreCatch(String i) {
         try {
             System.out.println(Integer.parseInt(i));
-        }
-        catch(NumberFormatException | NullPointerException ex) {
+        } catch (NumberFormatException | NullPointerException ex) {
             System.out.println("none");
         }
     }
@@ -163,29 +166,29 @@ public class TestDeadLocalStore {
     @AssertNoWarning("*")
     public void testDeadLocalStoreTernaryOk(int b) {
         int x = 2;
-        if(b > 0) {
+        if (b > 0) {
             x = b % 2 == 0 ? 3 : 4;
         }
         System.out.println(x);
     }
-    
+
     @AssertNoWarning("*")
     public void testDeadLocalStoreTernaryOk2(int b) {
         int c;
-        if(b > 0)
+        if (b > 0)
             c = b % 2 == 0 ? 1 : 2;
         else
             c = b % 2 == 0 ? 3 : 4;
         System.out.println(c);
     }
-    
-//    @AssertWarning("UnusedLocalVariable")
-//    public void testDeadLocalStoreTernary(boolean flag, int a, int b) {
-//        int c = flag ? a : b;
-//        System.out.println(a);
-//        System.out.println(b);
-//    }
-    
+
+    //    @AssertWarning("UnusedLocalVariable")
+    //    public void testDeadLocalStoreTernary(boolean flag, int a, int b) {
+    //        int c = flag ? a : b;
+    //        System.out.println(a);
+    //        System.out.println(b);
+    //    }
+
     @AssertNoWarning("*")
     public void testThrow(String i) {
         if (i.length() > 2) {
@@ -198,22 +201,20 @@ public class TestDeadLocalStore {
     public void testDeadLocalStoreCatch2(String i) {
         try {
             System.out.println(Integer.parseInt(i));
-        }
-        catch(NumberFormatException ex) {
+        } catch (NumberFormatException ex) {
             i = "abc";
-        }
-        catch(Exception ex) {
+        } catch (Exception ex) {
             return;
         }
         System.out.println(i);
     }
-    
+
     static class MyException extends Exception {
         private static final long serialVersionUID = 1L;
     };
-    
+
     private int convert(String s) throws MyException {
-        if(s.isEmpty())
+        if (s.isEmpty())
             throw new MyException();
         return Integer.parseInt(s);
     }
@@ -222,39 +223,38 @@ public class TestDeadLocalStore {
     public void testDeadLocalStoreCatch3(String i) {
         boolean flag = false;
         try {
-            if(i != null) {
+            if (i != null) {
                 System.out.println(convert(i));
             } else {
                 flag = true;
             }
-        }
-        catch(MyException ex) {
+        } catch (MyException ex) {
             flag = true;
         }
-        if(flag) {
+        if (flag) {
             throw new RuntimeException();
         }
     }
-    
+
     @AssertNoWarning("*")
     public void testDeadLocalStoreLabel(boolean x, String a) {
-        if(x ? !a.equals("x") : !a.equals("y"))
+        if (x ? !a.equals("x") : !a.equals("y"))
             return;
         int i = 1;
         System.out.println(i);
     }
 
-    @AssertWarning(value="DeadLocalStore", maxScore = 35)
+    @AssertWarning(value = "DeadLocalStore", maxScore = 35)
     public void testDeadLocalStoreInit(boolean x) {
         int a = 0;
-        if(x) {
+        if (x) {
             a = 1;
         } else {
             a = 2;
         }
         System.out.println(a);
     }
-    
+
     public void testLocalClass() {
         class X {
             @AssertWarning("ParameterOverwritten")
@@ -264,5 +264,26 @@ public class TestDeadLocalStore {
             }
         }
         new X().print(5);
+    }
+
+    static class TestClass {
+        long someCalculation(long i) {
+            return i;
+        }
+    }
+
+    // TODO: procyon bug
+    //@AssertNoWarning("UnusedLocalVariable")
+    public void testUnusedLocalVariableClassInStreamMap() {
+        // class vs primitive has some difference, i could guess
+        // or maybe .map()'s complexity is the key to warning failure 
+        TestClass tc = new TestClass();
+        final List<Long> numbers = Stream.of(1L, 2L, 3L).map(i -> {
+            if (i == 2L) {
+                return 11L;
+            }
+            return tc.someCalculation(i);
+        }).collect(Collectors.toList());
+        System.out.println(numbers.size());
     }
 }
