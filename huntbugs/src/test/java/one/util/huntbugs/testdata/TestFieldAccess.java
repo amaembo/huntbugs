@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
@@ -111,6 +112,16 @@ public class TestFieldAccess {
     
     public long inc() {
         return alfu.incrementAndGet(this);
+    }
+    
+    @AssertNoWarning("*")
+    private Object refUpdated;
+    
+    private static final AtomicReferenceFieldUpdater<TestFieldAccess, Object> arfu = AtomicReferenceFieldUpdater
+            .newUpdater(TestFieldAccess.class, Object.class, "refUpdated");
+    
+    public boolean cas(Object expected, Object updated) {
+        return arfu.compareAndSet(this, expected, updated);
     }
     
     @AssertNoWarning("*")
@@ -324,5 +335,16 @@ public class TestFieldAccess {
     
     public void updateExpose2() {
         expose2 = new int[] {2};
+    }
+    
+    @AssertNoWarning("*")
+    public static class Reflected {
+        long x = 0;
+        long y = 0;
+        long z = 0;
+        
+        public void set(String name) throws Exception {
+            Reflected.class.getDeclaredField(name).set(this, 1L);
+        }
     }
 }

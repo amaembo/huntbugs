@@ -43,9 +43,6 @@ import one.util.huntbugs.util.Types;
  */
 @TypeDatabase
 public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
-    private static final Object UNKNOWN_CONST = new Object();
-    private static final Object NULL_CONST = new Object();
-    
     public static final int WRITE_CONSTRUCTOR = 0x0001;
     public static final int WRITE_CLASS = 0x0002;
     public static final int WRITE_PACKAGE = 0x0004;
@@ -63,48 +60,91 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
         super(name -> new TypeFieldStats());
     }
     
+    static final class SimpleStack {
+        private static final Object UNKNOWN_CONST = new Object();
+        private static final Object NULL_CONST = new Object();
+
+        Set<Instruction> seenLabels = new HashSet<>();
+        Deque<Object> constStack = new ArrayDeque<>();
+
+        void preprocess(Instruction instr) {
+            if(instr.getOperandCount() == 1 && instr.getOperand(0) instanceof Instruction) {
+                seenLabels.add(instr.getOperand(0));
+            }
+            if(seenLabels.contains(instr)) {
+                constStack.clear();
+            }
+        }
+        
+        void pushUnknown() {
+            push(UNKNOWN_CONST);
+        }
+        
+        void push(Object cst) {
+            constStack.add(cst == null ? NULL_CONST : cst);
+        }
+        
+        Object poll() {
+            Object cst = constStack.pollLast();
+            return cst == null ? UNKNOWN_CONST : cst == NULL_CONST ? null : cst; 
+        }
+
+        void clear() {
+            constStack.clear();
+        }
+    }
+    
     @Override
     protected void visitType(TypeDefinition td) {
         getOrCreate(td);
         for(MethodDefinition md : td.getDeclaredMethods()) {
             MethodBody body = md.getBody();
             if(body != null) {
-                Set<Instruction> seenLabels = new HashSet<>();
-                Deque<Object> constStack = new ArrayDeque<>();
+                SimpleStack ss = new SimpleStack();
                 for(Instruction instr : body.getInstructions()) {
-                    if(instr.getOperandCount() == 1 && instr.getOperand(0) instanceof Instruction) {
-                        seenLabels.add(instr.getOperand(0));
-                    }
-                    if(seenLabels.contains(instr)) {
-                        constStack.clear();
-                    }
+                    ss.preprocess(instr);
                     switch(instr.getOpCode()) {
+                    case ALOAD:
+                    case ALOAD_0:
+                    case ALOAD_1:
+                    case ALOAD_2:
+                    case ALOAD_3:
+                    case ALOAD_W:
+                        ss.pushUnknown();
+                        continue;
                     case LDC:
                     case LDC_W:
-                        constStack.add(instr.getOperand(0));
+                        ss.push(instr.getOperand(0));
                         continue;
                     case INVOKESTATIC:
                     case INVOKEVIRTUAL: {
-                        if(constStack.size() >= 2) {
-                            MethodReference mr = instr.getOperand(0);
-                            if (mr.getName().equals("newUpdater") && mr.getDeclaringType().getPackageName().equals(
-                                "java.util.concurrent.atomic")) {
-                                linkUncontrolled(constStack, 0);
-                            }
-                            if (mr.getName().equals("getDeclaredField") && Types.is(mr.getDeclaringType(),
+                        MethodReference mr = instr.getOperand(0);
+                        if (mr.getName().equals("newUpdater") && mr.getDeclaringType().getPackageName().equals(
+                            "java.util.concurrent.atomic") || mr.getName().equals("getDeclaredField") && Types.is(mr.getDeclaringType(),
                                 Class.class)) {
-                                linkUncontrolled(constStack, 0);
+                            Object fieldName = ss.poll();
+                            if(mr.getParameters().size() == 3) {
+                                ss.poll(); // field type for AtomicReferenceFieldUpdater
                             }
-                            if (mr.getDeclaringType().getInternalName().equals("java/lang/invoke/MethodHandles$Lookup")
-                                && (mr.getName().equals("findGetter") || mr.getName().equals("findSetter") || mr
-                                        .getName().startsWith("findStatic"))) {
-                                linkUncontrolled(constStack, 1);
-                            }
+                            Object type = ss.poll();
+                            linkUncontrolled(type, fieldName);
+                        }
+                        if (mr.getDeclaringType().getInternalName().equals("java/lang/invoke/MethodHandles$Lookup")
+                            && (mr.getName().equals("findGetter") || mr.getName().equals("findSetter") || mr
+                                    .getName().startsWith("findStatic"))) {
+                            ss.poll();
+                            Object fieldName = ss.poll();
+                            Object type = ss.poll();
+                            linkUncontrolled(type, fieldName);
+                        }
+                        if (mr.getName().equals("getDeclaredFields") && Types.is(mr.getDeclaringType(), Class.class)) {
+                            Object type = ss.poll();
+                            linkUncontrolled(type, null);
                         }
                         break;
                     }
                     case ACONST_NULL:
-                        constStack.add(NULL_CONST);
+                        ss.push(null);
                         continue;
                     case PUTFIELD:
                     case PUTSTATIC: {
@@ -115,11 +155,11 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
                                 break;
                             fr = fd;
                         } // fd == null case is necessary to workaround procyon problem#301
-                        Object value = constStack.isEmpty() ? UNKNOWN_CONST : constStack.removeLast();
+                        Object value = ss.poll();
                         if(instr.getOpCode() == OpCode.PUTFIELD)
-                            constStack.pollLast();
+                            ss.poll();
                         getOrCreate(fr.getDeclaringType()).link(md, fr,
-                            instr.getOpCode() == OpCode.PUTSTATIC, true, value == NULL_CONST);
+                            instr.getOpCode() == OpCode.PUTSTATIC, true, value == null);
                         continue;
                     }
                     case GETFIELD:
@@ -132,46 +172,58 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
                             fr = fd;
                         } // fd == null case is necessary to workaround procyon problem#301
                         if(instr.getOpCode() == OpCode.GETFIELD)
-                            constStack.pollLast();
+                            ss.poll();
                         getOrCreate(fr.getDeclaringType()).link(md, fr,
                             instr.getOpCode() == OpCode.GETSTATIC, false, false);
-                        constStack.add(UNKNOWN_CONST);
+                        ss.pushUnknown();
                         continue;
                     default:
                     }
-                    constStack.clear();
+                    ss.clear();
                 }
             }
         }
     }
     
-    private void linkUncontrolled(Deque<Object> constStack, int shift) {
-        int size = constStack.size();
-        if(size < shift+2)
-            return;
-        while(shift-->0)
-            constStack.removeLast();
-        Object fieldName = constStack.removeLast();
-        Object type = constStack.removeLast();
-        if(type instanceof TypeReference && fieldName instanceof String) {
-            getOrCreate((TypeReference) type).linkUncontrolled((String) fieldName);
+    private void linkUncontrolled(Object type, Object fieldName) {
+        if(type instanceof TypeReference) {
+            TypeFieldStats tfs = getOrCreate((TypeReference) type);
+            if(fieldName instanceof String)
+                tfs.linkUncontrolled((String) fieldName);
+            else
+                tfs.linkUncontrolled();
         }
     }
 
     public int getFlags(FieldReference fr) {
         TypeFieldStats fs = get(fr.getDeclaringType());
-        return fs == null ? UNRESOLVED : fs.fieldRecords.getOrDefault(fr.getName(), 0); 
+        return fs == null ? UNRESOLVED : fs.getFlags(fr.getName()); 
     }
 
     @TypeDatabaseItem(parentDatabase=FieldStats.class)
     public static class TypeFieldStats {
-        Map<String, Integer> fieldRecords = new HashMap<>();
+        // Can be null if the whole type is uncontrolled
+        private Map<String, Integer> fieldRecords = new HashMap<>();
         
         void linkUncontrolled(String fieldName) {
-            fieldRecords.put(fieldName, ACCESS | WRITE_NONNULL);
+            if(fieldRecords != null)
+                fieldRecords.put(fieldName, ACCESS | WRITE_NONNULL);
         }
         
+        public int getFlags(String name) {
+            if(fieldRecords == null) {
+                return ACCESS | WRITE_NONNULL;
+            }
+            return fieldRecords.getOrDefault(name, 0);
+        }
+
+        void linkUncontrolled() {
+            fieldRecords = null;
+        }
+
         void link(MethodDefinition src, FieldReference fr, boolean isStatic, boolean write, boolean hadNull) {
+            if(fieldRecords == null)
+                return;
             int prevStatus = fieldRecords.getOrDefault(fr.getName(), 0);
             int curStatus = prevStatus;
             if(src.getDeclaringType().isEquivalentTo(fr.getDeclaringType())) {
