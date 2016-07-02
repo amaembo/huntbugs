@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -160,6 +161,23 @@ public class TestDeadLocalStore {
             System.out.println(Integer.parseInt(i));
         } catch (NumberFormatException | NullPointerException ex) {
             System.out.println("none");
+        }
+    }
+    
+    @AssertNoWarning("*")
+    public void execute(Runnable r) throws InstantiationException, NoSuchMethodException, SecurityException {
+        try {
+            r.getClass().getConstructor().newInstance().run();
+        } catch (IllegalArgumentException | IllegalAccessException e) {
+            throw new AssertionError(e);
+        } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof RuntimeException) {
+                throw (RuntimeException) cause;
+            } else if (cause instanceof Error) {
+                throw (Error) cause;
+            }
+            throw new RuntimeException(cause);
         }
     }
 

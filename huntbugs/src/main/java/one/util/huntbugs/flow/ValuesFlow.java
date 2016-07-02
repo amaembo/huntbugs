@@ -221,8 +221,10 @@ public class ValuesFlow {
                     if (tryCatch.getFinallyBlock() == null) {
                         Set<TypeReference> exceptions = new LinkedHashSet<>();
                         for(CatchBlock catchBlock : tryCatch.getCatchBlocks()) {
-                            exceptions.addAll(catchBlock.getCaughtTypes());
-                            exceptions.add(catchBlock.getExceptionType());
+                            if(catchBlock.getCaughtTypes().isEmpty())
+                                exceptions.add(catchBlock.getExceptionType());
+                            else
+                                exceptions.addAll(catchBlock.getCaughtTypes());
                         }
                         exceptions.remove(null);
                         ThrowTargets tryTargets = new ThrowTargets(targets, exceptions);
