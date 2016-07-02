@@ -286,4 +286,12 @@ public class TestDeadLocalStore {
         }).collect(Collectors.toList());
         System.out.println(numbers.size());
     }
+    
+    @AssertNoWarning("*")
+    public void testAndChain(int x) {
+        int a = 0;
+        if(x > 2 && ((a = x*2) > 5)) {
+            System.out.println(a);
+        }
+    }
 }

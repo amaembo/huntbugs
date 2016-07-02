@@ -138,6 +138,12 @@ class Frame {
             Frame rightFrame = target.process(right, targets);
             return leftFrame.merge(rightFrame);
         }
+        if (expr.getCode() == AstCode.LogicalAnd || expr.getCode() == AstCode.LogicalOr) {
+            Expression left = expr.getArguments().get(0);
+            Expression right = expr.getArguments().get(1);
+            Frame target = process(left, targets);
+            return target.merge(target.process(right, targets));
+        }
         Frame target = processChildren(expr, targets);
         switch (expr.getCode()) {
         case Store: {
