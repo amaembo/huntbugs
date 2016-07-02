@@ -15,10 +15,14 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
@@ -99,6 +103,33 @@ public class TestFieldAccess {
     private double x;
     private double y;
     private double z;
+
+    @AssertNoWarning("*")
+    private long updated;
+    
+    private static final AtomicLongFieldUpdater<TestFieldAccess> alfu = AtomicLongFieldUpdater.newUpdater(TestFieldAccess.class, "updated");
+    
+    public long inc() {
+        return alfu.incrementAndGet(this);
+    }
+    
+    @AssertNoWarning("*")
+    private long reflected;
+    
+    public void updateReflected() throws Exception {
+        Field field = TestFieldAccess.class.getDeclaredField("reflected");
+        field.setAccessible(true);
+        field.set(this, ((long)field.get(this))+1);
+    }
+    
+    @AssertNoWarning("*")
+    private long mh;
+
+    public void updateMH() throws Throwable {
+        MethodHandle getter = MethodHandles.lookup().findGetter(TestFieldAccess.class, "mh", long.class);
+        MethodHandle setter = MethodHandles.lookup().findSetter(TestFieldAccess.class, "mh", long.class);
+        setter.invokeExact(this, (((long)getter.invokeExact(this))+1));
+    }
 
     @AssertWarning("FieldUsedInSingleMethod")
     public void test() {
