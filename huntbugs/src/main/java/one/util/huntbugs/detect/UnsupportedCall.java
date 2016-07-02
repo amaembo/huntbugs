@@ -25,6 +25,7 @@ import one.util.huntbugs.db.MethodStats.MethodData;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
+import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.AccessLevel;
 import one.util.huntbugs.util.NodeChain;
@@ -36,6 +37,7 @@ import one.util.huntbugs.util.Types;
  */
 @WarningDefinition(category = "CodeStyle", name = "UnsupportedCall", maxScore = 50)
 public class UnsupportedCall {
+    @MethodVisitor
     public boolean check(MethodDefinition md) {
         return !md.isSynthetic();
     }
@@ -62,7 +64,7 @@ public class UnsupportedCall {
                 } else if(expr.getCode() == AstCode.InvokeVirtual) {
                     MethodDefinition md = mr.resolve();
                     if(md != null && !md.isFinal() && !md.getDeclaringType().isFinal()) {
-                        priority = AccessLevel.of(md).select(20, 10, 0, 0);
+                        priority = AccessLevel.of(md).select(25, 15, 0, 0);
                     }
                 }
                 mc.report("UnsupportedCall", priority, expr);
