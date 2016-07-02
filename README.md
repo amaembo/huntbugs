@@ -13,7 +13,7 @@ Currently 199 FindBugs warnings reimplemented and several new warnings added.
 
 ### Use with Maven
 
-Run `mvn one.util:huntbugs-maven-plugin:huntbugs`
+Compile project and run `mvn one.util:huntbugs-maven-plugin:huntbugs`
 
 The output report is located in `target/huntbugs/report.html`
 
