@@ -1394,5 +1394,17 @@
       as well as and its overrides (if applicable) unconditionally throw <code>UnsupportedOperationException</code>,
       so it's likely that this call will fail.]]></LongDescription>
     </Warning>
+    <Warning Type="StaticNotThreadSafeField">
+      <Title>Static field is not thread-safe</Title>
+      <Description>Static field $FIELD$ is declared which type $FIELD_TYPE$ is not thread-safe.</Description>
+      <LongDescription><![CDATA[This code declares $FIELD$ of type $FIELD_TYPE$. This type is not thread-safe,
+      so using such object from different threads may cause random exceptions or incorrect results.]]></LongDescription>
+    </Warning>
+    <Warning Type="StaticNotThreadSafeFieldInvoke">
+      <Title>Static field usage is not thread-safe</Title>
+      <Description>Static field $FIELD$ is used which type $CALLED_METHOD:type.plain$ is not thread-safe.</Description>
+      <LongDescription><![CDATA[This code calls method $CALLED_METHOD$ on field $FIELD$. The type $CALLED_METHOD:type.html$ is not thread-safe,
+      so using such object from different threads may cause random exceptions or incorrect results.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

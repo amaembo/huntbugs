@@ -199,6 +199,10 @@ abbrev="ME" type="ME_MUTABLE_ENUM_FIELD" category="BAD_PRACTICE" --> MutableEnum
 abbrev="SQL" type="SQL_BAD_RESULTSET_ACCESS" category="CORRECTNESS" --> BadResultSetArgument
 abbrev="SQL" type="SQL_BAD_PREPARED_STATEMENT_ACCESS" category="CORRECTNESS" --> BadPreparedStatementArgument
 abbrev="Dm" type="DMI_UNSUPPORTED_METHOD" category="STYLE" --> UnsupportedCall
+abbrev="STCAL" type="STCAL_STATIC_CALENDAR_INSTANCE" category="MT_CORRECTNESS" --> StaticNotThreadSafeField
+abbrev="STCAL" type="STCAL_STATIC_SIMPLE_DATE_FORMAT_INSTANCE" category="MT_CORRECTNESS" --> StaticNotThreadSafeField
+abbrev="STCAL" type="STCAL_INVOKE_ON_STATIC_CALENDAR_INSTANCE" category="MT_CORRECTNESS" --> StaticNotThreadSafeFieldInvoke
+abbrev="STCAL" type="STCAL_INVOKE_ON_STATIC_DATE_FORMAT_INSTANCE" category="MT_CORRECTNESS" --> StaticNotThreadSafeFieldInvoke
 
 ==== Not reimplemented
 
@@ -211,10 +215,6 @@ abbrev="HRS" type="HRS_REQUEST_PARAMETER_TO_HTTP_HEADER" category="SECURITY" cwe
 abbrev="HRS" type="HRS_REQUEST_PARAMETER_TO_COOKIE" category="SECURITY" cweid="113" 
 abbrev="PT" type="PT_ABSOLUTE_PATH_TRAVERSAL" category="SECURITY" cweid="36" 
 abbrev="PT" type="PT_RELATIVE_PATH_TRAVERSAL" category="SECURITY" cweid="23" 
-abbrev="STCAL" type="STCAL_STATIC_CALENDAR_INSTANCE" category="MT_CORRECTNESS"
-abbrev="STCAL" type="STCAL_STATIC_SIMPLE_DATE_FORMAT_INSTANCE" category="MT_CORRECTNESS"
-abbrev="STCAL" type="STCAL_INVOKE_ON_STATIC_CALENDAR_INSTANCE" category="MT_CORRECTNESS"
-abbrev="STCAL" type="STCAL_INVOKE_ON_STATIC_DATE_FORMAT_INSTANCE" category="MT_CORRECTNESS"
 abbrev="NP" type="NP_SYNC_AND_NULL_CHECK_FIELD" category="MT_CORRECTNESS" cweid="585"
 abbrev="NP" type="NP_NONNULL_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" category="CORRECTNESS"
 abbrev="HSC" type="HSC_HUGE_SHARED_STRING_CONSTANT" category="PERFORMANCE"
