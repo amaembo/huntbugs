@@ -16,6 +16,7 @@
 package one.util.huntbugs.db;
 
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,6 +32,7 @@ import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
+import com.strobel.assembler.metadata.VariableReference;
 
 import one.util.huntbugs.registry.AbstractTypeDatabase;
 import one.util.huntbugs.registry.anno.TypeDatabase;
@@ -66,6 +68,12 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
 
         Set<Instruction> seenLabels = new HashSet<>();
         Deque<Object> constStack = new ArrayDeque<>();
+        Object[] locals;
+        
+        SimpleStack(int maxLocals) {
+            locals = new Object[maxLocals];
+            Arrays.fill(locals, UNKNOWN_CONST);
+        }
 
         void preprocess(Instruction instr) {
             if(instr.getOperandCount() == 1 && instr.getOperand(0) instanceof Instruction) {
@@ -73,7 +81,20 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
             }
             if(seenLabels.contains(instr)) {
                 constStack.clear();
+                Arrays.fill(locals, UNKNOWN_CONST);
             }
+        }
+        
+        void set(int slot, Object cst) {
+            locals[slot] = cst;
+        }
+        
+        void setUnknown(int slot) {
+            locals[slot] = UNKNOWN_CONST;
+        }
+        
+        Object get(int slot) {
+            return locals[slot];
         }
         
         void pushUnknown() {
@@ -100,17 +121,27 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
         for(MethodDefinition md : td.getDeclaredMethods()) {
             MethodBody body = md.getBody();
             if(body != null) {
-                SimpleStack ss = new SimpleStack();
+                SimpleStack ss = new SimpleStack(body.getMaxLocals());
                 for(Instruction instr : body.getInstructions()) {
                     ss.preprocess(instr);
                     switch(instr.getOpCode()) {
-                    case ALOAD:
                     case ALOAD_0:
                     case ALOAD_1:
                     case ALOAD_2:
                     case ALOAD_3:
-                    case ALOAD_W:
-                        ss.pushUnknown();
+                        ss.push(ss.get(instr.getOpCode().getCode()-OpCode.ALOAD_0.getCode()));
+                        continue;
+                    case ALOAD:
+                        ss.push(ss.get(((VariableReference)instr.getOperand(0)).getSlot()));
+                        continue;
+                    case ASTORE_0:
+                    case ASTORE_1:
+                    case ASTORE_2:
+                    case ASTORE_3:
+                        ss.set(instr.getOpCode().getCode()-OpCode.ASTORE_0.getCode(), ss.poll());
+                        continue;
+                    case ASTORE:
+                        ss.set(((VariableReference)instr.getOperand(0)).getSlot(), ss.poll());
                         continue;
                     case LDC:
                     case LDC_W:

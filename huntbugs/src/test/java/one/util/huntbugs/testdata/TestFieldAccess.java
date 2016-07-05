@@ -128,7 +128,8 @@ public class TestFieldAccess {
     private long reflected;
     
     public void updateReflected() throws Exception {
-        Field field = TestFieldAccess.class.getDeclaredField("reflected");
+        Class<TestFieldAccess> clazz = TestFieldAccess.class;
+        Field field = clazz.getDeclaredField("reflected");
         field.setAccessible(true);
         field.set(this, ((long)field.get(this))+1);
     }
