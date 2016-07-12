@@ -404,6 +404,7 @@ public class ValuesFlow {
     
     public static List<Expression> annotate(Context ctx, MethodDefinition md, ClassFields cf, Block method, Frame closure) {
         ctx.incStat("ValuesFlow.Total");
+        CFG cfg = CFG.build(md, method);
         List<Lambda> lambdas = new ArrayList<>();
         Annotator.forExpressions(method, expr -> collectLambdas(expr, lambdas));
         FrameContext fc = new FrameContext(md, cf);
