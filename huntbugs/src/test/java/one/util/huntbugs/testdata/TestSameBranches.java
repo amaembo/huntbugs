@@ -157,6 +157,7 @@ public class TestSameBranches {
             System.out.println("Bar");
             break;
         case 5:
+        case 6:
             System.out.println("Foo");
             break;
         default:
