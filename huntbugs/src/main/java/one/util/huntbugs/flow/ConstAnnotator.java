@@ -41,6 +41,7 @@ import com.strobel.decompiler.ast.Variable;
  */
 public class ConstAnnotator extends Annotator<Object> implements Dataflow<Object, ConstAnnotator.ContextValues> {
     static final Object UNKNOWN_VALUE = new Object() {
+        @Override
         public String toString() {
             return "??";
         }
@@ -550,9 +551,8 @@ public class ConstAnnotator extends Annotator<Object> implements Dataflow<Object
     @Override
     public TrueFalse<ContextValues> transferConditionalState(ContextValues src, Expression expr) {
         boolean invert = false;
-        while(expr.getCode() == AstCode.LogicalNot /*|| expr.getCode() == AstCode.LogicalAnd || expr.getCode() == AstCode.LogicalOr*/) {
-            if(expr.getCode() == AstCode.LogicalNot)
-                invert = !invert;
+        while(expr.getCode() == AstCode.LogicalNot) {
+            invert = !invert;
             expr = expr.getArguments().get(expr.getArguments().size()-1);
         }
         Expression arg = null;

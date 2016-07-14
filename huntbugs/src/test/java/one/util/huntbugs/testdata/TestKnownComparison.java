@@ -759,50 +759,6 @@ public class TestKnownComparison {
         }
     }
     
-    public static int parsePattern(String rule, int pos, int limit,
-            String pattern, int[] parsedInts) {
-        int[] p = new int[1];
-        int intCount = 0; // number of integers parsed
-        for (int i=0; i<pattern.length(); ++i) {
-            char cpat = pattern.charAt(i);
-            char c;
-            switch (cpat) {
-            case ' ':
-                if (pos >= limit) {
-                    return -1;
-                }
-                c = rule.charAt(pos++);
-                if (!Character.isWhitespace(c)) {
-                    return -1;
-                }
-                // FALL THROUGH to skipWhitespace
-            case '~':
-                pos = pos + 2;
-                break;
-            case '#':
-                p[0] = pos;
-                parsedInts[intCount++] = Integer.parseInt(rule);
-                if (p[0] == pos) {
-                    // Syntax error; failed to parse integer
-                    return -1;
-                }
-                pos = p[0];
-                break;
-            default:
-                if (pos >= limit) {
-                    return -1;
-                }
-                c = Character.toLowerCase(rule.charAt(pos++));
-                if (c != cpat) {
-                    return -1;
-                }
-                break;
-            }
-        }
-        return pos;
-    }
-
-    
     @AssertWarning("ResultOfComparisonIsStaticallyKnown")
     public void testCatch(String s) {
         try {
