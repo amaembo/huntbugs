@@ -28,7 +28,6 @@ import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Roles;
-import one.util.huntbugs.warning.WarningAnnotation;
 
 /**
  * @author Tagir Valeev

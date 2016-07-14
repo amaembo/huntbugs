@@ -7,7 +7,6 @@
   <artifactId>huntbugs-all</artifactId>
   <version>0.0.9-SNAPSHOT</version>
  </parent>
- <groupId>one.util</groupId>
  <artifactId>huntbugs</artifactId>
  <packaging>jar</packaging>
 
