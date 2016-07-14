@@ -404,7 +404,6 @@ public class ValuesFlow {
     
     public static List<Expression> annotate(Context ctx, MethodDefinition md, ClassFields cf, Block method, Frame closure) {
         ctx.incStat("ValuesFlow.Total");
-        CFG cfg = CFG.build(md, method);
         List<Lambda> lambdas = new ArrayList<>();
         Annotator.forExpressions(method, expr -> collectLambdas(expr, lambdas));
         FrameContext fc = new FrameContext(md, cf);
@@ -423,7 +422,13 @@ public class ValuesFlow {
                 ctx.incStat("ValuesFlow");
             }
         }
-        Inf.CONST.annotate(method);
+        if(closure == null) {
+            CFG cfg = CFG.build(md, method);
+            ctx.incStat("DFA.CONST.Incomplete.Total");
+            if(!cfg.runDFA(Inf.CONST, 7)) {
+                ctx.incStat("DFA.CONST.Incomplete");
+            }
+        }
         Inf.PURITY.annotate(method, fc);
         Inf.BACKLINK.annotate(method);
         return valid ? origParams : null;

@@ -15,6 +15,9 @@
  */
 package one.util.huntbugs.flow;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -29,20 +32,22 @@ import com.strobel.assembler.metadata.JvmType;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
-import com.strobel.decompiler.ast.Block;
-import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
-import com.strobel.decompiler.ast.Node;
+import com.strobel.decompiler.ast.Variable;
 
 /**
- * @author shustkost
+ * @author Tagir Valeev
  *
  */
-public class ConstAnnotator extends Annotator<Object> {
-    static final Object UNKNOWN_VALUE = new Object();
+public class ConstAnnotator extends Annotator<Object> implements Dataflow<Object, ConstAnnotator.ContextValues> {
+    static final Object UNKNOWN_VALUE = new Object() {
+        public String toString() {
+            return "??";
+        }
+    };
 
     ConstAnnotator() {
-        super("value2", null);
+        super("value", null);
     }
     
     /**
@@ -66,47 +71,75 @@ public class ConstAnnotator extends Annotator<Object> {
         return constant.equals(get(input));
     }
     
-    private class ContextValues {
-        ContextValues parent;
-        Expression expr;
-        Object value;
-
-        ContextValues(ContextValues parent, Expression expr, Object value) {
-            this.parent = parent;
-            this.expr = expr;
-            this.value = value;
+    static final class ContextValues {
+        static final ContextValues DEFAULT = new ContextValues(null);
+        
+        final Map<Variable, Object> values;
+        
+        private ContextValues(Map<Variable, Object> values) {
+            this.values = values;
+        }
+        
+        ContextValues merge(ContextValues other) {
+            if(this == other || other == DEFAULT)
+                return this;
+            if(this == DEFAULT)
+                return other;
+            Map<Variable, Object> newValues = new HashMap<>(values);
+            other.values.forEach((k, v) -> newValues.merge(k, v, (v1, v2) -> Objects.equals(v1, v2) ? v1 : UNKNOWN_VALUE));
+            return new ContextValues(newValues);
+        }
+        
+        ContextValues add(Variable var, Object value) {
+            if(values == null) {
+                return new ContextValues(Collections.singletonMap(var, value));
+            }
+            if(Objects.equals(value, values.get(var)))
+                return this;
+            Map<Variable, Object> newValues = new HashMap<>(values);
+            newValues.put(var, value);
+            return new ContextValues(newValues);
+        }
+        
+        ContextValues remove(Variable var) {
+            if(values != null && values.containsKey(var)) {
+                if(values.size() == 1)
+                    return DEFAULT;
+                Map<Variable, Object> newValues = new HashMap<>(values);
+                newValues.remove(var);
+                return new ContextValues(newValues);
+            }
+            return this;
+        }
+        
+        ContextValues transfer(Expression expr) {
+            Variable var = Nodes.getWrittenVariable(expr);
+            return var == null ? this : add(var, UNKNOWN_VALUE);
         }
         
         Object resolve(Expression expr) {
-            if(this.expr == expr) {
-                return value;
-            }
-            if(parent != null) {
-                return parent.resolve(expr);
-            }
-            return UNKNOWN_VALUE;
+            Object oper = expr.getOperand();
+            Object result = oper instanceof Variable && values != null ? values.get(oper) : null;
+            return result == UNKNOWN_VALUE ? null : result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null || getClass() != obj.getClass())
+                return false;
+            ContextValues other = (ContextValues) obj;
+            return Objects.equals(values, other.values);
+        }
+        
+        @Override
+        public String toString() {
+            return values == null ? "{}" : values.toString();
         }
     }
     
-    private boolean hasForwardLinks;
-    private boolean isChanged;
-    private ContextValues contextValues;
-    
-    private void push(Expression expr, Object value) {
-        if (expr.getCode() == AstCode.LdC || value == null || value == UNKNOWN_VALUE)
-            return;
-        // Zero is excluded as 0.0 == -0.0
-        if (value instanceof Double && ((double)value == 0.0 || Double.isNaN((double) value)))
-            return;
-        if (value instanceof Float && ((float)value == 0.0 || Float.isNaN((float) value)))
-            return;
-        Expression src = ValuesFlow.getSource(expr);
-        if(src == expr)
-            return;
-        contextValues = new ContextValues(contextValues, src, value);
-    }
-    
-    private Object resolve(Expression expr) {
+    private Object resolve(ContextValues contextValues, Expression expr) {
         if(expr.getCode() == AstCode.LdC) {
             return expr.getOperand() == null ? UNKNOWN_VALUE : expr.getOperand();
         }
@@ -117,311 +150,46 @@ public class ConstAnnotator extends Annotator<Object> {
         if(val != UNKNOWN_VALUE && val != null) {
             return val;
         }
-        if(contextValues != null) {
-            return contextValues.resolve(expr);
-        }
+        Object resolved = contextValues.resolve(expr);
+        if(resolved != null)
+            return resolved;
         return val;
     }
 
-    void annotate(Block method) {
-        hasForwardLinks = isChanged = false;
-        contextValues = null;
-        annotateNode(method);
-        if(hasForwardLinks) {
-            for(int i=0; i<5; i++) {
-                isChanged = false;
-                annotateNode(method);
-                if(!isChanged)
-                    return;
-            }
-            throw new InternalError("Const annotation is diverged");
-        }
+    private Object resolveConditional(ContextValues contextValues, Expression expr) {
+        Object val = resolve(contextValues, expr);
+        // Zero is excluded as 0.0 == -0.0
+        if (val instanceof Double && ((double)val == 0.0 || Double.isNaN((double) val)))
+            return UNKNOWN_VALUE;
+        if (val instanceof Float && ((float)val == 0.0 || Float.isNaN((float) val)))
+            return UNKNOWN_VALUE;
+        return val;
     }
 
-    private void annotateNode(Node node) {
-        if(node instanceof Condition) {
-            Condition cond = (Condition)node;
-            update(cond.getCondition());
-            ContextValues curCtx = contextValues;
-            pushTrueContext(cond.getCondition());
-            annotateNode(cond.getTrueBlock());
-            contextValues = curCtx;
-            pushFalseContext(cond.getCondition());
-            annotateNode(cond.getFalseBlock());
-            contextValues = curCtx;
-            return;
-        }
-        for(Node child : Nodes.getChildren(node)) {
-            if(child instanceof Expression) {
-                update((Expression)child);
-            } else {
-                annotateNode(child);
-            }
-        }
-    }
-
-    private Object update(Expression expr) {
-        Object val = computeValue(expr);
-        Object curValue = get(expr);
-        if (Objects.equals(val, curValue) || curValue == UNKNOWN_VALUE)
-            return curValue;
-        Object resValue = curValue == null ? val : UNKNOWN_VALUE;
-        isChanged = true;
-        put(expr, resValue);
-        return resValue;
-    }
-    
-    private Object computeValue(Expression expr) {
-        switch(expr.getCode()) {
-        case TernaryOp: {
-            Expression cond = expr.getArguments().get(0);
-            Expression left = expr.getArguments().get(1);
-            Expression right = expr.getArguments().get(2);
-            update(cond);
-            ContextValues curCtx = contextValues;
-            pushTrueContext(cond);
-            Object leftVal = update(left);
-            contextValues = curCtx;
-            pushFalseContext(cond);
-            Object rightVal = update(right);
-            contextValues = curCtx;
-            return Objects.equals(leftVal, rightVal) ? leftVal : UNKNOWN_VALUE;
-        }
-        case LogicalAnd: {
-            update(expr.getArguments().get(0));
-            ContextValues curCtx = contextValues;
-            pushTrueContext(expr.getArguments().get(0));
-            update(expr.getArguments().get(1));
-            contextValues = curCtx;
-            return processBinaryOp(expr, Boolean.class, Boolean.class, Boolean::logicalAnd);
-        }
-        case LogicalOr: {
-            update(expr.getArguments().get(0));
-            ContextValues curCtx = contextValues;
-            pushFalseContext(expr.getArguments().get(0));
-            update(expr.getArguments().get(1));
-            contextValues = curCtx;
-            return processBinaryOp(expr, Boolean.class, Boolean.class, Boolean::logicalOr);
-        }
-        default:
-        }
-        for(Expression child : expr.getArguments()) {
-            update(child);
-        }
-        if (get(expr) == UNKNOWN_VALUE) {
+    private Object fromSource(ContextValues ctx, Expression expr) {
+        Object value = ctx.resolve(expr);
+        if(value != null)
+            return value;
+        Expression src = ValuesFlow.getSource(expr);
+        if(src == expr)
             return UNKNOWN_VALUE;
-        }
-        switch (expr.getCode()) {
-        case Store:
-            return resolve(expr.getArguments().get(0));
-        case LdC:
-            return expr.getOperand();
-        case ArrayLength: {
-            Integer len = getArrayLength(expr.getArguments().get(0));
-            return len == null ? UNKNOWN_VALUE : len;
-        }
-        case CmpEq:
-            return processCmpEq(expr);
-        case CmpNe:
-            return processCmpNe(expr);
-        case CmpLt:
-            return processCmpLt(expr);
-        case CmpLe:
-            return processCmpLe(expr);
-        case CmpGt:
-            return processCmpGt(expr);
-        case CmpGe:
-            return processCmpGe(expr);
-        case Add:
-            return processAdd(expr);
-        case Sub:
-            return processSub(expr);
-        case Mul:
-            return processMul(expr);
-        case Div:
-            return processDiv(expr);
-        case Rem:
-            return processRem(expr);
-        case Xor: {
-            switch (getType(expr)) {
-            case Integer:
-                return processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a ^ b);
-            case Long:
-                return processBinaryOp(expr, Long.class, Long.class, (a, b) -> a ^ b);
-            default:
-            }
-            return UNKNOWN_VALUE;
-        }
-        case Or: {
-            switch (getType(expr)) {
-            case Integer:
-                return processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a | b);
-            case Long:
-                return processBinaryOp(expr, Long.class, Long.class, (a, b) -> a | b);
-            default:
-            }
-            return UNKNOWN_VALUE;
-        }
-        case And: {
-            switch (getType(expr)) {
-            case Integer:
-                return processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a & b);
-            case Long:
-                return processBinaryOp(expr, Long.class, Long.class, (a, b) -> a & b);
-            default:
-            }
-            return UNKNOWN_VALUE;
-        }
-        case Shl: {
-            switch (getType(expr)) {
-            case Integer:
-                return processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a << b);
-            case Long:
-                return processBinaryOp(expr, Long.class, Integer.class, (a, b) -> a << b);
-            default:
-            }
-            return UNKNOWN_VALUE;
-        }
-        case Shr: {
-            switch (getType(expr)) {
-            case Integer:
-                return processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a >> b);
-            case Long:
-                return processBinaryOp(expr, Long.class, Integer.class, (a, b) -> a >> b);
-            default:
-            }
-            return UNKNOWN_VALUE;
-        }
-        case UShr: {
-            switch (getType(expr)) {
-            case Integer:
-                return processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a >>> b);
-            case Long:
-                return processBinaryOp(expr, Long.class, Integer.class, (a, b) -> a >>> b);
-            default:
-            }
-            return UNKNOWN_VALUE;
-        }
-        case I2L:
-            return processUnaryOp(expr, Integer.class, i -> (long) i);
-        case I2B:
-            return processUnaryOp(expr, Integer.class, i -> (int) (byte) (int) i);
-        case I2C:
-            return processUnaryOp(expr, Integer.class, i -> (int) (char) (int) i);
-        case I2S:
-            return processUnaryOp(expr, Integer.class, i -> (int) (short) (int) i);
-        case I2D:
-            return processUnaryOp(expr, Integer.class, i -> (double) i);
-        case I2F:
-            return processUnaryOp(expr, Integer.class, i -> (float) i);
-        case L2I:
-            return processUnaryOp(expr, Long.class, l -> (int) (long) l);
-        case L2D:
-            return processUnaryOp(expr, Long.class, l -> (double) l);
-        case L2F:
-            return processUnaryOp(expr, Long.class, l -> (float) l);
-        case F2L:
-            return processUnaryOp(expr, Float.class, l -> (long) (float) l);
-        case F2I:
-            return processUnaryOp(expr, Float.class, l -> (int) (float) l);
-        case F2D:
-            return processUnaryOp(expr, Float.class, l -> (double) l);
-        case D2F:
-            return processUnaryOp(expr, Double.class, l -> (float) (double) l);
-        case D2I:
-            return processUnaryOp(expr, Double.class, l -> (int) (double) l);
-        case D2L:
-            return processUnaryOp(expr, Double.class, l -> (long) (double) l);
-        case Neg:
-            return processNeg(expr);
-        case Load:
-        case GetField: {
-            Expression src = ValuesFlow.getSource(expr);
-            return src == expr ? UNKNOWN_VALUE : fromSource(src);
-        }
-        case Inc: {
-            Expression src = ValuesFlow.getSource(expr);
-            if(src.getCode() == Frame.UPDATE_TYPE) {
-                src = src.getArguments().get(0);
-                Object val = get(src);
-                if (val instanceof Integer)
-                    return processUnaryOp(expr, Integer.class, inc -> ((int) val) + inc);
-                else if (val instanceof Long)
-                    return processUnaryOp(expr, Long.class, inc -> ((long) val) + inc);
-            }
-            return UNKNOWN_VALUE;
-        }
-        case InitObject:
-        case InvokeInterface:
-        case InvokeSpecial:
-        case InvokeStatic:
-        case InvokeVirtual: {
-            MethodReference mr = (MethodReference) expr.getOperand();
-            return processKnownMethods(expr, mr);
-        }
-        case GetStatic: {
-            FieldReference fr = ((FieldReference) expr.getOperand());
-            FieldDefinition fd = fr.resolve();
-            if (fd != null && fd.isEnumConstant()) {
-                return new EnumConstant(fd.getDeclaringType().getInternalName(), fd.getName());
-            }
-            Expression src = ValuesFlow.getSource(expr);
-            return src == expr ? UNKNOWN_VALUE : fromSource(src);
-        }
-        default:
-            return UNKNOWN_VALUE;
-        }
-    }
-
-    private void pushTrueContext(Expression expr) {
-        if (expr.getCode() == AstCode.LogicalAnd || expr.getCode() == AstCode.And) {
-            pushTrueContext(expr.getArguments().get(0));
-            pushTrueContext(expr.getArguments().get(1));
-        } else if (expr.getCode() == AstCode.CmpEq
-            || (expr.getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod((MethodReference) expr.getOperand()))) {
-            Expression left = expr.getArguments().get(0);
-            Expression right = expr.getArguments().get(1);
-            push(left, resolve(right));
-            push(right, resolve(left));
-        } else if (expr.getCode() == AstCode.LogicalNot) {
-            pushFalseContext(expr.getArguments().get(0));
-        }
-    }
-
-    private void pushFalseContext(Expression expr) {
-        if(expr.getCode() == AstCode.LogicalOr || expr.getCode() == AstCode.Or) {
-            pushFalseContext(expr.getArguments().get(0));
-            pushFalseContext(expr.getArguments().get(1));
-        } else if(expr.getCode() == AstCode.CmpNe) {
-            Expression left = expr.getArguments().get(0);
-            Expression right = expr.getArguments().get(1);
-            push(left, resolve(right));
-            push(right, resolve(left));
-        } else if(expr.getCode() == AstCode.LogicalNot) {
-            pushTrueContext(expr.getArguments().get(0));
-        }
-    }
-
-    private Object fromSource(Expression src) {
-        Object value = resolve(src);
+        value = resolve(ctx, src);
         if(value != null)
             return value;
         if(src.getCode() == Frame.PHI_TYPE) {
-            Object val = null;
             for(Expression child : src.getArguments()) {
-                Object newVal = resolve(child);
+                Object newVal = resolve(ctx, child);
                 if (newVal == null) {
                     if (Exprs.isParameter(child) || child.getCode() == Frame.UPDATE_TYPE) {
                         return UNKNOWN_VALUE;
                     }
-                    hasForwardLinks = true;
-                } else if (val == null) {
-                    val = newVal;
-                } else if (!val.equals(newVal)) {
+                } else if (value == null) {
+                    value = newVal;
+                } else if (!value.equals(newVal)) {
                     return UNKNOWN_VALUE;
                 }
             }
-            return val;
+            return value;
         }
         return UNKNOWN_VALUE;
     }
@@ -762,5 +530,262 @@ public class ConstAnnotator extends Annotator<Object> {
     private static JvmType getType(Expression expr) {
         TypeReference type = expr.getInferredType();
         return type == null ? JvmType.Void : type.getSimpleType();
+    }
+
+    @Override
+    public ContextValues makeInitialState() {
+        return ContextValues.DEFAULT;
+    }
+    
+    @Override
+    public ContextValues transferState(ContextValues src, Expression expr) {
+        return src.transfer(expr);
+    }
+
+    @Override
+    public ContextValues transferExceptionalState(ContextValues src, Expression expr) {
+        return src.transfer(expr);
+    }
+
+    @Override
+    public TrueFalse<ContextValues> transferConditionalState(ContextValues src, Expression expr) {
+        boolean invert = false;
+        while(expr.getCode() == AstCode.LogicalNot /*|| expr.getCode() == AstCode.LogicalAnd || expr.getCode() == AstCode.LogicalOr*/) {
+            if(expr.getCode() == AstCode.LogicalNot)
+                invert = !invert;
+            expr = expr.getArguments().get(expr.getArguments().size()-1);
+        }
+        Expression arg = null;
+        Object cst = null;
+        if (expr.getCode() == AstCode.CmpEq || expr.getCode() == AstCode.CmpNe
+            || (expr.getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod((MethodReference) expr.getOperand()))) {
+            Expression left = expr.getArguments().get(0);
+            Expression right = expr.getArguments().get(1);
+            if(expr.getCode() == AstCode.CmpNe)
+                invert = !invert;
+            cst = resolveConditional(src, right);
+            if(cst != null && cst != UNKNOWN_VALUE) {
+                arg = left;  
+            } else {
+                cst = resolveConditional(src, left);
+                if(cst != null && cst != UNKNOWN_VALUE) {
+                    arg = right;
+                }
+            }
+        }
+        Variable var = null;
+        if (arg != null && arg.getCode() == AstCode.Load) {
+            var = (Variable) arg.getOperand();
+        }
+        return var == null ? new TrueFalse<>(src.transfer(expr))
+                : new TrueFalse<>(src.add(var, cst), src.add(var, UNKNOWN_VALUE), invert);
+    }
+
+    @Override
+    public ContextValues mergeStates(ContextValues s1, ContextValues s2) {
+        return s1.merge(s2);
+    }
+
+    @Override
+    public boolean sameState(ContextValues s1, ContextValues s2) {
+        return s1.equals(s2);
+    }
+
+    @Override
+    public Object makeFact(ContextValues ctx, Expression expr) {
+        switch(expr.getCode()) {
+        case LogicalAnd:
+            return processBinaryOp(expr, Boolean.class, Boolean.class, Boolean::logicalAnd);
+        case LogicalOr:
+            return processBinaryOp(expr, Boolean.class, Boolean.class, Boolean::logicalOr);
+        case TernaryOp: {
+            Object cond = get(expr.getArguments().get(0));
+            Object left = get(expr.getArguments().get(1));
+            Object right = get(expr.getArguments().get(2));
+            if(Integer.valueOf(1).equals(cond) || Boolean.TRUE.equals(cond)) {
+                return left; 
+            }
+            if(Integer.valueOf(0).equals(cond) || Boolean.FALSE.equals(cond)) {
+                return right;
+            }
+            return mergeFacts(left, right);
+        }
+        case Store:
+            return resolve(ctx, expr.getArguments().get(0));
+        case LdC:
+            return expr.getOperand();
+        case ArrayLength: {
+            Integer len = getArrayLength(expr.getArguments().get(0));
+            return len == null ? UNKNOWN_VALUE : len;
+        }
+        case CmpEq:
+            return processCmpEq(expr);
+        case CmpNe:
+            return processCmpNe(expr);
+        case CmpLt:
+            return processCmpLt(expr);
+        case CmpLe:
+            return processCmpLe(expr);
+        case CmpGt:
+            return processCmpGt(expr);
+        case CmpGe:
+            return processCmpGe(expr);
+        case Add:
+            return processAdd(expr);
+        case Sub:
+            return processSub(expr);
+        case Mul:
+            return processMul(expr);
+        case Div:
+            return processDiv(expr);
+        case Rem:
+            return processRem(expr);
+        case Xor: {
+            switch (getType(expr)) {
+            case Integer:
+                return processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a ^ b);
+            case Long:
+                return processBinaryOp(expr, Long.class, Long.class, (a, b) -> a ^ b);
+            default:
+            }
+            return UNKNOWN_VALUE;
+        }
+        case Or: {
+            switch (getType(expr)) {
+            case Integer:
+                return processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a | b);
+            case Long:
+                return processBinaryOp(expr, Long.class, Long.class, (a, b) -> a | b);
+            default:
+            }
+            return UNKNOWN_VALUE;
+        }
+        case And: {
+            switch (getType(expr)) {
+            case Integer:
+                return processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a & b);
+            case Long:
+                return processBinaryOp(expr, Long.class, Long.class, (a, b) -> a & b);
+            default:
+            }
+            return UNKNOWN_VALUE;
+        }
+        case Shl: {
+            switch (getType(expr)) {
+            case Integer:
+                return processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a << b);
+            case Long:
+                return processBinaryOp(expr, Long.class, Integer.class, (a, b) -> a << b);
+            default:
+            }
+            return UNKNOWN_VALUE;
+        }
+        case Shr: {
+            switch (getType(expr)) {
+            case Integer:
+                return processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a >> b);
+            case Long:
+                return processBinaryOp(expr, Long.class, Integer.class, (a, b) -> a >> b);
+            default:
+            }
+            return UNKNOWN_VALUE;
+        }
+        case UShr: {
+            switch (getType(expr)) {
+            case Integer:
+                return processBinaryOp(expr, Integer.class, Integer.class, (a, b) -> a >>> b);
+            case Long:
+                return processBinaryOp(expr, Long.class, Integer.class, (a, b) -> a >>> b);
+            default:
+            }
+            return UNKNOWN_VALUE;
+        }
+        case I2L:
+            return processUnaryOp(expr, Integer.class, i -> (long) i);
+        case I2B:
+            return processUnaryOp(expr, Integer.class, i -> (int) (byte) (int) i);
+        case I2C:
+            return processUnaryOp(expr, Integer.class, i -> (int) (char) (int) i);
+        case I2S:
+            return processUnaryOp(expr, Integer.class, i -> (int) (short) (int) i);
+        case I2D:
+            return processUnaryOp(expr, Integer.class, i -> (double) i);
+        case I2F:
+            return processUnaryOp(expr, Integer.class, i -> (float) i);
+        case L2I:
+            return processUnaryOp(expr, Long.class, l -> (int) (long) l);
+        case L2D:
+            return processUnaryOp(expr, Long.class, l -> (double) l);
+        case L2F:
+            return processUnaryOp(expr, Long.class, l -> (float) l);
+        case F2L:
+            return processUnaryOp(expr, Float.class, l -> (long) (float) l);
+        case F2I:
+            return processUnaryOp(expr, Float.class, l -> (int) (float) l);
+        case F2D:
+            return processUnaryOp(expr, Float.class, l -> (double) l);
+        case D2F:
+            return processUnaryOp(expr, Double.class, l -> (float) (double) l);
+        case D2I:
+            return processUnaryOp(expr, Double.class, l -> (int) (double) l);
+        case D2L:
+            return processUnaryOp(expr, Double.class, l -> (long) (double) l);
+        case Neg:
+            return processNeg(expr);
+        case Load:
+        case GetField:
+            return fromSource(ctx, expr);
+        case Inc: {
+            Expression src = ValuesFlow.getSource(expr);
+            if(src.getCode() == Frame.UPDATE_TYPE) {
+                src = src.getArguments().get(0);
+                Object val = get(src);
+                if (val instanceof Integer)
+                    return processUnaryOp(expr, Integer.class, inc -> ((int) val) + inc);
+                else if (val instanceof Long)
+                    return processUnaryOp(expr, Long.class, inc -> ((long) val) + inc);
+            }
+            return UNKNOWN_VALUE;
+        }
+        case InitObject:
+        case InvokeInterface:
+        case InvokeSpecial:
+        case InvokeStatic:
+        case InvokeVirtual: {
+            MethodReference mr = (MethodReference) expr.getOperand();
+            return processKnownMethods(expr, mr);
+        }
+        case GetStatic: {
+            FieldReference fr = ((FieldReference) expr.getOperand());
+            FieldDefinition fd = fr.resolve();
+            if (fd != null && fd.isEnumConstant()) {
+                return new EnumConstant(fd.getDeclaringType().getInternalName(), fd.getName());
+            }
+            return fromSource(ctx, expr);
+        }
+        default:
+            return UNKNOWN_VALUE;
+        }
+    }
+
+    @Override
+    public Object mergeFacts(Object f1, Object f2) {
+        if(f1 == null)
+            return f2;
+        if(f2 == null)
+            return f1;
+        if(f1 == UNKNOWN_VALUE || f2 == UNKNOWN_VALUE || !Objects.equals(f1, f2))
+            return UNKNOWN_VALUE;
+        return f1;
+    }
+
+    @Override
+    public boolean sameFact(Object f1, Object f2) {
+        return Objects.equals(f1, f2);
+    }
+
+    @Override
+    public Object makeUnknownFact() {
+        return UNKNOWN_VALUE;
     }
 }

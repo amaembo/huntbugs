@@ -24,9 +24,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodDefinition;
@@ -64,23 +66,82 @@ public class CFG {
     final Map<Lambda, CFG> lambdas = new HashMap<>();
     final BasicBlock closure;
     final MethodDefinition md;
-    final BasicBlock entry = new BasicBlock(), exit = new BasicBlock(BLOCKTYPE_EXIT), fail = new BasicBlock(
+    final BasicBlock entry, exit = new BasicBlock(BLOCKTYPE_EXIT), fail = new BasicBlock(
             BLOCKTYPE_FAIL);
     final Map<Label, BasicBlock> labelTargets = new HashMap<>();
+    // Number of block till which CFG is forward-only
+    final int forwardTill;
     
     private CFG(MethodDefinition md, BasicBlock closure, Block methodBody) {
         this.md = md;
         this.closure = closure;
-        buildBlock(entry, exit, new OuterJumpContext(), methodBody);
+        if(methodBody.getBody().isEmpty()) {
+            entry = exit;
+        } else {
+            entry = new BasicBlock();
+            buildBlock(entry, exit, new OuterJumpContext(), methodBody);
+            fixBlocks();
+            verify();
+        }
+        this.forwardTill = computeForwardTill();
+    }
+
+    private void verify() {
+        for(BasicBlock bb : blocks) {
+            if(bb.trueTarget == null ^ bb.falseTarget == null) {
+                throw new IllegalStateException("Mismatch true/false targets CFG at ["+bb.getId()+"]: "+this);
+            }
+            if(bb.targets().anyMatch(target -> target.id == -1)) {
+                throw new IllegalStateException("Not linked target block at ["+bb.getId()+"]: "+this);
+            }
+        }
+    }
+
+    private void fixBlocks() {
+        for(BasicBlock bb : blocks) {
+            while(bb.falseTarget != null && bb.falseTarget.expr != null && bb.falseTarget.expr.getCode() == AstCode.LogicalAnd)
+                bb.falseTarget = bb.falseTarget.passTarget == null ? bb.falseTarget.falseTarget : bb.falseTarget.passTarget;
+            while(bb.trueTarget != null && bb.trueTarget.expr != null && bb.trueTarget.expr.getCode() == AstCode.LogicalOr)
+                bb.trueTarget = bb.trueTarget.passTarget == null ? bb.trueTarget.trueTarget : bb.trueTarget.passTarget;
+        }
+    }
+
+    private int computeForwardTill() {
+        int forwardTill = blocks.size();
+        for(BasicBlock bb : blocks) {
+            int min = bb.targets().mapToInt(t -> t.id).filter(id -> id >= 0 && id < bb.id)
+                .min().orElse(forwardTill);
+            if(min < forwardTill)
+                forwardTill = min;
+        }
+        return forwardTill;
     }
 
     private void buildBlock(BasicBlock entry, BasicBlock exit, JumpContext jc, Block block) {
         BasicBlock curBlock = entry;
         BasicBlock nextBlock = null;
         Node prevNode = null;
-        for (Node node : block.getBody()) {
+        List<Node> body = block.getBody();
+        if(body.isEmpty()) {
+            throw new IllegalStateException("Empty body is supplied!");
+        }
+        Node last = body.get(body.size()-1);
+        if (last instanceof Label && labelTargets.put((Label) last, exit) != null) {
+            throw new IllegalStateException("Label "+last+" is already linked");
+        }
+        for (Node node : body) {
             if (node instanceof Label) {
-                nextBlock = labelTargets.computeIfAbsent((Label) node, k -> new BasicBlock());
+                Label label = (Label) node;
+                if (prevNode == null) {
+                    BasicBlock oldTarget = labelTargets.putIfAbsent(label, entry);
+                    if(oldTarget != null && oldTarget != entry) {
+                        oldTarget.setExpression(new Expression(AstCode.Goto, label, -1));
+                        oldTarget.addTarget(EdgeType.PASS, entry);
+                        register(oldTarget);
+                    }
+                } else {
+                    nextBlock = labelTargets.computeIfAbsent(label, k -> new BasicBlock());
+                }
                 continue;
             }
             if (nextBlock == null)
@@ -116,9 +177,17 @@ public class CFG {
                 BasicBlock finallyBlock = new BasicBlock();
                 FinallyJumpContext fjc = new FinallyJumpContext(jc, finallyBlock);
                 buildTryCatch(curBlock, finallyBlock, fjc, tryCatch);
-                BasicBlock finallyExit = new BasicBlock(new Expression(AstCode.Ret, null, -1));
-                buildBlock(finallyBlock, finallyExit, jc, tryCatch.getFinallyBlock());
+                BasicBlock finallyExit;
+                if(tryCatch.getFinallyBlock().getBody().isEmpty()) {
+                    finallyExit = finallyBlock;
+                } else {
+                    finallyExit = new BasicBlock();
+                    buildBlock(finallyBlock, finallyExit, jc, tryCatch.getFinallyBlock());
+                }
+                finallyExit.setExpression(new Expression(AstCode.Ret, null, -1));
                 finallyExit.failTargets = new ArrayList<>(fjc.targets);
+                finallyExit.failTargets.add(nextBlock);
+                register(finallyExit);
             }
         }
     }
@@ -126,11 +195,12 @@ public class CFG {
     // Processes try-catch only, ignores finally, if any
     private void buildTryCatch(final BasicBlock curBlock, BasicBlock nextBlock, JumpContext jc, TryCatchBlock tryCatch) {
         if (!tryCatch.getCatchBlocks().isEmpty()) {
-            CatchJumpContext cjc = new CatchJumpContext(jc, tryCatch.getCatchBlocks());
+            CatchJumpContext cjc = new CatchJumpContext(jc, nextBlock, tryCatch.getCatchBlocks());
             buildBlock(curBlock, nextBlock, cjc, tryCatch.getTryBlock());
             for(CatchBlock cb : tryCatch.getCatchBlocks()) {
                 BasicBlock catchEntry = cjc.getEntry(cb);
-                buildBlock(catchEntry, nextBlock, jc, cb);
+                if(catchEntry != nextBlock)
+                    buildBlock(catchEntry, nextBlock, jc, cb);
             }
         } else {
             buildBlock(curBlock, nextBlock, jc, tryCatch.getTryBlock());
@@ -142,14 +212,21 @@ public class CFG {
         BasicBlock condBlock = buildExpr(curBlock, condition, jc);
         jc = new SwitchJumpContext(jc, nextBlock);
         List<CaseBlock> caseBlocks = switchBlock.getCaseBlocks();
-        BasicBlock curCaseBlock = new BasicBlock();
+        BasicBlock finalCondBlock = nextBlock;
+        for(CaseBlock cb : caseBlocks) {
+            if(cb.isDefault()) {
+                finalCondBlock = new BasicBlock();
+            }
+        }
+        BasicBlock curCaseBlock = caseBlocks.get(0).isDefault() ? finalCondBlock : new BasicBlock();
         BasicBlock nextCaseBlock;
-        BasicBlock curCondBlock = new BasicBlock();
+        BasicBlock curCondBlock = caseBlocks.size() == 1 && caseBlocks.get(0).isDefault() ? finalCondBlock : new BasicBlock();
         BasicBlock nextCondBlock;
         condBlock.addTarget(EdgeType.PASS, curCondBlock);
         for (int i = 0; i < caseBlocks.size(); i++) {
-            nextCaseBlock = i == caseBlocks.size() - 1 ? nextBlock : new BasicBlock();
             CaseBlock caseBlock = caseBlocks.get(i);
+            CaseBlock nextCase = i == caseBlocks.size() - 1 ? null : caseBlocks.get(i+1);
+            nextCaseBlock = nextCase == null ? nextBlock : nextCase.isDefault() ? finalCondBlock : new BasicBlock();
             List<Integer> vals = caseBlock.getValues();
             for (int j = 0; j < vals.size(); j++) {
                 int val = vals.get(j);
@@ -157,16 +234,27 @@ public class CFG {
                 Expression eq = new Expression(AstCode.CmpEq, null, -1, condition, ldc);
                 curCondBlock.setExpression(eq);
                 BasicBlock eqBlock = register(curCondBlock);
-                if (j < vals.size() - 1 || i < caseBlocks.size() - 1 && !caseBlocks.get(i + 1).isDefault()) {
-                    nextCondBlock = new BasicBlock();
+                if (j == vals.size() - 1 && (nextCase == null || (i == caseBlocks.size() - 2 && nextCase.isDefault()))) {
+                    nextCondBlock = finalCondBlock;
                 } else {
-                    nextCondBlock = nextCaseBlock;
+                    nextCondBlock = new BasicBlock();
                 }
                 eqBlock.addTarget(EdgeType.TRUE, curCaseBlock);
                 eqBlock.addTarget(EdgeType.FALSE, nextCondBlock);
                 curCondBlock = nextCondBlock;
             }
-            buildBlock(curCaseBlock, nextCaseBlock, jc, caseBlock);
+            if(caseBlock.getBody().isEmpty()) {
+                // likely a procyon bug: seems that return is expected
+                buildNode(curCaseBlock, nextCaseBlock, jc, new Expression(AstCode.Return, null, -1));
+            } else {
+                if(nextCase != null) {
+                    List<Node> next = nextCase.getBody();
+                    if(!next.isEmpty() && next.get(0) instanceof Label) {
+                        labelTargets.putIfAbsent((Label) next.get(0), nextCaseBlock);
+                    }
+                }
+                buildBlock(curCaseBlock, nextCaseBlock, jc, caseBlock);
+            }
             curCaseBlock = nextCaseBlock;
         }
     }
@@ -241,10 +329,12 @@ public class CFG {
             Expression right = expr.getArguments().get(1);
             BasicBlock rightBlock = new BasicBlock();
             BasicBlock and = new BasicBlock(expr);
-            BasicBlock leftBlock = buildExpr(entry, left, jc);
-            leftBlock.addTarget(EdgeType.TRUE, rightBlock);
-            leftBlock.addTarget(EdgeType.FALSE, and);
-            buildExpr(rightBlock, right, jc).addTarget(EdgeType.PASS, and);
+            BasicBlock leftRes = buildExpr(entry, left, jc);
+            leftRes.addTarget(EdgeType.TRUE, rightBlock);
+            leftRes.addTarget(EdgeType.FALSE, and);
+            BasicBlock rightRes = buildExpr(rightBlock, right, jc);
+            rightRes.addTarget(EdgeType.TRUE, and);
+            rightRes.addTarget(EdgeType.FALSE, and);
             return register(and);
         }
         case LogicalOr: {
@@ -255,7 +345,9 @@ public class CFG {
             BasicBlock leftBlock = buildExpr(entry, left, jc);
             leftBlock.addTarget(EdgeType.FALSE, rightBlock);
             leftBlock.addTarget(EdgeType.TRUE, or);
-            buildExpr(rightBlock, right, jc).addTarget(EdgeType.PASS, or);
+            BasicBlock rightRes = buildExpr(rightBlock, right, jc);
+            rightRes.addTarget(EdgeType.TRUE, or);
+            rightRes.addTarget(EdgeType.FALSE, or);
             return register(or);
         }
         default:
@@ -363,18 +455,6 @@ public class CFG {
         return block;
     }
 
-    public BasicBlock getEntryBlock() {
-        return entry;
-    }
-
-    public BasicBlock getExitBlock() {
-        return exit;
-    }
-
-    public BasicBlock getFailBlock() {
-        return fail;
-    }
-
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("CFG for ").append(new MemberInfo(md)).append("\n");
@@ -386,13 +466,138 @@ public class CFG {
     public static CFG build(MethodDefinition md, Block body) {
         return new CFG(md, null, body);
     }
+    
+    public <STATE, FACT, DF extends Annotator<FACT> & Dataflow<FACT, STATE>> boolean runDFA(DF df, int maxIter) {
+        return new DFARunner<>(df).run(maxIter);
+    }
+    
+    void clearChanged() {
+        for(BasicBlock bb : blocks) {
+            bb.changed = false;
+        }
+        exit.changed = false;
+        fail.changed = false;
+    }
 
+    class DFARunner<STATE, FACT, DF extends Annotator<FACT> & Dataflow<FACT, STATE>> {
+        private final DF df;
+        private boolean changed = false;
+
+        DFARunner(DF df) {
+            this.df = df;
+        }
+        
+        boolean run(int maxIteration) {
+            if(blocks.isEmpty()) {
+                return true;
+            }
+            initialize();
+            if(closure != null) {
+                @SuppressWarnings("unchecked")
+                STATE startState = (STATE)closure.state;
+                blocks.get(0).state = startState;
+            }
+            runIteration(blocks);
+            boolean valid = true;
+            if(changed && forwardTill < blocks.size()) {
+                List<BasicBlock> subList = blocks.subList(forwardTill, blocks.size());
+                valid = false;
+                for(int iter = 0; iter < maxIteration; iter++) {
+                    runIteration(subList);
+                    if(!changed) {
+                        valid = true;
+                        break;
+                    }
+                }
+                if(!valid) {
+                    for(BasicBlock bb : subList) {
+                        if(bb.changed) {
+                            df.put(bb.expr, df.makeUnknownFact());
+                        }
+                    }
+                }
+            }
+            for(CFG subCFG : lambdas.values()) {
+                valid &= subCFG.runDFA(df, maxIteration);
+            }
+            return valid;
+        }
+
+        private void initialize() {
+            for(BasicBlock bb : blocks) {
+                bb.state = df.makeInitialState();
+            }
+            exit.state = df.makeInitialState();
+            fail.state = df.makeInitialState();
+        }
+
+        private void runIteration(List<BasicBlock> blocks) {
+            changed = false;
+            clearChanged();
+            for(BasicBlock bb : blocks) {
+                @SuppressWarnings("unchecked")
+                STATE state = (STATE)bb.state;
+                FACT fact = df.makeFact(state, bb.expr);
+                FACT oldFact = df.get(bb.expr);
+                if(!df.sameFact(oldFact, fact)) {
+                    FACT updatedFact = df.mergeFacts(oldFact, fact);
+                    if(!df.sameFact(updatedFact, oldFact)) {
+                        df.put(bb.expr, updatedFact);
+                        bb.changed = changed = true;
+                    }
+                }
+                if(bb.passTarget != null) {
+                    updateState(df.transferState(state, bb.expr), bb.passTarget);
+                }
+                if(bb.trueTarget != null || bb.falseTarget != null) {
+                    TrueFalse<STATE> tf = df.transferConditionalState(state, bb.expr);
+                    updateState(tf.trueState, bb.trueTarget);
+                    updateState(tf.falseState, bb.falseTarget);
+                }
+                if(bb.failTargets != null) {
+                    STATE newState = bb.expr.getCode() == AstCode.Ret ? df.transferState(state, bb.expr)
+                            : df.transferExceptionalState(state, bb.expr);
+                    for(BasicBlock target : bb.failTargets) {
+                        updateState(newState, target);
+                    }
+                }
+            }
+        }
+
+        private void updateState(STATE newState, BasicBlock target) {
+            @SuppressWarnings("unchecked")
+            STATE oldState = (STATE) target.state;
+            if (!df.sameState(oldState, newState)) {
+                STATE updatedState = df.mergeStates(oldState, newState);
+                target.state = updatedState;
+                if(!df.sameState(oldState, updatedState)) {
+                    target.changed = changed = true;
+                }
+            }
+        }
+        
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            for(BasicBlock bb : blocks) {
+                sb.append(getBlockDescription(bb));
+            }
+            sb.append(getBlockDescription(exit));
+            sb.append(getBlockDescription(fail));
+            return sb.toString();
+        }
+
+        String getBlockDescription(BasicBlock bb) {
+            return "["+bb.getId()+"] "+(bb.changed ? "*" : " ")+" "+bb.state+" | "+(bb.expr == null ? "?" : df.get(bb.expr))+"\n";
+        }
+    }
+    
     public enum EdgeType {
         PASS, TRUE, FALSE, FAIL;
     }
 
     static class BasicBlock {
-        Object state, fact;
+        Object state;
         boolean changed;
         int id = -1;
         Expression expr;
@@ -464,6 +669,13 @@ public class CFG {
                 return String.valueOf(id);
             }
         }
+        
+        public Stream<BasicBlock> targets() {
+            Stream<BasicBlock> stream = Stream.of(passTarget, trueTarget, falseTarget);
+            if(failTargets != null)
+                stream = Stream.concat(stream, failTargets.stream());
+            return stream.filter(Objects::nonNull);
+        }
 
         @Override
         public String toString() {
@@ -497,17 +709,20 @@ public class CFG {
     class OuterJumpContext implements JumpContext {
         @Override
         public void addExceptional(BasicBlock block, TypeReference exception) {
-            block.addTarget(EdgeType.FAIL, getFailBlock());
+            block.addTarget(EdgeType.FAIL, fail);
         }
 
         @Override
         public void addReturn(BasicBlock block) {
-            block.addTarget(EdgeType.PASS, getExitBlock());
+            block.addTarget(EdgeType.PASS, exit);
         }
 
         @Override
         public void addBreak(BasicBlock block, Label label) {
-            throw new IllegalStateException("Misplaced break");
+            if(label != null)
+                addJump(block, label);
+            else
+                throw new IllegalStateException("Misplaced break");
         }
 
         @Override
@@ -586,7 +801,7 @@ public class CFG {
 
         @Override
         public void addBreak(BasicBlock block, Label label) {
-            if (label == null || labelTargets.get(label) == entry) {
+            if (label == null) {
                 block.addTarget(EdgeType.PASS, exit);
             } else {
                 super.addBreak(block, label);
@@ -606,10 +821,11 @@ public class CFG {
     static class CatchJumpContext extends DelegatingJumpContext {
         private final Map<CatchBlock, BasicBlock> catches;
 
-        CatchJumpContext(JumpContext parent, List<CatchBlock> catchBlocks) {
+        CatchJumpContext(JumpContext parent, BasicBlock nextBlock, List<CatchBlock> catchBlocks) {
             super(parent);
             this.catches = catchBlocks.stream().collect(
-                Collectors.toMap(Function.identity(), cb -> new BasicBlock(), (a, b) -> a, LinkedHashMap::new));
+                Collectors.toMap(Function.identity(), cb -> cb.getBody().isEmpty() ? nextBlock : new BasicBlock(), (a,
+                        b) -> a, LinkedHashMap::new));
         }
 
         @Override

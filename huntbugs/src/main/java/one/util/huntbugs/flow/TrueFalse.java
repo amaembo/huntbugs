@@ -13,28 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package one.util.huntbugs.testdata;
-
-import one.util.huntbugs.registry.anno.AssertWarning;
+package one.util.huntbugs.flow;
 
 /**
  * @author lan
  *
  */
-public class TestUselessVoidMethod {
-    @AssertWarning("UselessVoidMethod")
-    public void doNothing(int x) {
-        int y = x;
-        if (x > 0) {
-            y = y * 2;
-        }
+class TrueFalse<STATE> {
+    final STATE trueState, falseState;
+    
+    TrueFalse(STATE sameState) {
+        this(sameState, sameState);
     }
     
-    @AssertWarning("UselessVoidMethod")
-    public void uselessSwitch(int x) {
-        switch(x) {
-        case 1:
-            break;
-        }
+    TrueFalse(STATE trueState, STATE falseState) {
+        this(trueState, falseState, false);
+    }
+
+    TrueFalse(STATE trueState, STATE falseState, boolean invert) {
+        this.trueState = invert ? falseState : trueState;
+        this.falseState = invert ? trueState : falseState;
     }
 }

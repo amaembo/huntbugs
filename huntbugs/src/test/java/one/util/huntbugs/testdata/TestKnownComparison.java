@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.io.IOException;
 import java.util.List;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
@@ -624,6 +625,211 @@ public class TestKnownComparison {
         }
     }
 
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testCompareToKnown(int a, int b) {
+        if(a == 5 && b == a) {
+            System.out.println(b == 5 ? 1 : 2);
+        }
+    }
+    
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testWhileExitCondition(int i) {
+        while(i != 10) {
+            System.out.println(i++);
+        }
+        if(i != 10) {
+            System.out.println("Never");
+        }
+    }
+
+    @AssertNoWarning("*")
+    public void testLabel(int i, int j) {
+        int x = 2;
+        outer:
+        while(i < 10) {
+            x = 3;
+            while(j < 20) {
+                x = 4;
+                if (i + j + x == 20) {
+                    x = 5;
+                    break outer;
+                }
+            }
+            x = 5;
+        }
+        if(x != 5) {
+            System.out.println("Never");
+        }
+    }
+    
+    @AssertWarning("ResultOfComparisonIsStaticallyKnown")
+    public void testNestedSwitch(int i, int j) {
+        switch(i) {
+        case 1:
+            switch(j) {
+            case 2:
+                System.out.println("1-2");
+                break;
+            }
+            break;
+        case 2:
+            switch(j) {
+            case 3:
+                if(i == 2)
+                    System.out.println("2-3");
+                break;
+            }
+            break;
+        case 3:
+            return;
+        case 4:
+            return;
+        default:
+            break;
+        }
+    }
+    
+    @AssertNoWarning("*")
+    public static void catchInfiniteLoop(int[] arr, int offset) {
+        while (true) {
+            try {
+                arr[offset++] = 1;
+                break;
+            } catch (IndexOutOfBoundsException ex) {
+                System.out.println("Retrying...");
+                offset = 0;
+            }
+        }
+        System.out.println("done");
+    }
+    
+    @AssertNoWarning("*")
+    public void testSwitchPassthru(int x) {
+        int a = 3;
+        for(int i=0; i<10; i++) {
+            switch(x) {
+            case 1:
+                System.out.println(x);
+                a = 2;
+                if(Math.random() > 0.5)
+                    return;
+            case 2:
+                if(a == 3) {
+                    System.out.println("Always");
+                }
+                break;
+            default:
+                System.out.println("Default");
+            }
+        }
+    }
+    
+    @AssertNoWarning("*")
+    public void testSwitchMisplacedDefault(int x) {
+        int a = 3;
+        switch(x) {
+        case 3:
+            System.out.println("3");
+            break;
+        default:
+            System.out.println("Default");
+            a = 2;
+        case 1:
+        case 2:
+            if(a == 3) {
+                System.out.println("Possible");
+            }
+        }
+    }
+    
+    @AssertWarning("ResultOfComparisonIsStaticallyKnown")
+    public void testSwitchMisplacedDefault2(int x) {
+        int a = 3;
+        switch(x) {
+        default:
+        case 3:
+            System.out.println("3");
+            a = 2;
+            break;
+        case 1:
+        case 2:
+            if(a == 3) {
+                System.out.println("Always");
+            }
+        }
+    }
+    
+    public static int parsePattern(String rule, int pos, int limit,
+            String pattern, int[] parsedInts) {
+        int[] p = new int[1];
+        int intCount = 0; // number of integers parsed
+        for (int i=0; i<pattern.length(); ++i) {
+            char cpat = pattern.charAt(i);
+            char c;
+            switch (cpat) {
+            case ' ':
+                if (pos >= limit) {
+                    return -1;
+                }
+                c = rule.charAt(pos++);
+                if (!Character.isWhitespace(c)) {
+                    return -1;
+                }
+                // FALL THROUGH to skipWhitespace
+            case '~':
+                pos = pos + 2;
+                break;
+            case '#':
+                p[0] = pos;
+                parsedInts[intCount++] = Integer.parseInt(rule);
+                if (p[0] == pos) {
+                    // Syntax error; failed to parse integer
+                    return -1;
+                }
+                pos = p[0];
+                break;
+            default:
+                if (pos >= limit) {
+                    return -1;
+                }
+                c = Character.toLowerCase(rule.charAt(pos++));
+                if (c != cpat) {
+                    return -1;
+                }
+                break;
+            }
+        }
+        return pos;
+    }
+
+    
+    @AssertWarning("ResultOfComparisonIsStaticallyKnown")
+    public void testCatch(String s) {
+        try {
+            if(s.equals("test")) {
+                throw new IOException();
+            }
+            System.out.println(s);
+        }
+        catch(IOException ex) {
+            if(s.equals("test")) {
+                System.out.println("Always!");
+            }
+        }
+    }
+    
+    @AssertNoWarning("*")
+    public void testOrNested(int x) {
+        if(Math.random() > 0.5 && (x == 1 || x == 2)) {
+            if(x == 1) {
+                System.out.println(2);
+            } else {
+                System.out.println(1);
+            }
+            System.out.println("ok");
+        }
+    }
+    
     @AssertNoWarning("*")
     static class ArrayTest {
         int[] arr;

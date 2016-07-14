@@ -104,17 +104,24 @@ public class Nodes {
         }
     }
     
-    public static boolean isWriteTo(Node node, Set<Variable> vars) {
+    public static Variable getWrittenVariable(Node node) {
         if (!(node instanceof Expression))
-            return false;
+            return null;
         Expression expr = (Expression) node;
-        if (expr.getOperand() instanceof Variable && vars.contains(expr.getOperand()) && (expr
+        if (expr.getOperand() instanceof Variable && (expr
                 .getCode() == AstCode.Store || expr.getCode() == AstCode.Inc))
-            return true;
-        if ((expr.getCode() == AstCode.PreIncrement || expr.getCode() == AstCode.PostIncrement) && vars.contains(expr
-                .getArguments().get(0).getOperand()))
-            return true;
-        return false;
+            return (Variable) expr.getOperand();
+        if (expr.getCode() == AstCode.PreIncrement || expr.getCode() == AstCode.PostIncrement) {
+            Object var = expr.getArguments().get(0).getOperand();
+            if(var instanceof Variable)
+                return (Variable) var;
+        }
+        return null;
+    }
+    
+    public static boolean isWriteTo(Node node, Set<Variable> vars) {
+        Variable var = getWrittenVariable(node);
+        return var != null && vars.contains(var);
     }
 
     public static boolean isComparison(Node node) {
