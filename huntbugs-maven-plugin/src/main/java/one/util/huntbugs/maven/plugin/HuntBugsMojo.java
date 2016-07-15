@@ -24,12 +24,14 @@ import one.util.huntbugs.repo.AuxRepository;
 import one.util.huntbugs.repo.CompositeRepository;
 import one.util.huntbugs.repo.DirRepository;
 import one.util.huntbugs.repo.Repository;
+import one.util.huntbugs.warning.Warning;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -72,6 +74,12 @@ public class HuntBugsMojo extends AbstractMojo {
      */
     @Parameter(defaultValue = "30", property = "minScore", required = true)
     private int minScore;
+    
+    /**
+     * Score to fail build
+     */
+    @Parameter(defaultValue = "0", property = "failScore", required = false)
+    private int failScore;
     
     /**
      * Do not print progress messages
@@ -177,5 +185,8 @@ public class HuntBugsMojo extends AbstractMojo {
             res = Reports.diff(XmlReportReader.read(ctx, xmlFile), ctx);
         }
         Reports.write(xmlFile, htmlFile, res);
+        if (failScore > 0 && res.warnings().mapToInt(Warning::getScore).anyMatch(score -> score >= failScore)) {
+            throw new MojoFailureException("There are warnings with score higher than " + failScore);
+        }
     }
 }
