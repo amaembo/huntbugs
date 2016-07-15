@@ -272,10 +272,16 @@ public class Context implements HuntBugsResult {
             Long value = e.getValue();
             if(stat.containsKey(key+".Total"))
                 return;
-            if(key.endsWith(".Total")) {
-                String subKey = key.substring(0, key.length()-".Total".length());
-                Long part = stat.getOrDefault(subKey, 0L);
-                app.printf(Locale.ENGLISH, "\t%s: %d of %d (%.2f%%)%n", subKey, part, value, part*100.0/value);
+            int slashPos = key.indexOf('/');
+            if(slashPos >= 0) {
+                String partKey = key.substring(0, slashPos);
+                String totalKey = key.substring(slashPos+1);
+                Long totalValue = stat.getOrDefault(totalKey, 0L);
+                app.printf(Locale.ENGLISH, "\t%s: %d of %d (%.2f%%)%n", partKey, value, totalValue, value*100.0/totalValue);
+            } else if(key.endsWith(".Total")) {
+                String partKey = key.substring(0, key.length()-".Total".length());
+                Long part = stat.getOrDefault(partKey, 0L);
+                app.printf(Locale.ENGLISH, "\t%s: %d of %d (%.2f%%)%n", partKey, part, value, part*100.0/value);
             } else 
                 app.printf(Locale.ENGLISH, "\t%s: %d%n", key, value);
         });
