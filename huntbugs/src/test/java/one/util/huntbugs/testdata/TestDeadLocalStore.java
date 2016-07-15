@@ -305,11 +305,42 @@ public class TestDeadLocalStore {
         System.out.println(numbers.size());
     }
     
-    @AssertNoWarning("*")
+    @AssertWarning(value = "DeadLocalStore", maxScore = 35)
     public void testAndChain(int x) {
         int a = 0;
         if(x > 2 && ((a = x*2) > 5)) {
             System.out.println(a);
         }
+    }
+
+    @AssertWarning("DeadLocalStore")
+    public void testLabel(int i, int j) {
+        int x = 2;
+        outer:
+        while(i < 10) {
+            x = 3;
+            while(j < 20) {
+                x = 4;
+                if (i + j + x == 20) {
+                    x = 5;
+                    break outer;
+                }
+            }
+            x = 5;
+        }
+        if(x != 5) {
+            System.out.println("Never");
+        }
+    }
+    
+    @AssertWarning("DeadLocalStore")
+    public int[] testUnreachableCatch() {
+        int[] a = null;
+        try {
+            a = new int[20];
+        } catch(Exception ex) {
+            System.out.println("Exceptional");
+        }
+        return a;
     }
 }

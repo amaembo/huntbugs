@@ -642,26 +642,6 @@ public class TestKnownComparison {
         }
     }
 
-    @AssertNoWarning("*")
-    public void testLabel(int i, int j) {
-        int x = 2;
-        outer:
-        while(i < 10) {
-            x = 3;
-            while(j < 20) {
-                x = 4;
-                if (i + j + x == 20) {
-                    x = 5;
-                    break outer;
-                }
-            }
-            x = 5;
-        }
-        if(x != 5) {
-            System.out.println("Never");
-        }
-    }
-    
     @AssertWarning("ResultOfComparisonIsStaticallyKnown")
     public void testNestedSwitch(int i, int j) {
         switch(i) {

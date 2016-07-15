@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.flow;
 
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.decompiler.ast.Expression;
 
 /**
@@ -22,7 +23,9 @@ import com.strobel.decompiler.ast.Expression;
  *
  */
 interface Dataflow<FACT, STATE> {
-    public STATE makeInitialState();
+    public STATE makeEntryState(MethodDefinition md, STATE closureState);
+
+    public STATE makeTopState();
     
     public STATE transferState(STATE src, Expression expr);
 
@@ -41,4 +44,8 @@ interface Dataflow<FACT, STATE> {
     public FACT mergeFacts(FACT f1, FACT f2);
     
     public boolean sameFact(FACT f1, FACT f2);
+    
+    public default void onSuccess(STATE exitState) {};
+    
+    public default void onFail(STATE exitState) {};
 }

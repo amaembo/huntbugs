@@ -68,7 +68,7 @@ public class BackLinkAnnotator extends Annotator<Set<Expression>> {
     }
 
     private void link(Expression target, Expression source) {
-        if (source.getCode() == Frame.PHI_TYPE || source.getCode() == Frame.UPDATE_TYPE) {
+        if (source.getCode() == SourceAnnotator.PHI_TYPE || source.getCode() == SourceAnnotator.UPDATE_TYPE) {
             source.getArguments().forEach(arg -> link(target, arg));
             return;
         }

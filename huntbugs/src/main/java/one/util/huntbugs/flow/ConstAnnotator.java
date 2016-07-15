@@ -29,6 +29,7 @@ import one.util.huntbugs.util.Nodes;
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.JvmType;
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
@@ -49,6 +50,10 @@ public class ConstAnnotator extends Annotator<Object> implements Dataflow<Object
 
     ConstAnnotator() {
         super("value", null);
+    }
+    
+    boolean build(CFG cfg) {
+        return cfg.runDFA(this, 7);
     }
     
     /**
@@ -177,11 +182,11 @@ public class ConstAnnotator extends Annotator<Object> implements Dataflow<Object
         value = resolve(ctx, src);
         if(value != null)
             return value;
-        if(src.getCode() == Frame.PHI_TYPE) {
+        if(src.getCode() == SourceAnnotator.PHI_TYPE) {
             for(Expression child : src.getArguments()) {
                 Object newVal = resolve(ctx, child);
                 if (newVal == null) {
-                    if (Exprs.isParameter(child) || child.getCode() == Frame.UPDATE_TYPE) {
+                    if (Exprs.isParameter(child) || child.getCode() == SourceAnnotator.UPDATE_TYPE) {
                         return UNKNOWN_VALUE;
                     }
                 } else if (value == null) {
@@ -534,10 +539,15 @@ public class ConstAnnotator extends Annotator<Object> implements Dataflow<Object
     }
 
     @Override
-    public ContextValues makeInitialState() {
+    public ContextValues makeTopState() {
         return ContextValues.DEFAULT;
     }
     
+    @Override
+    public ContextValues makeEntryState(MethodDefinition md, ContextValues closureState) {
+        return closureState == null ? ContextValues.DEFAULT : closureState;
+    }
+
     @Override
     public ContextValues transferState(ContextValues src, Expression expr) {
         return src.transfer(expr);
@@ -737,7 +747,7 @@ public class ConstAnnotator extends Annotator<Object> implements Dataflow<Object
             return fromSource(ctx, expr);
         case Inc: {
             Expression src = ValuesFlow.getSource(expr);
-            if(src.getCode() == Frame.UPDATE_TYPE) {
+            if(src.getCode() == SourceAnnotator.UPDATE_TYPE) {
                 src = src.getArguments().get(0);
                 Object val = get(src);
                 if (val instanceof Integer)

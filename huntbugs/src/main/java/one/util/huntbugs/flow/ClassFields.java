@@ -23,6 +23,7 @@ import java.util.Set;
 import one.util.huntbugs.db.FieldStats;
 import one.util.huntbugs.db.MethodStats;
 import one.util.huntbugs.db.MethodStats.MethodData;
+import one.util.huntbugs.flow.SourceAnnotator.Frame;
 import one.util.huntbugs.util.Annotations;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
@@ -44,7 +45,7 @@ public class ClassFields {
     Set<FieldDefinition> initializedInCtor = new HashSet<>();
     MethodStats ms;
     Map<MemberInfo, Map<MemberInfo, Expression>> ctorFields = new HashMap<>();
-
+    
     public ClassFields(TypeDefinition td, FieldStats fieldStats, MethodStats methodStats) {
         this.ms = methodStats;
         for (FieldDefinition fd : td.getDeclaredFields()) {
@@ -77,18 +78,18 @@ public class ClassFields {
         return fd != null && (fd.isFinal() || initializedInCtor.contains(fd));
     }
     
-    void mergeConstructor(MethodDefinition md, Frame frame) {
+    void mergeConstructor(MethodDefinition md, Frame frame, FrameContext fc) {
         ctorFields.put(new MemberInfo(md), frame.fieldValues);
         frame.fieldValues.forEach((mi, expr) -> {
             FieldDefinition fd = fields.get(mi);
             if (fd != null && !fd.isStatic() && (fd.isFinal() || (fd.isPrivate() || fd.isPackagePrivate())
-                && initializedInCtor.contains(fd))) {
+                    && initializedInCtor.contains(fd))) {
                 // TODO: better merging
-                values.merge(mi, expr, Frame::makePhiNode);
+                values.merge(mi, expr, (e1, e2) -> SourceAnnotator.makePhiNode(e1, e2, fc));
             }
         });
     }
-
+    
     void setStaticFinalFields(Frame frame) {
         frame.fieldValues.forEach((mi, expr) -> {
             FieldDefinition fd = fields.get(mi);
@@ -98,7 +99,7 @@ public class ClassFields {
             }
         });
     }
-
+    
     public void clearCtorData() {
         ctorFields = null;
     }

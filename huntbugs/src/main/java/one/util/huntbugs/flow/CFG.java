@@ -26,13 +26,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.strobel.assembler.metadata.FieldReference;
+import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
@@ -62,10 +65,48 @@ public class CFG {
     private static final int BLOCKTYPE_EXIT = -2;
     private static final int BLOCKTYPE_FAIL = -3;
 
+    static final TypeDefinition runtimeException;
+    static final TypeDefinition classCastException;
+    static final TypeDefinition nullPointerException;
+    static final TypeDefinition arrayIndexOutOfBoundsException;
+    static final TypeDefinition arrayStoreException;
+    static final TypeDefinition outOfMemoryError;
+    static final TypeDefinition linkageError;
+    static final TypeDefinition error;
+    static final TypeDefinition throwable;
+    static final TypeDefinition exception;
+    
+    static {
+        MetadataSystem ms = MetadataSystem.instance();
+        throwable = getException(ms, "java/lang/Throwable");
+        exception = getException(ms, "java/lang/Exception");
+        runtimeException = getException(ms, "java/lang/RuntimeException");
+        classCastException = getException(ms, "java/lang/ClassCastException");
+        nullPointerException = getException(ms, "java/lang/NullPointerException");
+        arrayIndexOutOfBoundsException = getException(ms, "java/lang/ArrayIndexOutOfBoundsException");
+        arrayStoreException = getException(ms, "java/lang/ArrayStoreException");
+        outOfMemoryError = getException(ms, "java/lang/OutOfMemoryError");
+        linkageError = getException(ms, "java/lang/LinkageError");
+        error = getException(ms, "java/lang/Error");
+    }
+
+    static TypeDefinition getException(MetadataSystem ms, String internalName) {
+        TypeReference tr = ms.lookupType(internalName);
+        if(tr == null) {
+            throw new InternalError("Unable to lookup exception "+internalName);
+        }
+        TypeDefinition td = tr.resolve();
+        if(td == null) {
+            throw new InternalError("Unable to resolve exception "+internalName);
+        }
+        return td;
+    }
+    
     final List<BasicBlock> blocks = new ArrayList<>();
     final Map<Lambda, CFG> lambdas = new HashMap<>();
     final BasicBlock closure;
     final MethodDefinition md;
+    final Block body;
     final BasicBlock entry, exit = new BasicBlock(BLOCKTYPE_EXIT), fail = new BasicBlock(BLOCKTYPE_FAIL);
     final Map<Label, BasicBlock> labelTargets = new HashMap<>();
     // Number of block till which CFG is forward-only
@@ -73,6 +114,7 @@ public class CFG {
 
     private CFG(MethodDefinition md, BasicBlock closure, Block methodBody) {
         this.md = md;
+        this.body = methodBody;
         this.closure = closure;
         if (methodBody.getBody().isEmpty()) {
             entry = exit;
@@ -97,6 +139,7 @@ public class CFG {
     }
 
     private void fixBlocks() {
+        entry.reached = true;
         for (BasicBlock bb : blocks) {
             while (bb.falseTarget != null && bb.falseTarget.expr != null && bb.falseTarget.expr
                     .getCode() == AstCode.LogicalAnd)
@@ -105,6 +148,8 @@ public class CFG {
             while (bb.trueTarget != null && bb.trueTarget.expr != null && bb.trueTarget.expr
                     .getCode() == AstCode.LogicalOr)
                 bb.trueTarget = bb.trueTarget.passTarget == null ? bb.trueTarget.trueTarget : bb.trueTarget.passTarget;
+            if(bb.reached)
+                bb.targets().forEach(t -> t.reached = true);
         }
     }
 
@@ -217,51 +262,50 @@ public class CFG {
         jc = new SwitchJumpContext(jc, nextBlock);
         List<CaseBlock> caseBlocks = switchBlock.getCaseBlocks();
         BasicBlock finalCondBlock = nextBlock;
+        Map<Integer, BasicBlock> targets = new LinkedHashMap<>();
+        List<BasicBlock> blocks = new ArrayList<>();
+        CaseBlock prevBlock = null;
         for (CaseBlock cb : caseBlocks) {
+            BasicBlock curBB;
+            if (prevBlock != null && prevBlock.isDefault() && prevBlock.getBody().isEmpty()) {
+                curBB = blocks.get(blocks.size() -1);
+            } else {
+                curBB = new BasicBlock();
+            }
+            blocks.add(curBB);
             if (cb.isDefault()) {
-                finalCondBlock = new BasicBlock();
+                finalCondBlock = curBB;
+            } else {
+                for(Integer val : cb.getValues()) {
+                    targets.put(val, curBB);
+                }
+            }
+            if(!cb.getBody().isEmpty() && cb.getBody().get(0) instanceof Label) {
+                Label l = (Label) cb.getBody().get(0);
+                labelTargets.putIfAbsent(l, curBB);
             }
         }
-        BasicBlock curCaseBlock = caseBlocks.get(0).isDefault() ? finalCondBlock : new BasicBlock();
-        BasicBlock nextCaseBlock;
-        BasicBlock curCondBlock = caseBlocks.size() == 1 && caseBlocks.get(0).isDefault() ? finalCondBlock
-                : new BasicBlock();
-        BasicBlock nextCondBlock;
-        condBlock.addTarget(EdgeType.PASS, curCondBlock);
-        for (int i = 0; i < caseBlocks.size(); i++) {
+        blocks.add(nextBlock);
+        BasicBlock prevCondBlock = condBlock;
+        for(Entry<Integer, BasicBlock> entry : targets.entrySet()) {
+            Expression ldc = new Expression(AstCode.LdC, entry.getKey(), -1);
+            Expression eq = new Expression(AstCode.CmpEq, null, -1, condition, ldc);
+            BasicBlock curCondBlock = register(new BasicBlock(eq));
+            prevCondBlock.addTarget(prevCondBlock == condBlock ? EdgeType.PASS : EdgeType.FALSE, curCondBlock);
+            curCondBlock.addTarget(EdgeType.TRUE, entry.getValue());
+            prevCondBlock = curCondBlock;
+        }
+        prevCondBlock.addTarget(prevCondBlock == condBlock ? EdgeType.PASS : EdgeType.FALSE, finalCondBlock);
+        for(int i=0; i<caseBlocks.size(); i++) {
             CaseBlock caseBlock = caseBlocks.get(i);
-            CaseBlock nextCase = i == caseBlocks.size() - 1 ? null : caseBlocks.get(i + 1);
-            nextCaseBlock = nextCase == null ? nextBlock : nextCase.isDefault() ? finalCondBlock : new BasicBlock();
-            List<Integer> vals = caseBlock.getValues();
-            for (int j = 0; j < vals.size(); j++) {
-                int val = vals.get(j);
-                Expression ldc = new Expression(AstCode.LdC, val, -1);
-                Expression eq = new Expression(AstCode.CmpEq, null, -1, condition, ldc);
-                curCondBlock.setExpression(eq);
-                BasicBlock eqBlock = register(curCondBlock);
-                if (j == vals.size() - 1 && (nextCase == null || (i == caseBlocks.size() - 2 && nextCase
-                        .isDefault()))) {
-                    nextCondBlock = finalCondBlock;
-                } else {
-                    nextCondBlock = new BasicBlock();
-                }
-                eqBlock.addTarget(EdgeType.TRUE, curCaseBlock);
-                eqBlock.addTarget(EdgeType.FALSE, nextCondBlock);
-                curCondBlock = nextCondBlock;
-            }
+            BasicBlock caseBB = blocks.get(i);
+            BasicBlock nextBB = blocks.get(i+1); 
             if (caseBlock.getBody().isEmpty()) {
                 // likely a procyon bug: seems that return is expected
-                buildNode(curCaseBlock, nextCaseBlock, jc, new Expression(AstCode.Return, null, -1));
+                buildNode(caseBB, nextBB, jc, new Expression(AstCode.Return, null, -1));
             } else {
-                if (nextCase != null) {
-                    List<Node> next = nextCase.getBody();
-                    if (!next.isEmpty() && next.get(0) instanceof Label) {
-                        labelTargets.putIfAbsent((Label) next.get(0), nextCaseBlock);
-                    }
-                }
-                buildBlock(curCaseBlock, nextCaseBlock, jc, caseBlock);
+                buildBlock(caseBB, nextBB, jc, caseBlock);
             }
-            curCaseBlock = nextCaseBlock;
         }
     }
 
@@ -378,10 +422,17 @@ public class CFG {
             if (exc == null)
                 exc = expr.getExpectedType();
             if (exc == null)
-                exc = Frame.throwable;
+                exc = throwable;
             jc.addExceptional(block, exc);
             return null;
         }
+        case CheckCast:
+            jc.addExceptional(block, classCastException);
+            jc.addExceptional(block, linkageError);
+            break;
+        case InstanceOf:
+            jc.addExceptional(block, linkageError);
+            break;
         case Goto:
             jc.addJump(block, (Label) expr.getOperand());
             return null;
@@ -395,12 +446,12 @@ public class CFG {
             jc.addReturn(block);
             return null;
         case ArrayLength:
-            jc.addExceptional(block, Frame.nullPointerException);
+            jc.addExceptional(block, nullPointerException);
             break;
         case Bind:
         case InvokeDynamic:
-            jc.addExceptional(block, Frame.error);
-            jc.addExceptional(block, Frame.runtimeException);
+            jc.addExceptional(block, error);
+            jc.addExceptional(block, runtimeException);
             break;
         case InitObject:
         case InvokeInterface:
@@ -408,45 +459,45 @@ public class CFG {
         case InvokeStatic:
         case InvokeVirtual: {
             MethodReference mr = (MethodReference) expr.getOperand();
-            jc.addExceptional(block, Frame.error);
-            jc.addExceptional(block, Frame.runtimeException);
+            jc.addExceptional(block, error);
+            jc.addExceptional(block, runtimeException);
             MethodDefinition md = mr.resolve();
             if (md != null) {
                 for (TypeReference thrownType : md.getThrownTypes()) {
                     jc.addExceptional(block, thrownType);
                 }
             } else {
-                jc.addExceptional(block, Frame.exception);
+                jc.addExceptional(block, exception);
             }
             break;
         }
         case LoadElement:
-            jc.addExceptional(block, Frame.arrayIndexOutOfBoundsException);
-            jc.addExceptional(block, Frame.nullPointerException);
+            jc.addExceptional(block, arrayIndexOutOfBoundsException);
+            jc.addExceptional(block, nullPointerException);
             break;
         case StoreElement:
-            jc.addExceptional(block, Frame.arrayIndexOutOfBoundsException);
-            jc.addExceptional(block, Frame.arrayStoreException);
-            jc.addExceptional(block, Frame.nullPointerException);
+            jc.addExceptional(block, arrayIndexOutOfBoundsException);
+            jc.addExceptional(block, arrayStoreException);
+            jc.addExceptional(block, nullPointerException);
             break;
         case __New:
         case NewArray:
         case InitArray:
         case MultiANewArray:
-            jc.addExceptional(block, Frame.outOfMemoryError);
+            jc.addExceptional(block, outOfMemoryError);
             break;
         case PutStatic:
         case GetStatic: {
             FieldReference fr = ((FieldReference) expr.getOperand());
             if (!fr.getDeclaringType().isEquivalentTo(md.getDeclaringType()))
-                jc.addExceptional(block, Frame.linkageError);
+                jc.addExceptional(block, linkageError);
             break;
         }
         case PutField:
         case GetField: {
             if (md.isStatic() || !Exprs.isThis(expr.getArguments().get(0))) {
-                jc.addExceptional(block, Frame.nullPointerException);
-                jc.addExceptional(block, Frame.linkageError);
+                jc.addExceptional(block, nullPointerException);
+                jc.addExceptional(block, linkageError);
             }
             break;
         }
@@ -476,6 +527,11 @@ public class CFG {
     public <STATE, FACT, DF extends Annotator<FACT> & Dataflow<FACT, STATE>> boolean runDFA(DF df, int maxIter) {
         return new DFARunner<>(df).run(maxIter);
     }
+    
+    public void forBodies(BiConsumer<MethodDefinition, Block> consumer) {
+        consumer.accept(md, body);
+        lambdas.values().forEach(cfg -> cfg.forBodies(consumer));
+    }
 
     void clearChanged() {
         for (BasicBlock bb : blocks) {
@@ -498,11 +554,6 @@ public class CFG {
                 return true;
             }
             initialize();
-            if (closure != null) {
-                @SuppressWarnings("unchecked")
-                STATE startState = (STATE) closure.state;
-                blocks.get(0).state = startState;
-            }
             runIteration(blocks);
             boolean valid = true;
             if (changed && forwardTill < blocks.size()) {
@@ -519,10 +570,23 @@ public class CFG {
                     for (BasicBlock bb : subList) {
                         if (bb.changed) {
                             df.put(bb.expr, df.makeUnknownFact());
+                            bb.state = df.makeTopState();
                         }
+                    }
+                    if(exit.changed) {
+                        exit.state = df.makeTopState();
+                    }
+                    if(fail.changed) {
+                        fail.state = df.makeTopState();
                     }
                 }
             }
+            @SuppressWarnings("unchecked")
+            STATE exitState = (STATE) exit.state;
+            df.onSuccess(exitState);
+            @SuppressWarnings("unchecked")
+            STATE failState = (STATE) fail.state;
+            df.onFail(failState);
             for (CFG subCFG : lambdas.values()) {
                 valid &= subCFG.runDFA(df, maxIteration);
             }
@@ -531,16 +595,23 @@ public class CFG {
 
         private void initialize() {
             for (BasicBlock bb : blocks) {
-                bb.state = df.makeInitialState();
+                bb.state = df.makeTopState();
             }
-            exit.state = df.makeInitialState();
-            fail.state = df.makeInitialState();
+            exit.state = df.makeTopState();
+            fail.state = df.makeTopState();
+            @SuppressWarnings("unchecked")
+            STATE closureState = closure == null ? null : (STATE) closure.state;
+            entry.state = df.makeEntryState(md, closureState);
         }
 
         private void runIteration(List<BasicBlock> blocks) {
             changed = false;
             clearChanged();
             for (BasicBlock bb : blocks) {
+                if(!bb.reached) {
+                    df.put(bb.expr, df.makeUnknownFact());
+                    continue;
+                }
                 @SuppressWarnings("unchecked")
                 STATE state = (STATE) bb.state;
                 FACT fact = df.makeFact(state, bb.expr);
@@ -605,7 +676,7 @@ public class CFG {
 
     static class BasicBlock {
         Object state;
-        boolean changed;
+        boolean changed, reached;
         int id = -1;
         Expression expr;
         BasicBlock passTarget;

@@ -24,9 +24,12 @@ import java.util.Map;
 
 
 
+
+import one.util.huntbugs.flow.SourceAnnotator.Frame;
 import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Maps;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
+
 
 
 
@@ -48,7 +51,7 @@ class FrameContext {
     final MethodDefinition md;
     final ClassFields cf;
     private final Map<Expression, Expression> updatedNodes = new HashMap<>();
-
+    
     FrameContext(MethodDefinition md, ClassFields cf) {
         this.md = md;
         this.cf = cf;
@@ -126,9 +129,9 @@ class FrameContext {
     }
 
     Expression makeUpdatedNode(Expression src) {
-        if(src.getCode() == Frame.UPDATE_TYPE)
+        if(src.getCode() == SourceAnnotator.UPDATE_TYPE)
             return src;
-        return updatedNodes.computeIfAbsent(src, s -> new Expression(Frame.UPDATE_TYPE, null, s.getOffset(), s));
+        return updatedNodes.computeIfAbsent(src, s -> new Expression(SourceAnnotator.UPDATE_TYPE, null, s.getOffset(), s));
     }
 
     public void makeFieldsFrom(Frame frame) {
@@ -137,7 +140,7 @@ class FrameContext {
         if(md.isTypeInitializer()) {
             cf.setStaticFinalFields(frame);
         } else if(md.isConstructor()) {
-            cf.mergeConstructor(md, frame);
+            cf.mergeConstructor(md, frame, this);
         }
     }
 }
