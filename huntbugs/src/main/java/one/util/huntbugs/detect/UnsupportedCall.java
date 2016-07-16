@@ -15,6 +15,8 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.Locale;
+
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
@@ -55,6 +57,9 @@ public class UnsupportedCall {
                     // will be reported as ThreadStopThrowable
                     return;
                 }
+                String lcName = mr.getName().toLowerCase(Locale.ENGLISH);
+                if(lcName.contains("unsupported") || lcName.contains("throw") || lcName.contains("exception") || lcName.contains("error"))
+                    return;
                 if(nc.isInTry("java/lang/UnsupportedOperationException")) {
                     return;
                 }
