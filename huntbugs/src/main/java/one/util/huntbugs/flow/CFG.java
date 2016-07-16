@@ -171,6 +171,15 @@ public class CFG {
         if (body.isEmpty()) {
             throw new IllegalStateException("Empty body is supplied!");
         }
+        Set<Label> labels = new HashSet<>();
+        for(Node node : body) {
+            if(node instanceof Label) {
+                labels.add((Label) node);
+            }
+        }
+        if(!labels.isEmpty()) {
+            jc = new LabelJumpContext(jc, labels);
+        }
         Node last = body.get(body.size() - 1);
         if (last instanceof Label && labelTargets.put((Label) last, exit) != null) {
             throw new IllegalStateException("Label " + last + " is already linked");
@@ -608,35 +617,39 @@ public class CFG {
             changed = false;
             clearChanged();
             for (BasicBlock bb : blocks) {
-                if(!bb.reached) {
-                    df.put(bb.expr, df.makeUnknownFact());
-                    continue;
-                }
-                @SuppressWarnings("unchecked")
-                STATE state = (STATE) bb.state;
-                FACT fact = df.makeFact(state, bb.expr);
-                FACT oldFact = df.get(bb.expr);
-                if (!df.sameFact(oldFact, fact)) {
-                    FACT updatedFact = df.mergeFacts(oldFact, fact);
-                    if (!df.sameFact(updatedFact, oldFact)) {
-                        df.put(bb.expr, updatedFact);
-                        bb.changed = changed = true;
+                try {
+                    if(!bb.reached) {
+                        df.put(bb.expr, df.makeUnknownFact());
+                        continue;
                     }
-                }
-                if (bb.passTarget != null) {
-                    updateState(df.transferState(state, bb.expr), bb.passTarget);
-                }
-                if (bb.trueTarget != null || bb.falseTarget != null) {
-                    TrueFalse<STATE> tf = df.transferConditionalState(state, bb.expr);
-                    updateState(tf.trueState, bb.trueTarget);
-                    updateState(tf.falseState, bb.falseTarget);
-                }
-                if (bb.failTargets != null) {
-                    STATE newState = bb.expr.getCode() == AstCode.Ret ? df.transferState(state, bb.expr)
-                            : df.transferExceptionalState(state, bb.expr);
-                    for (BasicBlock target : bb.failTargets) {
-                        updateState(newState, target);
+                    @SuppressWarnings("unchecked")
+                    STATE state = (STATE) bb.state;
+                    FACT fact = df.makeFact(state, bb.expr);
+                    FACT oldFact = df.get(bb.expr);
+                    if (!df.sameFact(oldFact, fact)) {
+                        FACT updatedFact = df.mergeFacts(oldFact, fact);
+                        if (!df.sameFact(updatedFact, oldFact)) {
+                            df.put(bb.expr, updatedFact);
+                            bb.changed = changed = true;
+                        }
                     }
+                    if (bb.passTarget != null) {
+                        updateState(df.transferState(state, bb.expr), bb.passTarget);
+                    }
+                    if (bb.trueTarget != null || bb.falseTarget != null) {
+                        TrueFalse<STATE> tf = df.transferConditionalState(state, bb.expr);
+                        updateState(tf.trueState, bb.trueTarget);
+                        updateState(tf.falseState, bb.falseTarget);
+                    }
+                    if (bb.failTargets != null) {
+                        STATE newState = bb.expr.getCode() == AstCode.Ret ? df.transferState(state, bb.expr)
+                                : df.transferExceptionalState(state, bb.expr);
+                        for (BasicBlock target : bb.failTargets) {
+                            updateState(newState, target);
+                        }
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException("Error running DFA at block "+bb+"\n"+CFG.this+CFG.this.body, e);
                 }
             }
         }
@@ -892,6 +905,33 @@ public class CFG {
                 block.addTarget(EdgeType.PASS, continueTarget);
             } else {
                 super.addBreak(block, label);
+            }
+        }
+    }
+    
+    class LabelJumpContext extends DelegatingJumpContext {
+        private final Set<Label> labels;
+        
+        LabelJumpContext(JumpContext parent, Set<Label> labels) {
+            super(parent);
+            this.labels = labels;
+        }
+
+        @Override
+        public void addBreak(BasicBlock block, Label label) {
+            if(label != null) {
+                addJump(block, label);
+            } else {
+                super.addBreak(block, label);
+            }
+        }
+
+        @Override
+        public void addJump(BasicBlock block, Label label) {
+            if(labels.contains(label)) {
+                block.addTarget(EdgeType.PASS, labelTargets.computeIfAbsent(label, k -> new BasicBlock()));
+            } else {
+                super.addJump(block, label);
             }
         }
     }
