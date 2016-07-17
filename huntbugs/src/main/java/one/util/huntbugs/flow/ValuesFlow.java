@@ -42,7 +42,7 @@ public class ValuesFlow {
         CFG cfg = CFG.build(md, method);
         Frame origFrame = Inf.SOURCE.build(cf, cfg);
         if(origFrame == null) {
-            ctx.incStat("Inf.SOURCE2.Incomplete/ValuesFlow");
+            ctx.incStat("Inf.SOURCE.Incomplete/ValuesFlow");
         }
         if(!Inf.CONST.build(cfg)) {
             ctx.incStat("Inf.CONST.Incomplete/ValuesFlow");

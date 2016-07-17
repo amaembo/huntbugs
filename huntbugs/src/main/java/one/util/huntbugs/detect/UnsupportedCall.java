@@ -60,6 +60,9 @@ public class UnsupportedCall {
                 String lcName = mr.getName().toLowerCase(Locale.ENGLISH);
                 if(lcName.contains("unsupported") || lcName.contains("throw") || lcName.contains("exception") || lcName.contains("error"))
                     return;
+                // Subclassed in SPI which might be out of the analysis scope
+                if(mr.getDeclaringType().getInternalName().equals("java/nio/charset/CharsetDecoder"))
+                    return;
                 if(nc.isInTry("java/lang/UnsupportedOperationException")) {
                     return;
                 }
