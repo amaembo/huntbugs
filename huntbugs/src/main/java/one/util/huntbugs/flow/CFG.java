@@ -27,6 +27,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -556,8 +557,14 @@ public class CFG {
         }
     }
 
-    public <STATE, FACT, DF extends Annotator<FACT> & Dataflow<FACT, STATE>> boolean runDFA(DF df, int maxIter) {
-        return new DFARunner<>(df).run(maxIter);
+    public <STATE, FACT> boolean runDFA(Annotator<FACT> annotator, BiFunction<MethodDefinition, STATE, Dataflow<FACT, STATE>> dfFactory, int maxIter) {
+        @SuppressWarnings("unchecked")
+        STATE closureState = closure == null ? null : (STATE) closure.state;
+        boolean valid = new DFARunner<>(annotator, dfFactory.apply(md, closureState)).run(maxIter);
+        for (CFG subCFG : lambdas.values()) {
+            valid &= subCFG.runDFA(annotator, dfFactory, maxIter);
+        }
+        return valid;
     }
     
     public void forBodies(BiConsumer<MethodDefinition, Block> consumer) {
@@ -584,11 +591,13 @@ public class CFG {
     }
 
     class DFARunner<STATE, FACT, DF extends Annotator<FACT> & Dataflow<FACT, STATE>> {
-        private final DF df;
+        private final Annotator<FACT> annotator;
+        private final Dataflow<FACT, STATE> df;
         private boolean changed = false;
 
-        DFARunner(DF df) {
+        DFARunner(Annotator<FACT> annotator, Dataflow<FACT, STATE> df) {
             this.df = df;
+            this.annotator = annotator;
         }
 
         boolean run(int maxIteration) {
@@ -611,7 +620,7 @@ public class CFG {
                 if (!valid) {
                     for (BasicBlock bb : subList) {
                         if (bb.changed) {
-                            df.put(bb.expr, df.makeUnknownFact());
+                            annotator.put(bb.expr, df.makeUnknownFact());
                             bb.state = df.makeTopState();
                         }
                     }
@@ -629,9 +638,6 @@ public class CFG {
             @SuppressWarnings("unchecked")
             STATE failState = (STATE) fail.state;
             df.onFail(failState);
-            for (CFG subCFG : lambdas.values()) {
-                valid &= subCFG.runDFA(df, maxIteration);
-            }
             return valid;
         }
 
@@ -641,9 +647,7 @@ public class CFG {
             }
             exit.state = df.makeTopState();
             fail.state = df.makeTopState();
-            @SuppressWarnings("unchecked")
-            STATE closureState = closure == null ? null : (STATE) closure.state;
-            entry.state = df.makeEntryState(md, closureState);
+            entry.state = df.makeEntryState();
         }
 
         private void runIteration(List<BasicBlock> blocks) {
@@ -652,17 +656,17 @@ public class CFG {
             for (BasicBlock bb : blocks) {
                 try {
                     if(!bb.reached) {
-                        df.put(bb.expr, df.makeUnknownFact());
+                        annotator.put(bb.expr, df.makeUnknownFact());
                         continue;
                     }
                     @SuppressWarnings("unchecked")
                     STATE state = (STATE) bb.state;
                     FACT fact = df.makeFact(state, bb.expr);
-                    FACT oldFact = df.get(bb.expr);
+                    FACT oldFact = annotator.get(bb.expr);
                     if (!df.sameFact(oldFact, fact)) {
                         FACT updatedFact = df.mergeFacts(oldFact, fact);
                         if (!df.sameFact(updatedFact, oldFact)) {
-                            df.put(bb.expr, updatedFact);
+                            annotator.put(bb.expr, updatedFact);
                             bb.changed = changed = true;
                         }
                     }
@@ -712,7 +716,7 @@ public class CFG {
 
         String getBlockDescription(BasicBlock bb) {
             return "[" + bb.getId() + "] " + (bb.changed ? "*" : " ") + " " + bb.state + " | " + (bb.expr == null ? "?"
-                    : df.get(bb.expr)) + "\n";
+                    : annotator.get(bb.expr)) + "\n";
         }
     }
 

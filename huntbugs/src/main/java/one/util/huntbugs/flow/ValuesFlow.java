@@ -16,6 +16,7 @@
 package one.util.huntbugs.flow;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BinaryOperator;
@@ -23,7 +24,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import one.util.huntbugs.analysis.Context;
-import one.util.huntbugs.flow.SourceAnnotator.Frame;
 import one.util.huntbugs.util.Types;
 import com.strobel.assembler.metadata.BuiltinTypes;
 import com.strobel.assembler.metadata.MethodDefinition;
@@ -38,7 +38,7 @@ import com.strobel.decompiler.ast.Expression;
 public class ValuesFlow {
     public static List<Expression> annotate(Context ctx, MethodDefinition md, ClassFields cf, CFG cfg) {
         ctx.incStat("ValuesFlow");
-        Frame origFrame = Inf.SOURCE.build(cf, cfg);
+        Collection<Expression> origFrame = Inf.SOURCE.build(cf, cfg);
         if(origFrame == null) {
             ctx.incStat("Inf.SOURCE.Incomplete/ValuesFlow");
         }
@@ -47,7 +47,7 @@ public class ValuesFlow {
         }
         cfg.forBodies((smd, smethod) -> Inf.PURITY.annotate(smethod, new FrameContext(smd, cf)));
         cfg.forBodies((smd, smethod) -> Inf.BACKLINK.annotate(smethod));
-        return origFrame == null ? null : new ArrayList<>(origFrame.initial.values());
+        return origFrame == null ? null : new ArrayList<>(origFrame);
     }
 
     public static <T> T reduce(Expression input, Function<Expression, T> mapper, BinaryOperator<T> reducer,
