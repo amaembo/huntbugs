@@ -206,6 +206,7 @@ abbrev="STCAL" type="STCAL_INVOKE_ON_STATIC_CALENDAR_INSTANCE" category="MT_CORR
 abbrev="STCAL" type="STCAL_INVOKE_ON_STATIC_DATE_FORMAT_INSTANCE" category="MT_CORRECTNESS" --> StaticNotThreadSafeFieldInvoke
 abbrev="Nm" type="NM_FUTURE_KEYWORD_USED_AS_MEMBER_IDENTIFIER" category="BAD_PRACTICE" --> BadNameOfMethodFutureKeyword, BadNameOfFieldFutureKeyword
 abbrev="ML" type="ML_SYNC_ON_UPDATED_FIELD" category="MT_CORRECTNESS" --> SynchronizationOnUpdatedField
+abbrev="MSF" type="MSF_MUTABLE_SERVLET_FIELD" category="MT_CORRECTNESS" --> MutableServletField
 
 ==== Not reimplemented
 
@@ -256,7 +257,6 @@ abbrev="Eq" type="EQ_COMPARETO_USE_OBJECT_EQUALS" category="BAD_PRACTICE"
 abbrev="HE" type="HE_INHERITS_EQUALS_USE_HASHCODE" category="BAD_PRACTICE"
 abbrev="Eq" type="EQ_ABSTRACT_SELF" category="BAD_PRACTICE"
 abbrev="Co" type="CO_ABSTRACT_SELF" category="BAD_PRACTICE"
-abbrev="MSF" type="MSF_MUTABLE_SERVLET_FIELD" category="MT_CORRECTNESS"
 abbrev="IS" type="IS2_INCONSISTENT_SYNC" category="MT_CORRECTNESS"
 abbrev="TLW" type="TLW_TWO_LOCK_WAIT" category="MT_CORRECTNESS"
 abbrev="UR" type="UR_UNINIT_READ" category="CORRECTNESS"

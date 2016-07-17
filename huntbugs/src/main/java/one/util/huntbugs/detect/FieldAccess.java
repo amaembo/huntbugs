@@ -82,6 +82,7 @@ import one.util.huntbugs.warning.WarningAnnotation.Location;
 @WarningDefinition(category = "MaliciousCode", name = "ExposeMutableFieldViaReturnValue", maxScore = 35)
 @WarningDefinition(category = "MaliciousCode", name = "ExposeMutableStaticFieldViaReturnValue", maxScore = 50)
 @WarningDefinition(category = "MaliciousCode", name = "MutableEnumField", maxScore = 55)
+@WarningDefinition(category = "Multithreading", name = "MutableServletField", maxScore = 40)
 public class FieldAccess {
     private static final Set<String> MUTABLE_COLLECTION_CLASSES = new HashSet<>(Arrays.asList("java/util/ArrayList",
         "java/util/HashSet", "java/util/HashMap", "java/util/Hashtable", "java/util/IdentityHashMap",
@@ -323,6 +324,12 @@ public class FieldAccess {
                     priority += 3;
                 fc.report(type, priority, ArrayUtilities.append(expose
                         .getAnnotations(), Roles.FIELD_TYPE.create(fd.getFieldType())));
+            }
+        }
+        if (!fd.isStatic() && Flags.testAny(flags, FieldStats.WRITE_CLASS
+            | FieldStats.WRITE_PACKAGE | FieldStats.WRITE_OUTSIDE)) {
+            if(Types.isInstance(td, "javax/servlet/GenericServlet") && !Types.isInstance(td, "javax/servlet/SingleThreadModel")) {
+                fc.report("MutableServletField", 0, getWriteAnnotations(fieldRecord));
             }
         }
     }

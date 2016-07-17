@@ -1431,5 +1431,13 @@
       exception type is unlikely to be thrown from the corresponding try block. Probably something else was intended or
       the catch block could be removed.]]></LongDescription>
     </Warning>
+    <Warning Type="MutableServletField">
+      <Title>Mutable servlet field</Title>
+      <Description>Mutable servlet field $FIELD$.</Description>
+      <LongDescription><![CDATA[This servlet class declares a mutable field $FIELD$.
+      A web server generally only creates one instance of servlet or jsp class (i.e., treats the class as a singleton), 
+      and will have multiple threads invoke methods on that instance to service multiple simultaneous requests. 
+      Thus, having a mutable instance field generally creates race conditions.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

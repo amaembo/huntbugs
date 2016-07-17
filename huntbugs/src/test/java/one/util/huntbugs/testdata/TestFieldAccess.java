@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Field;
@@ -25,6 +26,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
+import javax.servlet.GenericServlet;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -346,6 +351,41 @@ public class TestFieldAccess {
         
         public void set(String name) throws Exception {
             Reflected.class.getDeclaredField(name).set(this, 1L);
+        }
+    }
+
+    @AssertNoWarning("*")
+    public static class TestServletOk extends GenericServlet {
+        private static final long serialVersionUID = 1L;
+        
+        long data;
+        
+        public TestServletOk() {
+            data = System.currentTimeMillis();
+        }
+        
+        public long getData() {
+            return data;
+        }
+
+        @Override
+        public void service(ServletRequest arg0, ServletResponse arg1) throws ServletException, IOException {
+        }
+    }
+    
+    public static class TestServlet extends GenericServlet {
+        private static final long serialVersionUID = 1L;
+        
+        @AssertWarning("MutableServletField")
+        long data;
+        
+        public long getData() {
+            return data;
+        }
+
+        @Override
+        public void service(ServletRequest arg0, ServletResponse arg1) throws ServletException, IOException {
+            data = System.currentTimeMillis();
         }
     }
 }
