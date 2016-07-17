@@ -74,4 +74,22 @@ public class TestSerializationIdiom implements Serializable {
     protected void writeObject(ObjectOutputStream oos) throws IOException {
         oos.defaultWriteObject();
     }
+    
+    public static class ReadResolveStatic implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        @AssertWarning("ReadResolveIsStatic")
+        static Object readResolve() {
+            return "xyz";
+        }
+    }
+    
+    public static class ReadResolveNonObject implements Serializable {
+        private static final long serialVersionUID = 1L;
+        
+        @AssertWarning("ReadResolveMustReturnObject")
+        private String readResolve() {
+            return "xyz";
+        }
+    }
 }

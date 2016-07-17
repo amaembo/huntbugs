@@ -40,6 +40,8 @@ import one.util.huntbugs.warning.Role.TypeRole;
 @WarningDefinition(category="Serialization", name="SerialVersionUidNotStatic", maxScore=50)
 @WarningDefinition(category="Serialization", name="SerialVersionUidNotLong", maxScore=40)
 @WarningDefinition(category="Serialization", name="SerializationMethodMustBePrivate", maxScore=60)
+@WarningDefinition(category="Serialization", name="ReadResolveMustReturnObject", maxScore=60)
+@WarningDefinition(category="Serialization", name="ReadResolveIsStatic", maxScore=60)
 public class SerializationIdiom {
     private static final TypeRole SHOULD_IMPLEMENT = TypeRole.forName("SHOULD_IMPLEMENT");
     
@@ -71,6 +73,15 @@ public class SerializationIdiom {
     public void visitMethod(MethodDefinition md, MethodContext mc) {
         if(isSerializable) {
             switch(md.getName()) {
+            case "readResolve":
+                if(md.getSignature().startsWith("()")) {
+                    if(!md.getSignature().equals("()Ljava/lang/Object;")) {
+                        mc.report("ReadResolveMustReturnObject", 0);
+                    } else if(md.isStatic()) {
+                        mc.report("ReadResolveIsStatic", 0);
+                    }
+                }
+                break;
             case "readObject":
                 if(md.getSignature().equals("(Ljava/io/ObjectInputStream;)V") && !md.isPrivate())
                     mc.report("SerializationMethodMustBePrivate", 0);

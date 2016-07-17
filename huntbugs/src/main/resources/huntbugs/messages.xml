@@ -812,6 +812,16 @@
       <LongDescription><![CDATA[This class is serializable and defines $METHOD$ for custom serialization or deserialization.
       But since that method isn't declared private, it will be silently ignored by the serialization/deserialization API.]]></LongDescription>
     </Warning>
+    <Warning Type="ReadResolveIsStatic">
+      <Title>readResolve() method is static</Title>
+      <Description>$METHOD$ must not be static.</Description>
+      <LongDescription><![CDATA[The $METHOD$ is declared as static, thus it will be silently ignored by serialization.]]></LongDescription>
+    </Warning>
+    <Warning Type="ReadResolveMustReturnObject">
+      <Title>readResolve() method must return Object</Title>
+      <Description>$METHOD$ must return Object.</Description>
+      <LongDescription><![CDATA[The $METHOD$ return type is not <code>Object</code>, thus it will be silently ignored by serialization.]]></LongDescription>
+    </Warning>
     <Warning Type="RedundantInterface">
       <Title>Class implements the same interface as superclass</Title>
       <Description>Class $TYPE$ implements $INTERFACE$ which is already implemented by superclass.</Description>

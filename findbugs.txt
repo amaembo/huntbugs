@@ -207,6 +207,8 @@ abbrev="STCAL" type="STCAL_INVOKE_ON_STATIC_DATE_FORMAT_INSTANCE" category="MT_C
 abbrev="Nm" type="NM_FUTURE_KEYWORD_USED_AS_MEMBER_IDENTIFIER" category="BAD_PRACTICE" --> BadNameOfMethodFutureKeyword, BadNameOfFieldFutureKeyword
 abbrev="ML" type="ML_SYNC_ON_UPDATED_FIELD" category="MT_CORRECTNESS" --> SynchronizationOnUpdatedField
 abbrev="MSF" type="MSF_MUTABLE_SERVLET_FIELD" category="MT_CORRECTNESS" --> MutableServletField
+abbrev="Se" type="SE_READ_RESOLVE_IS_STATIC" category="CORRECTNESS" --> ReadResolveIsStatic
+abbrev="Se" type="SE_READ_RESOLVE_MUST_RETURN_OBJECT" category="BAD_PRACTICE" --> ReadResolveMustReturnObject
 
 ==== Not reimplemented
 
@@ -274,13 +276,11 @@ abbrev="Nm" type="NM_WRONG_PACKAGE" category="CORRECTNESS"
 abbrev="Nm" type="NM_WRONG_PACKAGE_INTENTIONAL" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_CONFUSING" category="BAD_PRACTICE"
 abbrev="IA" type="IA_AMBIGUOUS_INVOCATION_OF_INHERITED_OR_OUTER_METHOD" category="STYLE"
-abbrev="Se" type="SE_READ_RESOLVE_IS_STATIC" category="CORRECTNESS"
 abbrev="Se" type="SE_PRIVATE_READ_RESOLVE_NOT_INHERITED" category="STYLE"
 abbrev="Se" type="SE_TRANSIENT_FIELD_OF_NONSERIALIZABLE_CLASS" category="STYLE"
 abbrev="Se" type="SE_NO_SUITABLE_CONSTRUCTOR" category="BAD_PRACTICE"
 abbrev="Se" type="SE_NO_SUITABLE_CONSTRUCTOR_FOR_EXTERNALIZATION" category="BAD_PRACTICE"
 abbrev="SnVI" type="SE_NO_SERIALVERSIONID" category="BAD_PRACTICE"
-abbrev="Se" type="SE_READ_RESOLVE_MUST_RETURN_OBJECT" category="BAD_PRACTICE"
 abbrev="Se" type="SE_TRANSIENT_FIELD_NOT_RESTORED" category="BAD_PRACTICE"
 abbrev="WS" type="WS_WRITEOBJECT_SYNC" category="MT_CORRECTNESS"
 abbrev="RS" type="RS_READOBJECT_SYNC" category="MT_CORRECTNESS"
