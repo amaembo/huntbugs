@@ -343,4 +343,14 @@ public class TestDeadLocalStore {
         }
         return a;
     }
+    
+    @AssertWarning("DeadLocalStore")
+    public void synchronizedTest() {
+        int a = 10;
+        synchronized(this) {
+            a = 20;
+            testLocalClass();
+        }
+        System.out.println(a);
+    }
 }

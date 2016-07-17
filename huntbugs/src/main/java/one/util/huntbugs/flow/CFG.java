@@ -171,6 +171,10 @@ public class CFG {
         if (body.isEmpty()) {
             throw new IllegalStateException("Empty body is supplied!");
         }
+        if (body.size() == 1 && body.get(0) instanceof Label) {
+            buildSingleLabel(entry, exit, (Label) body.get(0));
+            return;
+        }
         Set<Label> labels = new HashSet<>();
         for(Node node : body) {
             if(node instanceof Label) {
@@ -213,6 +217,19 @@ public class CFG {
         }
     }
 
+    private void buildSingleLabel(BasicBlock entry, BasicBlock exit, Label label) {
+        BasicBlock oldTarget = labelTargets.putIfAbsent(label, entry);
+        if (oldTarget != null && oldTarget != entry) {
+            oldTarget.setExpression(new Expression(AstCode.Goto, label, -1));
+            oldTarget.addTarget(EdgeType.PASS, entry);
+            register(oldTarget);
+        }
+        entry.setExpression(new Expression(AstCode.Goto, label, -1));
+        entry.addTarget(EdgeType.PASS, exit);
+        register(entry);
+        return;
+    }
+
     private void buildNode(final BasicBlock curBlock, BasicBlock nextBlock, JumpContext jc, Node node) {
         if (node instanceof Expression) {
             BasicBlock lastBlock = buildExpr(curBlock, (Expression) node, jc);
@@ -226,27 +243,26 @@ public class CFG {
             buildSwitch(curBlock, nextBlock, jc, (Switch) node);
         } else if (node instanceof TryCatchBlock) {
             TryCatchBlock tryCatch = (TryCatchBlock) node;
-            if (tryCatch.getFinallyBlock() == null) {
+            if (tryCatch.getFinallyBlock() == null || tryCatch.getFinallyBlock().getBody().isEmpty()) {
                 buildTryCatch(curBlock, nextBlock, jc, tryCatch);
             } else if (tryCatch.getTryBlock().getBody().isEmpty() && tryCatch.getCatchBlocks().isEmpty()) {
                 buildBlock(curBlock, nextBlock, jc, tryCatch.getFinallyBlock());
             } else {
-                BasicBlock finallyBlock = new BasicBlock();
-                FinallyJumpContext fjc = new FinallyJumpContext(jc, finallyBlock);
-                buildTryCatch(curBlock, finallyBlock, fjc, tryCatch);
-                BasicBlock finallyExit;
-                if (tryCatch.getFinallyBlock().getBody().isEmpty()) {
-                    finallyExit = finallyBlock;
-                } else {
-                    finallyExit = new BasicBlock();
-                    buildBlock(finallyBlock, finallyExit, jc, tryCatch.getFinallyBlock());
-                }
-                finallyExit.setExpression(new Expression(AstCode.Ret, null, -1));
-                finallyExit.failTargets = new ArrayList<>(fjc.targets);
-                finallyExit.failTargets.add(nextBlock);
-                register(finallyExit);
+                buildFinally(curBlock, nextBlock, jc, tryCatch);
             }
         }
+    }
+
+    private void buildFinally(final BasicBlock curBlock, BasicBlock nextBlock, JumpContext jc, TryCatchBlock tryCatch) {
+        BasicBlock finallyBlock = new BasicBlock();
+        FinallyJumpContext fjc = new FinallyJumpContext(jc);
+        buildTryCatch(curBlock, finallyBlock, fjc, tryCatch);
+        if(blocks.stream().flatMap(BasicBlock::targets).anyMatch(finallyBlock::equals)) {
+            buildBlock(finallyBlock, nextBlock, jc, tryCatch.getFinallyBlock());
+        }
+        fjc.targetEntries.forEach((target, entry) -> {
+            buildBlock(entry, target, jc, tryCatch.getFinallyBlock());
+        });
     }
 
     // Processes try-catch only, ignores finally, if any
@@ -530,7 +546,11 @@ public class CFG {
     }
 
     public static CFG build(MethodDefinition md, Block body) {
-        return new CFG(md, null, body);
+        try {
+            return new CFG(md, null, body);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to build CFG for "+new MemberInfo(md)+"\n"+body, e);
+        }
     }
 
     public <STATE, FACT, DF extends Annotator<FACT> & Dataflow<FACT, STATE>> boolean runDFA(DF df, int maxIter) {
@@ -716,7 +736,7 @@ public class CFG {
 
         void setExpression(Expression expr) {
             if (this.expr != null)
-                throw new IllegalStateException("Expression is set twice: " + expr);
+                throw new IllegalStateException("Expression is set twice: " + expr + "\n" + this);
             this.expr = expr;
         }
 
@@ -974,19 +994,16 @@ public class CFG {
     }
 
     static class FinallyJumpContext extends DelegatingJumpContext {
-        private final Set<BasicBlock> targets = new HashSet<>();
-        private final BasicBlock finallyEntry;
+        final Map<BasicBlock, BasicBlock> targetEntries = new HashMap<>();
 
-        FinallyJumpContext(JumpContext parent, BasicBlock finallyEntry) {
+        FinallyJumpContext(JumpContext parent) {
             super(parent);
-            this.finallyEntry = finallyEntry;
         }
 
         private void replacePass(BasicBlock block) {
             if (block.passTarget == null)
                 throw new IllegalStateException("Passtarget is null for " + block);
-            targets.add(block.passTarget);
-            block.passTarget = finallyEntry;
+            block.passTarget = targetEntries.computeIfAbsent(block.passTarget, t -> new BasicBlock());
         }
 
         @Override
@@ -1020,8 +1037,8 @@ public class CFG {
             super.addExceptional(block, exception);
             List<BasicBlock> newTargets = block.failTargets;
             block.failTargets = oldTargets;
-            block.addTarget(EdgeType.FAIL, finallyEntry);
-            targets.addAll(newTargets);
+            newTargets.forEach(t -> block.addTarget(EdgeType.FAIL, targetEntries.computeIfAbsent(t,
+                tt -> new BasicBlock())));
         }
     }
 }
