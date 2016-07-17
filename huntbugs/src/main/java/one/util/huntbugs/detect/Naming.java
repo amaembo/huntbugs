@@ -31,8 +31,10 @@ import one.util.huntbugs.registry.anno.ClassVisitor;
 import one.util.huntbugs.registry.anno.FieldVisitor;
 import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.AccessLevel;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
+import one.util.huntbugs.warning.Role.StringRole;
 import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 
@@ -48,7 +50,11 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 @WarningDefinition(category = "CodeStyle", name = "BadNameOfClassSameAsSuperclass", maxScore = 45)
 @WarningDefinition(category = "CodeStyle", name = "BadNameOfClassSameAsInterface", maxScore = 45)
 @WarningDefinition(category = "Correctness", name = "BadNameOfMethodMistake", maxScore = 60)
+@WarningDefinition(category = "BadPractice", name = "BadNameOfMethodFutureKeyword", maxScore = 70)
+@WarningDefinition(category = "BadPractice", name = "BadNameOfFieldFutureKeyword", maxScore = 70)
 public class Naming {
+    private static final StringRole JAVA_VERSION = StringRole.forName("JAVA_VERSION");
+    
     @ClassVisitor
     public void visitClass(TypeDefinition td, ClassContext cc) {
         if (td.isAnonymous() || td.isSynthetic())
@@ -98,11 +104,30 @@ public class Naming {
             }
             mc.report("BadNameOfMethod", priority);
         }
+        String javaVersion = getFutureKeywordVersion(md.getName());
+        if (javaVersion != null) {
+            mc.report("BadNameOfMethodFutureKeyword", AccessLevel.of(md).select(0, 10, 20, 30), JAVA_VERSION.create(javaVersion));
+        }
         if (!md.isStatic() && md.isPublic()) {
             MemberInfo mi = getMistakeFix(md);
             if (mi != null) {
                 mc.report("BadNameOfMethodMistake", md.isDeprecated() ? 20 : 0, Roles.REPLACEMENT_METHOD.create(mi));
             }
+        }
+    }
+
+    private String getFutureKeywordVersion(String name) {
+        switch(name) {
+        case "strictfp":
+            return "Java 1.2";
+        case "assert":
+            return "Java 1.4";
+        case "enum":
+            return "Java 1.5";
+        case "_":
+            return "Java 9";
+        default:
+            return null;
         }
     }
 
@@ -126,14 +151,11 @@ public class Naming {
     @FieldVisitor
     public void visitField(FieldDefinition fd, FieldContext fc) {
         if (badFieldName(fd)) {
-            int priority = 0;
-            if (fd.isPrivate())
-                priority += 20;
-            else if (fd.isPackagePrivate())
-                priority += 15;
-            else if (fd.isProtected())
-                priority += 10;
-            fc.report("BadNameOfField", priority);
+            fc.report("BadNameOfField", AccessLevel.of(fd).select(0, 10, 15, 20));
+        }
+        String javaVersion = getFutureKeywordVersion(fd.getName());
+        if (javaVersion != null) {
+            fc.report("BadNameOfFieldFutureKeyword", AccessLevel.of(fd).select(0, 10, 20, 30), JAVA_VERSION.create(javaVersion));
         }
     }
 

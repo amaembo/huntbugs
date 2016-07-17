@@ -568,6 +568,12 @@
       <Description>Name of the method $METHOD$ violates the convention.</Description>
       <LongDescription><![CDATA[Methods should be named in mixed case (camel-case) with the first letter lowercase and the first letter of each internal word capitalized.]]></LongDescription>
     </Warning>
+    <Warning Type="BadNameOfMethodFutureKeyword">
+      <Title>Method named as keyword in future Java versions</Title>
+      <Description>Name of the method $METHOD:name$ will become invalid since $JAVA_VERSION$.</Description>
+      <LongDescription><![CDATA[The name of the method <code>$METHOD:name$</code> coincides with keyword which is introduced
+      since $JAVA_VERSION$. This class will have compilation errors when compiled with newer Java.]]></LongDescription>
+    </Warning>
     <Warning Type="BadNameOfMethodSameAsConstructor">
       <Title>Method is named like constructor</Title>
       <Description>Method $METHOD$ was probably intended to be a constructor.</Description>
@@ -580,6 +586,12 @@
       <Title>Field names should start with a lower case letter</Title>
       <Description>Name of the field $FIELD$ violates the convention.</Description>
       <LongDescription><![CDATA[Names of fields that are not final should be in mixed case with a lowercase first letter and the first letters of subsequent words capitalized.]]></LongDescription>
+    </Warning>
+    <Warning Type="BadNameOfFieldFutureKeyword">
+      <Title>Field named as keyword in future Java versions</Title>
+      <Description>Name of the field $FIELD:name$ will become invalid since $JAVA_VERSION$.</Description>
+      <LongDescription><![CDATA[The name of the method <code>$FIELD:name$</code> coincides with keyword which is introduced
+      since $JAVA_VERSION$. This class will have compilation errors when compiled with newer Java.]]></LongDescription>
     </Warning>
     <Warning Type="BadNameOfClass">
       <Title>Class names should start with an upper case letter</Title>

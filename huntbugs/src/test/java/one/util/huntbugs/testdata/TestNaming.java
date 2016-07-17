@@ -31,6 +31,9 @@ public class TestNaming {
     @AssertNoWarning("BadNameOfField")
     public String abc;
     
+    @AssertWarning("BadNameOfFieldFutureKeyword")
+    protected String _ = "";
+    
     @AssertNoWarning("BadNameOfField")
     public final String Empty = "";
     
@@ -143,5 +146,10 @@ public class TestNaming {
         public void close() throws IOException {
             // empty
         }
+    }
+    
+    @AssertWarning("BadNameOfMethodFutureKeyword")
+    public void _() {
+        
     }
 }
