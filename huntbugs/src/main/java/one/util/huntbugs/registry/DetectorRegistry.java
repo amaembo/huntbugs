@@ -51,6 +51,7 @@ import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.db.FieldStats;
 import one.util.huntbugs.db.MethodStats;
+import one.util.huntbugs.flow.CFG;
 import one.util.huntbugs.flow.ClassFields;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.anno.WarningDefinition;
@@ -169,12 +170,15 @@ public class DetectorRegistry {
     private void visitChildren(Node node, NodeChain parents, List<MethodContext> list, MethodData mdata) {
         if (node instanceof Lambda) {
             MethodDefinition curMethod = mdata.realMethod;
+            CFG curCFG = mdata.cfg;
             mdata.realMethod = Nodes.getLambdaMethod((Lambda) node);
+            mdata.cfg = curCFG.getLambdaCFG((Lambda) node);
             Iterable<Node> children = Nodes.getChildren(node);
             NodeChain newChain = new NodeChain(parents, node);
             for (Node child : children)
                 visitChildren(child, newChain, list, mdata);
             mdata.realMethod = curMethod;
+            mdata.cfg = curCFG;
         } else {
             Iterable<Node> children = Nodes.getChildren(node);
             NodeChain newChain = new NodeChain(parents, node);
@@ -243,7 +247,8 @@ public class DetectorRegistry {
                     try {
                         methodAst.getBody().addAll(AstBuilder.build(body, true, context));
                         AstOptimizer.optimize(context, methodAst, AstOptimizationStep.None);
-                        mdata.origParams = ValuesFlow.annotate(ctx, md, cf, methodAst);
+                        mdata.cfg = CFG.build(md, methodAst);
+                        mdata.origParams = ValuesFlow.annotate(ctx, md, cf, mdata.cfg);
                         mdata.fullyAnalyzed = true;
                     } catch (Throwable t) {
                         ctx.addError(new ErrorMessage(null, type.getFullName(), md.getFullName(), md.getSignature(),

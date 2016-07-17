@@ -29,7 +29,6 @@ import com.strobel.assembler.metadata.BuiltinTypes;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
-import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.Expression;
 
 /**
@@ -37,9 +36,8 @@ import com.strobel.decompiler.ast.Expression;
  *
  */
 public class ValuesFlow {
-    public static List<Expression> annotate(Context ctx, MethodDefinition md, ClassFields cf, Block method) {
+    public static List<Expression> annotate(Context ctx, MethodDefinition md, ClassFields cf, CFG cfg) {
         ctx.incStat("ValuesFlow");
-        CFG cfg = CFG.build(md, method);
         Frame origFrame = Inf.SOURCE.build(cf, cfg);
         if(origFrame == null) {
             ctx.incStat("Inf.SOURCE.Incomplete/ValuesFlow");

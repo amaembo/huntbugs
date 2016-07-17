@@ -1406,5 +1406,12 @@
       <LongDescription><![CDATA[This code calls method $CALLED_METHOD$ on field $FIELD$. The type $CALLED_METHOD:type.html$ is not thread-safe,
       so using such object from different threads may cause random exceptions or incorrect results.]]></LongDescription>
     </Warning>
+    <Warning Type="UnreachableCatch">
+      <Title>Catch block is unreachable</Title>
+      <Description>Catch block is unreachable in $METHOD$.</Description>
+      <LongDescription><![CDATA[Analysis discovers that this catch block is possibly redundant as the corresponding
+      exception type is unlikely to be thrown from the corresponding try block. Probably something else was intended or
+      the catch block could be removed.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

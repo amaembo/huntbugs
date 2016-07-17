@@ -57,7 +57,7 @@ import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 
 /**
- * @author shustkost
+ * @author Tagir Valeev
  *
  */
 public class CFG {
@@ -111,6 +111,7 @@ public class CFG {
     final Map<Label, BasicBlock> labelTargets = new HashMap<>();
     // Number of block till which CFG is forward-only
     final int forwardTill;
+    final boolean hasUnreachable;
 
     private CFG(MethodDefinition md, BasicBlock closure, Block methodBody) {
         this.md = md;
@@ -118,11 +119,13 @@ public class CFG {
         this.closure = closure;
         if (methodBody.getBody().isEmpty()) {
             entry = exit;
+            hasUnreachable = false;
         } else {
             entry = new BasicBlock();
             buildBlock(entry, exit, new OuterJumpContext(), methodBody);
             fixBlocks();
             verify();
+            hasUnreachable = blocks.stream().anyMatch(bb -> !bb.reached);
         }
         this.forwardTill = computeForwardTill();
     }
@@ -560,6 +563,16 @@ public class CFG {
     public void forBodies(BiConsumer<MethodDefinition, Block> consumer) {
         consumer.accept(md, body);
         lambdas.values().forEach(cfg -> cfg.forBodies(consumer));
+    }
+    
+    public CFG getLambdaCFG(Lambda lambda) {
+        return lambdas.get(lambda);
+    }
+    
+    public boolean isReachable(Expression expr) {
+        if(!hasUnreachable)
+            return true;
+        return blocks.stream().filter(bb -> bb.expr == expr).anyMatch(bb -> bb.reached);
     }
 
     void clearChanged() {

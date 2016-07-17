@@ -18,6 +18,7 @@ package one.util.huntbugs.registry;
 import java.util.Collections;
 import java.util.List;
 
+import one.util.huntbugs.flow.CFG;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -51,6 +52,7 @@ final class MethodData {
     private OffsetToLineNumberConverter ltc;
     List<Expression> origParams;
     boolean fullyAnalyzed;
+    CFG cfg;
 
     MethodData(MethodDefinition md) {
         this.mainMethod = this.realMethod = md;

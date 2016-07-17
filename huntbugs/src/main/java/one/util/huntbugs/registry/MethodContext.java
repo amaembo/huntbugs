@@ -218,10 +218,18 @@ public class MethodContext extends ElementContext {
     }
 
     /**
-     * @return true if the method is fully annotated via ValuesFlow
+     * @return true if the method is fully annotated via Inf.SOURCE
      */
     public boolean isAnnotated() {
         return mdata.origParams != null;
+    }
+    
+    /**
+     * @param expr expression to test
+     * @return true if given expression is reachable
+     */
+    public boolean isReachable(Expression expr) {
+        return mdata.cfg.isReachable(expr);
     }
     
     public Set<Expression> getParameterUsages(ParameterDefinition pd) {
