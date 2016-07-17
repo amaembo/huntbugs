@@ -807,25 +807,25 @@ public class TestKnownComparison {
     }
 
     // procyon does not perfectly merge these finally blocks 
-//    @AssertNoWarning("*")
-//    public void testNestedFinally() {
-//        int i = 0;
-//        try {
-//            i = ThreadLocalRandom.current().nextInt();
-//        } catch(Throwable t) {
-//            t.printStackTrace();
-//        }
-//        finally {
-//            try {
-//                System.out.println("Finish");
-//            }
-//            finally {
-//                if(i == 5) {
-//                    System.out.println("Hello");
-//                }
-//            }
-//        }
-//    }
+    //@AssertNoWarning("*")
+    public void testNestedFinally() {
+        int i = 0;
+        try {
+            i = ThreadLocalRandom.current().nextInt();
+        } catch(Throwable t) {
+            t.printStackTrace();
+        }
+        finally {
+            try {
+                System.out.println("Finish");
+            }
+            finally {
+                if(i == 5) {
+                    System.out.println("Hello");
+                }
+            }
+        }
+    }
 
     // procyon bug
 //    @AssertNoWarning("*")
