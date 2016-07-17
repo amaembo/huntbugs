@@ -891,6 +891,12 @@
       like $REPLACEMENT$ was intended. Even if this code is written as intended, this is a bad practice and might be extremely confusing for
       other developers.]]></LongDescription>
     </Warning>
+    <Warning Type="SynchronizationOnUpdatedField">
+      <Title>Synchronization on updated field</Title>
+      <Description>Synchronization on updated field $FIELD$ in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code synchronizes on a $FIELD$ and the field is updated within the synchronization block.
+      This is unlikely to work as expected as different threads may synchronize on different objects.]]></LongDescription>
+    </Warning>
     <Warning Type="SynchronizationOnBoolean">
       <Title>Synchronization on Boolean</Title>
       <Description>Synchronization on $MONITOR_TYPE$ in $METHOD$.</Description>

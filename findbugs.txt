@@ -79,6 +79,7 @@ abbrev="BIT" type="BIT_SIGNED_CHECK" category="BAD_PRACTICE" --> BitCheckGreater
 abbrev="BIT" type="BIT_SIGNED_CHECK_HIGH_BIT" category="CORRECTNESS" --> BitCheckGreaterNegative
 abbrev="Bx" type="DM_BOXED_PRIMITIVE_TOSTRING" category="PERFORMANCE" --> BoxedForToString
 abbrev="Bx" type="BX_BOXING_IMMEDIATELY_UNBOXED" category="PERFORMANCE" --> BoxedForUnboxing
+abbrev="Bx" type="BX_BOXING_IMMEDIATELY_UNBOXED_TO_PERFORM_COERCION" category="PERFORMANCE" --> BoxedForUnboxing
 abbrev="Bx" type="BX_UNBOXING_IMMEDIATELY_REBOXED" category="PERFORMANCE" --> UnboxedForBoxing
 abbrev="Nm" type="NM_LCASE_HASHCODE" category="CORRECTNESS" --> BadNameOfMethodMistake
 abbrev="Nm" type="NM_LCASE_TOSTRING" category="CORRECTNESS" --> BadNameOfMethodMistake
@@ -204,6 +205,7 @@ abbrev="STCAL" type="STCAL_STATIC_SIMPLE_DATE_FORMAT_INSTANCE" category="MT_CORR
 abbrev="STCAL" type="STCAL_INVOKE_ON_STATIC_CALENDAR_INSTANCE" category="MT_CORRECTNESS" --> StaticNotThreadSafeFieldInvoke
 abbrev="STCAL" type="STCAL_INVOKE_ON_STATIC_DATE_FORMAT_INSTANCE" category="MT_CORRECTNESS" --> StaticNotThreadSafeFieldInvoke
 abbrev="Nm" type="NM_FUTURE_KEYWORD_USED_AS_MEMBER_IDENTIFIER" category="BAD_PRACTICE" --> BadNameOfMethodFutureKeyword, BadNameOfFieldFutureKeyword
+abbrev="ML" type="ML_SYNC_ON_UPDATED_FIELD" category="MT_CORRECTNESS" --> SynchronizationOnUpdatedField
 
 ==== Not reimplemented
 
@@ -230,7 +232,6 @@ abbrev="Dm" type="DMI_COLLECTION_OF_URLS" category="PERFORMANCE"
 abbrev="Bx" type="DM_BOXED_PRIMITIVE_FOR_PARSING" category="PERFORMANCE"
 abbrev="Bx" type="DM_BOXED_PRIMITIVE_FOR_COMPARE" category="PERFORMANCE"
 abbrev="Bx" type="BX_UNBOXED_AND_COERCED_FOR_TERNARY_OPERATOR" category="PERFORMANCE"
-abbrev="Bx" type="BX_BOXING_IMMEDIATELY_UNBOXED_TO_PERFORM_COERCION" category="PERFORMANCE" cweid="192"
 abbrev="Dm" type="DM_MONITOR_WAIT_ON_CONDITION" category="MT_CORRECTNESS"
 abbrev="NP" type="NP_ARGUMENT_MIGHT_BE_NULL" category="CORRECTNESS"
 abbrev="NP" type="NP_EQUALS_SHOULD_HANDLE_NULL_ARGUMENT" category="BAD_PRACTICE"
@@ -266,7 +267,6 @@ abbrev="IC" type="IC_SUPERCLASS_USES_SUBCLASS_DURING_INITIALIZATION" category="B
 abbrev="SI" type="SI_INSTANCE_BEFORE_FINALS_ASSIGNED" category="BAD_PRACTICE"
 abbrev="IS" type="IS_FIELD_NOT_GUARDED" category="MT_CORRECTNESS"
 abbrev="ML" type="ML_SYNC_ON_FIELD_TO_GUARD_CHANGING_THAT_FIELD" category="MT_CORRECTNESS"
-abbrev="ML" type="ML_SYNC_ON_UPDATED_FIELD" category="MT_CORRECTNESS"
 abbrev="ME" type="ME_ENUM_FIELD_SETTER" category="BAD_PRACTICE"
 abbrev="Nm" type="NM_VERY_CONFUSING" category="CORRECTNESS"
 abbrev="Nm" type="NM_VERY_CONFUSING_INTENTIONAL" category="BAD_PRACTICE"

@@ -17,12 +17,15 @@ package one.util.huntbugs.util;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeReference;
+import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.CatchBlock;
+import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Lambda;
 import com.strobel.decompiler.ast.Loop;
 import com.strobel.decompiler.ast.Node;
@@ -56,6 +59,9 @@ public class NodeChain {
         return cur + " -> "+parent;
     }
     
+    /**
+     * @return root block of this NodeChain
+     */
     public Block getRoot() {
         NodeChain nc = this;
         while(nc.getParent() != null) {
@@ -64,6 +70,9 @@ public class NodeChain {
         return (Block) nc.getNode();
     }
     
+    /**
+     * @return true if this NodeChain inside the synchronized block
+     */
     public boolean isSynchronized() {
         NodeChain chain = this;
         while(chain != null) {
@@ -74,6 +83,28 @@ public class NodeChain {
         return false;
     }
     
+    /**
+     * @return Expression which is used for synchronization if this NodeChain directly represents synchronized try block.
+     * Otherwise returns null.
+     */
+    public Expression getSyncObject() {
+        if(cur instanceof TryCatchBlock && parent != null) {
+            Node parentNode = parent.getNode();
+            if(parentNode instanceof Block) {
+                List<Node> peers = ((Block)parentNode).getBody();
+                for(int i = 1; i < peers.size(); i++) {
+                    if(peers.get(i) == cur) {
+                        Node prev = peers.get(i-1);
+                        if(Nodes.isOp(prev, AstCode.MonitorEnter)) {
+                            return Exprs.getChild((Expression) prev, 0);
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     public boolean isInTry(String... wantedExceptions) {
         NodeChain nc = this;
         while(nc != null) {

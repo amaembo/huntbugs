@@ -263,7 +263,11 @@ public class Nodes {
         Node n = list.get(0);
         if (!Nodes.isOp(n, AstCode.MonitorExit))
             return null;
-        return Exprs.getChild((Expression) n, 0);
+        Expression e = ((Expression)n).getArguments().get(0);
+        if(e.getOperand() instanceof Variable && ((Variable)e.getOperand()).isGenerated()) {
+            return ValuesFlow.getSource(e);
+        }
+        return e;
     }
 
     public static boolean isCompoundAssignment(Node node) {
