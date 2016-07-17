@@ -17,6 +17,7 @@ package one.util.huntbugs.testdata;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
@@ -786,6 +787,45 @@ public class TestKnownComparison {
             }
         }
     }
+    
+    @AssertNoWarning("*")
+    public void testFinally() {
+        int i = 0;
+        try {
+            i = ThreadLocalRandom.current().nextInt();
+        }
+        finally {
+            try {
+                System.out.println("Finish");
+            }
+            finally {
+                if(i == 5) {
+                    System.out.println("Hello");
+                }
+            }
+        }
+    }
+
+    // procyon does not perfectly merge these finally blocks 
+//    @AssertNoWarning("*")
+//    public void testNestedFinally() {
+//        int i = 0;
+//        try {
+//            i = ThreadLocalRandom.current().nextInt();
+//        } catch(Throwable t) {
+//            t.printStackTrace();
+//        }
+//        finally {
+//            try {
+//                System.out.println("Finish");
+//            }
+//            finally {
+//                if(i == 5) {
+//                    System.out.println("Hello");
+//                }
+//            }
+//        }
+//    }
 
     // procyon bug
 //    @AssertNoWarning("*")
