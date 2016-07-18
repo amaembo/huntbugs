@@ -139,6 +139,9 @@ public class CFG {
             if (bb.targets().anyMatch(target -> target.id == -1)) {
                 throw new IllegalStateException("Not linked target block at [" + bb.getId() + "]: " + this);
             }
+            if (bb.reached && bb.targets().anyMatch(target -> !target.reached)) {
+                throw new IllegalStateException("Invalid flow control at [" + bb.getId() + "]: " + this);
+            }
         }
     }
 
@@ -807,7 +810,7 @@ public class CFG {
 
         @Override
         public String toString() {
-            StringBuilder sb = new StringBuilder("[").append(getId()).append("] ").append(expr).append("\n  ");
+            StringBuilder sb = new StringBuilder("[").append(getId()).append("]").append(!reached?"-":" ").append(expr).append("\n  ");
             if (passTarget != null)
                 sb.append("PASS -> [").append(passTarget.getId()).append("] ");
             if (trueTarget != null)

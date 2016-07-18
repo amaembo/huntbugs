@@ -229,7 +229,7 @@ public class MethodContext extends ElementContext {
      * @return true if given expression is reachable
      */
     public boolean isReachable(Expression expr) {
-        return mdata.cfg.isReachable(expr);
+        return mdata.cfg == null || mdata.cfg.isReachable(expr);
     }
     
     public Set<Expression> getParameterUsages(ParameterDefinition pd) {
