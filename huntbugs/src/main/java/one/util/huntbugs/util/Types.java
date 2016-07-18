@@ -85,7 +85,8 @@ public class Types {
         String typeName = type.getInternalName();
         return typeName.equals("java/util/Random") || typeName.equals("java/security/SecureRandom")
             || typeName.equals("java/util/concurrent/ThreadLocalRandom")
-            || typeName.equals("java/util/SplittableRandom");
+            || typeName.equals("java/util/SplittableRandom")
+            || typeName.startsWith("cern/jet/random/engine/");
     }
 
     public static TypeReference getExpressionType(Expression expr) {

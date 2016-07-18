@@ -21,6 +21,7 @@ import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
+import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -39,7 +40,7 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
  */
 @WarningDefinition(category = "Performance", name = "RandomNextIntViaNextDouble", maxScore = 50)
 @WarningDefinition(category = "Correctness", name = "RandomDoubleToInt", maxScore = 80)
-@WarningDefinition(category = "Correctness", name = "RandomUsedOnlyOnce", maxScore = 80)
+@WarningDefinition(category = "Correctness", name = "RandomUsedOnlyOnce", maxScore = 70)
 public class RandomUsage {
     private static final TypeRole RANDOM_TYPE = TypeRole.forName("RANDOM_TYPE");
 
@@ -66,15 +67,32 @@ public class RandomUsage {
                     });
             }
         }
-        if (node.getCode() == AstCode.InvokeVirtual && node.getArguments().get(0).getCode() == AstCode.InitObject) {
-            MethodReference ctor = (MethodReference) node.getArguments().get(0).getOperand();
-            TypeReference type = ctor.getDeclaringType();
-            if (Types.isRandomClass(type) && !type.getInternalName().equals("java/security/SecureRandom")) {
-                MethodReference mr = (MethodReference) node.getOperand();
-                if(!mr.getReturnType().getPackageName().equals("java.util.stream"))
-                    ctx.report("RandomUsedOnlyOnce", 0, node, RANDOM_TYPE.create(type));
-            }
+        checkOnlyOnce(node, ctx);
+    }
+
+    void checkOnlyOnce(Expression node, MethodContext ctx) {
+        if (node.getCode() != AstCode.InvokeVirtual || node.getArguments().get(0).getCode() != AstCode.InitObject)
+            return;
+        MethodReference ctor = (MethodReference) node.getArguments().get(0).getOperand();
+        TypeReference type = ctor.getDeclaringType();
+        if (!Types.isRandomClass(type) || type.getInternalName().equals("java/security/SecureRandom"))
+            return;
+        MethodReference mr = (MethodReference) node.getOperand();
+        if(mr.getReturnType().getPackageName().equals("java.util.stream"))
+            return;
+        if(Inf.BACKLINK.findTransitiveUsages(node, true).allMatch(this::isRandomInit))
+            return;
+        ctx.report("RandomUsedOnlyOnce", 0, node, RANDOM_TYPE.create(type));
+    }
+    
+    private boolean isRandomInit(Expression expr) {
+        if(expr.getCode() == AstCode.InitObject) {
+            MethodReference ctor = (MethodReference) expr.getOperand();
+            // It seems ok to initialize cern.jet.random generators with new Random().nextInt()
+            if(ctor.getDeclaringType().getPackageName().equals("cern.jet.random.engine"))
+                return true;
         }
+        return false;
     }
 
     private WarningAnnotation<MemberInfo> getReplacement(String type) {
