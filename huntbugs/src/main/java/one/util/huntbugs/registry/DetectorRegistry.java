@@ -172,7 +172,7 @@ public class DetectorRegistry {
             MethodDefinition curMethod = mdata.realMethod;
             CFG curCFG = mdata.cfg;
             mdata.realMethod = Nodes.getLambdaMethod((Lambda) node);
-            mdata.cfg = curCFG.getLambdaCFG((Lambda) node);
+            mdata.cfg = curCFG == null ? null : curCFG.getLambdaCFG((Lambda) node);
             Iterable<Node> children = Nodes.getChildren(node);
             NodeChain newChain = new NodeChain(parents, node);
             for (Node child : children)
