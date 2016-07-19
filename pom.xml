@@ -4,7 +4,7 @@
 
  <groupId>one.util</groupId>
  <artifactId>huntbugs-all</artifactId>
- <version>0.0.9-SNAPSHOT</version>
+ <version>0.0.9</version>
  <packaging>pom</packaging>
 
  <name>huntbugs-all</name>
