@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.testdata;
 
+import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
 /**
@@ -38,5 +39,21 @@ public class TestUnnecessaryInstanceOf {
 		if (a instanceof CharSequence) {
 			System.out.println(a);
 		}
+    }
+    
+    @AssertNoWarning("*")
+    void testArray(String[] data) {
+        Object[] arr = data;
+        if(arr instanceof Integer[]) {
+            System.out.println("Never");
+        }
+    }
+    
+    @AssertWarning("UnnecessaryInstanceOf")
+    void testArrayOk(String[] data) {
+        Object[] arr = data;
+        if(arr instanceof CharSequence[]) {
+            System.out.println("Always");
+        }
     }
 }

@@ -66,6 +66,13 @@ public class Types {
     public static boolean isInstance(TypeReference type, String wantedType) {
         if (type == null)
             return false;
+        if (wantedType.equals("java/lang/Object"))
+            return true;
+        if (type.isArray()) {
+            if(!wantedType.startsWith("["))
+                return false;
+            return isInstance(type.getElementType(), wantedType.substring(1));
+        }
         if (type.getInternalName().equals(wantedType))
             return true;
         TypeDefinition td = type.resolve();
