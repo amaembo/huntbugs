@@ -19,42 +19,48 @@ import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
-import one.util.huntbugs.flow.ValuesFlow;
+import one.util.huntbugs.flow.Inf;
+import one.util.huntbugs.flow.etype.EType;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
-import one.util.huntbugs.util.Types;
-import one.util.huntbugs.warning.Role.TypeRole;
+import one.util.huntbugs.util.YesNoMaybe;
+import one.util.huntbugs.warning.Role.StringRole;
+import one.util.huntbugs.warning.Roles;
 
 /**
  * @author Tagir Valeev
  *
  */
 @WarningDefinition(category = "RedundantCode", name = "UnnecessaryInstanceOf", maxScore = 60)
-@WarningDefinition(category = "RedundantCode", name = "UnnecessaryInstanceOfInferred", maxScore = 70)
+@WarningDefinition(category = "Correctness", name = "ImpossibleInstanceOf", maxScore = 70)
+@WarningDefinition(category = "Correctness", name = "ImpossibleCast", maxScore = 70)
 public class UnnecessaryInstanceOf {
-    private static final TypeRole INSTANCEOF_TYPE = TypeRole.forName("INSTANCEOF_TYPE");
-    private static final TypeRole INFERRED_TYPE = TypeRole.forName("INFERRED_TYPE");
-    private static final TypeRole ACTUAL_TYPE = TypeRole.forName("ACTUAL_TYPE");
+    private static final StringRole ETYPE = StringRole.forName("ETYPE");
 
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
     public void visit(Expression node, MethodContext mc) {
         if (node.getCode() == AstCode.InstanceOf) {
             TypeReference typeRef = (TypeReference) node.getOperand();
             Expression expr = node.getArguments().get(0);
-            TypeReference exprType = Types.getExpressionType(expr);
-            if (Types.isInstance(exprType, typeRef)) {
-                mc.report("UnnecessaryInstanceOf", 0, expr, INSTANCEOF_TYPE.create(typeRef), ACTUAL_TYPE.create(
-                    exprType));
-            } else {
-                TypeReference inferredType = ValuesFlow.reduceType(expr);
-                if (typeRef != null && Types.isInstance(inferredType, typeRef)) {
-                    mc.report("UnnecessaryInstanceOfInferred", 0, expr, INSTANCEOF_TYPE.create(typeRef), ACTUAL_TYPE
-                            .create(exprType), INFERRED_TYPE.create(inferredType));
-                }
+            EType eType = Inf.ETYPE.get(expr);
+            YesNoMaybe ynm = eType.isSubtypeOf(typeRef);
+            if (ynm == YesNoMaybe.YES) {
+                mc.report("UnnecessaryInstanceOf", 0, expr, Roles.TARGET_TYPE.create(typeRef), ETYPE.create(eType
+                        .toString()));
+            } else if (ynm == YesNoMaybe.NO) {
+                mc.report("ImpossibleInstanceOf", 0, expr, Roles.TARGET_TYPE.create(typeRef), ETYPE.create(eType
+                        .toString()));
+            }
+        } else if (node.getCode() == AstCode.CheckCast) {
+            TypeReference typeRef = (TypeReference) node.getOperand();
+            Expression expr = node.getArguments().get(0);
+            EType eType = Inf.ETYPE.get(expr);
+            YesNoMaybe ynm = eType.isSubtypeOf(typeRef);
+            if (ynm == YesNoMaybe.NO) {
+                mc.report("ImpossibleCast", 0, expr, Roles.TARGET_TYPE.create(typeRef), ETYPE.create(eType.toString()));
             }
         }
     }
-
 }

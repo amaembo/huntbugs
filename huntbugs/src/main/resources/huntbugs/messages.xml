@@ -218,19 +218,26 @@
       <LongDescription><![CDATA[This code performs an operation like <code>(x $OPERATION$ x)</code>. The result of this operation is 
    always the same regardless the value of <code>x</code> (not considering the NaNs). Probably there's logical error or typo in the code.]]></LongDescription>
     </Warning>
-    <Warning Type="UnnecessaryInstanceOfInferred">
-      <Title>The instanceof check is found to be unnecessary</Title>
-      <Description>Unnecessary instanceof $INSTANCEOF_TYPE$ is detected in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code performs an <code>instanceof $INSTANCEOF_TYPE:plain$</code> check. However it's statically known that 
-   the expression type is always $INFERRED_TYPE$, so this check is always true.<br> 
-   Probably something else was meant or this check could be replaced with null check or removed at all.]]></LongDescription>
-    </Warning>
     <Warning Type="UnnecessaryInstanceOf">
       <Title>The instanceof check is unnecessary</Title>
-      <Description>Unnecessary instanceof $INSTANCEOF_TYPE$ is performed in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code performs an <code>instanceof $INSTANCEOF_TYPE:plain$</code> check. However this check is always true as the expression
-   type is $ACTUAL_TYPE$.<br>
-   Probably something else was meant or this check could be replaced with null check or removed at all.]]></LongDescription>
+      <Description>Unnecessary instanceof $TARGET_TYPE$ is performed in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code performs an <code>instanceof $TARGET_TYPE:plain$</code> check. However it's statically known that
+      this check is always true as the expression type is <code>$ETYPE$</code>.<br>
+      Probably something else was meant or this check could be replaced with null check or removed at all.]]></LongDescription>
+    </Warning>
+    <Warning Type="ImpossibleInstanceOf">
+      <Title>The instanceof check is always false</Title>
+      <Description>Impossible instanceof $TARGET_TYPE$ is performed in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code performs an <code>instanceof $TARGET_TYPE:plain$</code> check. However it's statically known that
+      this check is always false as the expression type is <code>$ETYPE$</code>.<br>
+      Probably something else was meant here.]]></LongDescription>
+    </Warning>
+    <Warning Type="ImpossibleCast">
+      <Title>The type cast is impossible</Title>
+      <Description>Impossible cast to $TARGET_TYPE$ is performed in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code performs a cast to $TARGET_TYPE$. However it's statically known that
+      this cast will always fail with <code>ClassCastException</code> as the expression type is <code>$ETYPE$</code>.<br>
+      Probably something else was meant here.]]></LongDescription>
     </Warning>
     <Warning Type="SameBranchesTernary">
       <Title>The ternary operator has identical branches</Title>

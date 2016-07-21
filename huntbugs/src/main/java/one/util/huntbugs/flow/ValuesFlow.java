@@ -45,6 +45,9 @@ public class ValuesFlow {
         if(!Inf.CONST.build(cfg)) {
             ctx.incStat("Inf.CONST.Incomplete/ValuesFlow");
         }
+        if(!Inf.ETYPE.build(cfg)) {
+            ctx.incStat("Inf.ETYPE.Incomplete/ValuesFlow");
+        }
         cfg.forBodies((smd, smethod) -> Inf.PURITY.annotate(smethod, new FrameContext(smd, cf)));
         cfg.forBodies((smd, smethod) -> Inf.BACKLINK.annotate(smethod));
         return origFrame == null ? null : new ArrayList<>(origFrame);
@@ -77,33 +80,9 @@ public class ValuesFlow {
         return result;
     }
     
-    private static TypeReference mergeTypes(TypeReference t1, TypeReference t2) {
-        if (t1 == null || t2 == null)
-            return null;
-        if (t1 == BuiltinTypes.Null)
-            return t2;
-        if (t2 == BuiltinTypes.Null)
-            return t1;
-        if (t1.isEquivalentTo(t2))
-            return t1;
-        if(t1.isArray() ^ t2.isArray())
-            return null;
-        if(t1.isArray()) {
-            TypeReference merged = mergeTypes(t1.getElementType(), t2.getElementType());
-            return merged == null ? null : merged.makeArrayType();
-        }
-        List<TypeReference> chain1 = Types.getBaseTypes(t1);
-        List<TypeReference> chain2 = Types.getBaseTypes(t2);
-        for (int i = Math.min(chain1.size(), chain2.size()) - 1; i >= 0; i--) {
-            if (chain1.get(i).equals(chain2.get(i)))
-                return chain1.get(i);
-        }
-        return null;
-    }
-
     public static TypeReference reduceType(Expression input) {
         return reduce(input, e -> e.getCode() == AstCode.AConstNull ?
-                BuiltinTypes.Null : Types.getExpressionType(e), ValuesFlow::mergeTypes, Objects::isNull);
+                BuiltinTypes.Null : Types.getExpressionType(e), Types::mergeTypes, Objects::isNull);
     }
 
     public static Expression getSource(Expression input) {

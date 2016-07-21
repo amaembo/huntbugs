@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.strobel.assembler.metadata.BuiltinTypes;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.Expression;
@@ -64,17 +65,17 @@ public class Types {
     }
 
     public static boolean isInstance(TypeReference type, String wantedType) {
-        if (type == null)
+        if (type == null || type.isPrimitive())
             return false;
         if (wantedType.equals("java/lang/Object"))
+            return true;
+        if (type.getInternalName().equals(wantedType))
             return true;
         if (type.isArray()) {
             if(!wantedType.startsWith("["))
                 return false;
             return isInstance(type.getElementType(), wantedType.substring(1));
         }
-        if (type.getInternalName().equals(wantedType))
-            return true;
         TypeDefinition td = type.resolve();
         if (td == null)
             return false;
@@ -184,6 +185,8 @@ public class Types {
     public static boolean hasCompleteHierarchy(TypeDefinition type) {
         if(type == null)
             return false;
+        if(type.isArray())
+            return hasCompleteHierarchy(type.getElementType().resolve());
         TypeReference base = type.getBaseType();
         if(base != null && !hasCompleteHierarchy(base.resolve()))
             return false;
@@ -192,5 +195,29 @@ public class Types {
                 return false;
         }
         return true;
+    }
+
+    public static TypeReference mergeTypes(TypeReference t1, TypeReference t2) {
+        if (t1 == null || t2 == null)
+            return null;
+        if (t1 == BuiltinTypes.Null)
+            return t2;
+        if (t2 == BuiltinTypes.Null)
+            return t1;
+        if (t1.isEquivalentTo(t2))
+            return t1;
+        if(t1.isArray() ^ t2.isArray())
+            return null;
+        if(t1.isArray()) {
+            TypeReference merged = mergeTypes(t1.getElementType(), t2.getElementType());
+            return merged == null ? null : merged.makeArrayType();
+        }
+        List<TypeReference> chain1 = getBaseTypes(t1);
+        List<TypeReference> chain2 = getBaseTypes(t2);
+        for (int i = Math.min(chain1.size(), chain2.size()) - 1; i >= 0; i--) {
+            if (chain1.get(i).equals(chain2.get(i)))
+                return chain1.get(i);
+        }
+        return null;
     }
 }

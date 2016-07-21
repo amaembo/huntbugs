@@ -16,7 +16,7 @@
 package one.util.huntbugs.flow;
 
 /**
- * Publically available annotators
+ * Publicly available annotators
  * 
  * @author Tagir Valeev
  */
@@ -30,6 +30,11 @@ public class Inf {
      * Annotator which can determine the statically known constant value of given expression (if any)
      */
     public static final ConstAnnotator CONST = new ConstAnnotator();
+    
+    /**
+     * Annotator which can determine whether given expression is subtype of given type or not
+     */
+    public static final ETypeAnnotator ETYPE = new ETypeAnnotator();
     
     /**
      * Annotator which can find the usages of given expression
