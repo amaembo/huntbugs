@@ -44,7 +44,7 @@ public class UnnecessaryInstanceOf {
         if (node.getCode() == AstCode.InstanceOf) {
             TypeReference typeRef = (TypeReference) node.getOperand();
             Expression expr = node.getArguments().get(0);
-            EType eType = Inf.ETYPE.get(expr);
+            EType eType = Inf.ETYPE.resolve(expr);
             YesNoMaybe ynm = eType.isSubtypeOf(typeRef);
             if (ynm == YesNoMaybe.YES) {
                 mc.report("UnnecessaryInstanceOf", 0, expr, Roles.TARGET_TYPE.create(typeRef), ETYPE.create(eType
@@ -56,7 +56,7 @@ public class UnnecessaryInstanceOf {
         } else if (node.getCode() == AstCode.CheckCast) {
             TypeReference typeRef = (TypeReference) node.getOperand();
             Expression expr = node.getArguments().get(0);
-            EType eType = Inf.ETYPE.get(expr);
+            EType eType = Inf.ETYPE.resolve(expr);
             YesNoMaybe ynm = eType.isSubtypeOf(typeRef);
             if (ynm == YesNoMaybe.NO) {
                 mc.report("ImpossibleCast", 0, expr, Roles.TARGET_TYPE.create(typeRef), ETYPE.create(eType.toString()));

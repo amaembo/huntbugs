@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.strobel.assembler.metadata.FieldReference;
+import com.strobel.assembler.metadata.MetadataHelper;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
@@ -42,56 +43,56 @@ public class ETypeAnnotator extends Annotator<EType> {
     }
 
     boolean build(CFG cfg) {
-        return cfg.<ContextTypes,EType>runDFA(this, (md, closure) -> new ETypeDataflow(closure == null ? ContextTypes.DEFAULT : closure), 7);
+        return cfg.<ContextTypes, EType> runDFA(this, (md, closure) -> new ETypeDataflow(closure == null
+                ? ContextTypes.DEFAULT : closure), 7);
     }
-    
-    @Override
-    public EType get(Expression expr) {
-        return super.get(expr);
+
+    public EType resolve(Expression expr) {
+        EType eType = super.get(expr);
+        return eType == null ? EType.UNKNOWN : eType;
     }
-    
+
     static class ContextTypes {
         static final ContextTypes DEFAULT = new ContextTypes(null);
-        
+
         final Map<Variable, EType> values;
-        
+
         private ContextTypes(Map<Variable, EType> values) {
             this.values = values;
         }
-        
+
         ContextTypes merge(ContextTypes other) {
-            if(this == other)
+            if (this == other)
                 return this;
-            if(this == DEFAULT || other == DEFAULT)
+            if (this == DEFAULT || other == DEFAULT)
                 return DEFAULT;
             Map<Variable, EType> newTypes = new HashMap<>(values);
             newTypes.keySet().retainAll(other.values.keySet());
-            if(newTypes.isEmpty())
+            if (newTypes.isEmpty())
                 return DEFAULT;
-            other.values.forEach((k, v) -> newTypes.compute(k, (oldK, oldV) -> 
-                oldV == null ? null : EType.or(v, oldV)
-            ));
+            other.values.forEach((k, v) -> newTypes.compute(k, (oldK, oldV) -> oldV == null ? null
+                    : EType.or(v, oldV)));
             return new ContextTypes(newTypes);
         }
-        
+
         ContextTypes and(Variable var, EType value) {
-            if(values == null) {
+            if (values == null) {
                 return new ContextTypes(Collections.singletonMap(var, value));
             }
             EType oldType = values.get(var);
-            if(Objects.equals(value, oldType))
+            if (Objects.equals(value, oldType))
                 return this;
             EType newType = EType.and(oldType, value);
-            if(Objects.equals(newType, oldType))
+            if (Objects.equals(newType, oldType))
                 return this;
             Map<Variable, EType> newTypes = new HashMap<>(values);
             newTypes.put(var, newType);
             return new ContextTypes(newTypes);
         }
-        
+
         ContextTypes remove(Variable var) {
-            if(values != null && values.containsKey(var)) {
-                if(values.size() == 1)
+            if (values != null && values.containsKey(var)) {
+                if (values.size() == 1)
                     return DEFAULT;
                 Map<Variable, EType> newTypes = new HashMap<>(values);
                 newTypes.remove(var);
@@ -99,12 +100,12 @@ public class ETypeAnnotator extends Annotator<EType> {
             }
             return this;
         }
-        
+
         ContextTypes transfer(Expression expr) {
             Variable var = Nodes.getWrittenVariable(expr);
             return var == null ? this : remove(var);
         }
-        
+
         EType resolve(Expression expr) {
             Object oper = expr.getOperand();
             EType result = oper instanceof Variable && values != null ? values.get(oper) : null;
@@ -120,14 +121,14 @@ public class ETypeAnnotator extends Annotator<EType> {
             ContextTypes other = (ContextTypes) obj;
             return Objects.equals(values, other.values);
         }
-        
+
         @Override
         public String toString() {
             return values == null ? "{}" : values.toString();
         }
 
     }
-    
+
     class ETypeDataflow implements Dataflow<EType, ContextTypes> {
         private final ContextTypes initial;
 
@@ -142,9 +143,9 @@ public class ETypeAnnotator extends Annotator<EType> {
 
         @Override
         public ContextTypes transferState(ContextTypes src, Expression expr) {
-            if(expr.getCode() == AstCode.CheckCast) {
+            if (expr.getCode() == AstCode.CheckCast) {
                 Expression arg = expr.getArguments().get(0);
-                if(arg.getCode() == AstCode.Load) {
+                if (arg.getCode() == AstCode.Load) {
                     Variable var = (Variable) arg.getOperand();
                     EType type = EType.subType((TypeReference) expr.getOperand());
                     return src.and(var, type);
@@ -155,9 +156,9 @@ public class ETypeAnnotator extends Annotator<EType> {
 
         @Override
         public ContextTypes transferExceptionalState(ContextTypes src, Expression expr) {
-            if(expr.getCode() == AstCode.CheckCast) {
+            if (expr.getCode() == AstCode.CheckCast) {
                 Expression arg = expr.getArguments().get(0);
-                if(arg.getCode() == AstCode.Load) {
+                if (arg.getCode() == AstCode.Load) {
                     Variable var = (Variable) arg.getOperand();
                     EType type = EType.subType((TypeReference) expr.getOperand()).negate();
                     return src.and(var, type);
@@ -169,15 +170,15 @@ public class ETypeAnnotator extends Annotator<EType> {
         @Override
         public TrueFalse<ContextTypes> transferConditionalState(ContextTypes src, Expression expr) {
             boolean invert = false;
-            while(expr.getCode() == AstCode.LogicalNot) {
+            while (expr.getCode() == AstCode.LogicalNot) {
                 invert = !invert;
-                expr = expr.getArguments().get(expr.getArguments().size()-1);
+                expr = expr.getArguments().get(expr.getArguments().size() - 1);
             }
             Variable var = null;
             EType etype = null;
-            if(expr.getCode() == AstCode.InstanceOf) {
+            if (expr.getCode() == AstCode.InstanceOf) {
                 Expression arg = expr.getArguments().get(0);
-                if(arg.getCode() == AstCode.Load) {
+                if (arg.getCode() == AstCode.Load) {
                     var = (Variable) arg.getOperand();
                     etype = EType.subType((TypeReference) expr.getOperand());
                 }
@@ -186,7 +187,7 @@ public class ETypeAnnotator extends Annotator<EType> {
             // a.getClass() == Foo.class
             // a.getClass().equals(Foo.class)
             // Foo.class.isInstance(a)
-            if(var != null) {
+            if (var != null) {
                 return new TrueFalse<>(src.and(var, etype), src.and(var, etype.negate()), invert);
             }
             return new TrueFalse<>(src);
@@ -204,25 +205,26 @@ public class ETypeAnnotator extends Annotator<EType> {
 
         @Override
         public EType makeFact(ContextTypes state, Expression expr) {
-            switch(expr.getCode()) {
+            switch (expr.getCode()) {
             case TernaryOp: {
                 Object cond = Inf.CONST.get(expr.getArguments().get(0));
                 EType left = get(expr.getArguments().get(1));
                 EType right = get(expr.getArguments().get(2));
-                if(Integer.valueOf(1).equals(cond) || Boolean.TRUE.equals(cond)) {
-                    return left; 
+                if (Integer.valueOf(1).equals(cond) || Boolean.TRUE.equals(cond)) {
+                    return left;
                 }
-                if(Integer.valueOf(0).equals(cond) || Boolean.FALSE.equals(cond)) {
+                if (Integer.valueOf(0).equals(cond) || Boolean.FALSE.equals(cond)) {
                     return right;
                 }
                 return EType.or(left, right);
             }
             case Load: {
-                return EType.and(fromSource(state, expr), EType.subType(expr.getInferredType()));
+                return EType.and(fromSource(state, expr), EType.subType(MetadataHelper.erase(expr.getInferredType())));
             }
             case GetField:
             case GetStatic: {
-                return EType.and(fromSource(state, expr), EType.subType(((FieldReference)expr.getOperand()).getFieldType()));
+                return EType.and(fromSource(state, expr), EType.subType(((FieldReference) expr.getOperand())
+                        .getFieldType()));
             }
             case InitObject:
             case InitArray:
@@ -234,7 +236,7 @@ public class ETypeAnnotator extends Annotator<EType> {
             case InvokeSpecial:
             case InvokeInterface: {
                 MethodReference mr = (MethodReference) expr.getOperand();
-                return EType.subType(mr.getReturnType());
+                return EType.subType(MetadataHelper.erase(mr).getReturnType());
             }
             case CheckCast:
                 return EType.and(EType.subType((TypeReference) expr.getOperand()), get(expr.getArguments().get(0)));
@@ -266,33 +268,33 @@ public class ETypeAnnotator extends Annotator<EType> {
         public boolean sameFact(EType f1, EType f2) {
             return Objects.equals(f1, f2);
         }
-        
+
         private EType resolve(ContextTypes ctx, Expression expr) {
-            if(expr.getCode() == AstCode.LdC) {
+            if (expr.getCode() == AstCode.LdC) {
                 return EType.exact(expr.getInferredType());
             }
             EType val = get(expr);
-            if(val != EType.UNKNOWN && val != null) {
+            if (val != EType.UNKNOWN && val != null) {
                 return val;
             }
             EType resolved = ctx.resolve(expr);
-            if(resolved != null)
+            if (resolved != null)
                 return resolved;
             return val;
         }
 
         private EType fromSource(ContextTypes ctx, Expression expr) {
             EType value = ctx.resolve(expr);
-            if(value != null)
+            if (value != null)
                 return value;
             Expression src = ValuesFlow.getSource(expr);
-            if(src == expr)
+            if (src == expr)
                 return EType.UNKNOWN;
             value = resolve(ctx, src);
-            if(value != null)
+            if (value != null)
                 return value;
-            if(src.getCode() == SourceAnnotator.PHI_TYPE) {
-                for(Expression child : src.getArguments()) {
+            if (src.getCode() == SourceAnnotator.PHI_TYPE) {
+                for (Expression child : src.getArguments()) {
                     EType newVal = resolve(ctx, child);
                     if (newVal == null) {
                         if (Exprs.isParameter(child) || child.getCode() == SourceAnnotator.UPDATE_TYPE) {
@@ -303,7 +305,7 @@ public class ETypeAnnotator extends Annotator<EType> {
                     } else {
                         value = EType.or(value, newVal);
                     }
-                    if(value == EType.UNKNOWN)
+                    if (value == EType.UNKNOWN)
                         return EType.UNKNOWN;
                 }
                 return value;

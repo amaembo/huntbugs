@@ -139,7 +139,7 @@ public class SingleType implements EType {
         case NOT:
             return "not " + tr.getFullName();
         case NOT_SUBTYPE:
-            return "not subtype of " + tr.getFullName() + ")";
+            return "not subtype of " + tr.getFullName();
         case SUBTYPE:
             return "subtype of " + tr.getFullName();
         default:

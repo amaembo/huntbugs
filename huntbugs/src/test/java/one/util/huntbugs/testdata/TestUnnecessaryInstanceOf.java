@@ -25,100 +25,100 @@ import one.util.huntbugs.registry.anno.AssertWarning;
  *
  */
 public class TestUnnecessaryInstanceOf {
-    Object f = Math.random() > 0.5 ? (Number)1 : (Number)1.0;
-    
+    Object f = Math.random() > 0.5 ? (Number) 1 : (Number) 1.0;
+
     @AssertWarning("UnnecessaryInstanceOf")
     void testInferred(int x) {
         Object a = 1.0;
-        if(x > 2) a = -2;
-        if(a instanceof Number) {
+        if (x > 2)
+            a = -2;
+        if (a instanceof Number) {
             System.out.println(a);
         }
     }
 
     @AssertWarning("UnnecessaryInstanceOf")
     void testField() {
-        if(f instanceof Number) {
+        if (f instanceof Number) {
             System.out.println(f);
         }
     }
-    
+
     @AssertWarning("UnnecessaryInstanceOf")
     void testSimple() {
-		String a = "test";
-		if (a instanceof CharSequence) {
-			System.out.println(a);
-		}
+        String a = "test";
+        if (a instanceof CharSequence) {
+            System.out.println(a);
+        }
     }
-    
+
     @AssertWarning("ImpossibleCast")
     void testCast() {
         Object a = "test";
-        System.out.println((Integer)a);
+        System.out.println((Integer) a);
     }
-    
+
     @AssertWarning("ImpossibleInstanceOf")
     void testArray(String[] data) {
         Object[] arr = data;
-        if(arr instanceof Integer[]) {
+        if (arr instanceof Integer[]) {
             System.out.println("Never");
         }
     }
-    
+
     @AssertNoWarning("*")
     int testPrimArray(Object data) {
-        if(data instanceof Object[])
+        if (data instanceof Object[])
             return 1;
-        if(data instanceof int[])
+        if (data instanceof int[])
             return 2;
         return 0;
     }
-    
+
     @AssertWarning("UnnecessaryInstanceOf")
     void testArrayOk(String[] data) {
         Object[] arr = data;
-        if(arr instanceof CharSequence[]) {
+        if (arr instanceof CharSequence[]) {
             System.out.println("Always");
         }
     }
-    
+
     @AssertWarning("UnnecessaryInstanceOf")
     void testConditional(Object obj) {
-        if(!(obj instanceof String))
+        if (!(obj instanceof String))
             return;
-        if(obj instanceof CharSequence) {
+        if (obj instanceof CharSequence) {
             System.out.println("Always");
         }
     }
-    
+
     @AssertWarning("ImpossibleInstanceOf")
     void testCCE(Object obj) {
         CharSequence s;
         try {
-            s = (CharSequence)obj;
-        }
-        catch(ClassCastException cce) {
-            if(obj instanceof String) {
+            s = (CharSequence) obj;
+        } catch (ClassCastException cce) {
+            if (obj instanceof String) {
                 System.out.println("Never!");
             }
             return;
         }
         System.out.println(s);
     }
-    
+
     @AssertWarning("ImpossibleInstanceOf")
     void testConditionalImpossible(Object obj) {
-        if(!(obj instanceof String))
+        if (!(obj instanceof String))
             return;
-        if(obj instanceof Number) {
+        if (obj instanceof Number) {
             System.out.println("Never");
         }
     }
-    
+
     @AssertNoWarning("*")
     void testInterfaceNonFinal(ArrayList<String> al) {
         Object obj = al;
-        if(obj instanceof Comparable) {
+        if (obj instanceof Comparable) {
             System.out.println("Yes!");
         }
     }
@@ -126,28 +126,52 @@ public class TestUnnecessaryInstanceOf {
     @AssertNoWarning("*")
     void testInterfaceNonFinal2(Comparable<?> cmp) {
         Object obj = cmp;
-        if(obj instanceof ArrayList) {
+        if (obj instanceof ArrayList) {
             System.out.println("Yes!");
         }
     }
-    
+
     @AssertWarning("ImpossibleInstanceOf")
     void testInterfaceFinal(StringBuilder sb) {
         Object obj = sb;
-        if(obj instanceof Comparable) {
+        if (obj instanceof Comparable) {
             System.out.println("Yes!");
         }
     }
-    
+
     @AssertNoWarning("*")
     void testTypeMerging(Object obj, String type) {
-        if(type.equals("String")) {
-            String val = (String)obj;
-            System.out.println("String: "+val);
+        if (type.equals("String")) {
+            String val = (String) obj;
+            System.out.println("String: " + val);
         }
-        if(type.equals("Int")) {
-            Integer val = (Integer)obj;
-            System.out.println("Int: "+val);
+        if (type.equals("Int")) {
+            Integer val = (Integer) obj;
+            System.out.println("Int: " + val);
+        }
+    }
+
+    String[] stringArr() {
+        return new String[] { "test" };
+    }
+
+    int[] intArr() {
+        return new int[] { 1 };
+    }
+    
+    @AssertWarning("UnnecessaryInstanceOf")
+    void testRetValue1() {
+        Object x = stringArr();
+        if(x instanceof String[]) {
+            System.out.println("Ok");
+        }
+    }
+    
+    @AssertWarning("UnnecessaryInstanceOf")
+    void testRetValue2() {
+        Object x = intArr();
+        if(x instanceof int[]) {
+            System.out.println("Ok");
         }
     }
 }

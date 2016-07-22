@@ -673,6 +673,10 @@ public class CFG {
                             bb.changed = changed = true;
                         }
                     }
+                    if (bb.expr.getCode() == AstCode.Goto) {
+                        updateState(state, bb.passTarget);
+                        continue;
+                    }
                     if (bb.passTarget != null) {
                         updateState(df.transferState(state, bb.expr), bb.passTarget);
                     }
@@ -702,7 +706,7 @@ public class CFG {
                     target.state = newState;
                     target.changed = changed = true;
                 }
-            } else if (!df.sameState(oldState, newState)) {
+            } else if (newState != null && !df.sameState(oldState, newState)) {
                 STATE updatedState = df.mergeStates(oldState, newState);
                 target.state = updatedState;
                 if (!df.sameState(oldState, updatedState)) {
