@@ -92,13 +92,16 @@ public class ConstAnnotator extends Annotator<Object> {
         }
         
         ContextValues merge(ContextValues other) {
-            if(this == other || other == DEFAULT)
+            if(this == other)
                 return this;
-            if(this == DEFAULT)
-                return other;
+            if(this == DEFAULT || other == DEFAULT)
+                return DEFAULT;
             Map<Variable, Object> newValues = new HashMap<>(values);
-            other.values.forEach((k, v) -> newValues.merge(k, v, (v1, v2) -> Objects.equals(v1, v2) ? v1 : UNKNOWN_VALUE));
-            return new ContextValues(newValues);
+            newValues.keySet().retainAll(other.values.keySet());
+            if(newValues.isEmpty())
+                return DEFAULT;
+            other.values.forEach((k, v) -> newValues.compute(k, (oldK, oldV) -> Objects.equals(v, oldV) ? v : null));
+            return newValues.isEmpty() ? DEFAULT : new ContextValues(newValues);
         }
         
         ContextValues add(Variable var, Object value) {
@@ -125,7 +128,7 @@ public class ConstAnnotator extends Annotator<Object> {
         
         ContextValues transfer(Expression expr) {
             Variable var = Nodes.getWrittenVariable(expr);
-            return var == null ? this : add(var, UNKNOWN_VALUE);
+            return var == null ? this : remove(var);
         }
         
         Object resolve(Expression expr) {
@@ -546,11 +549,6 @@ public class ConstAnnotator extends Annotator<Object> {
         }
 
         @Override
-        public ContextValues makeTopState() {
-            return ContextValues.DEFAULT;
-        }
-        
-        @Override
         public ContextValues makeEntryState() {
             return initState;
         }
@@ -595,7 +593,7 @@ public class ConstAnnotator extends Annotator<Object> {
                 var = (Variable) arg.getOperand();
             }
             return var == null ? new TrueFalse<>(src.transfer(expr))
-                    : new TrueFalse<>(src.add(var, cst), src.add(var, UNKNOWN_VALUE), invert);
+                    : new TrueFalse<>(src.add(var, cst), src.remove(var), invert);
         }
 
         @Override

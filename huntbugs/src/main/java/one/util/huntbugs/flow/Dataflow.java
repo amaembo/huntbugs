@@ -24,8 +24,6 @@ import com.strobel.decompiler.ast.Expression;
 interface Dataflow<FACT, STATE> {
     public STATE makeEntryState();
 
-    public STATE makeTopState();
-    
     public STATE transferState(STATE src, Expression expr);
 
     public STATE transferExceptionalState(STATE src, Expression expr);

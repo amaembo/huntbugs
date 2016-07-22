@@ -141,11 +141,6 @@ public class ETypeAnnotator extends Annotator<EType> {
         }
 
         @Override
-        public ContextTypes makeTopState() {
-            return null;
-        }
-
-        @Override
         public ContextTypes transferState(ContextTypes src, Expression expr) {
             if(expr.getCode() == AstCode.CheckCast) {
                 Expression arg = expr.getArguments().get(0);
@@ -199,19 +194,11 @@ public class ETypeAnnotator extends Annotator<EType> {
 
         @Override
         public ContextTypes mergeStates(ContextTypes s1, ContextTypes s2) {
-            if (s1 == null || s1 == s2)
-                return s2;
-            if (s2 == null)
-                return s1;
             return s1.merge(s2);
         }
 
         @Override
         public boolean sameState(ContextTypes s1, ContextTypes s2) {
-            if (s1 == s2)
-                return true;
-            if (s1 == null || s2 == null)
-                return false;
             return s1.equals(s2);
         }
 

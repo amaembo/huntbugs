@@ -624,14 +624,14 @@ public class CFG {
                     for (BasicBlock bb : subList) {
                         if (bb.changed) {
                             annotator.put(bb.expr, df.makeUnknownFact());
-                            bb.state = df.makeTopState();
+                            bb.state = null;
                         }
                     }
                     if(exit.changed) {
-                        exit.state = df.makeTopState();
+                        exit.state = null;
                     }
                     if(fail.changed) {
-                        fail.state = df.makeTopState();
+                        fail.state = null;
                     }
                 }
             }
@@ -646,10 +646,10 @@ public class CFG {
 
         private void initialize() {
             for (BasicBlock bb : blocks) {
-                bb.state = df.makeTopState();
+                bb.state = null;
             }
-            exit.state = df.makeTopState();
-            fail.state = df.makeTopState();
+            exit.state = null;
+            fail.state = null;
             entry.state = df.makeEntryState();
         }
 
@@ -697,7 +697,12 @@ public class CFG {
         private void updateState(STATE newState, BasicBlock target) {
             @SuppressWarnings("unchecked")
             STATE oldState = (STATE) target.state;
-            if (!df.sameState(oldState, newState)) {
+            if (oldState == null) {
+                if (newState != null) {
+                    target.state = newState;
+                    target.changed = changed = true;
+                }
+            } else if (!df.sameState(oldState, newState)) {
                 STATE updatedState = df.mergeStates(oldState, newState);
                 target.state = updatedState;
                 if (!df.sameState(oldState, updatedState)) {

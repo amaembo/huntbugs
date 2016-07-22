@@ -232,8 +232,6 @@ public class SourceAnnotator extends Annotator<Expression> {
         static boolean isEqual(Frame left, Frame right) {
             if (left == right)
                 return true;
-            if (left == null || right == null)
-                return false;
             Map<Variable, Expression> l = left.sources;
             Map<Variable, Expression> r = right.sources;
             if(l.size() != r.size())
@@ -331,11 +329,6 @@ public class SourceAnnotator extends Annotator<Expression> {
         SourceDataflow(ClassFields cf, MethodDefinition md, Frame closure) {
             this.fc = new FrameContext(md, cf);
             this.origFrame = new Frame(fc, closure);
-        }
-        
-        @Override
-        public Frame makeTopState() {
-            return null;
         }
         
         @Override
@@ -447,10 +440,6 @@ public class SourceAnnotator extends Annotator<Expression> {
         }
         @Override
         public Frame mergeStates(Frame s1, Frame s2) {
-            if (s1 == null || s1 == s2)
-                return s2;
-            if (s2 == null)
-                return s1;
             return s1.merge(s2, fc);
         }
         
