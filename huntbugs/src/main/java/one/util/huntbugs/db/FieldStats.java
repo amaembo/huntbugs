@@ -74,11 +74,14 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
             locals = new Object[maxLocals];
             Arrays.fill(locals, UNKNOWN_CONST);
         }
-
-        void preprocess(Instruction instr) {
+        
+        void registerJump(Instruction instr) {
             if(instr.getOperandCount() == 1 && instr.getOperand(0) instanceof Instruction) {
                 seenLabels.add(instr.getOperand(0));
             }
+        }
+
+        void preprocess(Instruction instr) {
             if(seenLabels.contains(instr)) {
                 constStack.clear();
                 Arrays.fill(locals, UNKNOWN_CONST);
@@ -122,6 +125,9 @@ public class FieldStats extends AbstractTypeDatabase<FieldStats.TypeFieldStats>{
             MethodBody body = md.getBody();
             if(body != null) {
                 SimpleStack ss = new SimpleStack(body.getMaxLocals());
+                for(Instruction instr : body.getInstructions()) {
+                    ss.registerJump(instr);
+                }
                 for(Instruction instr : body.getInstructions()) {
                     ss.preprocess(instr);
                     switch(instr.getOpCode()) {
