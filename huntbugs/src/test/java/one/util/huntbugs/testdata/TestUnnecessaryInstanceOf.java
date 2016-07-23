@@ -16,6 +16,7 @@
 package one.util.huntbugs.testdata;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
@@ -172,6 +173,49 @@ public class TestUnnecessaryInstanceOf {
         Object x = intArr();
         if(x instanceof int[]) {
             System.out.println("Ok");
+        }
+    }
+    
+    @AssertWarning("ImpossibleInstanceOf")
+    void testGetClass(Object obj) {
+        if(obj.getClass() == ArrayList.class) {
+            if(obj instanceof Comparable) {
+                System.out.println("Never");
+            }
+        }
+    }
+    
+    @AssertWarning("ImpossibleInstanceOf")
+    void testGetClass2(Object obj) {
+        if(ArrayList.class.equals(obj.getClass())) {
+            if(obj instanceof Comparable) {
+                System.out.println("Never");
+            }
+        }
+    }
+    
+    @AssertWarning("UnnecessaryInstanceOf")
+    void testIsInstance(Object obj) {
+        Class<?> clazz = String.class;
+        if(clazz.isInstance(obj)) {
+            if(obj instanceof CharSequence) {
+                System.out.println("Always");
+            }
+        }
+    }
+    
+    public class MyList<E extends CharSequence> extends ArrayList<E> {
+        private static final long serialVersionUID = 1L;
+        
+        @AssertNoWarning("*")
+        public boolean hasString() {
+            for(Iterator<E> itr = iterator(); itr.hasNext();) {
+                CharSequence cs = itr.next();
+                if(cs instanceof String) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

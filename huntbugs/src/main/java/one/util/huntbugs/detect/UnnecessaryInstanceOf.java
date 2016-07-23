@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.detect;
 
+import com.strobel.assembler.metadata.MetadataHelper;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
@@ -54,7 +55,7 @@ public class UnnecessaryInstanceOf {
                         .toString()));
             }
         } else if (node.getCode() == AstCode.CheckCast) {
-            TypeReference typeRef = (TypeReference) node.getOperand();
+            TypeReference typeRef = MetadataHelper.erase((TypeReference) node.getOperand());
             Expression expr = node.getArguments().get(0);
             EType eType = Inf.ETYPE.resolve(expr);
             YesNoMaybe ynm = eType.isSubtypeOf(typeRef);

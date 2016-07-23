@@ -30,7 +30,9 @@ import com.strobel.decompiler.ast.Variable;
 
 import one.util.huntbugs.flow.etype.EType;
 import one.util.huntbugs.util.Exprs;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
+import one.util.huntbugs.util.Types;
 
 /**
  * @author shustkost
@@ -182,11 +184,41 @@ public class ETypeAnnotator extends Annotator<EType> {
                     var = (Variable) arg.getOperand();
                     etype = EType.subType((TypeReference) expr.getOperand());
                 }
+            } else if (expr.getCode() == AstCode.CmpEq || expr.getCode() == AstCode.CmpNe || (expr
+                    .getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod((MethodReference) expr
+                            .getOperand()))) {
+                if(expr.getCode() == AstCode.CmpNe)
+                    invert = !invert;
+                Expression left = expr.getArguments().get(0);
+                Expression right = expr.getArguments().get(1);
+                Object clazz = Inf.CONST.getValue(right);
+                Expression arg = null;
+                if(clazz instanceof TypeReference) {
+                    arg = left;
+                } else {
+                    clazz = Inf.CONST.getValue(left);
+                    if(clazz instanceof TypeReference) {
+                        arg = right;
+                    }
+                }
+                if(arg != null && arg.getCode() == AstCode.InvokeVirtual && Methods.isGetClass((MethodReference) arg.getOperand())) {
+                    Expression target = arg.getArguments().get(0);
+                    if(target.getCode() == AstCode.Load) {
+                        var = (Variable) target.getOperand();
+                        etype = EType.exact((TypeReference) clazz);
+                    }
+                }
+            } else if (expr.getCode() == AstCode.InvokeVirtual) {
+                MethodReference mr = (MethodReference) expr.getOperand();
+                if(mr.getName().equals("isInstance") && Types.is(mr.getDeclaringType(), Class.class)) {
+                    Object clazz = Inf.CONST.getValue(expr.getArguments().get(0));
+                    Expression target = expr.getArguments().get(1);
+                    if(clazz instanceof TypeReference && target.getCode() == AstCode.Load) {
+                        var = (Variable) target.getOperand();
+                        etype = EType.subType((TypeReference) clazz);
+                    }
+                }
             }
-            // TODO support patterns:
-            // a.getClass() == Foo.class
-            // a.getClass().equals(Foo.class)
-            // Foo.class.isInstance(a)
             if (var != null) {
                 return new TrueFalse<>(src.and(var, etype), src.and(var, etype.negate()), invert);
             }
@@ -219,7 +251,8 @@ public class ETypeAnnotator extends Annotator<EType> {
                 return EType.or(left, right);
             }
             case Load: {
-                return EType.and(fromSource(state, expr), EType.subType(MetadataHelper.erase(expr.getInferredType())));
+                Variable v = (Variable) expr.getOperand();
+                return EType.and(fromSource(state, expr), EType.subType(MetadataHelper.erase(v.getType())));
             }
             case GetField:
             case GetStatic: {
@@ -239,7 +272,8 @@ public class ETypeAnnotator extends Annotator<EType> {
                 return EType.subType(MetadataHelper.erase(mr).getReturnType());
             }
             case CheckCast:
-                return EType.and(EType.subType((TypeReference) expr.getOperand()), get(expr.getArguments().get(0)));
+                return EType.and(EType.subType(MetadataHelper.erase((TypeReference) expr.getOperand())), get(expr
+                        .getArguments().get(0)));
             case Store:
             case PutStatic:
                 return get(expr.getArguments().get(0));
