@@ -221,22 +221,25 @@
     <Warning Type="UnnecessaryInstanceOf">
       <Title>The instanceof check is unnecessary</Title>
       <Description>Unnecessary instanceof $TARGET_TYPE$ is performed in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code performs an <code>instanceof $TARGET_TYPE:plain$</code> check. However it's statically known that
-      this check is always true as the expression type is <code>$ETYPE$</code>.<br>
+      <LongDescription><![CDATA[This code performs a check like <code>$EXPRESSION$ instanceof $TARGET_TYPE:plain$</code>. However it's statically known that
+      this check is always true as the following type constraint holds:<br>
+      <br><code>$EXPRESSION$ :- $ETYPE$</code><br><br>
       Probably something else was meant or this check could be replaced with null check or removed at all.]]></LongDescription>
     </Warning>
     <Warning Type="ImpossibleInstanceOf">
       <Title>The instanceof check is always false</Title>
-      <Description>Impossible instanceof $TARGET_TYPE$ is performed in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code performs an <code>instanceof $TARGET_TYPE:plain$</code> check. However it's statically known that
-      this check is always false as the expression type is <code>$ETYPE$</code>.<br>
+      <Description>Impossible $EXPRESSION$ instanceof $TARGET_TYPE$ is performed in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code performs a check like <code>$EXPRESSION$ instanceof $TARGET_TYPE:plain$</code>. However it's statically known that
+      this check is always false as the following type constraint holds:<br>
+      <br><code>$EXPRESSION$ :- $ETYPE$</code><br><br>
       Probably something else was meant here.]]></LongDescription>
     </Warning>
     <Warning Type="ImpossibleCast">
       <Title>The type cast is impossible</Title>
-      <Description>Impossible cast to $TARGET_TYPE$ is performed in $METHOD$.</Description>
-      <LongDescription><![CDATA[This code performs a cast to $TARGET_TYPE$. However it's statically known that
-      this cast will always fail with <code>ClassCastException</code> as the expression type is <code>$ETYPE$</code>.<br>
+      <Description>Impossible cast (($TARGET_TYPE$)$EXPRESSION$) is performed in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code performs a cast like <code>(($TARGET_TYPE:plain$)$EXPRESSION$)</code>. However it's statically known that
+      this cast will always fail with <code>ClassCastException</code> as the following type constraint holds:<br>
+      <br><code>$EXPRESSION$ :- $ETYPE$</code><br><br>
       Probably something else was meant here.]]></LongDescription>
     </Warning>
     <Warning Type="SameBranchesTernary">

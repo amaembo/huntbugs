@@ -49,10 +49,10 @@ public class UnnecessaryInstanceOf {
             YesNoMaybe ynm = eType.isSubtypeOf(typeRef);
             if (ynm == YesNoMaybe.YES) {
                 mc.report("UnnecessaryInstanceOf", 0, expr, Roles.TARGET_TYPE.create(typeRef), ETYPE.create(eType
-                        .toString()));
+                        .toString()), Roles.EXPRESSION.create(expr));
             } else if (ynm == YesNoMaybe.NO) {
                 mc.report("ImpossibleInstanceOf", 0, expr, Roles.TARGET_TYPE.create(typeRef), ETYPE.create(eType
-                        .toString()));
+                        .toString()), Roles.EXPRESSION.create(expr));
             }
         } else if (node.getCode() == AstCode.CheckCast) {
             TypeReference typeRef = MetadataHelper.erase((TypeReference) node.getOperand());
@@ -60,7 +60,8 @@ public class UnnecessaryInstanceOf {
             EType eType = Inf.ETYPE.resolve(expr);
             YesNoMaybe ynm = eType.isSubtypeOf(typeRef);
             if (ynm == YesNoMaybe.NO) {
-                mc.report("ImpossibleCast", 0, expr, Roles.TARGET_TYPE.create(typeRef), ETYPE.create(eType.toString()));
+                mc.report("ImpossibleCast", 0, expr, Roles.TARGET_TYPE.create(typeRef), ETYPE.create(eType.toString()),
+                    Roles.EXPRESSION.create(expr));
             }
         }
     }
