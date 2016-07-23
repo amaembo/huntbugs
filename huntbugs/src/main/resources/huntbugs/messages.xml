@@ -1445,8 +1445,8 @@
       <Title>Catch block is unreachable</Title>
       <Description>Catch block is unreachable in $METHOD$.</Description>
       <LongDescription><![CDATA[Analysis discovers that this catch block is possibly redundant as the corresponding
-      exception type is unlikely to be thrown from the corresponding try block. Probably something else was intended or
-      the catch block could be removed.]]></LongDescription>
+      exception type is unlikely to be thrown from the corresponding try block or already catched by previous catch blocks.
+      Probably something else was intended or the catch block could be removed.]]></LongDescription>
     </Warning>
     <Warning Type="MutableServletField">
       <Title>Mutable servlet field</Title>
