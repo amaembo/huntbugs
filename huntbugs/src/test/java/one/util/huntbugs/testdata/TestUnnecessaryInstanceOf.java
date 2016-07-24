@@ -44,13 +44,42 @@ public class TestUnnecessaryInstanceOf {
             System.out.println(f);
         }
     }
+    
+    @AssertWarning("ClassComparisonFalse")
+    void testClassComparisonSimple(String s) {
+        Object obj = s;
+        if(obj.getClass() == Integer.class) {
+            System.out.println("Never");
+        }
+    }
 
+    @AssertWarning("ClassComparisonFalse")
+    void testClassComparisonMixed(String a, Number b) {
+        if(b instanceof Float) {
+            Object x = Math.random() > 0.5 ? a : b;
+            if(x.getClass() == Long.class) {
+                System.out.println("Never");
+            }
+        }
+    }
+    
     @AssertWarning("UnnecessaryInstanceOf")
     void testSimple() {
         String a = "test";
         if (a instanceof CharSequence) {
             System.out.println(a);
         }
+    }
+
+    @AssertWarning("ImpossibleCast")
+    int testComplex(Object obj) {
+        if(obj instanceof Integer)
+            return 2;
+        if(obj instanceof String)
+            return 1;
+        if(obj instanceof CharSequence)
+            return 3;
+        return Integer.valueOf((String)obj);
     }
 
     @AssertWarning("ImpossibleCast")
@@ -202,6 +231,24 @@ public class TestUnnecessaryInstanceOf {
                 System.out.println("Always");
             }
         }
+    }
+    
+    Object convert(String s) {
+        return Integer.valueOf(s);
+    }
+    
+    @AssertNoWarning("*")
+    void testTwoOptions(Object obj) {
+        if(obj == null) {
+            obj = "1";
+        }
+        if(obj instanceof String) {
+            String s = (String)obj;
+            System.out.println(s);
+            obj = convert(s);
+        }
+        Integer i = (Integer)obj;
+        System.out.println(i);
     }
     
     public class MyList<E extends CharSequence> extends ArrayList<E> {

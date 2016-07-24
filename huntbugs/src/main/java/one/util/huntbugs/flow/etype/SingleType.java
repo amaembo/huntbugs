@@ -43,7 +43,7 @@ public class SingleType implements EType {
                 throw new InternalError();
             }
         }
-        
+
         boolean isNegative() {
             return this == NOT || this == NOT_SUBTYPE;
         }
@@ -81,46 +81,36 @@ public class SingleType implements EType {
     }
 
     @Override
-    public YesNoMaybe isSubtypeOf(TypeReference superTr) {
+    public YesNoMaybe is(TypeReference other, boolean exact) {
         switch (what) {
         case EXACT:
-            if(Types.isInstance(tr, superTr))
+            if (exact)
+                return YesNoMaybe.of(tr.getInternalName().equals(other.getInternalName()));
+            if (Types.isInstance(tr, other))
                 return YesNoMaybe.YES;
-            if(!complete)
+            if (!complete)
                 return YesNoMaybe.MAYBE;
             return YesNoMaybe.NO;
         case NOT:
+            if (exact)
+                return YesNoMaybe.of(!tr.getInternalName().equals(other.getInternalName()));
             return YesNoMaybe.MAYBE;
         case NOT_SUBTYPE:
-            return Types.isInstance(superTr, tr) ? YesNoMaybe.NO : YesNoMaybe.MAYBE;
+            return Types.isInstance(other, tr) ? YesNoMaybe.NO : YesNoMaybe.MAYBE;
         case SUBTYPE: {
-            if(Types.isInstance(tr, superTr))
+            if (exact)
+                return Types.isInstance(other, tr) || !Types.hasCompleteHierarchy(other.resolve()) ? YesNoMaybe.MAYBE
+                        : YesNoMaybe.NO;
+            if (Types.isInstance(tr, other))
                 return YesNoMaybe.YES;
-            if(!complete || tr.resolve().isInterface())
+            if (!complete || tr.resolve().isInterface())
                 return YesNoMaybe.MAYBE;
-            TypeDefinition superTd = superTr.resolve();
-            if (superTd == null || superTd.isInterface() || Types.isInstance(superTr, tr) || !Types
-                    .hasCompleteHierarchy(superTd))
+            TypeDefinition superTd = other.resolve();
+            if (superTd == null || superTd.isInterface() || Types.isInstance(other, tr) || !Types.hasCompleteHierarchy(
+                superTd))
                 return YesNoMaybe.MAYBE;
             return YesNoMaybe.NO;
         }
-        default:
-            throw new InternalError();
-        }
-    }
-
-    @Override
-    public YesNoMaybe isExact(TypeReference tr) {
-        switch (what) {
-        case EXACT:
-            return YesNoMaybe.of(this.tr.getInternalName().equals(tr.getInternalName()));
-        case NOT:
-            return YesNoMaybe.of(!tr.getInternalName().equals(this.tr.getInternalName()));
-        case NOT_SUBTYPE:
-            return Types.isInstance(tr, this.tr) ? YesNoMaybe.NO : YesNoMaybe.MAYBE;
-        case SUBTYPE:
-            return Types.isInstance(tr, this.tr) || !Types.hasCompleteHierarchy(tr.resolve()) ? YesNoMaybe.MAYBE
-                    : YesNoMaybe.NO;
         default:
             throw new InternalError();
         }

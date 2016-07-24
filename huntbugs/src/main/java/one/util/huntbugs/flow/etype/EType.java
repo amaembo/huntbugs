@@ -15,10 +15,11 @@
  */
 package one.util.huntbugs.flow.etype;
 
+import java.util.Collections;
+
 import com.strobel.assembler.metadata.TypeReference;
 
 import one.util.huntbugs.flow.etype.SingleType.What;
-import one.util.huntbugs.util.Types;
 import one.util.huntbugs.util.YesNoMaybe;
 
 /**
@@ -28,16 +29,6 @@ import one.util.huntbugs.util.YesNoMaybe;
 public interface EType {
     public static final EType UNKNOWN = new EType() {
         @Override
-        public YesNoMaybe isSubtypeOf(TypeReference tr) {
-            return YesNoMaybe.MAYBE;
-        }
-
-        @Override
-        public YesNoMaybe isExact(TypeReference tr) {
-            return YesNoMaybe.MAYBE;
-        }
-
-        @Override
         public String toString() {
             return "??";
         }
@@ -46,11 +37,14 @@ public interface EType {
         public EType negate() {
             return this;
         }
+
+        @Override
+        public YesNoMaybe is(TypeReference tr, boolean exact) {
+            return YesNoMaybe.MAYBE;
+        }
     };
-
-    YesNoMaybe isSubtypeOf(TypeReference superTr);
-
-    YesNoMaybe isExact(TypeReference tr);
+    
+    YesNoMaybe is(TypeReference tr, boolean exact);
 
     EType negate();
 
@@ -71,12 +65,25 @@ public interface EType {
             return UNKNOWN;
         if (t1.equals(t2))
             return t1;
+        if (t1 instanceof OrType) {
+            return ((OrType)t1).appendAny(t2);
+        }
+        if (t2 instanceof OrType) {
+            return ((OrType)t2).appendAny(t1);
+        }
+        if (t1 instanceof ComplexType) {
+            t1 = ((ComplexType)t1).reduce();
+            if(t1 == UNKNOWN)
+                return UNKNOWN;
+        }
+        if (t2 instanceof ComplexType) {
+            t2 = ((ComplexType)t2).reduce();
+            if(t2 == UNKNOWN)
+                return UNKNOWN;
+        }
         SingleType st1 = (SingleType)t1;
         SingleType st2 = (SingleType)t2;
-        if(!st1.what.isNegative() && !st2.what.isNegative()) {
-            return subType(Types.mergeTypes(st1.tr, st2.tr));
-        }
-        return UNKNOWN;
+        return new OrType(Collections.singleton(st1)).append(st2);
     }
     
     public static EType and(EType t1, EType t2) {
@@ -86,22 +93,24 @@ public interface EType {
             return t1;
         if(t1.equals(t2))
             return t1;
+        if (t1 instanceof AndType) {
+            return ((AndType)t1).appendAny(t2);
+        }
+        if (t2 instanceof AndType) {
+            return ((AndType)t2).appendAny(t1);
+        }
+        if (t1 instanceof ComplexType) {
+            t1 = ((ComplexType)t1).reduce();
+            if(t1 == UNKNOWN)
+                return t2;
+        }
+        if (t2 instanceof ComplexType) {
+            t2 = ((ComplexType)t2).reduce();
+            if(t2 == UNKNOWN)
+                return t1; // TODO: restore t1
+        }
         SingleType st1 = (SingleType)t1;
         SingleType st2 = (SingleType)t2;
-        if(st1.what == What.EXACT) {
-            if(st2.what == What.EXACT)
-                return UNKNOWN;
-            return t1;
-        }
-        if(st2.what == What.EXACT)
-            return t2;
-        if(st1.what == What.SUBTYPE) {
-            if(st2.what == What.SUBTYPE && Types.isInstance(st2.tr, st1.tr))
-                return t2;
-            return t1;
-        }
-        if(st2.what == What.SUBTYPE)
-            return t2;
-        return UNKNOWN;
+        return new AndType(Collections.singleton(st1)).append(st2);
     }
 }

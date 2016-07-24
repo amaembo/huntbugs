@@ -23,13 +23,13 @@ import java.util.Objects;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MetadataHelper;
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Variable;
 
 import one.util.huntbugs.flow.etype.EType;
-import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
@@ -252,12 +252,15 @@ public class ETypeAnnotator extends Annotator<EType> {
             }
             case Load: {
                 Variable v = (Variable) expr.getOperand();
-                return EType.and(fromSource(state, expr), EType.subType(MetadataHelper.erase(v.getType())));
+                EType etype = EType.and(state.resolve(expr), EType.and(fromSource(state, expr), EType.subType(
+                    MetadataHelper.erase(v.getType()))));
+                return etype == null ? EType.UNKNOWN : etype;
             }
             case GetField:
             case GetStatic: {
-                return EType.and(fromSource(state, expr), EType.subType(((FieldReference) expr.getOperand())
-                        .getFieldType()));
+                EType etype = EType.and(state.resolve(expr), EType.and(fromSource(state, expr), EType.subType(
+                    ((FieldReference) expr.getOperand()).getFieldType())));
+                return etype == null ? EType.UNKNOWN : etype;
             }
             case InitObject:
             case InitArray:
@@ -307,34 +310,27 @@ public class ETypeAnnotator extends Annotator<EType> {
             if (expr.getCode() == AstCode.LdC) {
                 return EType.exact(expr.getInferredType());
             }
-            EType val = get(expr);
-            if (val != EType.UNKNOWN && val != null) {
-                return val;
-            }
-            EType resolved = ctx.resolve(expr);
-            if (resolved != null)
-                return resolved;
-            return val;
+            return EType.and(get(expr), ctx.resolve(expr));
         }
 
         private EType fromSource(ContextTypes ctx, Expression expr) {
-            EType value = ctx.resolve(expr);
-            if (value != null)
-                return value;
             Expression src = ValuesFlow.getSource(expr);
             if (src == expr)
                 return EType.UNKNOWN;
-            value = resolve(ctx, src);
+            EType value = resolve(ctx, src);
             if (value != null)
                 return value;
             if (src.getCode() == SourceAnnotator.PHI_TYPE) {
                 for (Expression child : src.getArguments()) {
                     EType newVal = resolve(ctx, child);
                     if (newVal == null) {
-                        if (Exprs.isParameter(child) || child.getCode() == SourceAnnotator.UPDATE_TYPE) {
+                        if(child.getOperand() instanceof ParameterDefinition) {
+                            ParameterDefinition pd = (ParameterDefinition) child.getOperand();
+                            newVal = EType.subType(MetadataHelper.erase(pd.getParameterType()));
+                        } else
                             return EType.UNKNOWN;
-                        }
-                    } else if (value == null) {
+                    }
+                    if (value == null) {
                         value = newVal;
                     } else {
                         value = EType.or(value, newVal);

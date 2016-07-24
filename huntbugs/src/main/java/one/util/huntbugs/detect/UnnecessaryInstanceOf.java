@@ -16,16 +16,20 @@
 package one.util.huntbugs.detect;
 
 import com.strobel.assembler.metadata.MetadataHelper;
+import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
 import one.util.huntbugs.flow.Inf;
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.flow.etype.EType;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Methods;
+import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.YesNoMaybe;
 import one.util.huntbugs.warning.Role.StringRole;
 import one.util.huntbugs.warning.Roles;
@@ -37,6 +41,7 @@ import one.util.huntbugs.warning.Roles;
 @WarningDefinition(category = "RedundantCode", name = "UnnecessaryInstanceOf", maxScore = 60)
 @WarningDefinition(category = "Correctness", name = "ImpossibleInstanceOf", maxScore = 70)
 @WarningDefinition(category = "Correctness", name = "ImpossibleCast", maxScore = 70)
+@WarningDefinition(category = "Correctness", name = "ClassComparisonFalse", maxScore = 70)
 public class UnnecessaryInstanceOf {
     private static final StringRole ETYPE = StringRole.forName("ETYPE");
 
@@ -46,7 +51,7 @@ public class UnnecessaryInstanceOf {
             TypeReference typeRef = (TypeReference) node.getOperand();
             Expression expr = node.getArguments().get(0);
             EType eType = Inf.ETYPE.resolve(expr);
-            YesNoMaybe ynm = eType.isSubtypeOf(typeRef);
+            YesNoMaybe ynm = eType.is(typeRef, false);
             if (ynm == YesNoMaybe.YES) {
                 mc.report("UnnecessaryInstanceOf", 0, expr, Roles.TARGET_TYPE.create(typeRef), ETYPE.create(eType
                         .toString()), Roles.EXPRESSION.create(expr));
@@ -58,11 +63,28 @@ public class UnnecessaryInstanceOf {
             TypeReference typeRef = MetadataHelper.erase((TypeReference) node.getOperand());
             Expression expr = node.getArguments().get(0);
             EType eType = Inf.ETYPE.resolve(expr);
-            YesNoMaybe ynm = eType.isSubtypeOf(typeRef);
+            YesNoMaybe ynm = eType.is(typeRef, false);
             if (ynm == YesNoMaybe.NO) {
                 mc.report("ImpossibleCast", 0, expr, Roles.TARGET_TYPE.create(typeRef), ETYPE.create(eType.toString()),
                     Roles.EXPRESSION.create(expr));
             }
+        } else if(node.getCode() == AstCode.CmpEq || node.getCode() == AstCode.InvokeVirtual &&
+                Methods.isEqualsMethod((MethodReference) node.getOperand())) {
+            Nodes.ifBinaryWithConst(node, (arg, cst) -> {
+                if(cst instanceof TypeReference) {
+                    arg = ValuesFlow.getSource(arg);
+                    if(arg.getCode() == AstCode.InvokeVirtual && Methods.isGetClass((MethodReference) arg.getOperand())) {
+                        Expression obj = arg.getArguments().get(0);
+                        EType eType = Inf.ETYPE.resolve(obj);
+                        TypeReference typeRef = (TypeReference) cst;
+                        YesNoMaybe ynm = eType.is(typeRef, true);
+                        if(ynm == YesNoMaybe.NO) {
+                            mc.report("ClassComparisonFalse", 0, node, Roles.TARGET_TYPE.create(typeRef), ETYPE.create(eType.toString()),
+                                Roles.EXPRESSION.create(obj));
+                        }
+                    }
+                }
+            });
         }
     }
 }

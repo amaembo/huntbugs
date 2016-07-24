@@ -242,6 +242,14 @@
       <br><code>$EXPRESSION$ :- $ETYPE$</code><br><br>
       Probably something else was meant here.]]></LongDescription>
     </Warning>
+    <Warning Type="ClassComparisonFalse">
+      <Title>The class comparison is always false</Title>
+      <Description>Comparison $EXPRESSION$.getClass() == $TARGET_TYPE$ is always false.</Description>
+      <LongDescription><![CDATA[This code compares a class of <code>$EXPRESSION$</code> with $TARGET_TYPE$ like <code>$EXPRESSION$.getClass() == $TARGET_TYPE:plain$.class</code>. 
+      However it's statically known that this comparison is always false as the following type constraint holds:<br>
+      <br><code>$EXPRESSION$ :- $ETYPE$</code><br><br>
+      Probably something else was meant here.]]></LongDescription>
+    </Warning>
     <Warning Type="SameBranchesTernary">
       <Title>The ternary operator has identical branches</Title>
       <Description>The ternary operator has identical branches in $METHOD$.</Description>
