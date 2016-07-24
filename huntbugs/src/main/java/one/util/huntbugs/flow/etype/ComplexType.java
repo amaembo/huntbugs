@@ -16,7 +16,7 @@
 package one.util.huntbugs.flow.etype;
 
 import java.util.Set;
-import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 /**
  * @author shustkost
@@ -50,13 +50,7 @@ abstract class ComplexType implements EType {
     }
 
     String toString(String delimiter) {
-        StringJoiner sj = new StringJoiner(delimiter);
-        for(EType type : types) {
-            String typeStr = type.toString();
-            if(typeStr.contains(" "))
-                typeStr = "("+typeStr+")";
-            sj.add(typeStr);
-        }
-        return sj.toString();
+        return types.stream().map(EType::toString).map(typeStr -> typeStr.contains(" ") ? "(" + typeStr + ")" : typeStr)
+                .sorted().collect(Collectors.joining(delimiter));
     }
 }

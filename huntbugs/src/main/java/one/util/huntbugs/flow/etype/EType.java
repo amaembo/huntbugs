@@ -47,6 +47,10 @@ public interface EType {
     };
     
     YesNoMaybe is(TypeReference tr, boolean exact);
+    
+    default EType shrinkConstraint(TypeReference tr, boolean exact) {
+        return this;
+    }
 
     EType negate();
 

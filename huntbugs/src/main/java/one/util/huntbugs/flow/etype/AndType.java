@@ -32,23 +32,27 @@ public class AndType extends ComplexType {
     AndType(Set<SingleType> types) {
         super(types);
     }
+    
+    static EType of(Set<SingleType> types) {
+        if(types.isEmpty())
+            return UNKNOWN;
+        if(types.size() == 1)
+            return types.iterator().next();
+        return new AndType(types);
+    }
 
     @Override
     public YesNoMaybe is(TypeReference tr, boolean exact) {
         boolean hasYes = false, hasNo = false;
         for (EType type : types) {
-            YesNoMaybe cur = type.is(tr, exact);
-            switch (cur) {
+            switch (type.is(tr, exact)) {
             case YES:
                 hasYes = true;
                 break;
             case NO:
                 hasNo = true;
                 break;
-            case MAYBE:
-                break;
             default:
-                throw new InternalError();
             }
         }
         if (hasYes && hasNo)
@@ -58,6 +62,29 @@ public class AndType extends ComplexType {
         if (hasNo)
             return YesNoMaybe.NO;
         return YesNoMaybe.MAYBE;
+    }
+
+    @Override
+    public EType shrinkConstraint(TypeReference tr, boolean exact) {
+        Set<SingleType> yes = new HashSet<>(), no = new HashSet<>();
+        for (SingleType type : types) {
+            switch (type.is(tr, exact)) {
+            case YES:
+                yes.add(type);
+                break;
+            case NO:
+                no.add(type);
+                break;
+            default:
+            }
+        }
+        if (!yes.isEmpty() && !no.isEmpty())
+            return this;
+        if (!yes.isEmpty())
+            return of(yes);
+        if (!no.isEmpty())
+            return of(no);
+        return this;
     }
 
     @Override

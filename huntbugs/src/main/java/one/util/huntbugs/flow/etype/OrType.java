@@ -70,7 +70,7 @@ public class OrType extends ComplexType {
             else if (neg != UNKNOWN)
                 throw new IllegalStateException("Unexpected type: " + type);
         }
-        return new AndType(newTypes);
+        return AndType.of(newTypes);
     }
 
     @Override
