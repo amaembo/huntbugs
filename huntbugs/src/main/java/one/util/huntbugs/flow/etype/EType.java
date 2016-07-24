@@ -16,6 +16,8 @@
 package one.util.huntbugs.flow.etype;
 
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.strobel.assembler.metadata.TypeReference;
 
@@ -99,13 +101,39 @@ public interface EType {
         if (t2 instanceof AndType) {
             return ((AndType)t2).appendAny(t1);
         }
-        if (t1 instanceof ComplexType) {
-            t1 = ((ComplexType)t1).reduce();
+        if (t1 instanceof OrType) {
+            OrType ot1 = (OrType)t1;
+            if(ot1.types.contains(t2))
+                return ot1;
+            if(t2 instanceof OrType) {
+                Set<SingleType> commonTypes = new HashSet<>(ot1.types);
+                OrType ot2 = (OrType) t2;
+                commonTypes.retainAll(ot2.types);
+                if(!commonTypes.isEmpty()) {
+                    Set<SingleType> t1Types = new HashSet<>(ot1.types);
+                    t1Types.removeAll(commonTypes);
+                    if(t1Types.isEmpty())
+                        return t2;
+                    Set<SingleType> t2Types = new HashSet<>(ot2.types);
+                    t2Types.removeAll(commonTypes);
+                    if(t2Types.isEmpty())
+                        return t1;
+                    EType r1 = new OrType(t1Types).reduce();
+                    EType r2 = new OrType(t2Types).reduce();
+                    EType orend = r1 == UNKNOWN ? r2 : new AndType(Collections.singleton((SingleType)r1)).appendAny(r2);
+                    if(orend != UNKNOWN)
+                        return new OrType(commonTypes).appendAny(orend);
+                }
+            }
+            t1 = ot1.reduce();
             if(t1 == UNKNOWN)
                 return t2;
         }
-        if (t2 instanceof ComplexType) {
-            t2 = ((ComplexType)t2).reduce();
+        if (t2 instanceof OrType) {
+            OrType ot2 = (OrType)t2;
+            if(ot2.types.contains(t1))
+                return ot2;
+            t2 = ot2.reduce();
             if(t2 == UNKNOWN)
                 return t1; // TODO: restore t1
         }

@@ -63,6 +63,17 @@ public class TestUnnecessaryInstanceOf {
         }
     }
     
+    @AssertWarning("ClassComparisonFalse")
+    void testClassComparisonComplex(String a, Number b) {
+        Object x = 1.0;
+        if(b instanceof Float) {
+            x = Math.random() > 0.5 ? a : b;
+        }
+        if(x.getClass() == Long.class) {
+            System.out.println("Never");
+        }
+    }
+    
     @AssertWarning("UnnecessaryInstanceOf")
     void testSimple() {
         String a = "test";

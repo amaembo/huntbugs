@@ -31,7 +31,6 @@ import com.strobel.decompiler.ast.Variable;
 
 import one.util.huntbugs.flow.etype.EType;
 import one.util.huntbugs.util.Methods;
-import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 
 /**
@@ -92,6 +91,18 @@ public class ETypeAnnotator extends Annotator<EType> {
             return new ContextTypes(newTypes);
         }
 
+        ContextTypes add(Variable var, EType value) {
+            if (values == null) {
+                return new ContextTypes(Collections.singletonMap(var, value));
+            }
+            EType oldType = values.get(var);
+            if (Objects.equals(value, oldType))
+                return this;
+            Map<Variable, EType> newTypes = new HashMap<>(values);
+            newTypes.put(var, value);
+            return new ContextTypes(newTypes);
+        }
+        
         ContextTypes remove(Variable var) {
             if (values != null && values.containsKey(var)) {
                 if (values.size() == 1)
@@ -104,8 +115,10 @@ public class ETypeAnnotator extends Annotator<EType> {
         }
 
         ContextTypes transfer(Expression expr) {
-            Variable var = Nodes.getWrittenVariable(expr);
-            return var == null ? this : remove(var);
+            if(expr.getCode() == AstCode.Store) {
+                return add((Variable) expr.getOperand(), Inf.ETYPE.get(expr.getArguments().get(0)));
+            }
+            return this;
         }
 
         EType resolve(Expression expr) {
