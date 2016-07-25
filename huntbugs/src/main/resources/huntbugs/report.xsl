@@ -312,6 +312,7 @@
             <xsl:apply-templates select="Method"/>
             <xsl:apply-templates select="Field"/>
             <xsl:apply-templates select="Annotation[@Role='VARIABLE']"/>
+            <xsl:apply-templates select="LocationAnnotation[@Role='DEAD_CODE_LOCATION']"/>
             </table>
         </td>
         <td class="Description">
@@ -348,5 +349,9 @@
 
   <xsl:template match="Annotation[@Role='VARIABLE']">
     <tr><th>Variable:</th><td><xsl:value-of select="text()"/></td></tr>
+  </xsl:template>
+
+  <xsl:template match="LocationAnnotation[@Role='DEAD_CODE_LOCATION']">
+    <tr><th>Dead code at:</th><td><xsl:value-of select="@Line"/></td></tr>
   </xsl:template>
 </xsl:stylesheet>

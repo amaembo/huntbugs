@@ -62,6 +62,10 @@ public final class Roles {
      */
     public static final LocationRole ANOTHER_INSTANCE = new LocationRole("ANOTHER_INSTANCE");
     /**
+     * Location of the code which is never executed due to this warning
+     */
+    public static final LocationRole DEAD_CODE_LOCATION = LocationRole.forName("DEAD_CODE_LOCATION");
+    /**
      * Called method which is associated with the warning
      */
     public static final MemberRole CALLED_METHOD = new MemberRole("CALLED_METHOD", Count.ZERO_ONE);

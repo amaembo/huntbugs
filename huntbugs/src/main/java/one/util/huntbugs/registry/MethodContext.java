@@ -25,8 +25,10 @@ import java.util.stream.Collectors;
 
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
+import one.util.huntbugs.flow.CodeBlock;
 import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.flow.ValuesFlow;
+import one.util.huntbugs.flow.CFG.EdgeType;
 import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
@@ -230,6 +232,12 @@ public class MethodContext extends ElementContext {
      */
     public boolean isReachable(Expression expr) {
         return mdata.cfg == null || mdata.cfg.isReachable(expr);
+    }
+    
+    public CodeBlock findDeadCode(Expression expr, EdgeType edgeType) {
+        if(mdata.cfg == null)
+            return null;
+        return mdata.cfg.findDeadCode(expr, edgeType);
     }
     
     public Set<Expression> getParameterUsages(ParameterDefinition pd) {

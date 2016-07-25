@@ -17,20 +17,16 @@ package one.util.huntbugs.detect;
 
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
-import com.strobel.decompiler.ast.Block;
-import com.strobel.decompiler.ast.Condition;
 import com.strobel.decompiler.ast.Expression;
-import com.strobel.decompiler.ast.Node;
-
+import one.util.huntbugs.flow.CFG.EdgeType;
+import one.util.huntbugs.flow.CodeBlock;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Methods;
-import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
-import one.util.huntbugs.warning.Role.LocationRole;
 import one.util.huntbugs.warning.Role.StringRole;
 import one.util.huntbugs.warning.Roles;
 
@@ -41,13 +37,12 @@ import one.util.huntbugs.warning.Roles;
 @WarningDefinition(category = "RedundantCode", name = "ResultOfComparisonIsStaticallyKnown", maxScore = 50)
 @WarningDefinition(category = "RedundantCode", name = "ResultOfComparisonIsStaticallyKnownDeadCode", maxScore = 70)
 public class KnownComparison {
-    private static final LocationRole DEAD_CODE_LOCATION = LocationRole.forName("DEAD_CODE_LOCATION");
     private static final StringRole RESULT = StringRole.forName("RESULT");
     private static final StringRole LEFT_OPERAND = StringRole.forName("LEFT_OPERAND");
     private static final StringRole RIGHT_OPERAND = StringRole.forName("RIGHT_OPERAND");
 
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
-    public void visit(Expression expr, NodeChain nc, MethodContext mc) {
+    public void visit(Expression expr, MethodContext mc) {
         if (expr.getCode().isComparison() || (expr.getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod(
             (MethodReference) expr.getOperand()))) {
             Object result = Nodes.getConstant(expr);
@@ -55,55 +50,19 @@ public class KnownComparison {
                 Object left = Nodes.getConstant(expr.getArguments().get(0));
                 Object right = Nodes.getConstant(expr.getArguments().get(1));
                 if (left != null && right != null) {
-                    Node deadCode = getDeadCode(expr, nc, (boolean) result);
+                    CodeBlock deadCode = mc.findDeadCode(expr, (boolean) result ? EdgeType.FALSE : EdgeType.TRUE);
                     if (deadCode == null) {
                         mc.report("ResultOfComparisonIsStaticallyKnown", 0, expr, Roles.EXPRESSION.create(expr),
                             LEFT_OPERAND.createFromConst(left), RIGHT_OPERAND.createFromConst(right), Roles.OPERATION
                                     .create(expr), RESULT.create(result.toString()));
-                    } else if (!Nodes.isThrow(deadCode)) {
+                    } else if (!deadCode.isExceptional) {
                         mc.report("ResultOfComparisonIsStaticallyKnownDeadCode", 0, expr,
                             Roles.EXPRESSION.create(expr), LEFT_OPERAND.createFromConst(left), RIGHT_OPERAND
-                                    .createFromConst(right), Roles.OPERATION.create(expr), DEAD_CODE_LOCATION.create(
-                                mc, deadCode), RESULT.create(result.toString()));
+                                    .createFromConst(right), Roles.OPERATION.create(expr), Roles.DEAD_CODE_LOCATION.create(
+                                mc, deadCode.startExpr), RESULT.create(result.toString()));
                     }
                 }
             }
         }
-    }
-
-    private Node getDeadCode(Expression expr, NodeChain nc, boolean result) {
-        Node parent = nc.getNode();
-        if (parent instanceof Condition) {
-            Block block = result ? ((Condition) parent).getFalseBlock() : ((Condition) parent).getTrueBlock();
-            return Nodes.isEmptyOrBreak(block) ? null : block;
-        }
-        if (parent instanceof Expression) {
-            Expression parentExpr = (Expression) parent;
-            if (parentExpr.getCode() == AstCode.LogicalNot) {
-                return getDeadCode(parentExpr, nc.getParent(), !result);
-            }
-            if (parentExpr.getCode() == AstCode.LogicalOr) {
-                if (parentExpr.getArguments().get(0) == expr) {
-                    return result ? parentExpr.getArguments().get(1) : null;
-                }
-                if (parentExpr.getArguments().get(1) == expr) {
-                    return result ? getDeadCode(parentExpr, nc.getParent(), true) : null;
-                }
-            }
-            if (parentExpr.getCode() == AstCode.LogicalAnd) {
-                if (parentExpr.getArguments().get(0) == expr) {
-                    return result ? null : parentExpr.getArguments().get(1);
-                }
-                if (parentExpr.getArguments().get(1) == expr) {
-                    return result ? null : getDeadCode(parentExpr, nc.getParent(), false);
-                }
-            }
-            if (parentExpr.getCode() == AstCode.TernaryOp) {
-                if (parentExpr.getArguments().get(0) == expr) {
-                    return result ? parentExpr.getArguments().get(2) : parentExpr.getArguments().get(1);
-                }
-            }
-        }
-        return null;
     }
 }

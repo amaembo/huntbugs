@@ -40,6 +40,23 @@ public class TestKnownComparison {
         }
     }
 
+    @AssertWarning("ResultOfComparisonIsStaticallyKnown")
+    public void testFinalFieldOutside() {
+        if(finalField < 15) {
+            System.out.println("Always!");
+        }
+        System.out.println("Outside!");
+    }
+    
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testFinalFieldReturn() {
+        if(finalField < 15) {
+            System.out.println("Always!");
+            return;
+        }
+        System.out.println("Outside!");
+    }
+    
     @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testCompoundStore() {
         int a, b;

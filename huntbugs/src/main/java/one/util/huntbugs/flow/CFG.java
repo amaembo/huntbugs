@@ -76,7 +76,7 @@ public class CFG {
     static final TypeDefinition error;
     static final TypeDefinition throwable;
     static final TypeDefinition exception;
-    
+
     static {
         MetadataSystem ms = MetadataSystem.instance();
         throwable = getException(ms, "java/lang/Throwable");
@@ -93,16 +93,16 @@ public class CFG {
 
     static TypeDefinition getException(MetadataSystem ms, String internalName) {
         TypeReference tr = ms.lookupType(internalName);
-        if(tr == null) {
-            throw new InternalError("Unable to lookup exception "+internalName);
+        if (tr == null) {
+            throw new InternalError("Unable to lookup exception " + internalName);
         }
         TypeDefinition td = tr.resolve();
-        if(td == null) {
-            throw new InternalError("Unable to resolve exception "+internalName);
+        if (td == null) {
+            throw new InternalError("Unable to resolve exception " + internalName);
         }
         return td;
     }
-    
+
     final List<BasicBlock> blocks = new ArrayList<>();
     final Map<Lambda, CFG> lambdas = new HashMap<>();
     final BasicBlock closure;
@@ -155,7 +155,7 @@ public class CFG {
             while (bb.trueTarget != null && bb.trueTarget.expr != null && bb.trueTarget.expr
                     .getCode() == AstCode.LogicalOr)
                 bb.trueTarget = bb.trueTarget.passTarget == null ? bb.trueTarget.trueTarget : bb.trueTarget.passTarget;
-            if(bb.reached)
+            if (bb.reached)
                 bb.targets().forEach(t -> t.reached = true);
         }
     }
@@ -183,12 +183,12 @@ public class CFG {
             return;
         }
         Set<Label> labels = new HashSet<>();
-        for(Node node : body) {
-            if(node instanceof Label) {
+        for (Node node : body) {
+            if (node instanceof Label) {
                 labels.add((Label) node);
             }
         }
-        if(!labels.isEmpty()) {
+        if (!labels.isEmpty()) {
             jc = new LabelJumpContext(jc, labels);
         }
         Node last = body.get(body.size() - 1);
@@ -264,7 +264,7 @@ public class CFG {
         BasicBlock finallyBlock = new BasicBlock();
         FinallyJumpContext fjc = new FinallyJumpContext(jc);
         buildTryCatch(curBlock, finallyBlock, fjc, tryCatch);
-        if(blocks.stream().flatMap(BasicBlock::targets).anyMatch(finallyBlock::equals)) {
+        if (blocks.stream().flatMap(BasicBlock::targets).anyMatch(finallyBlock::equals)) {
             buildBlock(finallyBlock, nextBlock, jc, tryCatch.getFinallyBlock());
         }
         fjc.targetEntries.forEach((target, entry) -> {
@@ -300,7 +300,7 @@ public class CFG {
         for (CaseBlock cb : caseBlocks) {
             BasicBlock curBB;
             if (prevBlock != null && prevBlock.isDefault() && prevBlock.getBody().isEmpty()) {
-                curBB = blocks.get(blocks.size() -1);
+                curBB = blocks.get(blocks.size() - 1);
             } else {
                 curBB = new BasicBlock();
             }
@@ -308,18 +308,18 @@ public class CFG {
             if (cb.isDefault()) {
                 finalCondBlock = curBB;
             } else {
-                for(Integer val : cb.getValues()) {
+                for (Integer val : cb.getValues()) {
                     targets.put(val, curBB);
                 }
             }
-            if(!cb.getBody().isEmpty() && cb.getBody().get(0) instanceof Label) {
+            if (!cb.getBody().isEmpty() && cb.getBody().get(0) instanceof Label) {
                 Label l = (Label) cb.getBody().get(0);
                 labelTargets.putIfAbsent(l, curBB);
             }
         }
         blocks.add(nextBlock);
         BasicBlock prevCondBlock = condBlock;
-        for(Entry<Integer, BasicBlock> entry : targets.entrySet()) {
+        for (Entry<Integer, BasicBlock> entry : targets.entrySet()) {
             Expression ldc = new Expression(AstCode.LdC, entry.getKey(), -1);
             Expression eq = new Expression(AstCode.CmpEq, null, -1, condition, ldc);
             BasicBlock curCondBlock = register(new BasicBlock(eq));
@@ -328,10 +328,10 @@ public class CFG {
             prevCondBlock = curCondBlock;
         }
         prevCondBlock.addTarget(prevCondBlock == condBlock ? EdgeType.PASS : EdgeType.FALSE, finalCondBlock);
-        for(int i=0; i<caseBlocks.size(); i++) {
+        for (int i = 0; i < caseBlocks.size(); i++) {
             CaseBlock caseBlock = caseBlocks.get(i);
             BasicBlock caseBB = blocks.get(i);
-            BasicBlock nextBB = blocks.get(i+1); 
+            BasicBlock nextBB = blocks.get(i + 1);
             if (caseBlock.getBody().isEmpty()) {
                 // likely a procyon bug: seems that return is expected
                 buildNode(caseBB, nextBB, jc, new Expression(AstCode.Return, null, -1));
@@ -556,11 +556,12 @@ public class CFG {
         try {
             return new CFG(md, null, body);
         } catch (Exception e) {
-            throw new RuntimeException("Unable to build CFG for "+new MemberInfo(md)+"\n"+body, e);
+            throw new RuntimeException("Unable to build CFG for " + new MemberInfo(md) + "\n" + body, e);
         }
     }
 
-    public <STATE, FACT> boolean runDFA(Annotator<FACT> annotator, BiFunction<MethodDefinition, STATE, Dataflow<FACT, STATE>> dfFactory, int maxIter) {
+    public <STATE, FACT> boolean runDFA(Annotator<FACT> annotator,
+            BiFunction<MethodDefinition, STATE, Dataflow<FACT, STATE>> dfFactory, int maxIter) {
         @SuppressWarnings("unchecked")
         STATE closureState = closure == null ? null : (STATE) closure.state;
         boolean valid = new DFARunner<>(annotator, dfFactory.apply(md, closureState)).run(maxIter);
@@ -569,20 +570,83 @@ public class CFG {
         }
         return valid;
     }
-    
+
     public void forBodies(BiConsumer<MethodDefinition, Block> consumer) {
         consumer.accept(md, body);
         lambdas.values().forEach(cfg -> cfg.forBodies(consumer));
     }
-    
+
     public CFG getLambdaCFG(Lambda lambda) {
         return lambdas.get(lambda);
     }
-    
+
     public boolean isReachable(Expression expr) {
-        if(!hasUnreachable)
+        if (!hasUnreachable)
             return true;
         return blocks.stream().filter(bb -> bb.expr == expr).anyMatch(bb -> bb.reached);
+    }
+
+    public CodeBlock findDeadCode(Expression expr, EdgeType deadEdge) {
+        Set<BasicBlock> targetBlocks = blocks.stream().filter(bb -> bb.expr == expr).collect(Collectors.toSet());
+        if (targetBlocks.isEmpty())
+            return null;
+        if (deadEdge == EdgeType.TRUE || deadEdge == EdgeType.FALSE) {
+            if (targetBlocks.stream().allMatch(bb -> bb.trueTarget == null && bb.passTarget != null)) {
+                targetBlocks = targetBlocks.stream().map(bb -> bb.passTarget).collect(Collectors.toSet());
+                if (!targetBlocks.stream().allMatch(bb -> bb.expr != null && bb.expr.getCode() == AstCode.LogicalNot))
+                    return null;
+                deadEdge = deadEdge == EdgeType.TRUE ? EdgeType.FALSE : EdgeType.TRUE;
+            }
+        }
+        clearChanged();
+        boolean[] changed = { true };
+        entry.changed = true;
+        while (changed[0]) {
+            changed[0] = false;
+            for (BasicBlock bb : blocks) {
+                if (bb.changed) {
+                    Stream<BasicBlock> targets = targetBlocks.contains(bb) ? bb.targetsExcept(deadEdge) : bb.targets();
+                    targets.filter(t -> !t.changed).forEach(t -> {
+                        t.changed = changed[0] = true;
+                    });
+                }
+            }
+        }
+        BasicBlock deadCodeEntry = null;
+        Set<Expression> deadExpressions = new HashSet<>();
+        for (BasicBlock bb : blocks) {
+            if (!bb.changed && bb.reached) {
+                AstCode code = bb.expr.getCode();
+                if (code == AstCode.Goto || code == AstCode.LogicalAnd || code == AstCode.LogicalOr
+                    || code == AstCode.LoopContinue || code == AstCode.LoopOrSwitchBreak)
+                    continue;
+                deadExpressions.add(bb.expr);
+                if (deadCodeEntry == null) {
+                    deadCodeEntry = bb;
+                }
+            }
+        }
+        return deadCodeEntry == null ? null
+                : new CodeBlock(deadCodeEntry.expr, deadExpressions.size(), isExceptional(deadCodeEntry));
+    }
+
+    private boolean isExceptional(BasicBlock start) {
+        clearChanged();
+        boolean[] changed = { true };
+        start.changed = true;
+        while (changed[0]) {
+            changed[0] = false;
+            for (BasicBlock bb : blocks) {
+                if (bb.changed) {
+                    bb.targets().filter(t -> !t.changed).forEach(t -> {
+                        t.changed = changed[0] = true;
+                    });
+                }
+            }
+            if (exit.changed)
+                return false;
+        }
+        return !exit.changed;
     }
 
     void clearChanged() {
@@ -591,6 +655,14 @@ public class CFG {
         }
         exit.changed = false;
         fail.changed = false;
+    }
+
+    void initialize() {
+        for (BasicBlock bb : blocks) {
+            bb.state = null;
+        }
+        exit.state = null;
+        fail.state = null;
     }
 
     class DFARunner<STATE, FACT, DF extends Annotator<FACT> & Dataflow<FACT, STATE>> {
@@ -608,6 +680,7 @@ public class CFG {
                 return true;
             }
             initialize();
+            entry.state = df.makeEntryState();
             runIteration(blocks);
             boolean valid = true;
             if (changed && forwardTill < blocks.size()) {
@@ -627,10 +700,10 @@ public class CFG {
                             bb.state = null;
                         }
                     }
-                    if(exit.changed) {
+                    if (exit.changed) {
                         exit.state = null;
                     }
-                    if(fail.changed) {
+                    if (fail.changed) {
                         fail.state = null;
                     }
                 }
@@ -644,21 +717,12 @@ public class CFG {
             return valid;
         }
 
-        private void initialize() {
-            for (BasicBlock bb : blocks) {
-                bb.state = null;
-            }
-            exit.state = null;
-            fail.state = null;
-            entry.state = df.makeEntryState();
-        }
-
         private void runIteration(List<BasicBlock> blocks) {
             changed = false;
             clearChanged();
             for (BasicBlock bb : blocks) {
                 try {
-                    if(!bb.reached) {
+                    if (!bb.reached) {
                         annotator.put(bb.expr, df.makeUnknownFact());
                         continue;
                     }
@@ -693,7 +757,7 @@ public class CFG {
                         }
                     }
                 } catch (Exception e) {
-                    throw new RuntimeException("Error running DFA at block "+bb+"\n"+CFG.this+CFG.this.body, e);
+                    throw new RuntimeException("Error running DFA at block " + bb + "\n" + CFG.this + CFG.this.body, e);
                 }
             }
         }
@@ -817,9 +881,37 @@ public class CFG {
             return stream.filter(Objects::nonNull);
         }
 
+        public Stream<BasicBlock> targetsExcept(EdgeType type) {
+            switch (type) {
+            case PASS: {
+                Stream<BasicBlock> stream = Stream.of(trueTarget, falseTarget);
+                if (failTargets != null)
+                    stream = Stream.concat(stream, failTargets.stream());
+                return stream.filter(Objects::nonNull);
+            }
+            case TRUE: {
+                Stream<BasicBlock> stream = Stream.of(passTarget, falseTarget);
+                if (failTargets != null)
+                    stream = Stream.concat(stream, failTargets.stream());
+                return stream.filter(Objects::nonNull);
+            }
+            case FALSE: {
+                Stream<BasicBlock> stream = Stream.of(passTarget, trueTarget);
+                if (failTargets != null)
+                    stream = Stream.concat(stream, failTargets.stream());
+                return stream.filter(Objects::nonNull);
+            }
+            case FAIL:
+                return Stream.of(passTarget, trueTarget, falseTarget).filter(Objects::nonNull);
+            default:
+                throw new InternalError();
+            }
+        }
+
         @Override
         public String toString() {
-            StringBuilder sb = new StringBuilder("[").append(getId()).append("]").append(!reached?"-":" ").append(expr).append("\n  ");
+            StringBuilder sb = new StringBuilder("[").append(getId()).append("]").append(!reached ? "-" : " ").append(
+                expr).append("\n  ");
             if (passTarget != null)
                 sb.append("PASS -> [").append(passTarget.getId()).append("] ");
             if (trueTarget != null)
@@ -957,10 +1049,10 @@ public class CFG {
             }
         }
     }
-    
+
     class LabelJumpContext extends DelegatingJumpContext {
         private final Set<Label> labels;
-        
+
         LabelJumpContext(JumpContext parent, Set<Label> labels) {
             super(parent);
             this.labels = labels;
@@ -968,7 +1060,7 @@ public class CFG {
 
         @Override
         public void addBreak(BasicBlock block, Label label) {
-            if(label != null) {
+            if (label != null) {
                 addJump(block, label);
             } else {
                 super.addBreak(block, label);
@@ -977,7 +1069,7 @@ public class CFG {
 
         @Override
         public void addJump(BasicBlock block, Label label) {
-            if(labels.contains(label)) {
+            if (labels.contains(label)) {
                 block.addTarget(EdgeType.PASS, labelTargets.computeIfAbsent(label, k -> new BasicBlock()));
             } else {
                 super.addJump(block, label);

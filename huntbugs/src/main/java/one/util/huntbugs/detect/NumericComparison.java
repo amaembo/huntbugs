@@ -15,7 +15,10 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.strobel.assembler.metadata.JvmType;
@@ -27,6 +30,8 @@ import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 import com.strobel.decompiler.ast.Switch;
 
+import one.util.huntbugs.flow.CFG.EdgeType;
+import one.util.huntbugs.flow.CodeBlock;
 import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
@@ -36,13 +41,14 @@ import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
+import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.Role.StringRole;
 
 /**
  * @author Tagir Valeev
  *
  */
-@WarningDefinition(category = "Correctness", name = "ComparisonWithOutOfRangeValue", maxScore = 75)
+@WarningDefinition(category = "Correctness", name = "ComparisonWithOutOfRangeValue", maxScore = 80)
 @WarningDefinition(category = "RedundantCode", name = "SwitchBranchUnreachable", maxScore = 75)
 @WarningDefinition(category = "BadPractice", name = "CheckForOddnessFailsForNegative", maxScore = 40)
 public class NumericComparison {
@@ -51,9 +57,9 @@ public class NumericComparison {
     private static final LongRange LONG_RANGE = new LongRange(Long.MIN_VALUE, Long.MAX_VALUE);
     private static final LongRange BYTE_RANGE = new LongRange(Byte.MIN_VALUE, Byte.MAX_VALUE);
     private static final LongRange INT_RANGE = new LongRange(Integer.MIN_VALUE, Integer.MAX_VALUE);
-    
+
     private static final StringRole RESULT = StringRole.forName("RESULT");
-    
+
     static class LongRange {
         final long minValue, maxValue;
         final boolean invert;
@@ -88,17 +94,17 @@ public class NumericComparison {
             }
             this.invert = invert;
         }
-        
+
         LongRange absInt() {
-            if(minValue <= Integer.MIN_VALUE || minValue >= 0)
+            if (minValue <= Integer.MIN_VALUE || minValue >= 0)
                 return this;
-            if(maxValue <= 0)
+            if (maxValue <= 0)
                 return new LongRange(-maxValue, -minValue);
             return new LongRange(0, Math.max(-minValue, maxValue));
         }
-        
+
         LongRange union(LongRange other) {
-            if(invert || other.invert)
+            if (invert || other.invert)
                 throw new IllegalStateException();
             return new LongRange(Math.min(minValue, other.minValue), Math.max(maxValue, other.maxValue));
         }
@@ -161,14 +167,14 @@ public class NumericComparison {
                 arg = Exprs.getChild(expr, 0);
                 jvmType = getIntegralType(expr.getArguments().get(0));
             }
-            if(jvmType == null)
+            if (jvmType == null)
                 return;
-            
+
             checkRem2Eq1(mc, jvmType, code, arg, constant);
-            
+
             LongRange cmpRange = new LongRange(code, constant);
             LongRange realRange = getExpressionRange(jvmType, arg);
-            if(realRange == null)
+            if (realRange == null)
                 return;
             Boolean result = null;
             if (cmpRange.isTrueEmpty(realRange)) {
@@ -179,21 +185,33 @@ public class NumericComparison {
             if (result == null || Exprs.isAssertion(expr))
                 return;
             int priority = 0;
-            if (realRange.minValue == constant || realRange.maxValue == constant)
-                priority += 15;
-            mc.report("ComparisonWithOutOfRangeValue", priority, expr, Roles.OPERATION.create(code),
-                Roles.NUMBER.create(constant), Roles.MIN_VALUE.create(realRange.minValue), Roles.MAX_VALUE.create(
-                    realRange.maxValue), RESULT.create(result.toString()));
-        }
-        else if(node instanceof Switch) {
-            Switch switchNode = (Switch)node;
+            CodeBlock deadCode = mc.findDeadCode(expr, result ? EdgeType.FALSE : EdgeType.TRUE);
+            List<WarningAnnotation<?>> anno = new ArrayList<>(Arrays.asList(Roles.OPERATION.create(code), Roles.NUMBER
+                    .create(constant), Roles.MIN_VALUE.create(realRange.minValue), Roles.MAX_VALUE.create(
+                        realRange.maxValue), RESULT.create(result.toString())));
+            if (deadCode == null) {
+                priority += 20;
+                if (realRange.minValue == constant || realRange.maxValue == constant)
+                    priority += 15;
+                else if (Math.abs(realRange.minValue - constant) == 1 || Math.abs(realRange.maxValue - constant) == 1)
+                    priority += 5;
+            } else {
+                if(deadCode.isExceptional)
+                    priority += 55;
+                else if(deadCode.length < 4)
+                    priority += 5;
+                anno.add(Roles.DEAD_CODE_LOCATION.create(mc, deadCode.startExpr));
+            }
+            mc.report("ComparisonWithOutOfRangeValue", priority, expr, anno.toArray(new WarningAnnotation[0]));
+        } else if (node instanceof Switch) {
+            Switch switchNode = (Switch) node;
             Expression condition = switchNode.getCondition();
-            JvmType type = condition.getInferredType() == null ? JvmType.Integer : condition.getInferredType().getSimpleType();
+            JvmType type = condition.getInferredType() == null ? JvmType.Integer
+                    : condition.getInferredType().getSimpleType();
             LongRange realRange = getExpressionRange(type, condition);
-            if(realRange == null || realRange.minValue <= Integer.MIN_VALUE &&
-                    realRange.maxValue >= Integer.MAX_VALUE)
+            if (realRange == null || realRange.minValue <= Integer.MIN_VALUE && realRange.maxValue >= Integer.MAX_VALUE)
                 return;
-            for(CaseBlock block : switchNode.getCaseBlocks()) {
+            for (CaseBlock block : switchNode.getCaseBlocks()) {
                 block.getValues().stream().filter(val -> new LongRange(AstCode.CmpEq, val).isTrueEmpty(realRange))
                         .findFirst().ifPresent(val -> {
                             mc.report("SwitchBranchUnreachable", 0, block, Roles.NUMBER.create(val), Roles.MIN_VALUE
@@ -205,15 +223,15 @@ public class NumericComparison {
 
     private JvmType getIntegralType(Expression expression) {
         TypeReference type = expression.getInferredType();
-        if(type == null)
+        if (type == null)
             return null;
         JvmType jvmType = type.getSimpleType();
-        if(!jvmType.isIntegral())
+        if (!jvmType.isIntegral())
             return null;
-        if(jvmType == JvmType.Integer || jvmType == JvmType.Long)
+        if (jvmType == JvmType.Integer || jvmType == JvmType.Long)
             return jvmType;
         // Fix procyon type inference
-        switch(expression.getCode()) {
+        switch (expression.getCode()) {
         case Add:
         case Sub:
         case Div:
@@ -230,21 +248,22 @@ public class NumericComparison {
     }
 
     private void checkRem2Eq1(MethodContext mc, JvmType jvmType, AstCode code, Expression arg, long constant) {
-        if(constant == 1 && (code == AstCode.CmpEq || code == AstCode.CmpNe) && arg.getCode() == AstCode.Rem && Integer.valueOf(2).equals(Nodes.getConstant(arg.getArguments().get(1)))) {
+        if (constant == 1 && (code == AstCode.CmpEq || code == AstCode.CmpNe) && arg.getCode() == AstCode.Rem && Integer
+                .valueOf(2).equals(Nodes.getConstant(arg.getArguments().get(1)))) {
             Expression remInput = Exprs.getChild(arg, 0);
-            if(remInput.getCode() == AstCode.InvokeStatic) {
+            if (remInput.getCode() == AstCode.InvokeStatic) {
                 MethodReference mr = (MethodReference) remInput.getOperand();
-                if(mr.getName().equals("abs") && mr.getDeclaringType().getInternalName().equals("java/lang/Math")) {
+                if (mr.getName().equals("abs") && mr.getDeclaringType().getInternalName().equals("java/lang/Math")) {
                     return;
                 }
             }
-            if(getExpressionRange(jvmType, remInput).minValue < 0) {
+            if (getExpressionRange(jvmType, remInput).minValue < 0) {
                 mc.report("CheckForOddnessFailsForNegative", 0, arg, Roles.OPERATION.create(code),
                     Roles.REPLACEMENT_STRING.create(code == AstCode.CmpEq ? "!=" : "=="));
             }
         }
     }
-    
+
     private static LongRange getExpressionRange(JvmType type, Expression arg) {
         return getExpressionRange(type, arg, new HashSet<>());
     }
@@ -265,7 +284,7 @@ public class NumericComparison {
             return getTypeRange(type);
         }, (r1, r2) -> r1 == null || r2 == null ? null : r1.union(r2), r -> r == getTypeRange(type));
     }
-    
+
     private static LongRange getTypeRange(JvmType type) {
         switch (type) {
         case Integer:
@@ -293,17 +312,17 @@ public class NumericComparison {
             int maxBit1 = r1.minValue < 0 ? 0x80000000 : Integer.highestOneBit((int) r1.maxValue);
             int maxBit2 = r2.minValue < 0 ? 0x80000000 : Integer.highestOneBit((int) r2.maxValue);
             int totalMax = ((maxBit1 << 1) - 1) & ((maxBit2 << 1) - 1);
-            if(totalMax >= 0)
+            if (totalMax >= 0)
                 return new LongRange(0, totalMax);
             break;
         }
         case Rem: {
             LongRange remRange = getExpressionRange(JvmType.Integer, Exprs.getChild(arg, 1), visited).absInt();
-            if(remRange.minValue < 0 || remRange.maxValue == 0)
+            if (remRange.minValue < 0 || remRange.maxValue == 0)
                 break;
             LongRange divRange = getExpressionRange(JvmType.Integer, Exprs.getChild(arg, 0), visited);
-            if(divRange.minValue >= 0)
-                return new LongRange(0, remRange.maxValue-1);
+            if (divRange.minValue >= 0)
+                return new LongRange(0, remRange.maxValue - 1);
             return new LongRange(1 - remRange.maxValue, remRange.maxValue - 1);
         }
         case Shr: {
@@ -337,15 +356,15 @@ public class NumericComparison {
         case InvokeInterface: {
             MethodReference mr = (MethodReference) arg.getOperand();
             if (mr.getName().equals("size") && mr.getSignature().equals("()I")) {
-                if (Types.isInstance(mr.getDeclaringType(), "java/util/Collection")
-                    || Types.isInstance(mr.getDeclaringType(), "java/util/Map")) {
+                if (Types.isInstance(mr.getDeclaringType(), "java/util/Collection") || Types.isInstance(mr
+                        .getDeclaringType(), "java/util/Map")) {
                     return new LongRange(0, Integer.MAX_VALUE);
                 }
             }
-            if (mr.getName().equals("nextInt") && mr.getSignature().equals("(I)I") &&
-                    Types.isRandomClass(mr.getDeclaringType())) {
+            if (mr.getName().equals("nextInt") && mr.getSignature().equals("(I)I") && Types.isRandomClass(mr
+                    .getDeclaringType())) {
                 LongRange argRange = getExpressionRange(JvmType.Integer, Exprs.getChild(arg, 1), visited);
-                if(argRange.maxValue > 0) {
+                if (argRange.maxValue > 0) {
                     return new LongRange(0, argRange.maxValue - 1);
                 }
             }
