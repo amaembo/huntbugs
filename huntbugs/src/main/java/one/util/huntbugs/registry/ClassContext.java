@@ -23,14 +23,13 @@ import java.util.List;
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.assertions.MemberAsserter;
+import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 import one.util.huntbugs.warning.WarningType;
 
-import com.strobel.assembler.ir.attributes.SourceAttribute;
-import com.strobel.assembler.ir.attributes.SourceFileAttribute;
 import com.strobel.assembler.metadata.MemberReference;
 import com.strobel.assembler.metadata.TypeDefinition;
 
@@ -55,22 +54,13 @@ public class ClassContext extends ElementContext {
         if(annot == null) {
             annot = new ArrayList<>();
             annot.add(Roles.TYPE.create(type));
-            String sourceFile = getSourceFile();
+            String sourceFile = Types.getSourceFile(type);
             if(sourceFile != null)
                 annot.add(Roles.FILE.create(sourceFile));
         }
         return annot;
     }
     
-    String getSourceFile() {
-        for(SourceAttribute sa : type.getSourceAttributes()) {
-            if(sa instanceof SourceFileAttribute) {
-                return ((SourceFileAttribute)sa).getSourceFile();
-            }
-        }
-        return null;
-    }
-
     boolean visitClass() {
         for(MethodHandle mh : detector.classVisitors) {
             try {

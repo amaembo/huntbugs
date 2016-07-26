@@ -84,6 +84,8 @@ public class UncalledPrivateMethod {
     
     @ClassVisitor
     public void visitType(TypeDefinition td, ClassContext cc, NestedAnonymousCalls nac) {
+        if(Types.isInstance(td, "com/sun/jna/Callback"))
+            return;
         for(MethodDefinition md : td.getDeclaredMethods()) {
             if(md.isPrivate() && !md.isSpecialName() 
                     && !Methods.isSerializationMethod(md)

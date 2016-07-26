@@ -22,6 +22,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.strobel.assembler.ir.attributes.SourceAttribute;
+import com.strobel.assembler.ir.attributes.SourceFileAttribute;
 import com.strobel.assembler.metadata.BuiltinTypes;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
@@ -217,6 +219,15 @@ public class Types {
         for (int i = Math.min(chain1.size(), chain2.size()) - 1; i >= 0; i--) {
             if (chain1.get(i).equals(chain2.get(i)))
                 return chain1.get(i);
+        }
+        return null;
+    }
+
+    public static String getSourceFile(TypeDefinition type) {
+        for(SourceAttribute sa : type.getSourceAttributes()) {
+            if(sa instanceof SourceFileAttribute) {
+                return ((SourceFileAttribute)sa).getSourceFile();
+            }
         }
         return null;
     }

@@ -265,8 +265,11 @@ public class ETypeAnnotator extends Annotator<EType> {
             }
             case Load: {
                 Variable v = (Variable) expr.getOperand();
+                TypeReference varType = v.getType();
+                if(v.getOriginalParameter() != null)
+                    varType = v.getOriginalParameter().getParameterType();
                 EType etype = EType.and(state.resolve(expr), EType.and(fromSource(state, expr), EType.subType(
-                    MetadataHelper.erase(v.getType()))));
+                    MetadataHelper.erase(varType))));
                 return etype == null ? EType.UNKNOWN : etype;
             }
             case GetField:

@@ -28,7 +28,7 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 public class TestUnnecessaryInstanceOf {
     Object f = Math.random() > 0.5 ? (Number) 1 : (Number) 1.0;
 
-    @AssertWarning(value = "UnnecessaryInstanceOf", maxScore = 45)
+    @AssertWarning(value = "UnnecessaryInstanceOf", maxScore = 55)
     void testInferred(int x) {
         Object a = 1.0;
         if (x > 2)
@@ -38,7 +38,7 @@ public class TestUnnecessaryInstanceOf {
         }
     }
 
-    @AssertWarning(value = "UnnecessaryInstanceOf", minScore = 55)
+    @AssertWarning("UnnecessaryInstanceOf")
     void testInferredDeadCode(int x) {
         Object a = 1.0;
         if (x > 2)
@@ -57,7 +57,7 @@ public class TestUnnecessaryInstanceOf {
         }
     }
     
-    @AssertWarning("ClassComparisonFalse")
+    @AssertWarning(value="ClassComparisonFalse", minScore=65)
     void testClassComparisonSimple(String s) {
         Object obj = s;
         if(obj.getClass() == Integer.class) {

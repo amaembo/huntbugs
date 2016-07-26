@@ -60,6 +60,8 @@ public class SameBranches {
             return false;
         if(md.getName().startsWith("jj") && td.getName().endsWith("TokenManager"))
             return false;
+        if(md.getName().equals("getNextToken") && md.getSignature().equals("()I"))
+            return false;
         return true;
     }
     

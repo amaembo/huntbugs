@@ -148,7 +148,8 @@ public class BadMethodCalls {
         } else if (typeName.equals("java/lang/Thread") && name.equals("stop") && signature.equals(
             "(Ljava/lang/Throwable;)V")) {
             ctx.report("ThreadStopThrowable", 0, node);
-        } else if (typeName.equals("java/net/URL") && (name.equals("equals") || name.equals("hashCode"))) {
+        } else if (typeName.equals("java/net/URL") && (name.equals("equals") || name.equals("hashCode"))
+                && !fromFile(node)) {
             ctx.report("URLBlockingMethod", 0, node);
         } else if (isToStringCall(typeName, name, signature)) {
             Expression lastArg = Exprs.getChild(node, node.getArguments().size() - 1);
@@ -227,6 +228,21 @@ public class BadMethodCalls {
                 }
             }
         }
+    }
+    
+    private boolean fromFile(Expression expr) {
+        for(Expression arg : expr.getArguments()) {
+            arg = ValuesFlow.getSource(arg);
+            if(arg.getCode() == AstCode.InvokeVirtual) {
+                MethodReference mr = (MethodReference)arg.getOperand();
+                if(mr.getDeclaringType().getInternalName().equals("java/io/File"))
+                    return true;
+                if(mr.getDeclaringType().getInternalName().equals("java/net/URI") &&
+                        fromFile(arg))
+                    return true;
+            }
+        }
+        return false;
     }
 
     private boolean isToStringCall(String typeName, String name, String signature) {

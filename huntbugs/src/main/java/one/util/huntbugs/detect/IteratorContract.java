@@ -86,7 +86,7 @@ public class IteratorContract {
                 return;
             int priority = 0;
             if(td.isNonPublic())
-                priority += 20;
+                priority += 5;
             if(sawCall.get())
                 priority += 30;
             mc.report("IteratorNoThrow", priority, body);

@@ -31,7 +31,6 @@ import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.AccessLevel;
 import one.util.huntbugs.util.NodeChain;
-import one.util.huntbugs.util.Types;
 
 /**
  * @author lan
@@ -53,8 +52,7 @@ public class UnsupportedCall {
             if (stats != null
                 && stats.testAny(MethodStats.METHOD_HAS_BODY, exact)
                 && !stats.testAny(MethodStats.METHOD_SUPPORTED, exact)) {
-                if(mr.getName().equals("stop") && Types.is(mr.getDeclaringType(), Thread.class)) {
-                    // will be reported as ThreadStopThrowable
+                if(mr.getDeclaringType().getPackageName().equals("java.lang")) {
                     return;
                 }
                 String lcName = mr.getName().toLowerCase(Locale.ENGLISH);

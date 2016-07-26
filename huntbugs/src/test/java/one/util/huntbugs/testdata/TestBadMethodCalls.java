@@ -15,7 +15,9 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.io.File;
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -155,6 +157,17 @@ public class TestBadMethodCalls {
     @AssertWarning("URLBlockingMethod")
     public boolean urlEquals(URL url1, URL url2) {
         return url1.equals(url2);
+    }
+    
+    @AssertNoWarning("*")
+    public boolean urlEquals(URL url, File file) throws MalformedURLException {
+        return url.equals(file.toURI().toURL());
+    }
+
+    @SuppressWarnings("deprecation")
+    @AssertNoWarning("*")
+    public boolean urlEquals2(URL url, File file) throws MalformedURLException {
+        return file.toURL().equals(url);
     }
     
     @AssertWarning("ArrayToString")
