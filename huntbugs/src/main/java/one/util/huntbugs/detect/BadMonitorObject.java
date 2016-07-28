@@ -18,12 +18,13 @@ package one.util.huntbugs.detect;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
+import com.strobel.decompiler.ast.Variable;
 
+import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
-import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Role.TypeRole;
 import one.util.huntbugs.warning.Roles;
@@ -41,7 +42,9 @@ public class BadMonitorObject {
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression expr, MethodContext mc) {
         if(expr.getCode() == AstCode.MonitorEnter) {
-            Expression arg = Exprs.getChild(expr, 0);
+            Expression arg = expr.getArguments().get(0);
+            if(arg.getCode() == AstCode.Load && ((Variable)arg.getOperand()).isGenerated())
+                arg = ValuesFlow.getSource(arg);
             TypeReference type = arg.getInferredType();
             if(type != null && Types.isBoxed(type)) {
                 String warningType;

@@ -179,7 +179,7 @@ public class ETypeAnnotator extends Annotator<EType> {
                     return src.and(var, type);
                 }
             }
-            return src.transfer(expr);
+            return src;
         }
 
         @Override

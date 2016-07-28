@@ -1467,5 +1467,53 @@
       and will have multiple threads invoke methods on that instance to service multiple simultaneous requests. 
       Thus, having a mutable instance field generally creates race conditions.]]></LongDescription>
     </Warning>
+    <Warning Type="NullDereferenceGuaranteed">
+      <Title>Guaranteed null dereference</Title>
+      <Description>Guaranteed null dereference in $METHOD$.</Description>
+      <LongDescription><![CDATA[The expression <code>$EXPRESSION$</code> will fail with <code>NullPointerException</code>
+      as <code>$NULL_EXPRESSION$</code> is guaranteed to be null at this location.]]></LongDescription>
+    </Warning>
+    <Warning Type="NullDereferenceExceptional">
+      <Title>Guaranteed null dereference on exceptional path</Title>
+      <Description>Guaranteed null dereference on exceptional path in $METHOD$.</Description>
+      <LongDescription><![CDATA[The expression <code>$EXPRESSION$</code> will fail with <code>NullPointerException</code>
+      if previously executed code goes through catch block as <code>$NULL_EXPRESSION$</code> can be null at this location if exception occurs.]]></LongDescription>
+    </Warning>
+    <!-- Warning Type="NullDereferencePossible">
+      <Title>Possible null dereference</Title>
+      <Description>Possible null dereference in $METHOD$.</Description>
+      <LongDescription><![CDATA[The expression <code>$EXPRESSION$</code> may fail with <code>NullPointerException</code>
+      as <code>$NULL_EXPRESSION$</code> can be null at this location.]]></LongDescription>
+    </Warning-->
+    <Warning Type="ImpossibleInstanceOfNull">
+      <Title>Impossible instanceOf check of null</Title>
+      <Description>The expression $EXPRESSION$ is always false as argument is null.</Description>
+      <LongDescription><![CDATA[The expression <code>$EXPRESSION$</code> is always false as 
+      <code>$NULL_EXPRESSION$</code> is always null at this location. Probably something else was meant here.]]></LongDescription>
+    </Warning>
+    <Warning Type="RedundantNullCheck">
+      <Title>Redundant null check</Title>
+      <Description>Redundant comparison of $NONNULL_EXPRESSION$ with null.</Description>
+      <LongDescription><![CDATA[The expression <code>$NONNULL_EXPRESSION$</code> is always not null
+      at this place, thus the comparison with null is redundant. Probably something else was meant here.]]></LongDescription>
+    </Warning>
+    <Warning Type="RedundantNullCheckDeref">
+      <Title>Redundant null check of previously dereferenced object</Title>
+      <Description>Redundant null check of $NONNULL_EXPRESSION$ which was dereferenced previously.</Description>
+      <LongDescription><![CDATA[The expression <code>$NONNULL_EXPRESSION$</code> is always not null
+      at this place, because it was dereferenced previously. Thus the comparison with null is redundant. Probably something else was meant here.]]></LongDescription>
+    </Warning>
+    <Warning Type="RedundantNullCheckChecked">
+      <Title>Redundant null check of previously checked object</Title>
+      <Description>Redundant null check of $NONNULL_EXPRESSION$ which was already checked.</Description>
+      <LongDescription><![CDATA[The expression <code>$NONNULL_EXPRESSION$</code> is always not null
+      at this place, because it was already checked previously. Thus the comparison with null is redundant. Probably something else was meant here.]]></LongDescription>
+    </Warning>
+    <Warning Type="RedundantNullCheckNull">
+      <Title>Redundant null check of value known to be null</Title>
+      <Description>Redundant null check of $NULL_EXPRESSION$ which is known to be null.</Description>
+      <LongDescription><![CDATA[The expression <code>$NULL_EXPRESSION$</code> is always null
+      at this place. Thus the comparison with null is redundant. Probably something else was meant here.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

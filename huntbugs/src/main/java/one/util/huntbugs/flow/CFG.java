@@ -16,6 +16,7 @@
 package one.util.huntbugs.flow;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -110,6 +111,7 @@ public class CFG {
     final Block body;
     final BasicBlock entry, exit = new BasicBlock(BLOCKTYPE_EXIT), fail = new BasicBlock(BLOCKTYPE_FAIL);
     final Map<Label, BasicBlock> labelTargets = new HashMap<>();
+    final List<List<BasicBlock>> dupExpr;
     // Number of block till which CFG is forward-only
     final int forwardTill;
     final boolean hasUnreachable;
@@ -121,14 +123,30 @@ public class CFG {
         if (methodBody.getBody().isEmpty()) {
             entry = exit;
             hasUnreachable = false;
+            dupExpr = Collections.emptyList();
         } else {
             entry = new BasicBlock();
             buildBlock(entry, exit, new OuterJumpContext(), methodBody);
             fixBlocks();
             verify();
+            dupExpr = computeDupBlocks(findDuplicates(methodBody));
             hasUnreachable = blocks.stream().anyMatch(bb -> !bb.reached);
         }
         this.forwardTill = computeForwardTill();
+    }
+
+    private List<List<BasicBlock>> computeDupBlocks(Collection<Set<Expression>> dupExpr) {
+        return dupExpr.stream().map(dupSet -> blocks.stream().filter(bb -> dupSet.contains(bb.expr)).collect(Collectors
+                .toList())).collect(Collectors.toList());
+    }
+
+    private Collection<Set<Expression>> findDuplicates(Block methodBody) {
+        Map<List<?>, Set<Expression>> result = new HashMap<>();
+        Annotator.forExpressions(methodBody, e -> Exprs.stream(e).filter(expr -> expr.getOffset() > 0).forEach(
+            expr -> result.computeIfAbsent(Arrays.asList(expr.getOffset(), expr.getCode(), expr.getArguments().size(), expr.getOperand()),
+                k -> new HashSet<>()).add(expr)));
+        result.values().removeIf(set -> set.size() < 2);
+        return result.values();
     }
 
     private void verify() {
@@ -707,6 +725,10 @@ public class CFG {
                         fail.state = null;
                     }
                 }
+            }
+            for (List<BasicBlock> dupList : dupExpr) {
+                FACT res = dupList.stream().map(bb -> annotator.get(bb.expr)).reduce(null, df::mergeFacts);
+                dupList.forEach(bb -> annotator.put(bb.expr, res));
             }
             @SuppressWarnings("unchecked")
             STATE exitState = (STATE) exit.state;

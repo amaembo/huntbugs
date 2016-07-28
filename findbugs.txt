@@ -213,9 +213,16 @@ abbrev="BC" type="BC_IMPOSSIBLE_DOWNCAST" category="CORRECTNESS" cweid="570" -->
 abbrev="BC" type="BC_IMPOSSIBLE_CAST" category="CORRECTNESS" cweid="570" --> ImpossibleCast
 abbrev="BC" type="BC_IMPOSSIBLE_INSTANCEOF" category="CORRECTNESS" cweid="570" --> ImpossibleInstanceOf
 abbrev="BC" type="BC_VACUOUS_INSTANCEOF" category="STYLE" cweid="571" --> UnnecessaryInstanceOf
+abbrev="RCN" type="RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE" category="STYLE" --> RedundantNullCheckNull
+abbrev="RCN" type="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE" category="CORRECTNESS" --> RedundantNullCheckDeref
+abbrev="RCN" type="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE" category="STYLE" --> RedundantNullCheck, RedundantNullCheckChecked
+abbrev="RCN" type="RCN_REDUNDANT_COMPARISON_TWO_NULL_VALUES" category="STYLE" --> RedundantNullCheckNull
+abbrev="RCN" type="RCN_REDUNDANT_COMPARISON_OF_NULL_AND_NONNULL_VALUE" category="STYLE" --> RedundantNullCheck, RedundantNullCheckChecked, RedundantNullCheckDeref
+abbrev="NP" type="NP_ALWAYS_NULL" category="CORRECTNESS" --> NullDereferenceGuaranteed
 
 ==== Not reimplemented
 
+abbrev="NP" type="NP_GUARANTEED_DEREF" category="CORRECTNESS"
 abbrev="Ru" type="RU_INVOKE_RUN" category="MT_CORRECTNESS" cweid="572"
 abbrev="DL" type="DL_SYNCHRONIZATION_ON_SHARED_CONSTANT" category="MT_CORRECTNESS"
 abbrev="XSS" type="XSS_REQUEST_PARAMETER_TO_SEND_ERROR" category="SECURITY" cweid="81"
@@ -312,7 +319,6 @@ abbrev="RV" type="RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT" category="STYLE"
 abbrev="RV" type="RV_RETURN_VALUE_IGNORED_BAD_PRACTICE" category="BAD_PRACTICE" cweid="253"
 abbrev="RV" type="RV_CHECK_FOR_POSITIVE_INDEXOF" category="STYLE"
 abbrev="RV" type="RV_DONT_JUST_NULL_CHECK_READLINE" category="STYLE"
-abbrev="NP" type="NP_ALWAYS_NULL" category="CORRECTNESS"
 abbrev="NP" type="NP_CLOSING_NULL" category="CORRECTNESS"
 abbrev="NP" type="NP_STORE_INTO_NONNULL_FIELD" category="CORRECTNESS"
 abbrev="NP" type="NP_ALWAYS_NULL_EXCEPTION" category="CORRECTNESS"
@@ -329,15 +335,9 @@ abbrev="NP" type="NP_NONNULL_RETURN_VIOLATION" category="CORRECTNESS"
 abbrev="NP" type="NP_TOSTRING_COULD_RETURN_NULL" category="BAD_PRACTICE"
 abbrev="NP" type="NP_CLONE_COULD_RETURN_NULL" category="BAD_PRACTICE"
 abbrev="NP" type="NP_LOAD_OF_KNOWN_NULL_VALUE" category="STYLE"
-abbrev="NP" type="NP_GUARANTEED_DEREF" category="CORRECTNESS"
 abbrev="NP" type="NP_GUARANTEED_DEREF_ON_EXCEPTION_PATH" category="CORRECTNESS"
 abbrev="OS" type="OS_OPEN_STREAM" category="BAD_PRACTICE"
 abbrev="OS" type="OS_OPEN_STREAM_EXCEPTION_PATH" category="BAD_PRACTICE"
-abbrev="RCN" type="RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE" category="STYLE"
-abbrev="RCN" type="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE" category="CORRECTNESS"
-abbrev="RCN" type="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE" category="STYLE"
-abbrev="RCN" type="RCN_REDUNDANT_COMPARISON_TWO_NULL_VALUES" category="STYLE"
-abbrev="RCN" type="RCN_REDUNDANT_COMPARISON_OF_NULL_AND_NONNULL_VALUE" category="STYLE"
 abbrev="UL" type="UL_UNRELEASED_LOCK" category="MT_CORRECTNESS"
 abbrev="UL" type="UL_UNRELEASED_LOCK_EXCEPTION_PATH" category="MT_CORRECTNESS"
 abbrev="RC" type="RC_REF_COMPARISON_BAD_PRACTICE" category="BAD_PRACTICE"

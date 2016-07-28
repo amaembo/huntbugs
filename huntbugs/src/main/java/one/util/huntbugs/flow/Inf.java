@@ -37,6 +37,11 @@ public class Inf {
     public static final ETypeAnnotator ETYPE = new ETypeAnnotator();
     
     /**
+     * Annotator which can determine whether given expression can be null
+     */
+    public static final NullAnnotator NULL = new NullAnnotator();
+    
+    /**
      * Annotator which can find the usages of given expression
      */
     public static final BackLinkAnnotator BACKLINK = new BackLinkAnnotator();

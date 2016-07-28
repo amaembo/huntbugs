@@ -96,7 +96,8 @@ public class NodeChain {
                     if(peers.get(i) == cur) {
                         Node prev = peers.get(i-1);
                         if(Nodes.isOp(prev, AstCode.MonitorEnter)) {
-                            return Exprs.getChild((Expression) prev, 0);
+                            return ((Expression)prev).getArguments().get(0);
+                            //Exprs.getChild((Expression) prev, 0);
                         }
                     }
                 }

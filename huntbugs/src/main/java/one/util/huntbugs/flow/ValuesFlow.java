@@ -48,6 +48,9 @@ public class ValuesFlow {
         if(!Inf.ETYPE.build(cfg)) {
             ctx.incStat("Inf.ETYPE.Incomplete/ValuesFlow");
         }
+        if(!Inf.NULL.build(cfg)) {
+            ctx.incStat("Inf.NULL.Incomplete/ValuesFlow");
+        }
         cfg.forBodies((smd, smethod) -> Inf.PURITY.annotate(smethod, new FrameContext(smd, cf)));
         cfg.forBodies((smd, smethod) -> Inf.BACKLINK.annotate(smethod));
         return origFrame == null ? null : new ArrayList<>(origFrame);
