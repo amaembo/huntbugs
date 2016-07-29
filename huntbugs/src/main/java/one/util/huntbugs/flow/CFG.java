@@ -66,6 +66,7 @@ public class CFG {
     private static final int BLOCKTYPE_UNKNOWN = -1;
     private static final int BLOCKTYPE_EXIT = -2;
     private static final int BLOCKTYPE_FAIL = -3;
+    private static final int BLOCKTYPE_IMPLICIT = -4;
 
     static final TypeDefinition runtimeException;
     static final TypeDefinition classCastException;
@@ -109,7 +110,7 @@ public class CFG {
     final BasicBlock closure;
     final MethodDefinition md;
     final Block body;
-    final BasicBlock entry, exit = new BasicBlock(BLOCKTYPE_EXIT), fail = new BasicBlock(BLOCKTYPE_FAIL);
+    final BasicBlock entry, exit = new BasicBlock(BLOCKTYPE_EXIT), fail = new BasicBlock(BLOCKTYPE_FAIL), implicit = new BasicBlock(BLOCKTYPE_IMPLICIT);
     final Map<Label, BasicBlock> labelTargets = new HashMap<>();
     final List<List<BasicBlock>> dupExpr;
     // Number of block till which CFG is forward-only
@@ -509,6 +510,10 @@ public class CFG {
         case InvokeStatic:
         case InvokeVirtual: {
             MethodReference mr = (MethodReference) expr.getOperand();
+            if(mr.getName().equals("exit") && Types.is(mr.getDeclaringType(), System.class)) {
+                block.addTarget(EdgeType.PASS, implicit);
+                return null;
+            }
             jc.addExceptional(block, error);
             jc.addExceptional(block, runtimeException);
             MethodDefinition md = mr.resolve();
@@ -597,15 +602,42 @@ public class CFG {
     public CFG getLambdaCFG(Lambda lambda) {
         return lambdas.get(lambda);
     }
+    
+    private boolean isReachable(BasicBlock from, BasicBlock to) {
+        clearChanged();
+        boolean[] changed = { true };
+        from.changed = true;
+        while (changed[0]) {
+            changed[0] = false;
+            for (BasicBlock bb : blocks) {
+                if (bb.changed) {
+                    bb.targets().filter(t -> !t.changed).forEach(t -> {
+                        t.changed = changed[0] = true;
+                    });
+                }
+            }
+            if (to.changed)
+                return true;
+        }
+        return to.changed;
+    }
+    
+    private Stream<BasicBlock> blocksBy(Expression expr) {
+        return blocks.stream().filter(bb -> bb.expr == expr);
+    }
+    
+    public boolean mayTerminateImplicitly(Expression expr) {
+        return blocksBy(expr).anyMatch(bb -> isReachable(bb, implicit));
+    }
 
     public boolean isReachable(Expression expr) {
         if (!hasUnreachable)
             return true;
-        return blocks.stream().filter(bb -> bb.expr == expr).anyMatch(bb -> bb.reached);
+        return blocksBy(expr).anyMatch(bb -> bb.reached);
     }
 
     public CodeBlock findDeadCode(Expression expr, EdgeType deadEdge) {
-        Set<BasicBlock> targetBlocks = blocks.stream().filter(bb -> bb.expr == expr).collect(Collectors.toSet());
+        Set<BasicBlock> targetBlocks = blocksBy(expr).collect(Collectors.toSet());
         if (targetBlocks.isEmpty())
             return null;
         if (deadEdge == EdgeType.TRUE || deadEdge == EdgeType.FALSE) {
@@ -649,22 +681,7 @@ public class CFG {
     }
 
     private boolean isExceptional(BasicBlock start) {
-        clearChanged();
-        boolean[] changed = { true };
-        start.changed = true;
-        while (changed[0]) {
-            changed[0] = false;
-            for (BasicBlock bb : blocks) {
-                if (bb.changed) {
-                    bb.targets().filter(t -> !t.changed).forEach(t -> {
-                        t.changed = changed[0] = true;
-                    });
-                }
-            }
-            if (exit.changed)
-                return false;
-        }
-        return !exit.changed;
+        return !isReachable(start, exit);
     }
 
     void clearChanged() {
@@ -673,6 +690,7 @@ public class CFG {
         }
         exit.changed = false;
         fail.changed = false;
+        implicit.changed = false;
     }
 
     void initialize() {
@@ -681,6 +699,7 @@ public class CFG {
         }
         exit.state = null;
         fail.state = null;
+        implicit.state = null;
     }
 
     class DFARunner<STATE, FACT, DF extends Annotator<FACT> & Dataflow<FACT, STATE>> {
@@ -891,6 +910,8 @@ public class CFG {
                 return "EXIT";
             case BLOCKTYPE_FAIL:
                 return "FAIL";
+            case BLOCKTYPE_IMPLICIT:
+                return "IMPLICIT";
             default:
                 return String.valueOf(id);
             }

@@ -216,8 +216,8 @@ abbrev="BC" type="BC_VACUOUS_INSTANCEOF" category="STYLE" cweid="571" --> Unnece
 abbrev="RCN" type="RCN_REDUNDANT_NULLCHECK_OF_NULL_VALUE" category="STYLE" --> RedundantNullCheckNull
 abbrev="RCN" type="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE" category="CORRECTNESS" --> RedundantNullCheckDeref
 abbrev="RCN" type="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE" category="STYLE" --> RedundantNullCheck, RedundantNullCheckChecked
-abbrev="RCN" type="RCN_REDUNDANT_COMPARISON_TWO_NULL_VALUES" category="STYLE" --> RedundantNullCheckNull
-abbrev="RCN" type="RCN_REDUNDANT_COMPARISON_OF_NULL_AND_NONNULL_VALUE" category="STYLE" --> RedundantNullCheck, RedundantNullCheckChecked, RedundantNullCheckDeref
+abbrev="RCN" type="RCN_REDUNDANT_COMPARISON_TWO_NULL_VALUES" category="STYLE" --> RedundantComparisonNull
+abbrev="RCN" type="RCN_REDUNDANT_COMPARISON_OF_NULL_AND_NONNULL_VALUE" category="STYLE" --> RedundantComparisonNullNonNull
 abbrev="NP" type="NP_ALWAYS_NULL" category="CORRECTNESS" --> NullDereferenceGuaranteed
 
 ==== Not reimplemented

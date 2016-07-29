@@ -1515,5 +1515,25 @@
       <LongDescription><![CDATA[The expression <code>$NULL_EXPRESSION$</code> is always null
       at this place. Thus the comparison with null is redundant. Probably something else was meant here.]]></LongDescription>
     </Warning>
+    <Warning Type="RedundantComparisonNull">
+      <Title>Redundant comparison of two values both of which are null</Title>
+      <Description>Redundant comparison $EXPRESSION$ where both arguments are known to be null.</Description>
+      <LongDescription><![CDATA[The comparison <code>$EXPRESSION$</code> is redundant as both
+      left and right parts are null at this place. Probably something else was meant here.]]></LongDescription>
+    </Warning>
+    <Warning Type="RedundantComparisonNullNonNull">
+      <Title>Redundant comparison of null and non-null value</Title>
+      <Description>Redundant comparison $EXPRESSION$ where null is compared to non-null.</Description>
+      <LongDescription><![CDATA[The comparison <code>$EXPRESSION$</code> is redundant as it's known
+      that <code>$NONNULL_EXPRESSION$</code> is always non-null at this place while <code>$NULL_EXPRESSION$</code>
+      is always null. Probably something else was meant here.]]></LongDescription>
+    </Warning>
+    <Warning Type="RedundantEqualsNullCheck">
+      <Title>Redundant equals() call with null argument</Title>
+      <Description>Redundant $EXPRESSION$ where argument is known to be null.</Description>
+      <LongDescription><![CDATA[The equals call <code>$EXPRESSION$</code> is redundant as it's known
+      that the argument <code>$NULL_EXPRESSION$</code> is always null at this place. 
+      Probably something else was meant here.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

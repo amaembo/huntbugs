@@ -123,6 +123,19 @@ public class TestDeadLocalStore {
         System.out.println(x);
     }
 
+    @AssertNoWarning("Dead*")
+    public void testSystemExit(String s) {
+        int x = 0;
+        try {
+            x = Integer.parseInt(s);
+        }
+        catch(NumberFormatException ex) {
+            System.out.println("Ooops");
+            System.exit(1);
+        }
+        System.out.println(x);
+    }
+    
     @AssertNoWarning("*")
     public void testDeadLocalStoreLambda() {
         double x = Math.random();

@@ -843,6 +843,17 @@ public class TestKnownComparison {
             }
         }
     }
+    
+    @AssertWarning("ResultOfComparisonIsStaticallyKnown")
+    public void testSystemExit(int x) {
+        if(x != 5) {
+            System.out.println("Oops");
+            System.exit(0);
+        }
+        if(x == 5) {
+            System.out.println("Always");
+        }
+    }
 
     // procyon bug
 //    @AssertNoWarning("*")

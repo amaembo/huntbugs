@@ -202,7 +202,7 @@ public class NumericComparison {
                     priority += 5;
                 anno.add(Roles.DEAD_CODE_LOCATION.create(mc, deadCode.startExpr));
             }
-            mc.report("ComparisonWithOutOfRangeValue", priority, expr, anno.toArray(new WarningAnnotation[0]));
+            mc.report("ComparisonWithOutOfRangeValue", priority, expr, anno);
         } else if (node instanceof Switch) {
             Switch switchNode = (Switch) node;
             Expression condition = switchNode.getCondition();

@@ -39,7 +39,6 @@ import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Role.LocationRole;
 import one.util.huntbugs.warning.WarningAnnotation;
-import one.util.huntbugs.warning.WarningAnnotation.Location;
 
 /**
  * @author Tagir Valeev
@@ -89,7 +88,7 @@ public class SameBranches {
                 cb -> nonFallThrough(cb.getBody()) && !Nodes.isEmptyOrBreak(cb)).collect(Collectors.toList());
             BitSet marked = new BitSet();
             boolean hasDefault = false;
-            List<WarningAnnotation<Location>> eqLocations = new ArrayList<>();
+            List<WarningAnnotation<?>> eqLocations = new ArrayList<>();
             for (int i = 0; i < blocks.size(); i++) {
                 if (marked.get(i))
                     continue;
@@ -110,7 +109,7 @@ public class SameBranches {
                         n = (n - 3) / 2 + 3;
                     CaseBlock block = blocks.get(i);
                     mc.report(hasDefault ? "SameBranchesSwitchDefault" : "SameBranchesSwitch", computePriority(block, n), block,
-                        eqLocations.toArray(new WarningAnnotation[0]));
+                        eqLocations);
                     eqLocations.clear();
                     hasDefault = false;
                 }

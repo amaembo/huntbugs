@@ -134,15 +134,19 @@ public class DeadLocalStore {
                                 String type;
                                 if (!unusedLocal) {
                                     type = "DeadLocalStore";
-                                    if(arg.getCode() == AstCode.AConstNull)
+                                    if(arg.getCode() == AstCode.AConstNull) {
                                         priority += 20;
-                                    else if(arg.getCode() == AstCode.LdC) {
+                                        if(mc.mayTerminateImplicitly(arg))
+                                            return;
+                                    } else if(arg.getCode() == AstCode.LdC) {
                                         if (arg.getOperand() instanceof Number
                                             && ((Number) arg.getOperand()).doubleValue() == 0.0)
                                             priority += 20;
                                         else if ("".equals(arg.getOperand()) || Integer.valueOf(1).equals(arg.getOperand())
                                                 || Integer.valueOf(-1).equals(arg.getOperand()))
                                             priority += 10;
+                                        if(mc.mayTerminateImplicitly(arg))
+                                            return;
                                     }
                                 } else {
                                     type = "UnusedLocalVariable";

@@ -149,7 +149,7 @@ public class NumericPromotion {
                 if(op instanceof Variable) {
                     anno.add(WarningAnnotation.forVariable((Variable)op));
                 }
-                mc.report("IntegerDivisionPromotedToFloat", priority, expr, anno.toArray(new WarningAnnotation[0]));
+                mc.report("IntegerDivisionPromotedToFloat", priority, expr, anno);
             }
         }
     }

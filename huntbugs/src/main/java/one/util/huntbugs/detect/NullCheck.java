@@ -15,6 +15,10 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
@@ -26,7 +30,9 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.Methods;
 import one.util.huntbugs.warning.Roles;
+import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.Role.ExpressionRole;
 
 /**
@@ -41,6 +47,9 @@ import one.util.huntbugs.warning.Role.ExpressionRole;
 @WarningDefinition(category = "RedundantCode", name = "RedundantNullCheckNull", maxScore = 50)
 @WarningDefinition(category = "RedundantCode", name = "RedundantNullCheckDeref", maxScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "RedundantNullCheckChecked", maxScore = 60)
+@WarningDefinition(category = "RedundantCode", name = "RedundantComparisonNull", maxScore = 60)
+@WarningDefinition(category = "RedundantCode", name = "RedundantComparisonNullNonNull", maxScore = 60)
+@WarningDefinition(category = "RedundantCode", name = "RedundantEqualsNullCheck", maxScore = 60)
 public class NullCheck {
     private static final ExpressionRole NONNULL_EXPRESSION = ExpressionRole.forName("NONNULL_EXPRESSION");
     private static final ExpressionRole NULL_EXPRESSION = ExpressionRole.forName("NULL_EXPRESSION");
@@ -57,8 +66,7 @@ public class NullCheck {
         case InvokeInterface:
         case InvokeSpecial:
         case InvokeVirtual: {
-            Nullness nullability = Inf.NULL.resolve(expr.getArguments().get(0));
-            switch (nullability) {
+            switch (Inf.NULL.resolve(expr.getArguments().get(0))) {
             case NULL:
                 mc.report("NullDereferenceGuaranteed", 0, expr, Roles.EXPRESSION.create(expr), NULL_EXPRESSION.create(
                     expr.getArguments().get(0)));
@@ -67,11 +75,29 @@ public class NullCheck {
                 mc.report("NullDereferenceExceptional", 0, expr, Roles.EXPRESSION.create(expr), NULL_EXPRESSION.create(
                     expr.getArguments().get(0)));
                 return;
-/*            case NULLABLE:
-                mc.report("NullDereferencePossible", 0, expr, Roles.EXPRESSION.create(expr), NULL_EXPRESSION.create(expr
-                        .getArguments().get(0)));
-                return;*/
+            /*
+             * case NULLABLE: mc.report("NullDereferencePossible", 0, expr,
+             * Roles.EXPRESSION.create(expr), NULL_EXPRESSION.create(expr
+             * .getArguments().get(0))); return;
+             */
             default:
+            }
+            if(expr.getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod((MethodReference) expr.getOperand())) {
+                Nullness nullness = Inf.NULL.resolve(expr.getArguments().get(1));
+                if(nullness == Nullness.NULL) {
+                    String type = "RedundantEqualsNullCheck";
+                    List<WarningAnnotation<?>> anno = new ArrayList<>();
+                    anno.add(Roles.EXPRESSION.create(expr));
+                    anno.add(NULL_EXPRESSION.create(expr.getArguments().get(1)));
+                    CodeBlock deadCode = mc.findDeadCode(expr, EdgeType.TRUE);
+                    int priority;
+                    if (deadCode != null) {
+                        priority = deadCode.isExceptional ? 45 : deadCode.length < 4 ? 5 : 0;
+                        anno.add(Roles.DEAD_CODE_LOCATION.create(mc, deadCode.startExpr));
+                    } else
+                        priority = 30;
+                    mc.report(type, priority, expr, anno);
+                }
             }
             break;
         }
@@ -109,30 +135,48 @@ public class NullCheck {
                 nonNull = leftNull;
             }
             if (nullExpr != null) {
-                CodeBlock deadCode = mc.findDeadCode(expr, expr.getCode() == AstCode.CmpEq ? EdgeType.TRUE
-                        : EdgeType.FALSE);
                 String type = "RedundantNullCheck";
                 if (nonNull == Nullness.NONNULL_CHECKED)
                     type = "RedundantNullCheckChecked";
                 else if (nonNull == Nullness.NONNULL_DEREF)
                     type = "RedundantNullCheckDeref";
-                if (deadCode != null) {
-                    mc.report(type, deadCode.isExceptional ? 45 : 0, expr, Roles.DEAD_CODE_LOCATION.create(mc,
-                        deadCode.startExpr), Roles.EXPRESSION.create(expr), NONNULL_EXPRESSION.create(nonNullExpr));
-                } else {
-                    mc.report(type, 30, expr, Roles.EXPRESSION.create(expr), NONNULL_EXPRESSION.create(nonNullExpr));
+                List<WarningAnnotation<?>> anno = new ArrayList<>();
+                anno.add(Roles.EXPRESSION.create(expr));
+                anno.add(NONNULL_EXPRESSION.create(nonNullExpr));
+                if (nullExpr.getCode() != AstCode.AConstNull) {
+                    anno.add(NULL_EXPRESSION.create(nullExpr));
+                    type = "RedundantComparisonNullNonNull";
                 }
+                CodeBlock deadCode = mc.findDeadCode(expr, expr.getCode() == AstCode.CmpEq ? EdgeType.TRUE
+                        : EdgeType.FALSE);
+                int priority;
+                if (deadCode != null) {
+                    priority = deadCode.isExceptional ? 45 : deadCode.length < 4 ? 5 : 0;
+                    anno.add(Roles.DEAD_CODE_LOCATION.create(mc, deadCode.startExpr));
+                } else
+                    priority = 30;
+                mc.report(type, priority, expr, anno);
             }
             if (leftNull == Nullness.NULL && rightNull == Nullness.NULL) {
-                nullExpr = right.getCode() == AstCode.AConstNull ? left : right;
+                String type = "RedundantNullCheckNull";
+                List<WarningAnnotation<?>> anno = new ArrayList<>();
+                anno.add(Roles.EXPRESSION.create(expr));
+                if (right.getCode() == AstCode.AConstNull) {
+                    anno.add(NULL_EXPRESSION.create(left));
+                } else if (left.getCode() == AstCode.AConstNull) {
+                    anno.add(NULL_EXPRESSION.create(right));
+                } else {
+                    type = "RedundantComparisonNull";
+                }
+                int priority;
                 CodeBlock deadCode = mc.findDeadCode(expr, expr.getCode() == AstCode.CmpEq ? EdgeType.FALSE
                         : EdgeType.TRUE);
                 if (deadCode != null) {
-                    mc.report("RedundantNullCheckNull", deadCode.isExceptional ? 45 : 0, expr, Roles.DEAD_CODE_LOCATION.create(mc,
-                        deadCode.startExpr), Roles.EXPRESSION.create(expr), NULL_EXPRESSION.create(nullExpr));
-                } else {
-                    mc.report("RedundantNullCheckNull", 20, expr, Roles.EXPRESSION.create(expr), NULL_EXPRESSION.create(nullExpr));
-                }
+                    priority = deadCode.isExceptional ? 45 : deadCode.length < 4 ? 5 : 0;
+                    anno.add(Roles.DEAD_CODE_LOCATION.create(mc, deadCode.startExpr));
+                } else
+                    priority = 20;
+                mc.report(type, priority, expr, anno);
             }
             break;
         }

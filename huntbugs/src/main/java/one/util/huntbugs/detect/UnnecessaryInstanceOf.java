@@ -114,6 +114,6 @@ public class UnnecessaryInstanceOf {
                 priority = 20;
             }
         }
-        mc.report(wType, priority, expr, anno.toArray(new WarningAnnotation[0]));
+        mc.report(wType, priority, expr, anno);
     }
 }

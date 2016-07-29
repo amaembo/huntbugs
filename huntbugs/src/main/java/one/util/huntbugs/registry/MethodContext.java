@@ -18,6 +18,7 @@ package one.util.huntbugs.registry;
 import java.lang.invoke.MethodHandle;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -153,7 +154,7 @@ public class MethodContext extends ElementContext {
         report(warning, priority, null, annotations);
     }
 
-    public void report(String warning, int priority, Node node, WarningAnnotation<?>... annotations) {
+    public void report(String warning, int priority, Node node, Collection<WarningAnnotation<?>> annotations) {
         WarningType wt = resolveWarningType(warning, priority);
         if(wt == null)
             return;
@@ -176,7 +177,7 @@ public class MethodContext extends ElementContext {
                 anno.add(Roles.CALLED_METHOD.create(mr));
             }
         }
-        anno.addAll(Arrays.asList(annotations));
+        anno.addAll(annotations);
         WarningInfo info = new WarningInfo(wt, priority, loc, anno);
         if (lastWarning == null) {
             lastWarning = info;
@@ -184,6 +185,10 @@ public class MethodContext extends ElementContext {
             reportWarning(lastWarning.build());
             lastWarning = info;
         }
+    }
+
+    public void report(String warning, int priority, Node node, WarningAnnotation<?>... annotations) {
+        report(warning, priority, node, Arrays.asList(annotations));
     }
 
     private void reportWarning(Warning warn) {
@@ -233,12 +238,17 @@ public class MethodContext extends ElementContext {
     public boolean isReachable(Expression expr) {
         return mdata.cfg == null || mdata.cfg.isReachable(expr);
     }
+
+    public boolean mayTerminateImplicitly(Expression expr) {
+        return mdata.cfg != null && mdata.cfg.mayTerminateImplicitly(expr);
+    }
     
     public CodeBlock findDeadCode(Expression expr, EdgeType edgeType) {
         if(mdata.cfg == null)
             return null;
         return mdata.cfg.findDeadCode(expr, edgeType);
     }
+    
     
     public Set<Expression> getParameterUsages(ParameterDefinition pd) {
         if(mdata.origParams == null)
