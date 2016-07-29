@@ -42,39 +42,39 @@ public class TestSerializationIdiom implements Serializable {
         void readObjectNoData() {
         }
     }
-    
+
     @SuppressWarnings("serial")
     public static class NonStaticUid implements Serializable {
         @AssertWarning("SerialVersionUidNotStatic")
         final long serialVersionUID = 1L;
     }
-    
+
     @SuppressWarnings("serial")
     public static class NonFinalUid implements Serializable {
         @AssertWarning("SerialVersionUidNotFinal")
         static long serialVersionUID = 1L;
     }
-    
+
     @SuppressWarnings("serial")
     public static class NonLongUid implements Serializable {
         @AssertWarning("SerialVersionUidNotLong")
         static final int serialVersionUID = 1;
     }
-    
+
     @AssertWarning("SerializationMethodMustBePrivate")
     void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
         ois.defaultReadObject();
     }
-    
+
     @AssertWarning("SerializationMethodMustBePrivate")
     public void readObjectNoData() {
     }
-    
+
     @AssertWarning("SerializationMethodMustBePrivate")
     protected void writeObject(ObjectOutputStream oos) throws IOException {
         oos.defaultWriteObject();
     }
-    
+
     public static class ReadResolveStatic implements Serializable {
         private static final long serialVersionUID = 1L;
 
@@ -83,13 +83,31 @@ public class TestSerializationIdiom implements Serializable {
             return "xyz";
         }
     }
-    
+
     public static class ReadResolveNonObject implements Serializable {
         private static final long serialVersionUID = 1L;
-        
+
         @AssertWarning("ReadResolveMustReturnObject")
         private String readResolve() {
             return "xyz";
+        }
+    }
+
+    public static class ReadObjectSynchronized implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        @AssertWarning("ReadObjectIsSynchronized")
+        private synchronized void readObject(ObjectInputStream ois) throws ClassNotFoundException, IOException {
+            ois.defaultReadObject();
+        }
+    }
+    
+    public static class WriteObjectSynchronized implements Serializable {
+        private static final long serialVersionUID = 1L;
+        
+        @AssertWarning("WriteObjectIsSynchronized")
+        private synchronized void writeObject(ObjectOutputStream oos) throws IOException {
+            oos.defaultWriteObject();
         }
     }
 }

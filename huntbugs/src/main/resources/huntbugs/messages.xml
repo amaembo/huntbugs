@@ -1535,5 +1535,22 @@
       that the argument <code>$NULL_EXPRESSION$</code> is always null at this place. 
       Probably something else was meant here.]]></LongDescription>
     </Warning>
+    <Warning Type="ReadObjectIsSynchronized">
+      <Title>The readObject() method is synchronized</Title>
+      <Description>The $METHOD$ is synchronized.</Description>
+      <LongDescription><![CDATA[This serializable class defines a <code>readObject()</code> which is
+      synchronized. By definition, an object created by deserialization
+      is only reachable by one thread, and thus there is no need for
+      <code>readObject()</code> to be synchronized. If the <code>readObject()</code>
+      method itself is causing the object to become visible to another thread,
+      that is an example of very dubious coding style.]]></LongDescription>
+    </Warning>
+    <Warning Type="WriteObjectIsSynchronized">
+      <Title>The writeObject() method is synchronized</Title>
+      <Description>The $METHOD$ is synchronized.</Description>
+      <LongDescription><![CDATA[This serializable class defines a <code>writeObject()</code> which is
+      synchronized, but no other method of this class is synchronized as well. 
+      Probably this synchronization is useless and could be removed.]]></LongDescription>
+    </Warning>
   </WarningList>
 </p:Messages>

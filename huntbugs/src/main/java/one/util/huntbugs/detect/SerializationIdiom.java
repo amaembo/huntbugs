@@ -16,6 +16,7 @@
 package one.util.huntbugs.detect;
 
 import com.strobel.assembler.metadata.FieldDefinition;
+import com.strobel.assembler.metadata.Flags;
 import com.strobel.assembler.metadata.JvmType;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.TypeDefinition;
@@ -42,6 +43,8 @@ import one.util.huntbugs.warning.Role.TypeRole;
 @WarningDefinition(category="Serialization", name="SerializationMethodMustBePrivate", maxScore=60)
 @WarningDefinition(category="Serialization", name="ReadResolveMustReturnObject", maxScore=60)
 @WarningDefinition(category="Serialization", name="ReadResolveIsStatic", maxScore=60)
+@WarningDefinition(category="Serialization", name="ReadObjectIsSynchronized", maxScore=60)
+@WarningDefinition(category="Serialization", name="WriteObjectIsSynchronized", maxScore=40)
 public class SerializationIdiom {
     private static final TypeRole SHOULD_IMPLEMENT = TypeRole.forName("SHOULD_IMPLEMENT");
     
@@ -70,7 +73,7 @@ public class SerializationIdiom {
     }
     
     @MethodVisitor
-    public void visitMethod(MethodDefinition md, MethodContext mc) {
+    public void visitMethod(MethodDefinition md, MethodContext mc, TypeDefinition td) {
         if(isSerializable) {
             switch(md.getName()) {
             case "readResolve":
@@ -83,16 +86,26 @@ public class SerializationIdiom {
                 }
                 break;
             case "readObject":
-                if(md.getSignature().equals("(Ljava/io/ObjectInputStream;)V") && !md.isPrivate())
-                    mc.report("SerializationMethodMustBePrivate", 0);
+                if(md.getSignature().equals("(Ljava/io/ObjectInputStream;)V")) {
+                    if(!md.isPrivate())
+                        mc.report("SerializationMethodMustBePrivate", 0);
+                    if(Flags.testAny(md.getFlags(), Flags.SYNCHRONIZED))
+                        mc.report("ReadObjectIsSynchronized", 0);
+                }
                 break;
             case "readObjectNoData":
                 if(md.getSignature().equals("()V") && !md.isPrivate())
                     mc.report("SerializationMethodMustBePrivate", 0);
                 break;
             case "writeObject":
-                if(md.getSignature().equals("(Ljava/io/ObjectOutputStream;)V") && !md.isPrivate())
-                    mc.report("SerializationMethodMustBePrivate", 0);
+                if(md.getSignature().equals("(Ljava/io/ObjectOutputStream;)V")) {
+                    if(!md.isPrivate())
+                        mc.report("SerializationMethodMustBePrivate", 0);
+                    if(Flags.testAny(md.getFlags(), Flags.SYNCHRONIZED) &&
+                            td.getDeclaredMethods().stream().noneMatch(m -> m != md &&
+                                    Flags.testAny(m.getFlags(), Flags.SYNCHRONIZED)))
+                        mc.report("WriteObjectIsSynchronized", 0);
+                }
                 break;
             }
         }
