@@ -53,37 +53,30 @@ public class NullAnnotator extends Annotator<Nullness> {
     }
 
     static class ContextNulls {
-        static final ContextNulls DEFAULT = new ContextNulls(null, false);
+        static final ContextNulls DEFAULT = new ContextNulls(null);
 
         final Map<Variable, Nullness> values;
-        final boolean exceptional;
 
-        private ContextNulls(Map<Variable, Nullness> values, boolean exceptional) {
+        private ContextNulls(Map<Variable, Nullness> values) {
             this.values = values;
-            this.exceptional = exceptional;
         }
 
         ContextNulls merge(ContextNulls other) {
             if (this == other)
                 return this;
             if (values == null || other.values == null)
-                return (exceptional && other.exceptional) ? new ContextNulls(null, true) : DEFAULT;
+                return DEFAULT;
             Map<Variable, Nullness> newNulls = new HashMap<>(values);
             newNulls.keySet().retainAll(other.values.keySet());
-            if (newNulls.isEmpty() && !exceptional)
+            if (newNulls.isEmpty())
                 return DEFAULT;
-            if(exceptional && !other.exceptional)
-                other.values.forEach((k, v) -> newNulls.compute(k, (oldK, oldV) -> oldV == null ? null : v.orExceptional(oldV).unknownToNull()));
-            else if(!exceptional && other.exceptional)
-                other.values.forEach((k, v) -> newNulls.compute(k, (oldK, oldV) -> oldV == null ? null : oldV.orExceptional(v).unknownToNull()));
-            else
-                other.values.forEach((k, v) -> newNulls.compute(k, (oldK, oldV) -> oldV == null ? null : v.or(oldV).unknownToNull()));
-            return new ContextNulls(newNulls, exceptional && other.exceptional);
+            other.values.forEach((k, v) -> newNulls.compute(k, (oldK, oldV) -> oldV == null ? null : v.or(oldV).unknownToNull()));
+            return newNulls.isEmpty() ? DEFAULT : new ContextNulls(newNulls);
         }
 
         ContextNulls and(Variable var, Nullness value) {
             if (values == null) {
-                return new ContextNulls(Collections.singletonMap(var, value), exceptional);
+                return new ContextNulls(Collections.singletonMap(var, value));
             }
             Nullness oldNullability = values.get(var);
             if (Objects.equals(value, oldNullability))
@@ -93,19 +86,19 @@ public class NullAnnotator extends Annotator<Nullness> {
                 return this;
             Map<Variable, Nullness> newNulls = new HashMap<>(values);
             newNulls.put(var, newNullability);
-            return new ContextNulls(newNulls, exceptional);
+            return new ContextNulls(newNulls);
         }
 
         ContextNulls add(Variable var, Nullness value) {
             if (values == null) {
-                return new ContextNulls(Collections.singletonMap(var, value), exceptional);
+                return new ContextNulls(Collections.singletonMap(var, value));
             }
             Nullness oldNullability = values.get(var);
             if (Objects.equals(value, oldNullability))
                 return this;
             Map<Variable, Nullness> newNulls = new HashMap<>(values);
             newNulls.put(var, value);
-            return new ContextNulls(newNulls, exceptional);
+            return new ContextNulls(newNulls);
         }
 
         ContextNulls remove(Variable var) {
@@ -114,13 +107,17 @@ public class NullAnnotator extends Annotator<Nullness> {
                     return DEFAULT;
                 Map<Variable, Nullness> newNulls = new HashMap<>(values);
                 newNulls.remove(var);
-                return new ContextNulls(newNulls, exceptional);
+                return new ContextNulls(newNulls);
             }
             return this;
         }
         
         ContextNulls exceptional() {
-            return exceptional ? this : new ContextNulls(values, true);
+            if(values == null || values.values().stream().noneMatch(Nullness::isNull))
+                return this;
+            Map<Variable, Nullness> newValues = new HashMap<>(values);
+            newValues.replaceAll((var, nullness) -> nullness.asExceptional());
+            return new ContextNulls(newValues);
         }
 
         ContextNulls transfer(Expression expr) {
@@ -143,12 +140,12 @@ public class NullAnnotator extends Annotator<Nullness> {
             if (obj == null || getClass() != obj.getClass())
                 return false;
             ContextNulls other = (ContextNulls) obj;
-            return exceptional == other.exceptional && Objects.equals(values, other.values);
+            return Objects.equals(values, other.values);
         }
 
         @Override
         public String toString() {
-            return (values == null ? "{}" : values) + (exceptional ? "*" : "");
+            return values == null ? "{}" : values.toString();
         }
 
     }
@@ -177,7 +174,7 @@ public class NullAnnotator extends Annotator<Nullness> {
                 MethodReference mr = (MethodReference) expr.getOperand();
                 String lcName = mr.getName().toLowerCase(Locale.ENGLISH);
                 if (lcName.contains("error") && !mr.getDeclaringType().getSimpleName().contains("Log") || lcName
-                        .contains("throw"))
+                        .startsWith("throw") || lcName.startsWith("fail"))
                     return ContextNulls.DEFAULT;
             default:
             }

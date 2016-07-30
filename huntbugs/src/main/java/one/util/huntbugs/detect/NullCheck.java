@@ -32,6 +32,7 @@ import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.Methods;
+import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.WarningAnnotation;
 import one.util.huntbugs.warning.Role.ExpressionRole;
@@ -56,7 +57,7 @@ public class NullCheck {
     private static final ExpressionRole NULL_EXPRESSION = ExpressionRole.forName("NULL_EXPRESSION");
 
     @AstVisitor(nodes = AstNodes.EXPRESSIONS)
-    public void visit(Expression expr, MethodContext mc) {
+    public void visit(Expression expr, NodeChain nc, MethodContext mc) {
         switch (expr.getCode()) {
         case MonitorEnter:
         case MonitorExit:
@@ -69,24 +70,24 @@ public class NullCheck {
         case InvokeVirtual: {
             Nullness nullness = Inf.NULL.resolve(expr.getArguments().get(0));
             String type = null;
-            if(nullness.isNull())
+            if(nullness.isNull()) {
                 type = "NullDereferenceGuaranteed";
-            else if(nullness.state() == NullState.NULL_EXCEPTIONAL)
-                type = "NullDereferenceExceptional";
-            else if(nullness.state() == NullState.NULLABLE) {
-                if(nullness.expressions().allMatch(e -> mc.isAlwaysReachable(e, expr)))
+            } else if(nullness.state() == NullState.NULL_EXCEPTIONAL) {
+                if(nullness.doesNullAlwaysReach(mc.getCFG(), expr))
+                    type = "NullDereferenceExceptional";
+            } else if(nullness.state() == NullState.NULLABLE) {
+                if(nullness.doesNullAlwaysReach(mc.getCFG(), expr))
                     type = "NullDereferencePossible";
             }
             if(type != null) {
-                mc.report(type, 0, expr, Roles.EXPRESSION.create(expr), NULL_EXPRESSION.create(
+                int priority = 0;
+                if (nc.isInTry("java/lang/NullPointerException", "java/lang/RuntimeException", "java/lang/Exception",
+                    "java/lang/Throwable"))
+                    priority += 30;
+                mc.report(type, priority, expr, Roles.EXPRESSION.create(expr), NULL_EXPRESSION.create(
                     expr.getArguments().get(0)));
                 return;
             }
-            /*
-             * case NULLABLE: mc.report("NullDereferencePossible", 0, expr,
-             * Roles.EXPRESSION.create(expr), NULL_EXPRESSION.create(expr
-             * .getArguments().get(0))); return;
-             */
             if(expr.getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod((MethodReference) expr.getOperand())) {
                 if(Inf.NULL.resolve(expr.getArguments().get(1)).isNull()) {
                     type = "RedundantEqualsNullCheck";

@@ -39,6 +39,9 @@ public class ExpressionFormatter {
 
     private static StringBuilder format(StringBuilder sb, Expression expr, int outerPrecedence) {
         switch(expr.getCode()) {
+        case TernaryOp:
+            return format(format(format(sb, expr.getArguments().get(0), DEF_PRECEDENCE).append(" ? "), expr
+                    .getArguments().get(1), DEF_PRECEDENCE).append(" : "), expr.getArguments().get(2), DEF_PRECEDENCE);
         case And:
             return formatBinary(sb, expr, " & ", 9, outerPrecedence);
         case Or:

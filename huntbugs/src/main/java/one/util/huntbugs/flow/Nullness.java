@@ -69,6 +69,12 @@ public class Nullness {
         return expressions.stream();
     }
     
+    public boolean doesNullAlwaysReach(CFG cfg, Expression target) {
+        if(cfg == null)
+            return false;
+        return expressions().allMatch(ex -> cfg.isAlwaysReachable(ex, target));
+    }
+    
     public boolean isNull() {
         return state == NullState.NULL;
     }
@@ -76,23 +82,22 @@ public class Nullness {
     Nullness or(Nullness other) {
         if (this == other || other == null)
             return this;
-        if (this == UNKNOWN || other == UNKNOWN)
-            return UNKNOWN;
         if (this.state == other.state)
             return new Nullness(state, this.expressions, other.expressions);
-        if (state == NullState.NULLABLE || state == NullState.NULL_EXCEPTIONAL)
-            return other.isNonNull() ? UNKNOWN : new Nullness(NullState.NULLABLE, expressions, other.expressions);
-        if (other.state == NullState.NULLABLE || other.state == NullState.NULL_EXCEPTIONAL)
-            return this.isNonNull() ? UNKNOWN : new Nullness(NullState.NULLABLE, expressions, other.expressions);
-        if (this.isNull() || other.isNull())
+        if (this.isNull() || other.isNull() || state == NullState.NULLABLE || other.state == NullState.NULLABLE)
             return new Nullness(NullState.NULLABLE, this.expressions, other.expressions);
+        if (state == NullState.NULL_EXCEPTIONAL || other.state == NullState.NULL_EXCEPTIONAL)
+            return new Nullness(NullState.NULL_EXCEPTIONAL, this.expressions, other.expressions);
+        if (this == UNKNOWN || other == UNKNOWN)
+            return UNKNOWN;
         return NONNULL;
     }
     
-    Nullness orExceptional(Nullness exceptional) {
-        if (exceptional.isNull() && !isNull())
-            return new Nullness(NullState.NULL_EXCEPTIONAL, exceptional.expressions);
-        return or(exceptional);
+    Nullness asExceptional() {
+        if(isNull()) {
+            return new Nullness(NullState.NULL_EXCEPTIONAL, expressions);
+        }
+        return this;
     }
 
     Nullness unknownToNull() {
@@ -102,7 +107,7 @@ public class Nullness {
     Nullness and(Nullness other) {
         if (this == other || other == UNKNOWN || other == null)
             return this;
-        if (this == UNKNOWN)
+        if (this == UNKNOWN || state == other.state)
             return other;
         if (this.isNull())
             return other.isNonNull() ? UNKNOWN : this;
@@ -116,7 +121,7 @@ public class Nullness {
             return NONNULL;
         if (this.state == NullState.NULL_EXCEPTIONAL || other.state == NullState.NULL_EXCEPTIONAL)
             return new Nullness(NullState.NULL_EXCEPTIONAL, expressions, other.expressions);
-        return other.state == NullState.NULLABLE ? other : new Nullness(NullState.NULLABLE, other.expressions);
+        throw new InternalError("Unexpected: "+this+" and "+other);
     }
 
     public boolean isNonNull() {

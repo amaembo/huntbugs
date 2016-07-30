@@ -29,6 +29,7 @@ import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.flow.CodeBlock;
 import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.flow.ValuesFlow;
+import one.util.huntbugs.flow.CFG;
 import one.util.huntbugs.flow.CFG.EdgeType;
 import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Warning;
@@ -229,6 +230,10 @@ public class MethodContext extends ElementContext {
      */
     public boolean isAnnotated() {
         return mdata.origParams != null;
+    }
+    
+    public CFG getCFG() {
+        return mdata.cfg;
     }
     
     /**
