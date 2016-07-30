@@ -26,6 +26,7 @@ import one.util.huntbugs.flow.CodeBlock;
 import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.flow.Nullness;
 import one.util.huntbugs.flow.CFG.EdgeType;
+import one.util.huntbugs.flow.Nullness.NullState;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -41,7 +42,7 @@ import one.util.huntbugs.warning.Role.ExpressionRole;
  */
 @WarningDefinition(category = "Correctness", name = "NullDereferenceGuaranteed", maxScore = 90)
 @WarningDefinition(category = "Correctness", name = "NullDereferenceExceptional", maxScore = 50)
-//@WarningDefinition(category = "Correctness", name = "NullDereferencePossible", maxScore = 60)
+@WarningDefinition(category = "Correctness", name = "NullDereferencePossible", maxScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "ImpossibleInstanceOfNull", maxScore = 50)
 @WarningDefinition(category = "RedundantCode", name = "RedundantNullCheck", maxScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "RedundantNullCheckNull", maxScore = 50)
@@ -66,26 +67,29 @@ public class NullCheck {
         case InvokeInterface:
         case InvokeSpecial:
         case InvokeVirtual: {
-            switch (Inf.NULL.resolve(expr.getArguments().get(0))) {
-            case NULL:
-                mc.report("NullDereferenceGuaranteed", 0, expr, Roles.EXPRESSION.create(expr), NULL_EXPRESSION.create(
+            Nullness nullness = Inf.NULL.resolve(expr.getArguments().get(0));
+            String type = null;
+            if(nullness.isNull())
+                type = "NullDereferenceGuaranteed";
+            else if(nullness.state() == NullState.NULL_EXCEPTIONAL)
+                type = "NullDereferenceExceptional";
+            else if(nullness.state() == NullState.NULLABLE) {
+                if(nullness.expressions().allMatch(e -> mc.isAlwaysReachable(e, expr)))
+                    type = "NullDereferencePossible";
+            }
+            if(type != null) {
+                mc.report(type, 0, expr, Roles.EXPRESSION.create(expr), NULL_EXPRESSION.create(
                     expr.getArguments().get(0)));
                 return;
-            case NULL_EXCEPTIONAL:
-                mc.report("NullDereferenceExceptional", 0, expr, Roles.EXPRESSION.create(expr), NULL_EXPRESSION.create(
-                    expr.getArguments().get(0)));
-                return;
+            }
             /*
              * case NULLABLE: mc.report("NullDereferencePossible", 0, expr,
              * Roles.EXPRESSION.create(expr), NULL_EXPRESSION.create(expr
              * .getArguments().get(0))); return;
              */
-            default:
-            }
             if(expr.getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod((MethodReference) expr.getOperand())) {
-                Nullness nullness = Inf.NULL.resolve(expr.getArguments().get(1));
-                if(nullness == Nullness.NULL) {
-                    String type = "RedundantEqualsNullCheck";
+                if(Inf.NULL.resolve(expr.getArguments().get(1)).isNull()) {
+                    type = "RedundantEqualsNullCheck";
                     List<WarningAnnotation<?>> anno = new ArrayList<>();
                     anno.add(Roles.EXPRESSION.create(expr));
                     anno.add(NULL_EXPRESSION.create(expr.getArguments().get(1)));
@@ -102,8 +106,7 @@ public class NullCheck {
             break;
         }
         case InstanceOf: {
-            Nullness nullability = Inf.NULL.resolve(expr.getArguments().get(0));
-            if (nullability == Nullness.NULL) {
+            if (Inf.NULL.resolve(expr.getArguments().get(0)).isNull()) {
                 CodeBlock deadCode = mc.findDeadCode(expr, EdgeType.TRUE);
                 if (deadCode != null) {
                     mc.report("ImpossibleInstanceOfNull", deadCode.isExceptional ? 45 : 0, expr.getArguments().get(0),
@@ -125,11 +128,11 @@ public class NullCheck {
             Expression nullExpr = null;
             Expression nonNullExpr = null;
             Nullness nonNull = null;
-            if (leftNull == Nullness.NULL && rightNull.isNonNull()) {
+            if (leftNull.isNull() && rightNull.isNonNull()) {
                 nullExpr = left;
                 nonNullExpr = right;
                 nonNull = rightNull;
-            } else if (rightNull == Nullness.NULL && leftNull.isNonNull()) {
+            } else if (rightNull.isNull() && leftNull.isNonNull()) {
                 nullExpr = right;
                 nonNullExpr = left;
                 nonNull = leftNull;
@@ -157,7 +160,7 @@ public class NullCheck {
                     priority = 30;
                 mc.report(type, priority, expr, anno);
             }
-            if (leftNull == Nullness.NULL && rightNull == Nullness.NULL) {
+            if (leftNull.isNull() && rightNull.isNull()) {
                 String type = "RedundantNullCheckNull";
                 List<WarningAnnotation<?>> anno = new ArrayList<>();
                 anno.add(Roles.EXPRESSION.create(expr));

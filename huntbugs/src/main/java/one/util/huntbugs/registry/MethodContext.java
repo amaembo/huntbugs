@@ -238,6 +238,10 @@ public class MethodContext extends ElementContext {
     public boolean isReachable(Expression expr) {
         return mdata.cfg == null || mdata.cfg.isReachable(expr);
     }
+    
+    public boolean isAlwaysReachable(Expression from, Expression to) {
+        return mdata.cfg != null && mdata.cfg.isAlwaysReachable(from, to);
+    }
 
     public boolean mayTerminateImplicitly(Expression expr) {
         return mdata.cfg != null && mdata.cfg.mayTerminateImplicitly(expr);

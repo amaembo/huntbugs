@@ -17,6 +17,7 @@ package one.util.huntbugs.flow;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -169,6 +170,18 @@ public class NullAnnotator extends Annotator<Nullness> {
         @Override
         public ContextNulls transferState(ContextNulls src, Expression expr) {
             switch (expr.getCode()) {
+            case InvokeInterface:
+            case InvokeSpecial:
+            case InvokeStatic:
+            case InvokeVirtual:
+                MethodReference mr = (MethodReference) expr.getOperand();
+                String lcName = mr.getName().toLowerCase(Locale.ENGLISH);
+                if (lcName.contains("error") && !mr.getDeclaringType().getSimpleName().contains("Log") || lcName
+                        .contains("throw"))
+                    return ContextNulls.DEFAULT;
+            default:
+            }
+            switch (expr.getCode()) {
             case MonitorEnter:
             case MonitorExit:
             case GetField:
@@ -246,19 +259,19 @@ public class NullAnnotator extends Annotator<Nullness> {
                 ContextNulls trueSrc = src;
                 if (left.getCode() == AstCode.Load) {
                     var = (Variable) left.getOperand();
-                    Nullness nullability = Inf.NULL.get(right);
-                    if (nullability == Nullness.NULL)
-                        return new TrueFalse<>(src.and(var, nullability), src.and(var, Nullness.NONNULL_CHECKED),
+                    Nullness nullness = Inf.NULL.get(right);
+                    if (nullness != null && nullness.isNull())
+                        return new TrueFalse<>(src.and(var, Nullness.nullAt(expr)), src.and(var, Nullness.NONNULL_CHECKED),
                                 invert);
-                    trueSrc = src.add(var, nullability);
+                    trueSrc = src.add(var, nullness);
                 }
                 if (right.getCode() == AstCode.Load) {
                     var = (Variable) right.getOperand();
-                    Nullness nullability = Inf.NULL.get(left);
-                    if (nullability == Nullness.NULL)
-                        return new TrueFalse<>(trueSrc.and(var, nullability), src.and(var, Nullness.NONNULL_CHECKED),
+                    Nullness nullness = Inf.NULL.get(left);
+                    if (nullness != null && nullness.isNull())
+                        return new TrueFalse<>(trueSrc.and(var, Nullness.nullAt(expr)), src.and(var, Nullness.NONNULL_CHECKED),
                                 invert);
-                    return new TrueFalse<>(trueSrc.and(var, nullability), src, invert);
+                    return new TrueFalse<>(trueSrc.and(var, nullness), src, invert);
                 }
             } else if (expr.getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod((MethodReference) expr
                     .getOperand())) {
@@ -328,7 +341,7 @@ public class NullAnnotator extends Annotator<Nullness> {
             case StoreElement:
                 return get(expr.getArguments().get(2));
             case AConstNull:
-                return Nullness.NULL;
+                return Nullness.nullAt(expr);
             default:
                 return Nullness.UNKNOWN;
             }

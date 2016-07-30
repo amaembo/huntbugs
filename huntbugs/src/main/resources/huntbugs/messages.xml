@@ -1474,17 +1474,18 @@
       as <code>$NULL_EXPRESSION$</code> is guaranteed to be null at this location.]]></LongDescription>
     </Warning>
     <Warning Type="NullDereferenceExceptional">
-      <Title>Guaranteed null dereference on exceptional path</Title>
-      <Description>Guaranteed null dereference on exceptional path in $METHOD$.</Description>
+      <Title>Possible null dereference on exceptional path</Title>
+      <Description>Possible null dereference on exceptional path in $METHOD$.</Description>
       <LongDescription><![CDATA[The expression <code>$EXPRESSION$</code> will fail with <code>NullPointerException</code>
-      if previously executed code goes through catch block as <code>$NULL_EXPRESSION$</code> can be null at this location if exception occurs.]]></LongDescription>
+      if previously executed code goes through catch block as <code>$NULL_EXPRESSION$</code> can be null at this location if exception occurs.
+      This could be false-positive if the catch block always throws implicitly.]]></LongDescription>
     </Warning>
-    <!-- Warning Type="NullDereferencePossible">
+    <Warning Type="NullDereferencePossible">
       <Title>Possible null dereference</Title>
       <Description>Possible null dereference in $METHOD$.</Description>
       <LongDescription><![CDATA[The expression <code>$EXPRESSION$</code> may fail with <code>NullPointerException</code>
       as <code>$NULL_EXPRESSION$</code> can be null at this location.]]></LongDescription>
-    </Warning-->
+    </Warning>
     <Warning Type="ImpossibleInstanceOfNull">
       <Title>Impossible instanceOf check of null</Title>
       <Description>The expression $EXPRESSION$ is always false as argument is null.</Description>

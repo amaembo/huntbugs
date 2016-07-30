@@ -622,6 +622,29 @@ public class CFG {
         return to.changed;
     }
     
+    private boolean isAlwaysReachable(BasicBlock from, Set<BasicBlock> targets) {
+        clearChanged();
+        boolean[] changed = { true };
+        from.changed = true;
+        while (changed[0]) {
+            changed[0] = false;
+            for (BasicBlock bb : blocks) {
+                if (targets.contains(bb))
+                    continue;
+                if (bb.changed) {
+                    Stream<BasicBlock> stream = bb.passTarget == null && bb.trueTarget == null ? bb.targets()
+                            : bb.targetsExcept(EdgeType.FAIL);
+                    stream.filter(t -> !t.changed).forEach(t -> {
+                        t.changed = changed[0] = true;
+                    });
+                }
+            }
+            if (exit.changed || fail.changed || implicit.changed)
+                return false;
+        }
+        return true;
+    }
+    
     private Stream<BasicBlock> blocksBy(Expression expr) {
         return blocks.stream().filter(bb -> bb.expr == expr);
     }
@@ -634,6 +657,11 @@ public class CFG {
         if (!hasUnreachable)
             return true;
         return blocksBy(expr).anyMatch(bb -> bb.reached);
+    }
+    
+    public boolean isAlwaysReachable(Expression from, Expression to) {
+        Set<BasicBlock> targets = blocksBy(to).collect(Collectors.toSet());
+        return blocksBy(from).allMatch(bb -> isAlwaysReachable(bb, targets));
     }
 
     public CodeBlock findDeadCode(Expression expr, EdgeType deadEdge) {

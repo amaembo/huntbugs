@@ -36,6 +36,18 @@ public class TestNullCheck {
             System.out.println("Oops");
         }
     }
+    
+    private void error(String s) {
+        throw new IllegalArgumentException(s);
+    }
+    
+    @AssertNoWarning("*")
+    public void testErrorCall(String s) {
+        if(s == null) {
+            error("null");
+        }
+        System.out.println(s.trim());
+    }
 
     @AssertWarning("NullDereferenceExceptional")
     public void testNullExceptional(String s) {
@@ -49,34 +61,48 @@ public class TestNullCheck {
             System.out.println("Bigger");
         }
     }
-    
+
     @AssertWarning("RedundantComparisonNull")
     public void testRedundantNull(String s) {
         String a = null;
-        if(s == null) {
+        if (s == null) {
             System.out.println(1);
-            if(s == a) {
+            if (s == a) {
                 System.out.println(2);
             }
         }
     }
-    
-    @AssertWarning(value="RedundantComparisonNullNonNull", maxScore=45)
+
+    @AssertWarning(value = "RedundantComparisonNullNonNull", maxScore = 45)
     public void testRedundantNotNull() {
         TestNullCheck other = null;
-        if(this != other) {
+        if (this != other) {
+            System.out.println("Always");
+        }
+    }
+    
+    class X {
+        X parent;
+    }
+    
+    @AssertWarning("RedundantNullCheckNull")
+    public void testRedundantNullWhile(X x) {
+        while(x != null) {
+            x = x.parent;
+        }
+        if(x == null) {
             System.out.println("Always");
         }
     }
 
-    @AssertWarning(value = "RedundantEqualsNullCheck", minScore=55)
+    @AssertWarning(value = "RedundantEqualsNullCheck", minScore = 55)
     public void testRedundantEqualsNull() {
         TestNullCheck other = null;
-        if(this.equals(other)) {
+        if (this.equals(other)) {
             System.out.println("Never");
         }
     }
-    
+
     @AssertNoWarning("*")
     public String safeTrim(String s) {
         return s == null ? null : s.trim();
@@ -138,11 +164,16 @@ public class TestNullCheck {
         }
     }
 
-    /*
-     * @AssertWarning("NullDereferencePossible") public void
-     * testNullDerefPossible(boolean b) { String x = null; if (b) { x = "test";
-     * } if (x.isEmpty()) { System.out.println("Oops"); } }
-     */
+    @AssertWarning("NullDereferencePossible")
+    public void testNullDerefPossible(boolean b) {
+        String x = null;
+        if (b) {
+            x = "test";
+        }
+        if (x.isEmpty()) {
+            System.out.println("Oops");
+        }
+    }
 
     @SuppressWarnings("unused")
     @AssertWarning("RedundantNullCheckDeref")
