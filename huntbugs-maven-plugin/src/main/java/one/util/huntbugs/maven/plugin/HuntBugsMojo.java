@@ -138,7 +138,7 @@ public class HuntBugsMojo extends AbstractMojo {
                         if (!quiet) {
                             getLog().info("HuntBugs: +dep " + path);
                         }
-                        if (Files.isRegularFile(path)) {
+                        if (Files.isRegularFile(path) && art.getType().equals("jar")) {
                             deps.add(new JarTypeLoader(new JarFile(path.toFile())));
                         } else if (Files.isDirectory(path)) {
                             deps.add(new ClasspathTypeLoader(path.toString()));
