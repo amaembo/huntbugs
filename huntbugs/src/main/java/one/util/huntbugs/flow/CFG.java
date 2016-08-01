@@ -730,7 +730,7 @@ public class CFG {
         implicit.state = null;
     }
 
-    class DFARunner<STATE, FACT, DF extends Annotator<FACT> & Dataflow<FACT, STATE>> {
+    class DFARunner<STATE, FACT> {
         private final Annotator<FACT> annotator;
         private final Dataflow<FACT, STATE> df;
         private boolean changed = false;
