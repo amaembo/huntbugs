@@ -241,7 +241,7 @@ public class NullAnnotator extends Annotator<Nullness> {
                 invert = !invert;
                 expr = expr.getArguments().get(expr.getArguments().size() - 1);
             }
-            Variable var = null;
+            Variable var;
             if (expr.getCode() == AstCode.InstanceOf) {
                 Expression arg = expr.getArguments().get(0);
                 if (arg.getCode() == AstCode.Load) {
