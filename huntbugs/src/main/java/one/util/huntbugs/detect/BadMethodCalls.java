@@ -174,9 +174,9 @@ public class BadMethodCalls {
             }
         } else if (Methods.isHashCodeMethod(mr) || typeName.equals("java/util/Objects") && name.equals("hashCode")
             && signature.equals("(Ljava/lang/Object;)I")) {
-            Expression arg = Exprs.getChild(node, 0);
-            TypeReference type = ValuesFlow.reduceType(arg);
-            if (type != null && type.isArray()) {
+            Expression arg = node.getArguments().get(0);
+            EType type = Inf.ETYPE.resolve(arg);
+            if (type.isArray().yes()) {
                 ctx.report("ArrayHashCode", 0, arg);
             }
         } else if (typeName.equals("java/util/Objects") && name.equals("hash") && signature.equals(
@@ -184,8 +184,8 @@ public class BadMethodCalls {
             Expression arg = node.getArguments().get(0);
             if (arg.getCode() == AstCode.InitArray) {
                 for (Expression child : arg.getArguments()) {
-                    TypeReference type = ValuesFlow.reduceType(ValuesFlow.getSource(child));
-                    if (type != null && type.isArray()) {
+                    EType type = Inf.ETYPE.resolve(child);
+                    if (type.isArray().yes()) {
                         ctx.report("ArrayHashCode", 0, arg);
                     }
                 }
