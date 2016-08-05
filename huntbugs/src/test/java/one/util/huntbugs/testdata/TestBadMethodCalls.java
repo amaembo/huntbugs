@@ -180,6 +180,11 @@ public class TestBadMethodCalls {
         return arr+":"+suffix;
     }
     
+    @AssertWarning("CharArrayToString")
+    public String formatChar(char[] arr) {
+        return arr.toString();
+    }
+    
     @AssertWarning("ArrayToString")
     public String format3(int[] arr) {
         return arr.toString();

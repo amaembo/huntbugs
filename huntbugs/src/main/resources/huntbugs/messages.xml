@@ -34,8 +34,16 @@
       <Title>Invocation of toString() on an array</Title>
       <Description>Invocation of toString() on an array in $METHOD$</Description>
       <LongDescription><![CDATA[The code invokes <code>toString()</code> on an array or implicitly converts an array into String. 
-    This will generate a fairly useless result such as <code>[C@16f0472</code>. 
+    This will generate a fairly useless result such as <code>[B@16f0472</code>. 
     Consider using <code>java.util.Arrays.toString</code> to convert the array into a readable String that gives the contents of the array.]]></LongDescription>
+    </Warning>
+    <Warning Type="CharArrayToString">
+      <Title>Invocation of toString() on a char[] array</Title>
+      <Description>Invocation of toString() on a char[] array in $METHOD$</Description>
+      <LongDescription><![CDATA[The code invokes <code>toString()</code> on a <code>char[]</code> array or implicitly converts an array into String. 
+    This will generate a fairly useless result such as <code>[C@16f0472</code>. 
+    Consider using <code>new String(charArray)</code> to get a String consisting of <code>charArray</code> symbols
+    or <code>Arrays.toString(charArray)</code> to get a readable array representation like <code>[a, b, c]</code>.]]></LongDescription>
     </Warning>
     <Warning Type="StreamToString">
       <Title>Invocation of toString() on a Stream</Title>

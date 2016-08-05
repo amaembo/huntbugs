@@ -18,6 +18,7 @@ package one.util.huntbugs.detect;
 import java.math.BigDecimal;
 import java.util.Locale;
 
+import com.strobel.assembler.metadata.JvmType;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
@@ -52,6 +53,7 @@ import one.util.huntbugs.warning.Role.TypeRole;
 @WarningDefinition(category = "Correctness", name = "BigDecimalConstructedFromDouble", maxScore = 50)
 @WarningDefinition(category = "Correctness", name = "BigDecimalConstructedFromInfiniteOrNaN", maxScore = 70)
 @WarningDefinition(category = "Correctness", name = "ArrayToString", maxScore = 60)
+@WarningDefinition(category = "Correctness", name = "CharArrayToString", maxScore = 60)
 @WarningDefinition(category = "Correctness", name = "StreamToString", maxScore = 60)
 @WarningDefinition(category = "Correctness", name = "ArrayHashCode", maxScore = 60)
 @WarningDefinition(category = "Correctness", name = "DoubleLongBitsToDoubleOnInt", maxScore = 70)
@@ -156,7 +158,8 @@ public class BadMethodCalls {
             TypeReference type = ValuesFlow.reduceType(lastArg);
             if (type != null) {
                 if(type.isArray())
-                    ctx.report("ArrayToString", 0, lastArg);
+                    ctx.report(type.getElementType().getSimpleType() == JvmType.Character ? "CharArrayToString"
+                            : "ArrayToString", 0, lastArg);
                 else if(Types.isInstance(type, "java/util/stream/Stream"))
                     ctx.report("StreamToString", 0, lastArg);
             }
