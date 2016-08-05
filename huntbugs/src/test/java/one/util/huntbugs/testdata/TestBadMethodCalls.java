@@ -38,6 +38,8 @@ import one.util.huntbugs.registry.anno.AssertWarning;
 public class TestBadMethodCalls {
     ScheduledThreadPoolExecutor ex = new ScheduledThreadPoolExecutor(10);
     
+    Object arrField = Math.random()>0.5 ? new char[] {1,2,3} : new int[] {1,2,3};
+    
     @AssertWarning(value="SystemExit", maxScore = 30)
     public void systemExit() {
         System.exit(0);
@@ -178,6 +180,19 @@ public class TestBadMethodCalls {
     @AssertWarning("ArrayToString")
     public String format2(String suffix, int[] arr) {
         return arr+":"+suffix;
+    }
+    
+    @AssertWarning("ArrayToString")
+    public String fieldArray() {
+        return arrField.toString();
+    }
+    
+    @AssertWarning("ArrayToString")
+    public String instanceOfToArray(Object obj) {
+        if(obj instanceof Number[]) {
+            return obj.toString();
+        }
+        return null;
     }
     
     @AssertWarning("CharArrayToString")

@@ -117,6 +117,27 @@ public class SingleType implements EType {
     }
 
     @Override
+    public YesNoMaybe isArray() {
+        switch (what) {
+        case EXACT:
+            return YesNoMaybe.of(tr.isArray());
+        case NOT:
+            return YesNoMaybe.of(!tr.isArray());
+        case NOT_SUBTYPE:
+            return Types.isObject(tr) ? YesNoMaybe.NO : YesNoMaybe.MAYBE;
+        case SUBTYPE: {
+            if(tr.isArray())
+                return YesNoMaybe.YES;
+            if(Types.isObject(tr))
+                return YesNoMaybe.MAYBE;
+            return YesNoMaybe.NO;
+        }
+        default:
+            throw new InternalError();
+        }
+    }
+
+    @Override
     public EType negate() {
         return of(tr, what.negate());
     }

@@ -18,15 +18,18 @@ package one.util.huntbugs.detect;
 import java.math.BigDecimal;
 import java.util.Locale;
 
-import com.strobel.assembler.metadata.JvmType;
+import com.strobel.assembler.metadata.BuiltinTypes;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Node;
 
+import one.util.huntbugs.flow.Inf;
 import one.util.huntbugs.flow.ValuesFlow;
+import one.util.huntbugs.flow.etype.EType;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
@@ -63,6 +66,9 @@ import one.util.huntbugs.warning.Role.TypeRole;
 @WarningDefinition(category = "RedundantCode", name = "NullCheckMethodForConstant", maxScore = 65)
 @WarningDefinition(category = "Correctness", name = "WrongArgumentOrder", maxScore = 65)
 public class BadMethodCalls {
+    private static final TypeDefinition STREAM_TYPE = Types.lookupJdkType("java/util/stream/Stream");
+    private static final TypeReference CHAR_ARRAY_TYPE = BuiltinTypes.Character.makeArrayType();
+    
     private static final StringRole DOUBLE_NUMBER = StringRole.forName("DOUBLE_NUMBER");
     private static final StringRole BIGDECIMAL_NUMBER = StringRole.forName("BIGDECIMAL_NUMBER");
     private static final TypeRole ARG_TYPE = TypeRole.forName("ARG_TYPE");
@@ -154,14 +160,17 @@ public class BadMethodCalls {
                 && !fromFile(node)) {
             ctx.report("URLBlockingMethod", 0, node);
         } else if (isToStringCall(typeName, name, signature)) {
-            Expression lastArg = Exprs.getChild(node, node.getArguments().size() - 1);
-            TypeReference type = ValuesFlow.reduceType(lastArg);
-            if (type != null) {
-                if(type.isArray())
-                    ctx.report(type.getElementType().getSimpleType() == JvmType.Character ? "CharArrayToString"
-                            : "ArrayToString", 0, lastArg);
-                else if(Types.isInstance(type, "java/util/stream/Stream"))
-                    ctx.report("StreamToString", 0, lastArg);
+            Expression lastArg = node.getArguments().get(node.getArguments().size() - 1);
+            EType type = Inf.ETYPE.resolve(lastArg);
+            String wtype = null;
+            if(type.is(CHAR_ARRAY_TYPE, true).yes())
+                wtype = "CharArrayToString";
+            else if(type.isArray().yes())
+                wtype = "ArrayToString";
+            else if(type.is(STREAM_TYPE, false).yes())
+                wtype = "StreamToString";
+            if(wtype != null) {
+                ctx.report(wtype, 0, lastArg);
             }
         } else if (Methods.isHashCodeMethod(mr) || typeName.equals("java/util/Objects") && name.equals("hashCode")
             && signature.equals("(Ljava/lang/Object;)I")) {

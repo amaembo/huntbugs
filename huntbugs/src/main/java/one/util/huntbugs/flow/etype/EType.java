@@ -44,9 +44,16 @@ public interface EType {
         public YesNoMaybe is(TypeReference tr, boolean exact) {
             return YesNoMaybe.MAYBE;
         }
+
+        @Override
+        public YesNoMaybe isArray() {
+            return YesNoMaybe.MAYBE;
+        }
     };
     
     YesNoMaybe is(TypeReference tr, boolean exact);
+    
+    YesNoMaybe isArray();
     
     default EType shrinkConstraint(TypeReference tr, boolean exact) {
         return this;

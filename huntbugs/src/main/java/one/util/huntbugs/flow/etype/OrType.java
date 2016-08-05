@@ -61,6 +61,34 @@ public class OrType extends ComplexType {
     }
 
     @Override
+    public YesNoMaybe isArray() {
+        boolean hasYes = false, hasNo = false, hasMaybe = false;
+        for (EType type : types) {
+            YesNoMaybe cur = type.isArray();
+            switch (cur) {
+            case YES:
+                hasYes = true;
+                break;
+            case NO:
+                hasNo = true;
+                break;
+            case MAYBE:
+                hasMaybe = true;
+                break;
+            default:
+                throw new InternalError();
+            }
+        }
+        if (hasMaybe || hasYes && hasNo)
+            return YesNoMaybe.MAYBE;
+        if (hasYes)
+            return YesNoMaybe.YES;
+        if (hasNo)
+            return YesNoMaybe.NO;
+        return YesNoMaybe.MAYBE;
+    }
+    
+    @Override
     public EType negate() {
         Set<SingleType> newTypes = new HashSet<>();
         for (SingleType type : types) {

@@ -25,6 +25,7 @@ import java.util.Set;
 import com.strobel.assembler.ir.attributes.SourceAttribute;
 import com.strobel.assembler.ir.attributes.SourceFileAttribute;
 import com.strobel.assembler.metadata.BuiltinTypes;
+import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.TypeDefinition;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.Expression;
@@ -46,6 +47,21 @@ public class Types {
     private static final Set<String> MUTABLE_TYPES = new HashSet<>(Arrays.asList("java/util/Hashtable",
         "java/util/Vector", "java/util/Date", "java/sql/Date", "java/sql/Timestamp", "java/awt/Point",
         "java/awt/Dimension", "java/awt/Rectangle"));
+    
+    private static MetadataSystem ms = MetadataSystem.instance();
+
+    public static synchronized TypeDefinition lookupJdkType(String internalName) {
+        TypeReference tr = ms.lookupType(internalName);
+        if (tr == null) {
+            throw new InternalError("Unable to lookup type " + internalName);
+        }
+        TypeDefinition td = tr.resolve();
+        if (td == null) {
+            throw new InternalError("Unable to resolve type " + internalName);
+        }
+        return td;
+    }
+
 
     public static List<TypeReference> getBaseTypes(TypeReference input) {
         List<TypeReference> result = new ArrayList<>();

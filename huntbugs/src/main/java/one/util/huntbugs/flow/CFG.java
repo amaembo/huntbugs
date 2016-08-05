@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.strobel.assembler.metadata.FieldReference;
-import com.strobel.assembler.metadata.MetadataSystem;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeDefinition;
@@ -68,42 +67,16 @@ public class CFG {
     private static final int BLOCKTYPE_FAIL = -3;
     private static final int BLOCKTYPE_IMPLICIT = -4;
 
-    static final TypeDefinition runtimeException;
-    static final TypeDefinition classCastException;
-    static final TypeDefinition nullPointerException;
-    static final TypeDefinition arrayIndexOutOfBoundsException;
-    static final TypeDefinition arrayStoreException;
-    static final TypeDefinition outOfMemoryError;
-    static final TypeDefinition linkageError;
-    static final TypeDefinition error;
-    static final TypeDefinition throwable;
-    static final TypeDefinition exception;
-
-    static {
-        MetadataSystem ms = MetadataSystem.instance();
-        throwable = getException(ms, "java/lang/Throwable");
-        exception = getException(ms, "java/lang/Exception");
-        runtimeException = getException(ms, "java/lang/RuntimeException");
-        classCastException = getException(ms, "java/lang/ClassCastException");
-        nullPointerException = getException(ms, "java/lang/NullPointerException");
-        arrayIndexOutOfBoundsException = getException(ms, "java/lang/ArrayIndexOutOfBoundsException");
-        arrayStoreException = getException(ms, "java/lang/ArrayStoreException");
-        outOfMemoryError = getException(ms, "java/lang/OutOfMemoryError");
-        linkageError = getException(ms, "java/lang/LinkageError");
-        error = getException(ms, "java/lang/Error");
-    }
-
-    static TypeDefinition getException(MetadataSystem ms, String internalName) {
-        TypeReference tr = ms.lookupType(internalName);
-        if (tr == null) {
-            throw new InternalError("Unable to lookup exception " + internalName);
-        }
-        TypeDefinition td = tr.resolve();
-        if (td == null) {
-            throw new InternalError("Unable to resolve exception " + internalName);
-        }
-        return td;
-    }
+    static final TypeDefinition throwable = Types.lookupJdkType("java/lang/Throwable");
+    static final TypeDefinition exception = Types.lookupJdkType("java/lang/Exception");
+    static final TypeDefinition runtimeException = Types.lookupJdkType("java/lang/RuntimeException");
+    static final TypeDefinition classCastException = Types.lookupJdkType("java/lang/ClassCastException");
+    static final TypeDefinition nullPointerException = Types.lookupJdkType("java/lang/NullPointerException");
+    static final TypeDefinition arrayIndexOutOfBoundsException = Types.lookupJdkType("java/lang/ArrayIndexOutOfBoundsException");
+    static final TypeDefinition arrayStoreException = Types.lookupJdkType("java/lang/ArrayStoreException");
+    static final TypeDefinition outOfMemoryError = Types.lookupJdkType("java/lang/OutOfMemoryError");
+    static final TypeDefinition linkageError = Types.lookupJdkType("java/lang/LinkageError");
+    static final TypeDefinition error = Types.lookupJdkType("java/lang/Error");
 
     final List<BasicBlock> blocks = new ArrayList<>();
     final Map<Lambda, CFG> lambdas = new HashMap<>();

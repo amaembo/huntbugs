@@ -278,10 +278,11 @@ public class ETypeAnnotator extends Annotator<EType> {
                     ((FieldReference) expr.getOperand()).getFieldType())));
                 return etype == null ? EType.UNKNOWN : etype;
             }
+            case NewArray:
+                return EType.exact(((TypeReference)expr.getOperand()).makeArrayType());
             case InitObject:
             case InitArray:
             case MultiANewArray:
-            case NewArray:
                 return EType.exact(expr.getInferredType());
             case InvokeVirtual:
             case InvokeStatic:

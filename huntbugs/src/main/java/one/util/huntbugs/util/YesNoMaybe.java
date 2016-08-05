@@ -21,6 +21,14 @@ package one.util.huntbugs.util;
  */
 public enum YesNoMaybe {
     YES, MAYBE, NO;
+    
+    public boolean yes() {
+        return this == YES;
+    }
+    
+    public boolean no() {
+        return this == NO;
+    }
 
     public static YesNoMaybe of(boolean b) {
         return b ? YES : NO;

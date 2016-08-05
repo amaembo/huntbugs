@@ -65,6 +65,29 @@ public class AndType extends ComplexType {
     }
 
     @Override
+    public YesNoMaybe isArray() {
+        boolean hasYes = false, hasNo = false;
+        for (EType type : types) {
+            switch (type.isArray()) {
+            case YES:
+                hasYes = true;
+                break;
+            case NO:
+                hasNo = true;
+                break;
+            default:
+            }
+        }
+        if (hasYes && hasNo)
+            return YesNoMaybe.MAYBE;
+        if (hasYes)
+            return YesNoMaybe.YES;
+        if (hasNo)
+            return YesNoMaybe.NO;
+        return YesNoMaybe.MAYBE;
+    }
+
+    @Override
     public EType shrinkConstraint(TypeReference tr, boolean exact) {
         Set<SingleType> yes = new HashSet<>(), no = new HashSet<>();
         for (SingleType type : types) {
