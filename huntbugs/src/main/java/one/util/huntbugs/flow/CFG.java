@@ -605,14 +605,16 @@ public class CFG {
                 if (targets.contains(bb))
                     continue;
                 if (bb.changed) {
-                    Stream<BasicBlock> stream = bb.passTarget == null && bb.trueTarget == null ? bb.targets()
-                            : bb.targetsExcept(EdgeType.FAIL);
-                    stream.filter(t -> !t.changed).forEach(t -> {
+                    // Explicit throw
+                    if(bb.passTarget == null && bb.trueTarget == null &&
+                            bb.targets().anyMatch(fail::equals))
+                        return false;
+                    bb.targets().filter(t -> !t.changed).forEach(t -> {
                         t.changed = changed[0] = true;
                     });
                 }
             }
-            if (exit.changed || fail.changed || implicit.changed)
+            if (exit.changed || implicit.changed)
                 return false;
         }
         return true;

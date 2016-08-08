@@ -15,6 +15,10 @@
  */
 package one.util.huntbugs.testdata;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -72,7 +76,43 @@ public class TestNullCheck {
             }
         }
     }
+    
+    @AssertNoWarning("*")
+    public void testNullThrow(String s) {
+        boolean invalid = s == null || s.isEmpty();
+        if(invalid) {
+            throw new IllegalArgumentException();
+        }
+        System.out.println(s.trim());
+    }
 
+    @AssertNoWarning("*")
+    public void testFileOpen(File f1, File f2, File f3) throws IOException {
+        InputStream is = null;
+        boolean success = false;
+        try {
+            is = new FileInputStream(f1);
+            success = true;
+        }
+        catch(IOException e) {
+        }
+        if(!success) {
+            try {
+                is = new FileInputStream(f2);
+                success = true;
+            } catch (IOException e) {
+            }
+        }
+        if(!success) {
+            try {
+                is = new FileInputStream(f3);
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+        }
+        System.out.println(is.read());
+    }
+    
     @AssertWarning(value = "RedundantComparisonNullNonNull", maxScore = 45)
     public void testRedundantNotNull() {
         TestNullCheck other = null;
