@@ -24,7 +24,6 @@ import com.strobel.decompiler.ast.Expression;
 
 import one.util.huntbugs.flow.CodeBlock;
 import one.util.huntbugs.flow.Inf;
-import one.util.huntbugs.flow.Nullness;
 import one.util.huntbugs.flow.CFG.EdgeType;
 import one.util.huntbugs.flow.Nullness.NullState;
 import one.util.huntbugs.registry.MethodContext;
@@ -68,16 +67,14 @@ public class NullCheck {
         case InvokeInterface:
         case InvokeSpecial:
         case InvokeVirtual: {
-            Nullness nullness = Inf.NULL.resolve(expr.getArguments().get(0));
+            NullState nullness = Inf.NULL.resolve(expr.getArguments().get(0)).stateAt(mc.getCFG(), expr);
             String type = null;
-            if(nullness.isNull()) {
+            if(nullness == NullState.NULL) {
                 type = "NullDereferenceGuaranteed";
-            } else if(nullness.state() == NullState.NULL_EXCEPTIONAL) {
-                if(nullness.doesNullAlwaysReach(mc.getCFG(), expr))
-                    type = "NullDereferenceExceptional";
-            } else if(nullness.state() == NullState.NULLABLE) {
-                if(nullness.doesNullAlwaysReach(mc.getCFG(), expr))
-                    type = "NullDereferencePossible";
+            } else if(nullness == NullState.NULL_EXCEPTIONAL) {
+                type = "NullDereferenceExceptional";
+            } else if(nullness == NullState.NULLABLE) {
+                type = "NullDereferencePossible";
             }
             if(type != null) {
                 int priority = 0;
@@ -124,11 +121,11 @@ public class NullCheck {
         case CmpEq: {
             Expression left = expr.getArguments().get(0);
             Expression right = expr.getArguments().get(1);
-            Nullness leftNull = Inf.NULL.resolve(left);
-            Nullness rightNull = Inf.NULL.resolve(right);
+            NullState leftNull = Inf.NULL.resolve(left).stateAt(null, left);
+            NullState rightNull = Inf.NULL.resolve(right).stateAt(null, right);
             Expression nullExpr = null;
             Expression nonNullExpr = null;
-            Nullness nonNull = null;
+            NullState nonNull = null;
             if (leftNull.isNull() && rightNull.isNonNull()) {
                 nullExpr = left;
                 nonNullExpr = right;
@@ -140,9 +137,9 @@ public class NullCheck {
             }
             if (nullExpr != null) {
                 String type = "RedundantNullCheck";
-                if (nonNull == Nullness.NONNULL_CHECKED)
+                if (nonNull == NullState.NONNULL_CHECKED)
                     type = "RedundantNullCheckChecked";
-                else if (nonNull == Nullness.NONNULL_DEREF)
+                else if (nonNull == NullState.NONNULL_DEREF)
                     type = "RedundantNullCheckDeref";
                 List<WarningAnnotation<?>> anno = new ArrayList<>();
                 anno.add(Roles.EXPRESSION.create(expr));

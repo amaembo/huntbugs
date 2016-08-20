@@ -17,23 +17,27 @@ package one.util.huntbugs.flow;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import com.strobel.assembler.metadata.FieldDefinition;
 import com.strobel.assembler.metadata.FieldReference;
 import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
+import com.strobel.assembler.metadata.ParameterDefinition;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 import com.strobel.decompiler.ast.Variable;
 
+import one.util.huntbugs.flow.Nullness.NullState;
 import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Methods;
 
 /**
- * @author shustkost
+ * @author Tagir Valeev
  *
  */
 public class NullAnnotator extends Annotator<Nullness> {
@@ -43,8 +47,8 @@ public class NullAnnotator extends Annotator<Nullness> {
     }
 
     boolean build(CFG cfg) {
-        return cfg.<ContextNulls, Nullness> runDFA(this, (md, closure) -> new NullDataflow(md, closure == null
-                ? ContextNulls.DEFAULT : closure), 7);
+        return cfg.<ContextNulls, Nullness> runDFA(this, (md, closure) -> new NullDataflow(md,
+                closure == null ? ContextNulls.DEFAULT : closure), 7);
     }
 
     public Nullness resolve(Expression expr) {
@@ -66,27 +70,30 @@ public class NullAnnotator extends Annotator<Nullness> {
                 return this;
             if (values == null || other.values == null)
                 return DEFAULT;
-            Map<Variable, Nullness> newNulls = new HashMap<>(values);
-            newNulls.keySet().retainAll(other.values.keySet());
-            if (newNulls.isEmpty())
-                return DEFAULT;
-            other.values.forEach((k, v) -> newNulls.compute(k, (oldK, oldV) -> oldV == null ? null : v.or(oldV).unknownToNull()));
+            Set<Variable> vars = new HashSet<>(values.keySet());
+            vars.addAll(other.values.keySet());
+            Map<Variable, Nullness> newNulls = new HashMap<>();
+            for(Variable v : vars) {
+                Nullness n1 = get(values, v);
+                Nullness n2 = get(other.values, v);
+                if(n1 != null && n2 != null) {
+                    Nullness n = n1.or(n2);
+                    if(n != null)
+                        newNulls.put(v, n);
+                }
+            }
             return newNulls.isEmpty() ? DEFAULT : new ContextNulls(newNulls);
         }
 
-        ContextNulls and(Variable var, Nullness value) {
-            if (values == null) {
-                return new ContextNulls(Collections.singletonMap(var, value));
+        private static Nullness get(Map<Variable, Nullness> map, Variable v) {
+            Nullness nullness = map.get(v);
+            if(nullness != null)
+                return nullness;
+            ParameterDefinition pd = v.getOriginalParameter();
+            if(pd != null) {
+                return Nullness.UNKNOWN_AT_ENTRY;
             }
-            Nullness oldNullability = values.get(var);
-            if (Objects.equals(value, oldNullability))
-                return this;
-            Nullness newNullability = oldNullability == null ? value : oldNullability.and(value);
-            if (newNullability == oldNullability)
-                return this;
-            Map<Variable, Nullness> newNulls = new HashMap<>(values);
-            newNulls.put(var, newNullability);
-            return new ContextNulls(newNulls);
+            return null;
         }
 
         ContextNulls add(Variable var, Nullness value) {
@@ -111,18 +118,13 @@ public class NullAnnotator extends Annotator<Nullness> {
             }
             return this;
         }
-        
-        ContextNulls exceptional() {
-            if(values == null || values.values().stream().noneMatch(Nullness::isNull))
-                return this;
-            Map<Variable, Nullness> newValues = new HashMap<>(values);
-            newValues.replaceAll((var, nullness) -> nullness.asExceptional());
-            return new ContextNulls(newValues);
-        }
 
         ContextNulls transfer(Expression expr) {
             if (expr.getCode() == AstCode.Store) {
-                return add((Variable) expr.getOperand(), Inf.NULL.get(expr.getArguments().get(0)));
+                Nullness value = Inf.NULL.get(expr.getArguments().get(0));
+                if(value == Nullness.UNKNOWN)
+                    value = Nullness.createAt(expr, NullState.UNKNOWN);
+                return add((Variable) expr.getOperand(), value);
             }
             return this;
         }
@@ -173,8 +175,8 @@ public class NullAnnotator extends Annotator<Nullness> {
             case InvokeVirtual:
                 MethodReference mr = (MethodReference) expr.getOperand();
                 String lcName = mr.getName().toLowerCase(Locale.ENGLISH);
-                if (lcName.contains("error") && !mr.getDeclaringType().getSimpleName().contains("Log") || lcName
-                        .startsWith("throw") || lcName.startsWith("fail"))
+                if (lcName.contains("error") && !mr.getDeclaringType().getSimpleName().contains("Log")
+                    || lcName.startsWith("throw") || lcName.startsWith("fail"))
                     return ContextNulls.DEFAULT;
             default:
             }
@@ -191,7 +193,7 @@ public class NullAnnotator extends Annotator<Nullness> {
                 Expression arg = expr.getArguments().get(0);
                 if (arg.getCode() == AstCode.Load) {
                     Variable var = (Variable) arg.getOperand();
-                    return src.and(var, Nullness.NONNULL_DEREF);
+                    return src.add(var, Nullness.createAt(expr, NullState.NONNULL_DEREF));
                 }
                 return src;
             }
@@ -199,14 +201,14 @@ public class NullAnnotator extends Annotator<Nullness> {
                 MethodReference mr = (MethodReference) expr.getOperand();
                 String name = mr.getName();
                 String typeName = mr.getDeclaringType().getInternalName();
-                if (typeName.endsWith("/Assert") && name.equals("assertNotNull") || typeName.equals(
-                    "com/google/common/base/Preconditions") && name.equals("checkNotNull") || typeName.equals(
-                        "java/util/Objects") && name.equals("requireNonNull")) {
+                if (typeName.endsWith("/Assert") && name.equals("assertNotNull")
+                    || typeName.equals("com/google/common/base/Preconditions") && name.equals("checkNotNull")
+                    || typeName.equals("java/util/Objects") && name.equals("requireNonNull")) {
                     if (expr.getArguments().size() == 1) {
                         Expression arg = expr.getArguments().get(0);
                         if (arg.getCode() == AstCode.Load) {
                             Variable var = (Variable) arg.getOperand();
-                            return src.and(var, Nullness.NONNULL_CHECKED);
+                            return src.add(var, Nullness.createAt(expr, NullState.NONNULL_CHECKED));
                         }
                     }
                     if (expr.getArguments().size() == 2) {
@@ -218,7 +220,7 @@ public class NullAnnotator extends Annotator<Nullness> {
                         }
                         if (arg != null && arg.getCode() == AstCode.Load) {
                             Variable var = (Variable) arg.getOperand();
-                            return src.and(var, Nullness.NONNULL_CHECKED);
+                            return src.add(var, Nullness.createAt(expr, NullState.NONNULL_CHECKED));
                         }
                     }
                 }
@@ -231,11 +233,12 @@ public class NullAnnotator extends Annotator<Nullness> {
 
         @Override
         public ContextNulls transferExceptionalState(ContextNulls src, Expression expr) {
-            return src.exceptional();
+            return src;
         }
 
         @Override
         public TrueFalse<ContextNulls> transferConditionalState(ContextNulls src, Expression expr) {
+            src = transferState(src, expr);
             boolean invert = false;
             while (expr.getCode() == AstCode.LogicalNot) {
                 invert = !invert;
@@ -246,7 +249,7 @@ public class NullAnnotator extends Annotator<Nullness> {
                 Expression arg = expr.getArguments().get(0);
                 if (arg.getCode() == AstCode.Load) {
                     var = (Variable) arg.getOperand();
-                    return new TrueFalse<>(src.and(var, Nullness.NONNULL_CHECKED), src, invert);
+                    return new TrueFalse<>(src.add(var, Nullness.createAt(expr, NullState.NONNULL_CHECKED)), src, invert);
                 }
             } else if (expr.getCode() == AstCode.CmpEq || expr.getCode() == AstCode.CmpNe) {
                 if (expr.getCode() == AstCode.CmpNe)
@@ -256,26 +259,27 @@ public class NullAnnotator extends Annotator<Nullness> {
                 ContextNulls trueSrc = src;
                 if (left.getCode() == AstCode.Load) {
                     var = (Variable) left.getOperand();
-                    Nullness nullness = Inf.NULL.get(right);
+                    Nullness nullness = get(right);
                     if (nullness != null && nullness.isNull())
-                        return new TrueFalse<>(src.and(var, Nullness.nullAt(expr)), src.and(var, Nullness.NONNULL_CHECKED),
-                                invert);
+                        return new TrueFalse<>(src.add(var, Nullness.nullAt(expr)), src.add(var, Nullness.createAt(
+                            expr, NullState.NONNULL_CHECKED)), invert);
                     trueSrc = src.add(var, nullness);
                 }
                 if (right.getCode() == AstCode.Load) {
                     var = (Variable) right.getOperand();
-                    Nullness nullness = Inf.NULL.get(left);
+                    Nullness nullness = get(left);
                     if (nullness != null && nullness.isNull())
-                        return new TrueFalse<>(trueSrc.and(var, Nullness.nullAt(expr)), src.and(var, Nullness.NONNULL_CHECKED),
-                                invert);
-                    return new TrueFalse<>(trueSrc.and(var, nullness), src, invert);
+                        return new TrueFalse<>(trueSrc.add(var, Nullness.nullAt(expr)), src.add(var, Nullness.createAt(
+                            expr, NullState.NONNULL_CHECKED)), invert);
+                    return new TrueFalse<>(trueSrc.add(var, nullness), src, invert);
                 }
-            } else if (expr.getCode() == AstCode.InvokeVirtual && Methods.isEqualsMethod((MethodReference) expr
-                    .getOperand())) {
+            } else if (expr.getCode() == AstCode.InvokeVirtual
+                && Methods.isEqualsMethod((MethodReference) expr.getOperand())) {
                 Expression arg = expr.getArguments().get(1);
                 if (arg.getCode() == AstCode.Load) {
                     var = (Variable) arg.getOperand();
-                    return new TrueFalse<>(src.and(var, Nullness.NONNULL_CHECKED), src, invert);
+                    return new TrueFalse<>(src.add(var, Nullness.createAt(expr, NullState.NONNULL_CHECKED)), src,
+                            invert);
                 }
             }
             return new TrueFalse<>(src);
@@ -294,7 +298,7 @@ public class NullAnnotator extends Annotator<Nullness> {
         @Override
         public Nullness makeFact(ContextNulls state, Expression expr) {
             if (Inf.CONST.getValue(expr) != null)
-                return Nullness.NONNULL;
+                return Nullness.createAt(expr, NullState.NONNULL);
             switch (expr.getCode()) {
             case TernaryOp: {
                 Object cond = Inf.CONST.get(expr.getArguments().get(0));
@@ -306,29 +310,32 @@ public class NullAnnotator extends Annotator<Nullness> {
                 if (Integer.valueOf(0).equals(cond) || Boolean.FALSE.equals(cond)) {
                     return right;
                 }
+                if(left == right)
+                    return left;
+                if(left == Nullness.UNKNOWN)
+                    left = Nullness.createAt(expr.getArguments().get(1), NullState.UNKNOWN); 
+                if(right == Nullness.UNKNOWN)
+                    right = Nullness.createAt(expr.getArguments().get(2), NullState.UNKNOWN); 
                 return left.or(right);
             }
             case Load:
                 if (!md.isStatic() && Exprs.isThis(expr))
-                    return Nullness.NONNULL;
+                    return Nullness.createAt(expr, NullState.NONNULL);
                 return state.resolve(expr);
             case GetField:
                 return Nullness.UNKNOWN;
-            // Cannot reliably make facts from fields until they are directly supported by Context
-            //return fromSource(state, expr);
             case GetStatic: {
                 FieldReference fr = (FieldReference) expr.getOperand();
                 FieldDefinition fd = fr.resolve();
                 if (fd != null && fd.isEnumConstant())
-                    return Nullness.NONNULL;
+                    return Nullness.createAt(expr, NullState.NONNULL);
                 return Nullness.UNKNOWN;
-                //return fromSource(state, expr);
             }
             case InitObject:
             case InitArray:
             case MultiANewArray:
             case NewArray:
-                return Nullness.NONNULL;
+                return Nullness.createAt(expr, NullState.NONNULL);
             case CheckCast:
             case Store:
             case PutStatic:
@@ -359,41 +366,6 @@ public class NullAnnotator extends Annotator<Nullness> {
         @Override
         public boolean sameFact(Nullness f1, Nullness f2) {
             return Objects.equals(f1, f2);
-        }
-
-        private Nullness resolve(ContextNulls ctx, Expression expr) {
-            if (expr.getCode() == AstCode.LdC) {
-                return Nullness.NONNULL;
-            }
-            Nullness f1 = ctx.resolve(expr);
-            Nullness f2 = get(expr);
-            return f1 == null ? f2 : f1.and(f2);
-        }
-
-        private Nullness fromSource(ContextNulls ctx, Expression expr) {
-            Expression src = ValuesFlow.getSource(expr);
-            if (src == expr)
-                return Nullness.UNKNOWN;
-            Nullness value = resolve(ctx, src);
-            if (value != null)
-                return value;
-            if (src.getCode() == SourceAnnotator.PHI_TYPE) {
-                for (Expression child : src.getArguments()) {
-                    Nullness newVal = resolve(ctx, child);
-                    if (newVal == null) {
-                        return Nullness.UNKNOWN;
-                    }
-                    if (value == null) {
-                        value = newVal;
-                    } else {
-                        value = value.or(newVal);
-                    }
-                    if (value == Nullness.UNKNOWN)
-                        return Nullness.UNKNOWN;
-                }
-                return value;
-            }
-            return Nullness.UNKNOWN;
         }
     }
 }

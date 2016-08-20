@@ -620,6 +620,81 @@ public class CFG {
         return true;
     }
     
+    private <T> boolean updateState(GraphSearch<T> gs, BasicBlock bb, T newState) {
+        @SuppressWarnings("unchecked")
+        T oldState = (T) bb.state;
+        if(Objects.equals(oldState, newState))
+            return false;
+        newState = gs.merge(oldState, newState);
+        if(Objects.equals(oldState, newState))
+            return false;
+        bb.state = newState;
+        return bb.changed = true;
+    }
+
+    /**
+     * Result works only until new graph-search is performed.
+     * Must not be called during DFA run on the same CFG.
+     */
+    public <T> SearchResult<T> graphSearch(GraphSearch<T> gs) {
+        clearChanged();
+        for(BasicBlock bb : blocks) {
+            bb.state = gs.markStart(bb.expr, bb == entry);
+            if(bb.state != null)
+                bb.changed = true;
+        }
+        exit.state = fail.state = implicit.state = null;
+        boolean changed = true;
+        while(changed) {
+            changed = false;
+            for(BasicBlock bb : blocks) {
+                if(bb.changed) {
+                    bb.changed = false;
+                    @SuppressWarnings("unchecked")
+                    T state = (T) bb.state;
+                    if(bb.passTarget != null) {
+                        changed |= updateState(gs, bb.passTarget, gs.transfer(state, bb.expr, EdgeType.PASS, bb.passTarget.expr));
+                    } else if(bb.trueTarget != null) {
+                        changed |= updateState(gs, bb.trueTarget, gs.transfer(state, bb.expr, EdgeType.TRUE, bb.trueTarget.expr));
+                        changed |= updateState(gs, bb.falseTarget, gs.transfer(state, bb.expr, EdgeType.FALSE, bb.falseTarget.expr));
+                    }
+                    if(bb.failTargets != null) {
+                        for(BasicBlock target : bb.failTargets)
+                            changed |= updateState(gs, target, gs.transfer(state, bb.expr, EdgeType.FAIL, target.expr));
+                    }
+                }
+            }
+            if(forwardTill == blocks.size())
+                break;
+        }
+        return new SearchResult<>(gs);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public class SearchResult<T> {
+        private final GraphSearch<T> gs;
+
+        SearchResult(GraphSearch<T> gs) {
+            this.gs = gs;
+        }
+        
+        public T atExit() {
+            return (T) exit.state;
+        }
+        
+        public T atFail() {
+            return (T) fail.state;
+        }
+        
+        public T atImplicit() {
+            return (T) implicit.state;
+        }
+        
+        public T atExpression(Expression expr) {
+            return blocksBy(expr).map(bb -> (T)bb.state).filter(Objects::nonNull).reduce(gs::merge).orElse(null);
+        }
+    }
+    
     private Stream<BasicBlock> blocksBy(Expression expr) {
         return blocks.stream().filter(bb -> bb.expr == expr);
     }
@@ -704,7 +779,7 @@ public class CFG {
         fail.state = null;
         implicit.state = null;
     }
-
+    
     class DFARunner<STATE, FACT> {
         private final Annotator<FACT> annotator;
         private final Dataflow<FACT, STATE> df;

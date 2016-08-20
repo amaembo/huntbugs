@@ -52,6 +52,34 @@ public class TestNullCheck {
         }
         System.out.println(s.trim());
     }
+    
+    @AssertNoWarning("*")
+    public void testLoop(List<String> list) {
+        String s = null;
+        for(String item : list) {
+            s = item;
+        }
+        if(!list.isEmpty()) {
+            System.out.println(s.trim());
+        }
+    }
+    @AssertNoWarning("*")
+    public void testDoubleExpressionNull(int... order) {
+        int length = (order != null) ? order.length : 0;
+        if(length == 1 && order[0] == 1) {
+            length = 0;
+        }
+        System.out.println(length);
+    }
+    
+    @AssertNoWarning("*")
+    public void testTernaryNull(X x) {
+        X parent = x == null ? null : x.parent;
+        if(parent == null) {
+            throw new IllegalArgumentException();
+        }
+        System.out.println(parent.toString());
+    }
 
     @AssertWarning("NullDereferenceExceptional")
     public void testNullExceptional(String s) {
