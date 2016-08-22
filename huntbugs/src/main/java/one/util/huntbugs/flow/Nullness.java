@@ -17,7 +17,10 @@ package one.util.huntbugs.flow;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+
+import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Expression;
 
@@ -29,7 +32,13 @@ import one.util.huntbugs.flow.CFG.SearchResult;
  */
 public class Nullness {
     public static enum NullState {
-        UNKNOWN, NONNULL, NONNULL_DEREF, NONNULL_CHECKED, NULL, NULLABLE, NULL_EXCEPTIONAL, EXPLICIT_THROW;
+        UNKNOWN, NONNULL, NONNULL_DEREF, NONNULL_CHECKED, NULL, NULLABLE, NULL_EXCEPTIONAL,
+        // Flow from assignment to current expression goes through explicit throw
+        // (internal state)
+        INT_EXPLICIT_THROW,
+        // Flow from assignment to current expression goes through suspicious call
+        // which will probably never return normally (like Assert.fail())
+        SUSPICIOUS_CALL;
         
         NullState or(NullState other) {
             if(this == other)
@@ -110,9 +119,10 @@ public class Nullness {
         if(cfg == null || (hasUnknown && !hasNullable))
             return NullState.UNKNOWN;
         SearchResult<NullState> sr = cfg.graphSearch(new NullGraphSearch(target));
-        if(sr.atExit() != null || sr.atFail() == NullState.EXPLICIT_THROW)
+        if(sr.atExit() != null || sr.atFail() == NullState.INT_EXPLICIT_THROW)
             return NullState.UNKNOWN;
-        return sr.atExpression(target);
+        NullState res = sr.atExpression(target);
+        return res;
     }
     
     class NullGraphSearch implements GraphSearch<NullState> {
@@ -135,9 +145,23 @@ public class Nullness {
                 return state;
             if(from == target)
                 return null;
+            if(orig == NullState.NULL || orig == NullState.NULL_EXCEPTIONAL || orig == NullState.NULLABLE) {
+                switch (from.getCode()) {
+                case InvokeInterface:
+                case InvokeSpecial:
+                case InvokeStatic:
+                case InvokeVirtual:
+                    MethodReference mr = (MethodReference) from.getOperand();
+                    String lcName = mr.getName().toLowerCase(Locale.ENGLISH);
+                    if (lcName.contains("error") && !mr.getDeclaringType().getSimpleName().contains("Log")
+                        || lcName.startsWith("throw") || lcName.startsWith("fail"))
+                        return NullState.SUSPICIOUS_CALL;
+                default:
+                }
+            }
             if((orig == NullState.NULL || orig == NullState.NULLABLE) && edge == EdgeType.FAIL) {
                 if(to == null && from.getCode() == AstCode.AThrow)
-                    return NullState.EXPLICIT_THROW;
+                    return NullState.INT_EXPLICIT_THROW;
                 return NullState.NULL_EXCEPTIONAL;
             }
             return orig;
@@ -149,8 +173,10 @@ public class Nullness {
                 return f2;
             if(f2 == null)
                 return f1;
-            if(f1 == NullState.EXPLICIT_THROW || f2 == NullState.EXPLICIT_THROW)
-                return NullState.EXPLICIT_THROW;
+            if(f1 == NullState.SUSPICIOUS_CALL || f2 == NullState.SUSPICIOUS_CALL)
+                return NullState.SUSPICIOUS_CALL;
+            if(f1 == NullState.INT_EXPLICIT_THROW || f2 == NullState.INT_EXPLICIT_THROW)
+                return NullState.INT_EXPLICIT_THROW;
             if(f1.isNonNull() && f2.isNonNull())
                 return NullState.NONNULL;
             if(f1 == NullState.NULL || f1 == NullState.NULLABLE || f2 == NullState.NULL || f2 == NullState.NULLABLE)

@@ -18,7 +18,6 @@ package one.util.huntbugs.flow;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -168,18 +167,6 @@ public class NullAnnotator extends Annotator<Nullness> {
 
         @Override
         public ContextNulls transferState(ContextNulls src, Expression expr) {
-            switch (expr.getCode()) {
-            case InvokeInterface:
-            case InvokeSpecial:
-            case InvokeStatic:
-            case InvokeVirtual:
-                MethodReference mr = (MethodReference) expr.getOperand();
-                String lcName = mr.getName().toLowerCase(Locale.ENGLISH);
-                if (lcName.contains("error") && !mr.getDeclaringType().getSimpleName().contains("Log")
-                    || lcName.startsWith("throw") || lcName.startsWith("fail"))
-                    return ContextNulls.DEFAULT;
-            default:
-            }
             switch (expr.getCode()) {
             case MonitorEnter:
             case MonitorExit:
