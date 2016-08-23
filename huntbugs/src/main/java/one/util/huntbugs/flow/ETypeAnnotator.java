@@ -72,8 +72,8 @@ public class ETypeAnnotator extends Annotator<EType> {
             if (newTypes.isEmpty())
                 return DEFAULT;
             other.values.forEach((k, v) -> newTypes.compute(k, (oldK, oldV) -> oldV == null ? null
-                    : EType.or(v, oldV)));
-            return new ContextTypes(newTypes);
+                    : EType.or(v, oldV).unknownToNull()));
+            return newTypes.isEmpty() ? DEFAULT : new ContextTypes(newTypes);
         }
 
         ContextTypes and(Variable var, EType value) {
@@ -92,6 +92,9 @@ public class ETypeAnnotator extends Annotator<EType> {
         }
 
         ContextTypes add(Variable var, EType value) {
+            if (value == null || value == EType.UNKNOWN) {
+                return remove(var);
+            }
             if (values == null) {
                 return new ContextTypes(Collections.singletonMap(var, value));
             }

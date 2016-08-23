@@ -37,6 +37,16 @@ public class TestUnnecessaryInstanceOf {
             System.out.println(a);
         }
     }
+    
+    @AssertWarning(value = "UnnecessaryInstanceOf")
+    void testBooleanInstanceOf(Object obj) {
+        boolean flag = obj instanceof String;
+        if(flag) {
+            if(obj instanceof CharSequence) {
+                System.out.print("ok");
+            }
+        }
+    }
 
     @AssertWarning("UnnecessaryInstanceOf")
     void testInferredDeadCode(int x) {

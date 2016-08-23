@@ -864,7 +864,7 @@ public class CFG {
                         updateState(df.transferState(state, bb.expr), bb.passTarget);
                     }
                     if (bb.trueTarget != null || bb.falseTarget != null) {
-                        TrueFalse<STATE> tf = transferConditional(bb, state);
+                        TrueFalse<STATE> tf = transferConditional(bb.expr, state);
                         updateState(tf.trueState, bb.trueTarget);
                         updateState(tf.falseState, bb.falseTarget);
                     }
@@ -881,14 +881,34 @@ public class CFG {
             }
         }
 
-        private TrueFalse<STATE> transferConditional(BasicBlock bb, STATE state) {
+        private TrueFalse<STATE> transferConditional(Expression expr, STATE state) {
             boolean invert = false;
-            Expression expr = bb.expr;
             while(expr.getCode() == AstCode.LogicalNot) {
                 invert = !invert;
                 expr = expr.getArguments().get(0);
             }
-            TrueFalse<STATE> tf = df.transferConditionalState(state, expr);
+            TrueFalse<STATE> tf;
+            if(expr.getCode() == AstCode.Load) {
+                tf = new TrueFalse<>(state);
+                Expression src = Inf.SOURCE.get(expr);
+                if(src != null && !ValuesFlow.isSpecial(src)) {
+                    List<BasicBlock> blocks = blocksBy(src).collect(Collectors.toList());
+                    if(blocks.size() == 1) {
+                        BasicBlock bb = blocks.get(0);
+                        if(bb.passTarget != null) {
+                            @SuppressWarnings("unchecked")
+                            STATE nextState = (STATE) bb.passTarget.state;
+                            if (df.sameState(state, nextState)) {
+                                @SuppressWarnings("unchecked")
+                                STATE origState = (STATE) bb.state;
+                                tf = df.transferConditionalState(origState, src);
+                            }
+                        }
+                    }
+                }
+            } else {
+                tf = df.transferConditionalState(state, expr);
+            }
             return invert ? tf.invert() : tf;
         }
 

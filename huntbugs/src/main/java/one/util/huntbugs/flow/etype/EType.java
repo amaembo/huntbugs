@@ -152,4 +152,8 @@ public interface EType {
         SingleType st2 = (SingleType)t2;
         return new AndType(Collections.singleton(st1)).append(st2);
     }
+
+    default EType unknownToNull() {
+        return this == UNKNOWN ? null : this;
+    }
 }
