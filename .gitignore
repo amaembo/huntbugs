@@ -1,2 +1,8 @@
 /huntbugstest
 /target
+
+# Eclipse workspace
+.metadata
+
+# Merge files
+*.orig
