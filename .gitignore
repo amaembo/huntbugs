@@ -1,2 +1,17 @@
 /huntbugstest
 /target
+
+# Eclipse files
+.project
+.classpath
+.settings
+.metadata
+
+# IntelliJ IDEA files
+.idea
+*.iws
+*.ipr
+*.iml
+
+# Merge files
+*.orig
