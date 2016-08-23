@@ -15,22 +15,6 @@
  */
 package one.util.huntbugs.registry;
 
-import java.io.PrintStream;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
 import com.strobel.assembler.ir.Instruction;
 import com.strobel.assembler.ir.OpCode;
 import com.strobel.assembler.metadata.MetadataSystem;
@@ -46,7 +30,6 @@ import com.strobel.decompiler.ast.AstOptimizer;
 import com.strobel.decompiler.ast.Block;
 import com.strobel.decompiler.ast.Lambda;
 import com.strobel.decompiler.ast.Node;
-
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.ErrorMessage;
 import one.util.huntbugs.db.FieldStats;
@@ -57,11 +40,29 @@ import one.util.huntbugs.flow.ValuesFlow;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.repo.Repository;
 import one.util.huntbugs.repo.RepositoryVisitor;
+import one.util.huntbugs.spi.HuntBugsPlugin;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
 import one.util.huntbugs.warning.Messages.Message;
 import one.util.huntbugs.warning.Role.NumberRole;
 import one.util.huntbugs.warning.WarningType;
+
+import java.io.PrintStream;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author Tagir Valeev
@@ -102,9 +103,8 @@ public class DetectorRegistry {
     }
 
     private Map<String, WarningType> createWarningMap(Stream<WarningType> stream) {
-        Map<String, WarningType> systemWarnings = stream.map(ctx.getOptions().getRule()::adjust).collect(
+        return stream.map(ctx.getOptions().getRule()::adjust).collect(
             Collectors.toMap(WarningType::getName, Function.identity()));
-        return systemWarnings;
     }
 
     private List<WarningDefinition> getDefinitions(Class<?> clazz) {
@@ -145,26 +145,19 @@ public class DetectorRegistry {
     }
 
     void init() {
-        Repository repo = Repository.createSelfRepository();
-        String pkg = DETECTORS_PACKAGE.replace('.', '/');
-        repo.visit(pkg, new RepositoryVisitor() {
-            @Override
-            public boolean visitPackage(String packageName) {
-                return packageName.equals(pkg);
-            }
 
-            @Override
-            public void visitClass(String className) {
-                String name = className.replace('/', '.');
-                try {
-                    ctx.incStat("Detectors.Total");
-                    if (addDetector(MetadataSystem.class.getClassLoader().loadClass(name)))
-                        ctx.incStat("Detectors");
-                } catch (ClassNotFoundException e) {
-                    ctx.addError(new ErrorMessage(name, null, null, null, -1, e));
-                }
-            }
-        });
+        // adding HuntBugs built-in detectors
+        Repository selfRepo = Repository.createSelfRepository();
+        String pkg = DETECTORS_PACKAGE.replace('.', '/');
+        selfRepo.visit(pkg, new DetectorVisitor(pkg, false));
+
+        // adding HuntBugs 3-rd party detectors if any
+        for (HuntBugsPlugin huntBugsPlugin : ServiceLoader.load(HuntBugsPlugin.class)) {
+            Repository pluginRepository = Repository.createPluginRepository(huntBugsPlugin);
+            String pluginDetectorPackage = huntBugsPlugin.detectorPackage().replace('.', '/');
+            pluginRepository.visit(pluginDetectorPackage, new DetectorVisitor(pluginDetectorPackage, true));
+        }
+
     }
 
     private void visitChildren(Node node, NodeChain parents, List<MethodContext> list, MethodData mdata) {
@@ -310,7 +303,7 @@ public class DetectorRegistry {
             if(body != null) {
                 for(Instruction instr : body.getInstructions()) {
                     if(instr.getOpCode() == OpCode.INVOKESPECIAL) {
-                        MethodReference mr = (MethodReference)instr.getOperand(0);
+                        MethodReference mr = instr.getOperand(0);
                         if(mr.getDeclaringType().isEquivalentTo(ctor.getDeclaringType()) && mr.isConstructor()) {
                             deps.put(ctor, mr.resolve());
                         }
@@ -357,9 +350,9 @@ public class DetectorRegistry {
         List<String> result = new ArrayList<>();
 
         String arrow = " --> ";
-        typeToDetector.forEach((wt, detector) -> {
-            result.add(wt.getCategory() + arrow + wt.getName() + arrow + detector);
-        });
+        typeToDetector.forEach((wt, detector) ->
+            result.add(wt.getCategory() + arrow + wt.getName() + arrow + detector)
+        );
         printTree(out, result, arrow);
         out.println("Total types: " + typeToDetector.size());
     }
@@ -399,5 +392,38 @@ public class DetectorRegistry {
     
     public Stream<WarningType> warningTypes() {
         return typeToDetector.keySet().stream();
+    }
+
+    private class DetectorVisitor implements RepositoryVisitor {
+
+        private String packageToVisit;
+
+        private boolean external;
+
+        DetectorVisitor(String packageToVisit, boolean external) {
+            this.packageToVisit = packageToVisit;
+            this.external = external;
+        }
+
+        @Override
+        public boolean visitPackage(String packageName) {
+            return packageName.equals(packageToVisit);
+        }
+
+        @Override
+        public void visitClass(String className) {
+            String name = className.replace('/', '.');
+            try {
+                ctx.incStat("Detectors.Total");
+                if (addDetector(MetadataSystem.class.getClassLoader().loadClass(name))) {
+                    ctx.incStat("Detectors");
+                    if (external) {
+                        ctx.incStat("Detectors from HuntBugs plugins");
+                    }
+                }
+            } catch (ClassNotFoundException e) {
+                ctx.addError(new ErrorMessage(name, null, null, null, -1, e));
+            }
+        }
     }
 }

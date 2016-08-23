@@ -1,0 +1,50 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>one.util</groupId>
+        <artifactId>huntbugs-all</artifactId>
+        <version>0.0.11-SNAPSHOT</version>
+    </parent>
+    <artifactId>sample-project</artifactId>
+    <packaging>jar</packaging>
+
+    <name>sample-project</name>
+    <description>Sample project to demonstrate HuntBugs configuration and features</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>one.util</groupId>
+                <artifactId>huntbugs-maven-plugin</artifactId>
+                <version>${project.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>one.util</groupId>
+                        <artifactId>sample-huntbugs-custom-detector</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>huntbugs-check</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>huntbugs</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

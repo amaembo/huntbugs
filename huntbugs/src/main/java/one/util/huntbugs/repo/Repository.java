@@ -15,6 +15,9 @@
  */
 package one.util.huntbugs.repo;
 
+import com.strobel.assembler.metadata.ITypeLoader;
+import one.util.huntbugs.spi.HuntBugsPlugin;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -30,7 +33,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.jar.JarFile;
 
-import com.strobel.assembler.metadata.ITypeLoader;
+import static java.lang.String.format;
 
 /**
  * @author Tagir Valeev
@@ -41,7 +44,7 @@ public interface Repository {
 
     void visit(String rootPackage, RepositoryVisitor visitor);
 
-    public static Repository createSelfRepository() {
+    static Repository createSelfRepository() {
         List<Repository> repos = new ArrayList<>();
         Set<Path> paths = new HashSet<>();
         try {
@@ -59,33 +62,50 @@ public interface Repository {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        CodeSource codeSource = CompositeRepository.class.getProtectionDomain().getCodeSource();
-        URL url = codeSource == null ? null : codeSource.getLocation();
-        if(url != null) {
-            try {
-                Path path = Paths.get(url.toURI());
-                if(paths.add(path)) {
-                    if(Files.isDirectory(path))
-                        repos.add(new DirRepository(path));
-                    else if(Files.isRegularFile(path))
-                        repos.add(new JarRepository(new JarFile(path.toFile())));
-                }
-            } catch (URISyntaxException | FileSystemNotFoundException | IllegalArgumentException 
-                    | IOException | UnsupportedOperationException e) {
-                // ignore
-            }
-        }
-        CompositeRepository repo = new CompositeRepository(repos);
-        return repo;
+
+        repos.add(createDetectorsRepo(CompositeRepository.class, "HuntBugs Detectors", paths));
+
+        return new CompositeRepository(repos);
     }
-    
-    public static Repository createNullRepository() {
+
+    static Repository createPluginRepository(HuntBugsPlugin huntBugsPlugin) {
+        Class<?> pluginClass = huntBugsPlugin.getClass();
+        String pluginName = huntBugsPlugin.name();
+        return createDetectorsRepo(pluginClass, pluginName, new HashSet<>());
+    }
+
+    static Repository createDetectorsRepo(Class<?> clazz, String pluginName, Set<Path> paths) {
+        CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
+        if (codeSource == null) {
+            throw new RuntimeException(format("Initializing plugin '%s' could not get code source for class %s", pluginName, clazz.getName()));
+        }
+
+        URL url = codeSource.getLocation();
+        try {
+            Path path = Paths.get(url.toURI());
+            if(paths.add(path)) {
+                if(Files.isDirectory(path)) {
+                    return new DirRepository(path);
+                } else {
+                    return new JarRepository(new JarFile(path.toFile()));
+                }
+            } else {
+                return createNullRepository();
+            }
+        } catch (URISyntaxException | FileSystemNotFoundException | IllegalArgumentException
+                | IOException | UnsupportedOperationException e) {
+            String errorMessage = format("Error creating detector repository for plugin '%s'", pluginName);
+            throw new RuntimeException(errorMessage, e);
+        }
+    }
+
+    static Repository createNullRepository() {
         return new Repository() {
             @Override
             public void visit(String rootPackage, RepositoryVisitor visitor) {
                 // nothing to do
             }
-            
+
             @Override
             public ITypeLoader createTypeLoader() {
                 return (internalName, buffer) -> false;

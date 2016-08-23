@@ -22,6 +22,8 @@
   <module>huntbugs</module>
   <module>huntbugs-ant-plugin</module>
   <module>huntbugs-maven-plugin</module>
+  <module>sample-huntbugs-custom-detector</module>
+  <module>sample-project</module>
  </modules>
 
  <distributionManagement>

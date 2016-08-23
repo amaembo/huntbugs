@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package one.util.huntbugs;
+package one.util.huntbugs.sample;
 
 import one.util.huntbugs.spi.DataTests;
 import org.junit.Test;
 
 /**
- * @author Tagir Valeev
+ * @author Mihails Volkovs
  */
 public class DataTest {
 
     @Test
     public void test() throws Exception {
-        DataTests.test("one/util/huntbugs/testdata");
+        DataTests.test("one/util/huntbugs/sample/testdata");
     }
 
 }
