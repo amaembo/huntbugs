@@ -864,7 +864,7 @@ public class CFG {
                         updateState(df.transferState(state, bb.expr), bb.passTarget);
                     }
                     if (bb.trueTarget != null || bb.falseTarget != null) {
-                        TrueFalse<STATE> tf = df.transferConditionalState(state, bb.expr);
+                        TrueFalse<STATE> tf = transferConditional(bb, state);
                         updateState(tf.trueState, bb.trueTarget);
                         updateState(tf.falseState, bb.falseTarget);
                     }
@@ -879,6 +879,17 @@ public class CFG {
                     throw new RuntimeException("Error running DFA at block " + bb + "\n" + CFG.this + CFG.this.body, e);
                 }
             }
+        }
+
+        private TrueFalse<STATE> transferConditional(BasicBlock bb, STATE state) {
+            boolean invert = false;
+            Expression expr = bb.expr;
+            while(expr.getCode() == AstCode.LogicalNot) {
+                invert = !invert;
+                expr = expr.getArguments().get(0);
+            }
+            TrueFalse<STATE> tf = df.transferConditionalState(state, expr);
+            return invert ? tf.invert() : tf;
         }
 
         private void updateState(STATE newState, BasicBlock target) {

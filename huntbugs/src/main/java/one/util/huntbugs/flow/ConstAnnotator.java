@@ -566,10 +566,6 @@ public class ConstAnnotator extends Annotator<Object> {
         @Override
         public TrueFalse<ContextValues> transferConditionalState(ContextValues src, Expression expr) {
             boolean invert = false;
-            while(expr.getCode() == AstCode.LogicalNot) {
-                invert = !invert;
-                expr = expr.getArguments().get(expr.getArguments().size()-1);
-            }
             Expression arg = null;
             Object cst = null;
             if (expr.getCode() == AstCode.CmpEq || expr.getCode() == AstCode.CmpNe

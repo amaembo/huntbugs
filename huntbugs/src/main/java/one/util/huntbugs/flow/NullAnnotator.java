@@ -227,10 +227,6 @@ public class NullAnnotator extends Annotator<Nullness> {
         public TrueFalse<ContextNulls> transferConditionalState(ContextNulls src, Expression expr) {
             src = transferState(src, expr);
             boolean invert = false;
-            while (expr.getCode() == AstCode.LogicalNot) {
-                invert = !invert;
-                expr = expr.getArguments().get(expr.getArguments().size() - 1);
-            }
             Variable var;
             if (expr.getCode() == AstCode.InstanceOf) {
                 Expression arg = expr.getArguments().get(0);

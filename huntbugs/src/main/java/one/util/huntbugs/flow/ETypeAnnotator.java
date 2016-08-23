@@ -185,10 +185,6 @@ public class ETypeAnnotator extends Annotator<EType> {
         @Override
         public TrueFalse<ContextTypes> transferConditionalState(ContextTypes src, Expression expr) {
             boolean invert = false;
-            while (expr.getCode() == AstCode.LogicalNot) {
-                invert = !invert;
-                expr = expr.getArguments().get(expr.getArguments().size() - 1);
-            }
             Variable var = null;
             EType etype = null;
             if (expr.getCode() == AstCode.InstanceOf) {

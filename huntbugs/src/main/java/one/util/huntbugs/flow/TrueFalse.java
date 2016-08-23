@@ -34,4 +34,8 @@ class TrueFalse<STATE> {
         this.trueState = invert ? falseState : trueState;
         this.falseState = invert ? trueState : falseState;
     }
+
+    public TrueFalse<STATE> invert() {
+        return new TrueFalse<>(falseState, trueState);
+    }
 }
