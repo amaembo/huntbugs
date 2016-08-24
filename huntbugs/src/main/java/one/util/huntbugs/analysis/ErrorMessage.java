@@ -112,14 +112,7 @@ public class ErrorMessage {
             sb.append("\nElement: ").append(elementName).append(": ").append(descriptor);
         if(detector != null)
             sb.append("\nDetector: ").append(detector);
-        if(error != null) {
-            sb.append("\nError: ").append(error);
-            for(StackTraceElement ste : error.getStackTrace()) {
-                sb.append("\n\t").append(ste);
-            }
-        } else {
-            sb.append("\nError: ").append(errorMessage);
-        }
+        sb.append("\nError: ").append(getError());
         return sb.toString();
     }
 }
