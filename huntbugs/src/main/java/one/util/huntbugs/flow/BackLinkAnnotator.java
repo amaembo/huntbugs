@@ -31,7 +31,7 @@ import com.strobel.decompiler.ast.Node;
 public class BackLinkAnnotator extends Annotator<Set<Expression>> {
 
     public BackLinkAnnotator() {
-        super("backlink2", Collections.emptySet());
+        super("backlink", Collections.emptySet());
     }
     
     void annotate(Node node) {

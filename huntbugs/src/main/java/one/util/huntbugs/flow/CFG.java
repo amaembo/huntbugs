@@ -51,6 +51,7 @@ import com.strobel.decompiler.ast.LoopType;
 import com.strobel.decompiler.ast.Node;
 import com.strobel.decompiler.ast.Switch;
 import com.strobel.decompiler.ast.TryCatchBlock;
+import com.strobel.decompiler.ast.Variable;
 
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 import one.util.huntbugs.util.Exprs;
@@ -101,12 +102,194 @@ public class CFG {
         } else {
             entry = new BasicBlock();
             buildBlock(entry, exit, new OuterJumpContext(), methodBody);
-            fixBlocks();
             verify();
+            inlineBooleans();
+            fixBlocks();
             dupExpr = computeDupBlocks(findDuplicates(methodBody));
             hasUnreachable = blocks.stream().anyMatch(bb -> !bb.reached);
         }
         this.forwardTill = computeForwardTill();
+    }
+    
+    private TrueFalse<List<BasicBlock>> getConditionalBranches(BasicBlock cond) {
+        int trueStart = cond.trueTarget.id;
+        int falseStart = cond.falseTarget.id;
+        if(trueStart == BLOCKTYPE_EXIT)
+            trueStart = blocks.size();
+        if(falseStart == BLOCKTYPE_EXIT)
+            falseStart = blocks.size();
+        if(trueStart < cond.id || falseStart < cond.id)
+            return null;
+        Integer START = 0;
+        Integer TRUE = 1;
+        Integer FALSE = 2;
+        Integer BOTH = 3;
+        graphSearch(new GraphSearch<Integer>() {
+            @Override
+            public Integer markStart(Expression expr, boolean isEntry) {
+                return expr == cond.expr ? START : null;
+            }
+
+            @Override
+            public Integer transfer(Integer orig, Expression from, EdgeType edge, Expression to) {
+                if(orig == START) {
+                    if(edge == EdgeType.TRUE)
+                        return TRUE;
+                    if(edge == EdgeType.FALSE)
+                        return FALSE;
+                    return BOTH;
+                }
+                return orig;
+            }
+
+            @Override
+            public Integer merge(Integer f1, Integer f2) {
+                if(f1 == null)
+                    return f2;
+                if(f2 == null)
+                    return f1;
+                return BOTH;
+            }
+        });
+        List<BasicBlock> trueBlocks = null;
+        List<BasicBlock> falseBlocks = null;
+        int trueEnd = -1, falseEnd = -1;
+        for(BasicBlock bb : blocks) {
+            Integer state = (Integer) bb.state;
+            if(state == null)
+                continue;
+            if(trueEnd != -1 && trueBlocks == null && state != TRUE) {
+                trueBlocks = blocks.subList(trueStart, trueEnd+1);
+            }
+            if(falseEnd != -1 && falseBlocks == null && state != FALSE) {
+                falseBlocks = blocks.subList(falseStart, falseEnd+1);
+            }
+            if(state == TRUE) {
+                if(bb.id < trueStart || trueBlocks != null)
+                    return null;
+                trueEnd = bb.id;
+            }
+            if(state == FALSE) {
+                if(bb.id < falseStart || falseBlocks != null)
+                    return null;
+                falseEnd = bb.id;
+            }
+        }
+        if(trueEnd != -1 && trueBlocks == null) {
+            trueBlocks = blocks.subList(trueStart, blocks.size());
+        }
+        if(falseEnd != -1 && falseBlocks == null) {
+            falseBlocks = blocks.subList(falseStart, blocks.size());
+        }
+        if(trueBlocks == null && falseBlocks == null) {
+            return null;
+        }
+        if(trueBlocks == null) {
+            trueBlocks = Collections.emptyList();
+        }
+        if(falseBlocks == null) {
+            falseBlocks = Collections.emptyList();
+        }
+        return new TrueFalse<>(trueBlocks, falseBlocks);
+    }
+
+    private void inlineBooleans() {
+        boolean changed = true;
+        while(changed) {
+            changed = false;
+            for (BasicBlock bb : blocks) {
+                if (bb.trueTarget == null)
+                    continue;
+                BasicBlock load = bb;
+                boolean invert = false;
+                while (load.expr.getCode() == AstCode.LogicalNot) {
+                    load = blocks.get(load.id - 1);
+                    invert = !invert;
+                }
+                if (load.expr.getCode() != AstCode.Load)
+                    continue;
+                TrueFalse<List<BasicBlock>> branches = getConditionalBranches(bb);
+                if (branches == null)
+                    continue;
+                Variable var = (Variable) load.expr.getOperand();
+                if(var.getOriginalParameter() != null)
+                    continue;
+                List<BasicBlock> stores = blocks.stream().filter(s -> s.expr.getCode() == AstCode.Store && var.equals(s.expr
+                        .getOperand())).collect(Collectors.toList());
+                if (stores.size() != 1)
+                    continue;
+                BasicBlock store = stores.get(0);
+                BasicBlock cond = blocks.get(store.id-1);
+                int copyStart = store.id + 1;
+                int copyEnd = load.id;
+                int domStart = -1;
+                if(!branches.trueState.isEmpty()) {
+                    domStart = branches.trueState.get(branches.trueState.size()-1).id+1;
+                }
+                if(!branches.falseState.isEmpty()) {
+                    domStart = Math.max(domStart, branches.falseState.get(branches.falseState.size()-1).id+1);
+                }
+                if(copyEnd < copyStart || domStart == -1)
+                    continue;
+                List<BasicBlock> falseCopy = copyBlocks(copyStart, copyEnd);
+                if(falseCopy == null)
+                    continue;
+                List<BasicBlock> trueCopy = blocks.subList(copyStart, copyEnd);
+                List<BasicBlock> newBlocks = new ArrayList<>();
+                newBlocks.addAll(blocks.subList(0, cond.id+1));
+                BasicBlock storeTrue = new BasicBlock(true, new Expression(AstCode.Store, var, -1, new Expression(AstCode.LdC, Boolean.TRUE, -1)));
+                BasicBlock storeFalse = new BasicBlock(true, new Expression(AstCode.Store, var, -1, new Expression(AstCode.LdC, Boolean.FALSE, -1)));
+                cond.passTarget = null;
+                cond.trueTarget = storeTrue;
+                cond.falseTarget = storeFalse;
+                List<BasicBlock> dom = blocks.subList(domStart, blocks.size());
+                BasicBlock domTarget = dom.isEmpty() ? exit : dom.get(0);
+                BasicBlock trueTarget = branches.trueState.isEmpty() ? domTarget : branches.trueState.get(0);
+                if(!trueCopy.isEmpty())
+                    trueTarget = trueCopy.get(0);
+                BasicBlock falseTarget = branches.falseState.isEmpty() ? domTarget : branches.falseState.get(0);
+                if(!falseCopy.isEmpty())
+                    falseTarget = falseCopy.get(0);
+                newBlocks.add(storeTrue);
+                if(invert) {
+                    storeTrue.addTarget(EdgeType.PASS, falseTarget);
+                    newBlocks.addAll(falseCopy);
+                    newBlocks.addAll(branches.falseState);
+                    newBlocks.add(storeFalse);
+                    storeFalse.addTarget(EdgeType.PASS, trueTarget);
+                    newBlocks.addAll(trueCopy);
+                    newBlocks.addAll(branches.trueState);
+                } else {
+                    storeTrue.addTarget(EdgeType.PASS, trueTarget);
+                    newBlocks.addAll(trueCopy);
+                    newBlocks.addAll(branches.trueState);
+                    newBlocks.add(storeFalse);
+                    storeFalse.addTarget(EdgeType.PASS, falseTarget);
+                    newBlocks.addAll(falseCopy);
+                    newBlocks.addAll(branches.falseState);
+                }
+                newBlocks.addAll(dom);
+                blocks.clear();
+                blocks.addAll(newBlocks);
+                renumBlocks();
+                verify();
+                changed = true;
+                break;
+            }
+        }
+    }
+    
+    private List<BasicBlock> copyBlocks(int copyStart, int copyEnd) {
+        if(copyStart==copyEnd)
+            return Collections.emptyList();
+        // TODO
+        return null;
+    }
+
+    private void renumBlocks() {
+        for(int i=0; i<blocks.size(); i++) {
+            blocks.get(i).id = i;
+        }
     }
 
     private List<List<BasicBlock>> computeDupBlocks(Collection<Set<Expression>> dupExpr) {
@@ -131,6 +314,9 @@ public class CFG {
             if (bb.targets().anyMatch(target -> target.id == -1)) {
                 throw new IllegalStateException("Not linked target block at [" + bb.getId() + "]: " + this);
             }
+            if (bb.targets().anyMatch(target -> target.id >= 0 && blocks.get(target.id) != target)) {
+                throw new IllegalStateException("Missing target block at [" + bb.getId() + "]: " + this);
+            }
             if (bb.reached && bb.targets().anyMatch(target -> !target.reached)) {
                 throw new IllegalStateException("Invalid flow control at [" + bb.getId() + "]: " + this);
             }
@@ -142,11 +328,42 @@ public class CFG {
         for (BasicBlock bb : blocks) {
             while (bb.falseTarget != null && bb.falseTarget.expr != null && bb.falseTarget.expr
                     .getCode() == AstCode.LogicalAnd)
-                bb.falseTarget = bb.falseTarget.passTarget == null ? bb.falseTarget.falseTarget
-                        : bb.falseTarget.passTarget;
+                bb.falseTarget = bb.falseTarget.falseOrPass();
             while (bb.trueTarget != null && bb.trueTarget.expr != null && bb.trueTarget.expr
                     .getCode() == AstCode.LogicalOr)
-                bb.trueTarget = bb.trueTarget.passTarget == null ? bb.trueTarget.trueTarget : bb.trueTarget.passTarget;
+                bb.trueTarget = bb.trueTarget.trueOrPass();
+            if(bb.synthetic) {
+                Expression expr = bb.expr;
+                if(expr.getCode() == AstCode.Store) {
+                    Variable var = (Variable) expr.getOperand();
+                    Expression arg = expr.getArguments().get(0);
+                    if(arg.getCode() == AstCode.LdC && arg.getOperand() instanceof Boolean) {
+                        boolean val = (boolean) arg.getOperand();
+                        while(true) {
+                            BasicBlock target = bb.passTarget;
+                            if(target == null)
+                                break;
+                            Expression targetExpr = target.expr;
+                            if(targetExpr == null)
+                                break;
+                            boolean wanted;
+                            if(targetExpr.getCode() == AstCode.LogicalAnd)
+                                wanted = false;
+                            else if(targetExpr.getCode() == AstCode.LogicalOr)
+                                wanted = true;
+                            else break;
+                            Expression targetArg = targetExpr.getArguments().get(0);
+                            while(targetArg.getCode() == AstCode.LogicalNot) {
+                                val = !val;
+                                targetArg = targetArg.getArguments().get(0);
+                            }
+                            if (wanted != val || targetArg.getCode() != AstCode.Load || !var.equals(targetArg.getOperand()))
+                                break;
+                            bb.passTarget = wanted ? target.trueOrPass() : target.falseOrPass();
+                        }
+                    }
+                }
+            }
             if (bb.reached)
                 bb.targets().forEach(t -> t.reached = true);
         }
@@ -757,6 +974,10 @@ public class CFG {
         return deadCodeEntry == null ? null
                 : new CodeBlock(deadCodeEntry.expr, deadExpressions.size(), isExceptional(deadCodeEntry));
     }
+    
+    public boolean isInCFG(Expression expr) {
+        return blocksBy(expr).findAny().isPresent();
+    }
 
     private boolean isExceptional(BasicBlock start) {
         return !isReachable(start, exit);
@@ -887,28 +1108,7 @@ public class CFG {
                 invert = !invert;
                 expr = expr.getArguments().get(0);
             }
-            TrueFalse<STATE> tf;
-            if(expr.getCode() == AstCode.Load) {
-                tf = new TrueFalse<>(state);
-                Expression src = Inf.SOURCE.get(expr);
-                if(src != null && !ValuesFlow.isSpecial(src)) {
-                    List<BasicBlock> blocks = blocksBy(src).collect(Collectors.toList());
-                    if(blocks.size() == 1) {
-                        BasicBlock bb = blocks.get(0);
-                        if(bb.passTarget != null) {
-                            @SuppressWarnings("unchecked")
-                            STATE nextState = (STATE) bb.passTarget.state;
-                            if (df.sameState(state, nextState)) {
-                                @SuppressWarnings("unchecked")
-                                STATE origState = (STATE) bb.state;
-                                tf = df.transferConditionalState(origState, src);
-                            }
-                        }
-                    }
-                }
-            } else {
-                tf = df.transferConditionalState(state, expr);
-            }
+            TrueFalse<STATE> tf = df.transferConditionalState(state, expr);
             return invert ? tf.invert() : tf;
         }
 
@@ -952,7 +1152,7 @@ public class CFG {
 
     static class BasicBlock {
         Object state;
-        boolean changed, reached;
+        boolean changed, reached, synthetic;
         int id = -1;
         Expression expr;
         BasicBlock passTarget;
@@ -971,10 +1171,23 @@ public class CFG {
             this.expr = expr;
         }
 
+        BasicBlock(boolean synthetic, Expression expr) {
+            this.expr = expr;
+            this.synthetic = synthetic;
+        }
+        
         void setId(int id) {
             if (this.id >= 0)
                 throw new IllegalStateException("Double id: " + this.id + "/" + id);
             this.id = id;
+        }
+        
+        BasicBlock falseOrPass() {
+            return falseTarget != null ? falseTarget : passTarget;
+        }
+
+        BasicBlock trueOrPass() {
+            return trueTarget != null ? trueTarget : passTarget;
         }
 
         void setExpression(Expression expr) {

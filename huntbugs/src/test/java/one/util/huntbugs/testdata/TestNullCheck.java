@@ -280,4 +280,13 @@ public class TestNullCheck {
             System.out.println("Never");
         }
     }
+    
+    @AssertNoWarning("*")
+    public void testWithBooleanFlag(String s) {
+        boolean f = s == null || s.isEmpty();
+        if(f) {
+            s = "none";
+        }
+        System.out.println(s.trim());
+    }
 }

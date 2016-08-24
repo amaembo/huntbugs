@@ -125,6 +125,22 @@ public class TestKnownComparison {
     }
 
     @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
+    public void testBooleanAssignmentNot(int a, int b) {
+        boolean val = a != 5 || b > 10;
+        if(!val && a != 5) {
+            System.out.println("ok");
+        }
+    }
+    
+    @AssertNoWarning("*")
+    public void testBooleanAssignmentTernary(int a, int b) {
+        boolean val = a > 5 ? b > 10 : b < 10;
+        if(val && a == 5) {
+            System.out.println("ok");
+        }
+    }
+    
+    @AssertWarning("ResultOfComparisonIsStaticallyKnownDeadCode")
     public void testIfConstCompare(int a) {
         if (a == 5) {
             System.out.println("A is 5");

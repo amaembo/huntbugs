@@ -84,6 +84,10 @@ public class DeadLocalStore {
                     if(usages.size() == 1 && usages.iterator().next() == expr) {
                         Set<Expression> storeUsages = Inf.BACKLINK.findUsages(expr);
                         if(storeUsages.isEmpty()) {
+                            if(mc.getCFG() != null && !mc.getCFG().isInCFG(expr)) {
+                                // Was removed from CFG (probably inlined)
+                                return;
+                            }
                             if(nc.getNode() instanceof CatchBlock && nc.getNode().getChildren().get(0) == expr
                                     && ((CatchBlock)nc.getNode()).getCaughtTypes().size() > 1) {
                                 // Exception variable in multi-catch block

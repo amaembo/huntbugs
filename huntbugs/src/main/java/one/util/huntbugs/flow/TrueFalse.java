@@ -38,4 +38,9 @@ class TrueFalse<STATE> {
     public TrueFalse<STATE> invert() {
         return new TrueFalse<>(falseState, trueState);
     }
+    
+    @Override
+    public String toString() {
+        return "TRUE: "+trueState+"\nFALSE: "+falseState;
+    }
 }
