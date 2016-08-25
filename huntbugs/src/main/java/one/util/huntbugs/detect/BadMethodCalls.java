@@ -52,6 +52,7 @@ import one.util.huntbugs.warning.Role.TypeRole;
 @WarningDefinition(category = "BadPractice", name = "SystemRunFinalizersOnExit", maxScore = 60)
 @WarningDefinition(category = "BadPractice", name = "ThreadStopThrowable", maxScore = 60)
 @WarningDefinition(category = "Performance", name = "URLBlockingMethod", maxScore = 60)
+@WarningDefinition(category = "Performance", name = "ConcurrentCollectionSize", maxScore = 60)
 @WarningDefinition(category = "RedundantCode", name = "UselessThread", maxScore = 60)
 @WarningDefinition(category = "Correctness", name = "BigDecimalConstructedFromDouble", maxScore = 50)
 @WarningDefinition(category = "Correctness", name = "BigDecimalConstructedFromInfiniteOrNaN", maxScore = 70)
@@ -67,6 +68,8 @@ import one.util.huntbugs.warning.Role.TypeRole;
 @WarningDefinition(category = "Correctness", name = "WrongArgumentOrder", maxScore = 65)
 public class BadMethodCalls {
     private static final TypeDefinition STREAM_TYPE = Types.lookupJdkType("java/util/stream/Stream");
+    private static final TypeDefinition CLD_TYPE = Types.lookupJdkType("java/util/concurrent/ConcurrentLinkedDeque");
+    private static final TypeDefinition CLQ_TYPE = Types.lookupJdkType("java/util/concurrent/ConcurrentLinkedQueue");
     private static final TypeReference CHAR_ARRAY_TYPE = BuiltinTypes.Character.makeArrayType();
     
     private static final StringRole DOUBLE_NUMBER = StringRole.forName("DOUBLE_NUMBER");
@@ -238,6 +241,17 @@ public class BadMethodCalls {
                     ctx.report("WrongArgumentOrder", 0, node.getArguments().get(0), Roles.CALLED_METHOD.create(mr),
                         Roles.STRING.create((String) objArg));
                 }
+            }
+        } else if (name.equals("size") && signature.equals("()I") && (node.getCode() == AstCode.InvokeVirtual || node
+                .getCode() == AstCode.InvokeInterface)) {
+            EType eType = Inf.ETYPE.resolve(node.getArguments().get(0));
+            TypeReference target = null;
+            if (eType.is(CLD_TYPE, false).yes())
+                target = CLD_TYPE;
+            else if (eType.is(CLQ_TYPE, false).yes())
+                target = CLQ_TYPE;
+            if (target != null) {
+                ctx.report("ConcurrentCollectionSize", 0, node, Roles.TARGET_TYPE.create(target));
             }
         }
     }

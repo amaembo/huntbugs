@@ -16,6 +16,9 @@
 package one.util.huntbugs.testdata;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
@@ -78,5 +81,25 @@ public class TestRedundantStreamCalls {
     @AssertNoWarning("*")
     public void testParallel(ArrayList<String> x) {
         x.parallelStream().forEach(System.out::println);
+    }
+    
+    @AssertWarning("RedundantCollectionStream")
+    public Stream<String> testRedundantEmpty() {
+        return Collections.<String>emptyList().stream();
+    }
+    
+    @AssertWarning("RedundantCollectionStream")
+    public Stream<String> testRedundantSingleton() {
+        return Collections.singleton("a").stream();
+    }
+    
+    @AssertWarning("RedundantCollectionStream")
+    public Stream<String> testRedundantArray() {
+        return Arrays.asList("a", "b", "c").stream();
+    }
+    
+    @AssertWarning("StreamCountFromCollection")
+    public long testStreamCount(List<Integer> collection) {
+        return collection.stream().count();
     }
 }

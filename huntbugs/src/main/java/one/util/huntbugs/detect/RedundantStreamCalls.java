@@ -15,8 +15,9 @@
  */
 package one.util.huntbugs.detect;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.function.Predicate;
-
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.assembler.metadata.TypeReference;
 import com.strobel.decompiler.ast.AstCode;
@@ -27,6 +28,7 @@ import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
+import one.util.huntbugs.util.ExpressionFormatter;
 import one.util.huntbugs.util.Exprs;
 import one.util.huntbugs.util.Types;
 import one.util.huntbugs.warning.Roles;
@@ -37,6 +39,8 @@ import one.util.huntbugs.warning.Roles;
  */
 @WarningDefinition(category="RedundantCode", name="RedundantStreamForEach", maxScore=50)
 @WarningDefinition(category="RedundantCode", name="RedundantStreamFind", maxScore=48)
+@WarningDefinition(category="RedundantCode", name="RedundantCollectionStream", maxScore=48)
+@WarningDefinition(category="Performance", name="StreamCountFromCollection", maxScore=60)
 public class RedundantStreamCalls {
     @AstVisitor(nodes=AstNodes.EXPRESSIONS, minVersion=8)
     public void visit(Expression expr, MethodContext mc) {
@@ -49,6 +53,38 @@ public class RedundantStreamCalls {
                     if(isCollectionStream(mr2)) {
                         mc.report("RedundantStreamForEach", 0, expr, Roles.REPLACEMENT_METHOD.create(mr2
                                 .getDeclaringType().getInternalName(), "forEach", "(Ljava/util/function/Consumer;)V"));
+                    }
+                }
+            }
+            if(isStreamCount(mr)) {
+                Expression stream = Exprs.getChild(expr, 0);
+                if(stream.getCode() == AstCode.InvokeInterface || stream.getCode() == AstCode.InvokeVirtual) {
+                    MethodReference mr2 = (MethodReference) stream.getOperand();
+                    if(isCollectionStream(mr2)) {
+                        mc.report("StreamCountFromCollection", 0, expr, Roles.REPLACEMENT_METHOD.create(mr2
+                                .getDeclaringType().getInternalName(), "size", "()I"));
+                    }
+                }
+            }
+            if(isCollectionStream(mr)) {
+                Expression collection = Exprs.getChild(expr, 0);
+                if(!Inf.BACKLINK.findTransitiveUsages(collection, true).allMatch(Predicate.isEqual(expr))) {
+                    return;
+                }
+                if(collection.getCode() == AstCode.InvokeStatic) {
+                    MethodReference mr2 = (MethodReference)collection.getOperand();
+                    String replacement = null;
+                    if(Types.is(mr2.getDeclaringType(), Collections.class)) {
+                        if(mr2.getName().startsWith("singleton"))
+                            replacement = "Stream.of("+ExpressionFormatter.formatExpression(collection.getArguments().get(0))+")";
+                        else if(mr2.getName().startsWith("empty"))
+                            replacement = "Stream.empty()";
+                    } else if(Types.is(mr2.getDeclaringType(), Arrays.class)) {
+                        if(mr2.getName().equals("asList"))
+                            replacement = "Stream.of(...)";
+                    }
+                    if(replacement != null) {
+                        mc.report("RedundantCollectionStream", 0, expr, Roles.REPLACEMENT_STRING.create(replacement));
                     }
                 }
             }
@@ -93,6 +129,10 @@ public class RedundantStreamCalls {
     private boolean isStreamFind(MethodReference mr) {
         return (mr.getName().equals("findFirst") || mr.getName().equals("findAny")) &&
                 mr.getErasedSignature().startsWith("()Ljava/util/Optional") && Types.isBaseStream(mr.getDeclaringType());
+    }
+    
+    private boolean isStreamCount(MethodReference mr) {
+        return mr.getName().equals("count") && Types.isBaseStream(mr.getDeclaringType());
     }
     
     private boolean isStreamFilter(MethodReference mr) {

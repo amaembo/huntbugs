@@ -24,6 +24,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import org.junit.Assert;
@@ -39,6 +41,8 @@ public class TestBadMethodCalls {
     ScheduledThreadPoolExecutor ex = new ScheduledThreadPoolExecutor(10);
     
     Object arrField = Math.random()>0.5 ? new char[] {1,2,3} : new int[] {1,2,3};
+    
+    Queue<String> queue = new ConcurrentLinkedQueue<>(); 
     
     @AssertWarning(value="SystemExit", maxScore = 30)
     public void systemExit() {
@@ -306,5 +310,10 @@ public class TestBadMethodCalls {
     @AssertWarning("StreamToString")
     public String process(List<String> vals) {
         return vals.stream().map(String::trim).toString();
+    }
+    
+    @AssertWarning("ConcurrentCollectionSize")
+    public int size() {
+        return queue.size();
     }
 }

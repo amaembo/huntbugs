@@ -1257,6 +1257,19 @@
       For example, for <code>Collections.synchronizedXYZ</code> collections <code>stream().forEach()</code> is not synchronized,
       but <code>forEach()</code> is synchronized.]]></LongDescription>
     </Warning>
+    <Warning Type="RedundantCollectionStream">
+      <Title>Redundant collection is created just to make stream</Title>
+      <Description>Redundant collection is created just to make stream in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code creates a redundant collection just to create a stream.
+      Here stream can be created directly using <code>$REPLACEMENT$</code>. Which is shorter and probably more performant.]]></LongDescription>
+    </Warning>
+    <Warning Type="StreamCountFromCollection">
+      <Title>Stream.count() is called for stream created directly from collection</Title>
+      <Description>Stream.count() is called for stream created directly from collection in $METHOD$.</Description>
+      <LongDescription><![CDATA[This code creates a srteam from collection just to count its elements.
+      In Java 8 count() method actually enumerates all stream elements, which may be slow for big collections.
+      Use $REPLACEMENT$ which is shorter and usually works faster.]]></LongDescription>
+    </Warning>
     <Warning Type="RedundantStreamFind">
       <Title>Redundant filter().findFirst().isPresent() chain</Title>
       <Description>Redundant filter().findFirst().isPresent() chain in $METHOD$.</Description>
@@ -1560,6 +1573,14 @@
       <LongDescription><![CDATA[This serializable class defines a <code>writeObject()</code> which is
       synchronized, but no other method of this class is synchronized as well. 
       Probably this synchronization is useless and could be removed.]]></LongDescription>
+    </Warning>
+    <Warning Type="ConcurrentCollectionSize">
+      <Title>The size() method is called for concurrent collection</Title>
+      <Description>The size() method is called for $TARGET_TYPE$ which is slow.</Description>
+      <LongDescription><![CDATA[This code calls the <code>size()</code> method on concurrent collection
+      of type $TARGET_TYPE$. This is rarely a good idea as this method actually traverses
+      the whole collection which is really slow. Also if collection is modified concurrently,
+      it's size could be inaccurate.]]></LongDescription>
     </Warning>
   </WarningList>
 </p:Messages>
