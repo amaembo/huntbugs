@@ -78,5 +78,16 @@ public class TestWaitContract {
             } while (!condition);
         }
     }
+    
+    @AssertNoWarning("*")
+    static class Holder {
+        private final Object object = new Object();
 
+        @AssertWarning("WaitUnconditional")
+        class SubClass {
+            public void check() throws InterruptedException {
+                object.wait();
+            }
+        }
+    }
 }

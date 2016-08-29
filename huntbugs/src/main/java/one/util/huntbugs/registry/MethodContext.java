@@ -170,10 +170,12 @@ public class MethodContext extends ElementContext {
                 anno.add(WarningAnnotation.forVariable((Variable) operand));
                 operand = ValuesFlow.getSource(expr).getOperand();
             }
-            if (operand instanceof FieldReference) {
+            if (operand instanceof FieldReference && !annotations.stream().anyMatch(wa -> wa
+                .getRole() == Roles.FIELD)) {
                 anno.add(Roles.FIELD.create((FieldReference) operand));
             }
-            if (operand instanceof MethodReference) {
+            if (operand instanceof MethodReference && !annotations.stream().anyMatch(wa -> wa
+                    .getRole() == Roles.CALLED_METHOD)) {
                 MethodReference mr = (MethodReference) operand;
                 anno.add(Roles.CALLED_METHOD.create(mr));
             }
