@@ -17,6 +17,7 @@ package one.util.huntbugs.detect;
 
 import java.util.List;
 
+import com.strobel.assembler.metadata.MethodDefinition;
 import com.strobel.assembler.metadata.MethodReference;
 import com.strobel.decompiler.ast.AstCode;
 import com.strobel.decompiler.ast.Block;
@@ -29,6 +30,7 @@ import com.strobel.decompiler.ast.Node;
 import one.util.huntbugs.registry.MethodContext;
 import one.util.huntbugs.registry.anno.AstNodes;
 import one.util.huntbugs.registry.anno.AstVisitor;
+import one.util.huntbugs.registry.anno.MethodVisitor;
 import one.util.huntbugs.registry.anno.WarningDefinition;
 import one.util.huntbugs.util.NodeChain;
 import one.util.huntbugs.util.Nodes;
@@ -43,6 +45,11 @@ import one.util.huntbugs.warning.Roles;
 @WarningDefinition(category = "Multithreading", name = "WaitNotInLoop", maxScore = 65)
 @WarningDefinition(category = "Multithreading", name = "NotifyNaked", maxScore = 50)
 public class WaitContract {
+    @MethodVisitor
+    public boolean checkMethod(MethodDefinition md) {
+        return !md.isSynthetic();
+    }
+    
     @AstVisitor(nodes=AstNodes.EXPRESSIONS)
     public void visit(Expression expr, NodeChain parents, MethodContext mc) {
         if (expr.getCode() == AstCode.InvokeVirtual) {
