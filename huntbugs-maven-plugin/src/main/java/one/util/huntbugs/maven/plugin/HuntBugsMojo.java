@@ -15,6 +15,10 @@
  */
 package one.util.huntbugs.maven.plugin;
 
+import com.strobel.assembler.metadata.ClasspathTypeLoader;
+import com.strobel.assembler.metadata.CompositeTypeLoader;
+import com.strobel.assembler.metadata.ITypeLoader;
+import com.strobel.assembler.metadata.JarTypeLoader;
 import one.util.huntbugs.analysis.AnalysisOptions;
 import one.util.huntbugs.analysis.Context;
 import one.util.huntbugs.analysis.HuntBugsResult;
@@ -25,22 +29,23 @@ import one.util.huntbugs.repo.CompositeRepository;
 import one.util.huntbugs.repo.DirRepository;
 import one.util.huntbugs.repo.Repository;
 import one.util.huntbugs.warning.Warning;
-
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.repository.ArtifactRepository;
+import org.apache.maven.artifact.resolver.filter.ArtifactFilter;
+import org.apache.maven.artifact.resolver.filter.ScopeArtifactFilter;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugins.annotations.Component;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
-
-import com.strobel.assembler.metadata.ClasspathTypeLoader;
-import com.strobel.assembler.metadata.CompositeTypeLoader;
-import com.strobel.assembler.metadata.ITypeLoader;
-import com.strobel.assembler.metadata.JarTypeLoader;
+import org.apache.maven.shared.dependency.tree.DependencyNode;
+import org.apache.maven.shared.dependency.tree.DependencyTreeBuilder;
+import org.apache.maven.shared.dependency.tree.DependencyTreeBuilderException;
+import org.apache.maven.shared.dependency.tree.traversal.CollectingDependencyNodeVisitor;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,7 +54,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.jar.JarFile;
 
 /**
@@ -101,7 +105,10 @@ public class HuntBugsMojo extends AbstractMojo {
 
     @Parameter( defaultValue = "${session}", readonly = true, required = true )
     private MavenSession session;
-    
+
+    @Component
+    private DependencyTreeBuilder treeBuilder;
+
     @Override
     public void execute() throws MojoExecutionException {
         try {
@@ -125,26 +132,27 @@ public class HuntBugsMojo extends AbstractMojo {
             getLog().info("HuntBugs: +dir " + classesDirectory);
         }
 
-        List<ITypeLoader> deps = new ArrayList<>();
-        ArtifactRepository localRepository = session.getLocalRepository();
+        // collecting project dependencies including pom and transitive dependencies
+        ArtifactFilter artifactFilter = new ScopeArtifactFilter("compile");
+        DependencyNode rootNode;
+        try {
+            rootNode = treeBuilder.buildDependencyTree(project, session.getLocalRepository(), artifactFilter);
+        } catch (DependencyTreeBuilderException e) {
+            throw new RuntimeException(e);
+        }
+        CollectingDependencyNodeVisitor visitor = new CollectingDependencyNodeVisitor();
+        rootNode.accept(visitor);
 
-        Set<Artifact> dependencyArtifacts = project.getDependencyArtifacts();
-        if (dependencyArtifacts != null) {
-            for (Artifact art : dependencyArtifacts) {
-                if (art.getScope().equals("compile")) {
-                    File f = localRepository.find(art).getFile();
-                    if (f != null) {
-                        Path path = f.toPath();
-                        if (!quiet) {
-                            getLog().info("HuntBugs: +dep " + path);
-                        }
-                        if (Files.isRegularFile(path) && art.getType().equals("jar")) {
-                            deps.add(new JarTypeLoader(new JarFile(path.toFile())));
-                        } else if (Files.isDirectory(path)) {
-                            deps.add(new ClasspathTypeLoader(path.toString()));
-                        }
-                    }
-                }
+        // converting dependencies to type loaders
+        List<DependencyNode> nodes = visitor.getNodes();
+        List<ITypeLoader> deps = new ArrayList<>();
+        for (DependencyNode dependencyNode : nodes) {
+            int state = dependencyNode.getState();
+
+            // checking that transitive dependency is NOT excluded
+            if (state == DependencyNode.INCLUDED) {
+                Artifact artifact = dependencyNode.getArtifact();
+                addDependency(artifact, deps);
             }
         }
         
@@ -155,7 +163,25 @@ public class HuntBugsMojo extends AbstractMojo {
         return new CompositeRepository(
             Arrays.asList(repo, new AuxRepository(new CompositeTypeLoader(deps.toArray(new ITypeLoader[0])))));
     }
-    
+
+    private void addDependency(Artifact art, List<ITypeLoader> deps) throws IOException {
+        if ("compile".equals(art.getScope())) {
+            ArtifactRepository localRepository = session.getLocalRepository();
+            File f = localRepository.find(art).getFile();
+            if (f != null) {
+                Path path = f.toPath();
+                if (!quiet) {
+                    getLog().info("HuntBugs: +dep " + path);
+                }
+                if (Files.isRegularFile(path) && art.getType().equals("jar")) {
+                    deps.add(new JarTypeLoader(new JarFile(path.toFile())));
+                } else if (Files.isDirectory(path)) {
+                    deps.add(new ClasspathTypeLoader(path.toString()));
+                }
+            }
+        }
+    }
+
     private AnalysisOptions constructOptions() {
         AnalysisOptions options = new AnalysisOptions();
         options.minScore = minScore;
