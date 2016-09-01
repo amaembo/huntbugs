@@ -15,6 +15,9 @@
  */
 package one.util.huntbugs.repo;
 
+import com.strobel.assembler.metadata.ITypeLoader;
+import one.util.huntbugs.spi.HuntBugsPlugin;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -26,11 +29,11 @@ import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.jar.JarFile;
-
-import com.strobel.assembler.metadata.ITypeLoader;
 
 /**
  * @author Tagir Valeev
@@ -41,7 +44,7 @@ public interface Repository {
 
     void visit(String rootPackage, RepositoryVisitor visitor);
 
-    public static Repository createSelfRepository() {
+    static Repository createSelfRepository() {
         List<Repository> repos = new ArrayList<>();
         Set<Path> paths = new HashSet<>();
         try {
@@ -59,7 +62,20 @@ public interface Repository {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        CodeSource codeSource = CompositeRepository.class.getProtectionDomain().getCodeSource();
+
+        // adding HuntBugs built-in detectors
+        addDetectorsForClass(CompositeRepository.class, repos, paths);
+
+        // adding HuntBugs 3-rd party detectors if any
+        for (HuntBugsPlugin huntBugsPlugin : ServiceLoader.load(HuntBugsPlugin.class)) {
+            addDetectorsForClass(huntBugsPlugin.getClass(), repos, paths);
+        }
+
+        return new CompositeRepository(repos);
+    }
+
+    static void addDetectorsForClass(Class<?> clazz, List<Repository> repos, Set<Path> paths) {
+        CodeSource codeSource = clazz.getProtectionDomain().getCodeSource();
         URL url = codeSource == null ? null : codeSource.getLocation();
         if(url != null) {
             try {
@@ -75,11 +91,9 @@ public interface Repository {
                 // ignore
             }
         }
-        CompositeRepository repo = new CompositeRepository(repos);
-        return repo;
     }
     
-    public static Repository createNullRepository() {
+    static Repository createNullRepository() {
         return new Repository() {
             @Override
             public void visit(String rootPackage, RepositoryVisitor visitor) {
