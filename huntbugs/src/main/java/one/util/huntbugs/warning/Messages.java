@@ -18,6 +18,8 @@ package one.util.huntbugs.warning;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.URL;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -81,17 +83,35 @@ public class Messages {
     }
     
     public static Messages load() {
-        Document dom;
-        try(InputStream is = Messages.class.getClassLoader().getResourceAsStream(MESSAGES_XML)) {
+        Map<String, Message> allMessages = new HashMap<>();
+
+        try {
+            // 3-rd party detectors could provide their own messages
+            Enumeration<URL> messageUrls = Messages.class.getClassLoader().getResources(MESSAGES_XML);
+            while (messageUrls.hasMoreElements()) {
+                URL messageUrl = messageUrls.nextElement();
+                allMessages.putAll(toMap(readMessages(messageUrl)));
+            }
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+
+        return new Messages(allMessages);
+    }
+
+    private static Document readMessages(URL messageUrl) {
+        try (InputStream is = messageUrl.openStream()) {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
-            dom = builder.parse(is);
-        }
-        catch(IOException ex) {
+            return builder.parse(is);
+        } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         } catch (ParserConfigurationException | SAXException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static Map<String, Message> toMap(Document dom) {
         Map<String, Message> map = new HashMap<>();
         Element element = dom.getDocumentElement();
         Element warnings = Xml.getChild(element, "WarningList");
@@ -112,6 +132,6 @@ public class Messages {
                 node = node.getNextSibling();
             }
         }
-        return new Messages(map);
+        return map;
     }
 }

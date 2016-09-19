@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<p:Messages
+  xmlns:p="https://raw.githubusercontent.com/amaembo/huntbugs/master/huntbugs/src/main/resources/huntbugs"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="https://raw.githubusercontent.com/amaembo/huntbugs/master/huntbugs/src/main/resources/huntbugs messages.xsd">
+  <WarningList>
+    <Warning Type="SampleCustomDetector">
+      <Title>For some reason you can't return instance of java.util.Collection</Title>
+      <Description>For some reason you can't return instance of java.util.Collection</Description>
+      <LongDescription><![CDATA[For some reason you can't return instance of java.util.Collection]]></LongDescription>
+    </Warning>
+  </WarningList>
+</p:Messages>
