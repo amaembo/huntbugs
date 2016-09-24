@@ -1,10 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
- xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
  <modelVersion>4.0.0</modelVersion>
 
  <groupId>one.util</groupId>
  <artifactId>huntbugs-all</artifactId>
- <version>0.0.11-SNAPSHOT</version>
+ <version>0.0.12-SNAPSHOT</version>
  <packaging>pom</packaging>
 
  <name>huntbugs-all</name>
@@ -48,7 +47,8 @@
   <connection>scm:git:https://github.com/amaembo/huntbugs.git</connection>
   <developerConnection>scm:git:https://github.com/amaembo/huntbugs.git</developerConnection>
   <url>https://github.com/amaembo/huntbugs.git</url>
- </scm>
+   <tag>HEAD</tag>
+  </scm>
 
  <build>
   <plugins>

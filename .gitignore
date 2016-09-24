@@ -6,3 +6,5 @@
 
 # Merge files
 *.orig
+
+*.releaseBackup
