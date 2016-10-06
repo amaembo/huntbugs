@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import one.util.huntbugs.util.Annotations;
 import one.util.huntbugs.warning.Roles;
 import one.util.huntbugs.warning.Warning;
 import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
@@ -57,7 +58,7 @@ public class AnnotationFilters {
         Set<String> filters = null;
         for (CustomAnnotation ca : annos) {
             String name = ca.getAnnotationType().getSimpleName();
-            if (!(name.startsWith("Suppress") && name.endsWith("Warning")))
+            if (!Annotations.suppressWarningAnnotation(name))
                 continue;
             for (AnnotationParameter par : ca.getParameters()) {
                 if (par.getMember().equals("value")) {

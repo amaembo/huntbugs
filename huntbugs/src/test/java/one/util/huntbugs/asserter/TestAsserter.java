@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.asserter;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
@@ -40,7 +41,7 @@ public class TestAsserter {
     }
     
     @AssertWarning("ParameterOverwritte*")
-    @SuppressMyWarning("Param*")
+    @SuppressFBWarnings("Param*")
     public double testSuppress(int x) {
         x = 10;
         return x*2;

@@ -21,12 +21,15 @@ import com.strobel.assembler.metadata.annotations.CustomAnnotation;
 
 import one.util.huntbugs.registry.anno.AssertWarning;
 
+import java.util.regex.Pattern;
+
 /**
  * @author shustkost
  *
  */
 public class Annotations {
     private static final String INTERNAL_ANNOTATION_PACKAGE = AssertWarning.class.getPackage().getName();
+    private static final Pattern SUPPRESS_WARNING_ANNOTATION_PATTERN = Pattern.compile("Suppress.*Warnings?");
 
     public static boolean hasAnnotation(IAnnotationsProvider fd, boolean ignoreDeprecated) {
         for (CustomAnnotation ca : fd.getAnnotations()) {
@@ -36,7 +39,7 @@ public class Annotations {
             if (ignoreDeprecated && annoType.getInternalName().equals("java/lang/Deprecated"))
                 continue;
             String simpleName = annoType.getSimpleName();
-            if (simpleName.startsWith("Suppress") && simpleName.endsWith("Warning"))
+            if (suppressWarningAnnotation(simpleName))
                 continue;
             if (simpleName.equalsIgnoreCase("nonnull") || simpleName.equalsIgnoreCase("notnull") || simpleName
                     .equalsIgnoreCase("nullable") || simpleName.equalsIgnoreCase("checkfornull"))
@@ -44,6 +47,10 @@ public class Annotations {
             return true;
         }
         return false;
+    }
+
+    public static boolean suppressWarningAnnotation(String simpleName) {
+        return SUPPRESS_WARNING_ANNOTATION_PATTERN.matcher(simpleName).matches();
     }
 
 }
