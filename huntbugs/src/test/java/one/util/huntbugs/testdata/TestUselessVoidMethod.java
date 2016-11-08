@@ -15,6 +15,7 @@
  */
 package one.util.huntbugs.testdata;
 
+import one.util.huntbugs.registry.anno.AssertNoWarning;
 import one.util.huntbugs.registry.anno.AssertWarning;
 
 /**
@@ -36,5 +37,18 @@ public class TestUselessVoidMethod {
         case 1:
             break;
         }
+    }
+    
+    boolean b;
+    volatile boolean v;
+    
+    @AssertWarning("UselessVoidMethod")
+    public void uselessSpinLoop() {
+        while(b) {}
+    }
+    
+    @AssertNoWarning("UselessVoidMethod")
+    public void volatileSpinLoop() {
+        while(v) {}
     }
 }
