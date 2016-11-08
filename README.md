@@ -1,4 +1,4 @@
-HuntBugs 0.0.10
+HuntBugs 0.0.11
 ===
 
 [![Join the chat at https://gitter.im/amaembo/huntbugs](https://badges.gitter.im/amaembo/huntbugs.svg)](https://gitter.im/amaembo/huntbugs?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
