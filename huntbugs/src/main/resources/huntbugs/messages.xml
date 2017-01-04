@@ -1287,7 +1287,7 @@
       <Title>Static field should be final and package-private</Title>
       <Description>Static field $FIELD$ should be final and package-private.</Description>
       <LongDescription><![CDATA[The field $FIELD$ is not final, but could be easily declared final to prevent
-      possible malicious changes from other packages. It's also mutable, so cannot be modified even if declared as final.
+      possible malicious changes from other packages. It's also mutable, so can be modified even if declared as final.
       However as it's not accessed from other packages, you may declare it package-private to prevent undesired access.]]></LongDescription>
     </Warning>
     <Warning Type="StaticFieldCannotBeFinal">
