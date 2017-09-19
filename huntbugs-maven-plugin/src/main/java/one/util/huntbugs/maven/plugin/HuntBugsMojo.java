@@ -106,22 +106,27 @@ public class HuntBugsMojo extends AbstractMojo {
     @Parameter( defaultValue = "${session}", readonly = true, required = true )
     private MavenSession session;
 
+    @Parameter(property = "skip", defaultValue = "false")
+    private boolean skip;
+    
     @Component
     private DependencyTreeBuilder treeBuilder;
 
     @Override
     public void execute() throws MojoExecutionException {
-        try {
-            Context ctx = new Context(constructRepository(), constructOptions());
+        if (!skip) {
+            try {
+                Context ctx = new Context(constructRepository(), constructOptions());
 
-            if (!quiet) {
-                addAnalysisProgressListener(ctx);
+                if (!quiet) {
+                    addAnalysisProgressListener(ctx);
+                }
+
+                ctx.analyzePackage("");
+                writeReports(ctx);
+            } catch (Exception e) {
+                throw new MojoExecutionException("Failed to run HuntBugs", e);
             }
-
-            ctx.analyzePackage("");
-            writeReports(ctx);
-        } catch (Exception e) {
-            throw new MojoExecutionException("Failed to run HuntBugs", e);
         }
     }
     
