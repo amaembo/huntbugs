@@ -7,4 +7,7 @@
 # Merge files
 *.orig
 
+# IntelliJ IDEA
+.idea
+
 *.releaseBackup
