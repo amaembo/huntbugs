@@ -1,3 +1,6 @@
+This project is abandoned and unlikely will be supported in future
+===
+
 HuntBugs 0.0.11
 ===
 
