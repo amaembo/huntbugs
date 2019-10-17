@@ -38,7 +38,7 @@ import one.util.huntbugs.warning.WarningAnnotation.MemberInfo;
 public class Methods {
     private static final Set<String> SERIALIZATION_METHODS = 
             new HashSet<>(Arrays.asList("writeReplace", "readResolve",
-                "readObject", "readObjectNoData", "writeObject"));
+                "readObject", "readObjectNoData", "writeObject", "$deserializeLambda$"));
     
     public static boolean isEqualsMethod(MethodReference mr) {
         return mr.getName().equals("equals") && mr.getSignature().equals("(Ljava/lang/Object;)Z");
