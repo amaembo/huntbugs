@@ -46,6 +46,12 @@
    <version>2.5</version>
    <scope>test</scope>
   </dependency>
+  <dependency>
+   <groupId>com.google.code.findbugs</groupId>
+   <artifactId>annotations</artifactId>
+   <version>3.0.1u2</version>
+   <scope>test</scope>
+  </dependency>
  </dependencies>
 
  <build>
